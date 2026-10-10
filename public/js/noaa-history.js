@@ -73,7 +73,7 @@
             temperature: 'Temperature', dew_point_temperature: 'Dew point',
             station_level_pressure: 'Station-level pressure', relative_humidity: 'Relative humidity',
             wind_speed: 'Wind speed', wind_direction: 'Wind direction',
-            precipitation: 'Precipitation', sky_cover_summation_1: 'Cloud cover'
+            precipitation: 'Precipitation'
         };
         for (const [key, label] of Object.entries(labels)) lines.push(label + ': ' + Number(counts[key] || 0).toLocaleString());
         lines.push('', 'Only station-level pressure is used for GaugeIQ’s pressure chart. Sea-level pressure is not substituted. Missing values are left missing; flagged values are excluded.');
