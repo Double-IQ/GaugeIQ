@@ -802,9 +802,9 @@ async function loadWeatherChange() {
             const data = await response.json();
             allReadings = Array.isArray(data.readings) ? data.readings : [];
         }
-        // NOAA GSOD records are daily aggregates. Keep them in the unified
-        // history charts, but do not mix them into the short-window live change score.
-        const liveReadings = allReadings.filter(item => item.source !== 'NOAA GSOD');
+        // Imported station observations belong in history graphs, not the live
+        // short-window change score. Legacy source-less live records remain eligible.
+        const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
         const latestTime = liveReadings.reduce((latest, item) => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
