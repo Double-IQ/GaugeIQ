@@ -82,7 +82,8 @@ try {
     $stationCsv = noaaFetch('https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv', 60);
     $lines = preg_split('/\r\n|\n|\r/', trim($stationCsv));
     if (!$lines || count($lines) < 2) throw new RuntimeException('NOAA station directory was empty or unreadable.');
-    $headers = array_map(static fn($v) => strtoupper(trim((string)$v)), str_getcsv(array_shift($lines)));
+    $headerLine = preg_replace('/^\xEF\xBB\xBF/', '', (string)array_shift($lines));
+    $headers = array_map(static fn($v) => strtoupper(trim((string)$v)), str_getcsv($headerLine));
     $stations = [];
     foreach ($lines as $line) {
         if (trim($line) === '') continue;
@@ -188,7 +189,8 @@ try {
            wind_direction_degrees = COALESCE(?, wind_direction_degrees),
            rainfall_mm = COALESCE(?, rainfall_mm),
            cloud_cover_percent = COALESCE(?, cloud_cover_percent),
-           weather_code = COALESCE(?, weather_code)
+           weather_code = COALESCE(?, weather_code),
+           source = 'NOAA GSOD'
          WHERE observed_at = ?'
     );
     $find = $pdo->prepare('SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? ORDER BY id DESC LIMIT 1');
@@ -207,7 +209,7 @@ try {
                 $update->execute([...$values, $row['observed_at']]);
                 $updated++;
             } else {
-                $insert->execute([...$values, $row['observed_at'], $row['observed_at']]);
+                $insert->execute([...$values, $row['observed_at'], $row['observed_at'], 'NOAA GSOD']);
                 $inserted++;
             }
         }
