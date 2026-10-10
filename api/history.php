@@ -33,11 +33,11 @@ try {
     $since = gmdate('c', time() - ($hours * 3600));
 
     // For recent windows, created_at is the UTC ingestion/check time used by
-    // GaugeIQ's live monitor. NOAA historical rows use their observation date
+    // GaugeIQ's live monitor. Imported station observations use their observation date
     // as created_at, so they naturally appear only in matching recent ranges.
     $stmt = $pdo->prepare(
         'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
-                wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
+                wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source
          FROM gaugeiq_pressure_readings
          WHERE created_at >= ?
          ORDER BY observed_at ASC, id ASC'
