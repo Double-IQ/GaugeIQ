@@ -47,15 +47,10 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    temperature_c DOUBLE NULL,
-    dew_point_c DOUBLE NULL,
     pressure_hpa DOUBLE NOT NULL,
     humidity_percent DOUBLE NULL,
     wind_speed_kmh DOUBLE NULL,
     wind_direction_degrees DOUBLE NULL,
-    rainfall_mm DOUBLE NULL,
-    cloud_cover_percent DOUBLE NULL,
-    weather_code INT NULL,
     observed_at VARCHAR(64) NOT NULL,
     created_at VARCHAR(64) NOT NULL,
     INDEX idx_gaugeiq_pressure_created (created_at)
@@ -83,15 +78,10 @@ CREATE TABLE IF NOT EXISTS gaugeiq_schema (
 
 CREATE TABLE IF NOT EXISTS gaugeiq_pressure_readings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    temperature_c REAL NULL,
-    dew_point_c REAL NULL,
     pressure_hpa REAL NOT NULL,
     humidity_percent REAL NULL,
     wind_speed_kmh REAL NULL,
     wind_direction_degrees REAL NULL,
-    rainfall_mm REAL NULL,
-    cloud_cover_percent REAL NULL,
-    weather_code INTEGER NULL,
     observed_at TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
