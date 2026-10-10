@@ -21,14 +21,22 @@ final class PressureService
             $settings[(string)$setting['key']] = (string)$setting['value'];
         }
 
-        // A browser-selected IndexedDB location is synced to active_location_*.
-        // Keep the existing configured location as a backward-compatible fallback.
-        $latitude = $settings['active_location_latitude']
-            ?? $settings['location_latitude']
+        // Admin's single configured location is authoritative. Older releases
+        // may have saved browser-selected coordinates in active_location_*;
+        // retain those only as a fallback when the configured value is absent.
+        $latitude = $settings['location_latitude']
+            ?? $settings['active_location_latitude']
             ?? (string)$this->config['pressure']['latitude'];
-        $longitude = $settings['active_location_longitude']
-            ?? $settings['location_longitude']
+        $longitude = $settings['location_longitude']
+            ?? $settings['active_location_longitude']
             ?? (string)$this->config['pressure']['longitude'];
+
+        if (trim($latitude) === '') {
+            $latitude = $settings['active_location_latitude'] ?? (string)$this->config['pressure']['latitude'];
+        }
+        if (trim($longitude) === '') {
+            $longitude = $settings['active_location_longitude'] ?? (string)$this->config['pressure']['longitude'];
+        }
 
         return [$latitude, $longitude];
     }
