@@ -1060,7 +1060,7 @@ async function loadHistory(hours = 24) {
             if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone);
         });
 
-        const rangeLabel = hours === 'all' ? 'all imported history'
+        const rangeLabel = hours === 'all' ? 'all history'
             : hours === 168 ? '7 days'
             : hours === 720 ? '30 days'
             : hours === 2160 ? '90 days'
