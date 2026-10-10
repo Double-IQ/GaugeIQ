@@ -72,7 +72,7 @@ The installer supports:
 
 - SQLite storage, created automatically during installation
 - Browser location permission for easy coordinate setup
-- Direct NOAA historical data download and import into the same server database used by live monitoring
+- Optional NOAA GHCNh fixed-station observation import into the same server database used by live monitoring
 
 The installer locks itself after successful installation.
 
@@ -82,20 +82,20 @@ Production release packages bundle Composer dependencies, including vendor/, so 
 
 The browser settings page is available at `/alerts.php`. It provides a mobile-friendly interface for creating, enabling, disabling, and deleting alert rules. Direction values are stored as degrees internally so the alert engine can handle the 0°/360° boundary correctly.
 
-## Historical weather import and unified timeline
+## Historical station observations and unified timeline
 
-GaugeIQ can download historical observations from NOAA's public Global Summary of the Day dataset from **Admin → Historical data**. It finds a nearby reporting station based on the single location configured in Admin, downloads the selected date range in batches, and imports the observations directly into GaugeIQ's configured server database.
+GaugeIQ's Admin page can discover nearby stations in NOAA's **Global Historical Climatology Network hourly (GHCNh)** collection, preview a selected station's coverage for a date range, and import its actual station reports into the configured server database.
 
-- Historical records and live readings are stored together in `gaugeiq_pressure_readings`.
-- Imports match observation timestamps to update existing records instead of creating another record for the same timestamp.
-- The dashboard's **All history** graphs query the server database, so imported observations and new cron readings appear in one timeline.
-- The scheduled Open-Meteo monitor and existing alert rules continue running; the import does not pause cron.
-- NOAA's Global Summary of the Day data is **daily**, with coverage from 1973 onward. It is not hourly history.
-- Available NOAA values include temperature, dew point, sea-level pressure, wind speed, and precipitation when reported. Temperature and dew point are converted from Fahrenheit, wind speed from knots to km/h, and precipitation from inches to millimetres. Fields NOAA does not provide remain empty rather than being fabricated.
-- NOAA observations with missing pressure are skipped because GaugeIQ's current primary readings table requires a pressure value.
-- Each request imports up to five years; larger ranges are processed sequentially. If a batch fails, previously completed batches remain saved and the same range can safely be retried.
+- GHCNh is a collection of observations from fixed, land-based weather stations. It contains hourly and synoptic reports; not every station reports every hour or every variable.
+- The station list is ranked by distance from the single location configured in Admin. Review the station ID, name, distance, dates, and variable counts before importing. A nearby station is not guaranteed to represent the exact conditions at the configured property.
+- Imports use station/year files and preserve each source observation timestamp in UTC. Values carrying non-empty quality flags are excluded.
+- GaugeIQ requires station-level pressure for its current readings table. It does **not** silently substitute sea-level pressure, because those are different measurements. Rows without valid station-level pressure are not imported.
+- Available fields are used only when the station reports them: temperature, dew point, station-level pressure, relative humidity, wind speed/direction, precipitation, and a cloud-cover field where available. Missing measurements remain missing. Wind speed is converted from m/s to km/h.
+- Historical and live readings share `gaugeiq_pressure_readings`. Imports are deduplicated by observation timestamp and never replace an existing reading's pressure or source. They may fill missing non-pressure fields on an existing timestamp.
+- The dashboard's **All history** graphs query the unified server database. Imported station records are excluded from the live short-window weather-change score and live alert baselines, while the scheduled Open-Meteo monitor continues running.
+- The import preview is important: station distance, data availability, reporting frequency, and variable coverage vary by location and date. A preview is not a guarantee of complete hourly coverage.
 
-The standard short-range graphs and weather-change calculations continue to use recent server readings. The **All history** option displays the full imported-plus-live timeline.
+The standard short-range graphs and weather-change calculations use live monitor readings. **All history** displays the imported-plus-live timeline.
 
 ## Weather monitoring and dashboard insights
 
