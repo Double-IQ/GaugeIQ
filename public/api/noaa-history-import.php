@@ -46,6 +46,7 @@ function noaaNumber(array $row, string $field, float $missingLimit = 9998.0): ?f
 }
 
 try {
+    if (function_exists('set_time_limit')) { @set_time_limit(240); }
     AdminAuth::requireLogin();
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') noaaJson(405, ['error' => 'Use POST to import historical data.']);
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) noaaJson(403, ['error' => 'Your session expired. Refresh Admin and try again.']);
