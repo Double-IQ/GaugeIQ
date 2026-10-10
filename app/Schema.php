@@ -1,6 +1,40 @@
 <?php
 declare(strict_types=1);
 
+
+/**
+ * Add a column only when it is missing. This makes migrations safe to retry
+ * after an interrupted install or when a database already contains newer
+ * columns than its recorded schema version.
+ */
+function gaugeIqEnsureColumn(PDO $db, string $table, string $column, string $definition): void
+{
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $table) ||
+        !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)) {
+        throw new InvalidArgumentException('Invalid database identifier.');
+    }
+
+    $driver = (string)$db->getAttribute(PDO::ATTR_DRIVER_NAME);
+    if ($driver === 'sqlite') {
+        $columns = $db->query('PRAGMA table_info("' . $table . '")')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($columns as $existing) {
+            if (strcasecmp((string)$existing['name'], $column) === 0) {
+                return;
+            }
+        }
+    } elseif ($driver === 'mysql') {
+        $stmt = $db->prepare('SHOW COLUMNS FROM `' . $table . '` LIKE ?');
+        $stmt->execute([$column]);
+        if ($stmt->fetch(PDO::FETCH_ASSOC) !== false) {
+            return;
+        }
+    } else {
+        throw new RuntimeException('Unsupported database driver: ' . $driver);
+    }
+
+    $db->exec('ALTER TABLE `' . $table . '` ADD COLUMN `' . $column . '` ' . $definition);
+}
+
 function migrateDatabase(PDO $db): void
 {
     $driver = (string)$db->getAttribute(PDO::ATTR_DRIVER_NAME);
@@ -107,16 +141,9 @@ SQL);
     }
 
     if ($version === 1) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings
-                ADD COLUMN humidity_percent DOUBLE NULL,
-                ADD COLUMN wind_speed_kmh DOUBLE NULL,
-                ADD COLUMN wind_direction_degrees DOUBLE NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN humidity_percent REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_speed_kmh REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN wind_direction_degrees REAL NULL");
-        }
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'humidity_percent', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'wind_speed_kmh', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'wind_direction_degrees', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
 
         $db->exec("UPDATE gaugeiq_schema SET version = 2");
         $version = 2;
@@ -205,59 +232,33 @@ SQL);
     }
 
     if ($version === 4) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions
-                ADD COLUMN user_agent VARCHAR(512) NULL,
-                ADD COLUMN last_seen_at VARCHAR(64) NULL,
-                ADD COLUMN last_push_at VARCHAR(64) NULL,
-                ADD COLUMN last_push_status VARCHAR(32) NULL,
-                ADD COLUMN last_push_error TEXT NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN user_agent TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_seen_at TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_at TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_status TEXT NULL");
-            $db->exec("ALTER TABLE gaugeiq_push_subscriptions ADD COLUMN last_push_error TEXT NULL");
-        }
+        gaugeIqEnsureColumn($db, 'gaugeiq_push_subscriptions', 'user_agent', $driver === 'mysql' ? 'VARCHAR(512) NULL' : 'TEXT NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_push_subscriptions', 'last_seen_at', $driver === 'mysql' ? 'VARCHAR(64) NULL' : 'TEXT NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_push_subscriptions', 'last_push_at', $driver === 'mysql' ? 'VARCHAR(64) NULL' : 'TEXT NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_push_subscriptions', 'last_push_status', $driver === 'mysql' ? 'VARCHAR(32) NULL' : 'TEXT NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_push_subscriptions', 'last_push_error', 'TEXT NULL');
         $db->exec("UPDATE gaugeiq_schema SET version = 5");
         $version = 5;
     }
 
 
     if ($version === 5) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings
-                ADD COLUMN temperature_c DOUBLE NULL,
-                ADD COLUMN dew_point_c DOUBLE NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN temperature_c REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN dew_point_c REAL NULL");
-        }
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'temperature_c', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'dew_point_c', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
         $db->exec("UPDATE gaugeiq_schema SET version = 6");
         $version = 6;
     }
 
     if ($version === 6) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings
-                ADD COLUMN rainfall_mm DOUBLE NULL,
-                ADD COLUMN cloud_cover_percent DOUBLE NULL,
-                ADD COLUMN weather_code INT NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN rainfall_mm REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN cloud_cover_percent REAL NULL");
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN weather_code INTEGER NULL");
-        }
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'rainfall_mm', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'cloud_cover_percent', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'weather_code', $driver === 'mysql' ? 'INT NULL' : 'INTEGER NULL');
         $db->exec("UPDATE gaugeiq_schema SET version = 7");
         $version = 7;
     }
 
     if ($version === 7) {
-        if ($driver === 'mysql') {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN source VARCHAR(64) NULL");
-        } else {
-            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN source TEXT NULL");
-        }
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'source', $driver === 'mysql' ? 'VARCHAR(64) NULL' : 'TEXT NULL');
         $db->exec("UPDATE gaugeiq_schema SET version = 8");
         $version = 8;
     }
