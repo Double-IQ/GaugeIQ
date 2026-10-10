@@ -1042,7 +1042,7 @@ async function loadHistory(hours = 24) {
             const locations = await window.GaugeIQLocalWeather.allLocations();
             chartTimezone = locations.find(location => location.id === selectedLocation)?.timezone || null;
         } else {
-            const requestedHours = hours === 'all' ? 'all' : Math.min(336, Math.max(1, Number(hours) || 24));
+            const requestedHours = hours === 'all' ? 'all' : Math.min(8760, Math.max(1, Number(hours) || 24));
             const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
             if (!response.ok) throw new Error('History unavailable.');
             const data = await response.json();
