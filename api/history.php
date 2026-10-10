@@ -29,7 +29,7 @@ try {
         exit;
     }
 
-    $hours = min(336, max(1, (int)($_GET['hours'] ?? 24)));
+    $hours = min(8760, max(1, (int)($_GET['hours'] ?? 24)));
     $since = gmdate('c', time() - ($hours * 3600));
 
     // For recent windows, created_at is the UTC ingestion/check time used by
