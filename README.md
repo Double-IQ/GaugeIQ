@@ -72,7 +72,7 @@ The installer supports:
 
 - SQLite storage, created automatically during installation
 - Browser location permission for easy coordinate setup
-- A link to NOAA's official historical data search so users can download station/date-range files separately
+- Direct NOAA historical data download and import into the same server database used by live monitoring
 
 The installer locks itself after successful installation.
 
@@ -82,20 +82,20 @@ Production release packages bundle Composer dependencies, including vendor/, so 
 
 The browser settings page is available at `/alerts.php`. It provides a mobile-friendly interface for creating, enabling, disabling, and deleting alert rules. Direction values are stored as degrees internally so the alert engine can handle the 0°/360° boundary correctly.
 
-## Local weather history
+## Historical weather import and unified timeline
 
-GaugeIQ can keep imported Open-Meteo hourly weather history in the browser's IndexedDB database on each device. This local dataset is separate from the server database used by scheduled monitoring, alert evaluation, and push notifications.
+GaugeIQ can download historical observations from NOAA's public Global Summary of the Day dataset from **Admin → Historical data**. It finds a nearby reporting station based on the single location configured in Admin, downloads the selected date range in batches, and imports the observations directly into GaugeIQ's configured server database.
 
-Historical data management is in the **Admin** area:
-- Import Open-Meteo historical data from supported CSV or JSON files. CSV imports ask for the timezone used by the file.
-- Download historical weather data from Open-Meteo for a selected location and date range.
-- Choose a history location and source when viewing or managing local readings.
-- Export a JSON backup of locally stored locations and readings, and restore it by importing the backup.
-- Request persistent browser storage where supported and review the browser storage estimate when available.
+- Historical records and live readings are stored together in `gaugeiq_pressure_readings`.
+- Imports match observation timestamps to update existing records instead of creating another record for the same timestamp.
+- The dashboard's **All history** graphs query the server database, so imported observations and new cron readings appear in one timeline.
+- The scheduled Open-Meteo monitor and existing alert rules continue running; the import does not pause cron.
+- NOAA's Global Summary of the Day data is **daily**, with coverage from 1973 onward. It is not hourly history.
+- Available NOAA values include temperature, dew point, sea-level pressure, wind speed, and precipitation when reported. Temperature and dew point are converted from Fahrenheit, wind speed from knots to km/h, and precipitation from inches to millimetres. Fields NOAA does not provide remain empty rather than being fabricated.
+- NOAA observations with missing pressure are skipped because GaugeIQ's current primary readings table requires a pressure value.
+- Each request imports up to five years; larger ranges are processed sequentially. If a batch fails, previously completed batches remain saved and the same range can safely be retried.
 
-The dashboard keeps the historical graphs and their range controls; importing, downloading, exporting, and protecting local history are Admin tasks. The selected location's local history can also feed the dashboard's history-based weather insights.
-
-Local data is not uploaded to GaugeIQ's server. IndexedDB quota and persistence are controlled by the browser and device; users should export backups regularly, especially before clearing site data or changing devices. Restoring a backup merges records by location ID and timestamp rather than deleting other local records. Browser storage is not a substitute for an independent backup.
+The standard short-range graphs and weather-change calculations continue to use recent server readings. The **All history** option displays the full imported-plus-live timeline.
 
 ## Weather monitoring and dashboard insights
 
@@ -122,4 +122,4 @@ When the reason cards are opened, unchanged/zero-severity signals are hidden. Ai
 
 ## Project status
 
-Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes historical readings, recent alert history, light/dark/follow-device appearance controls, scheduled monitoring health information, and release update notifications. Production releases are packaged with Composer dependencies bundled.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes a unified historical-plus-live timeline, recent alert history, light/dark/follow-device appearance controls, scheduled monitoring health information, and release update notifications. Production releases are packaged with Composer dependencies bundled.
