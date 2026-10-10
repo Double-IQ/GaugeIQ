@@ -247,38 +247,27 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="section-heading">
         <div>
             <h2 id="historyManagementTitle">Historical data</h2>
-            <p class="muted">Download historical weather for a location, import a CSV/JSON dataset, or export a backup. Imported data is stored in this browser on this device.</p>
+            <p class="muted">Download NOAA historical observations directly into GaugeIQ's server database. The same database continues receiving live Open-Meteo readings through the existing cron monitor.</p>
         </div>
     </div>
-    <div class="local-weather-tools" aria-label="Historical data management">
-        <label for="weatherLocationSelect">Location for historical data</label>
-        <select id="weatherLocationSelect" class="theme-select"
-            data-server-latitude="<?= h(gaugeSetting($pdo, 'active_location_latitude', $locationLatitude) ?? $locationLatitude) ?>"
-            data-server-longitude="<?= h(gaugeSetting($pdo, 'active_location_longitude', $locationLongitude) ?? $locationLongitude) ?>"
-            data-server-location-name="<?= h(gaugeSetting($pdo, 'active_location_name', $locationName) ?? $locationName) ?>"
-            data-server-timezone="<?= h(gaugeSetting($pdo, 'active_location_timezone', (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC') ?>"
-            data-config-latitude="<?= h((string)$config['pressure']['latitude']) ?>"
-            data-config-longitude="<?= h((string)$config['pressure']['longitude']) ?>"
-            data-config-location-name="<?= h((string)$config['pressure']['location_name']) ?>"
-            data-config-timezone="<?= h((string)($config['app']['timezone'] ?? 'UTC')) ?>"
-            data-location-csrf="<?= h($csrf) ?>" data-location-sync-endpoint="save-dashboard-location.php">
-            <option value="server-current">Current GaugeIQ location (server)</option>
-        </select>
-        <div class="local-weather-actions">
-            <button type="button" class="secondary" id="localWeatherFetch">Get historical data</button>
-            <button type="button" class="secondary" id="localWeatherImport">Import file</button>
-            <button type="button" class="secondary" id="localWeatherExport">Export backup</button>
-            <button type="button" class="secondary" id="localWeatherPersist">Protect local storage</button>
-            <input type="file" id="localWeatherFile" accept=".csv,.json,application/json,text/csv" hidden>
-        </div>
+    <div class="local-weather-tools" aria-label="NOAA historical data import">
+        <p><strong>Configured location:</strong> <?= h($locationName) ?> · <?= h($locationLatitude) ?>, <?= h($locationLongitude) ?></p>
+        <input type="hidden" id="noaaHistoryCsrf" value="<?= h($csrf) ?>">
         <div class="local-weather-api-options">
-            <label for="localWeatherRange">Historical range to download</label>
-            <select id="localWeatherRange" class="theme-select"><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365" selected>Last year</option><option value="all">All available history</option></select>
-            <label for="localWeatherSource">Historical source</label>
-            <select id="localWeatherSource" class="theme-select"><option value="forecast" selected>Historical Forecast · recent conditions</option><option value="weather">Historical Weather · long-term history</option></select>
+            <div>
+                <label for="noaaHistoryStart">Start date</label>
+                <input id="noaaHistoryStart" type="date" min="1973-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="1973-01-01">
+            </div>
+            <div>
+                <label for="noaaHistoryEnd">End date</label>
+                <input id="noaaHistoryEnd" type="date" min="1973-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>">
+            </div>
         </div>
-        <p id="localWeatherStatus" class="muted" role="status" aria-live="polite">Preparing local weather database…</p>
-        <p class="muted local-weather-help">Historical Forecast is intended for recent conditions; Historical Weather is more suitable for long-term trends. “All available history” may take multiple requests. Export a backup before clearing browser data or changing devices. This browser storage is separate from GaugeIQ's server database.</p>
+        <div class="local-weather-actions">
+            <button type="button" id="noaaHistoryImport">Download and import NOAA history</button>
+        </div>
+        <p id="noaaHistoryStatus" class="muted" role="status" aria-live="polite">Historical records will be saved to the same server database as live readings.</p>
+        <p class="muted local-weather-help">GaugeIQ finds a nearby NOAA station and imports daily observations. NOAA provides temperature, dew point, pressure, wind speed, and precipitation when available; fields not provided by NOAA remain empty. Imports are deduplicated by observation timestamp. Large date ranges are processed in batches, and live monitoring is not paused.</p>
     </div>
 </section>
 
@@ -489,7 +478,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <a class="secondary button-link" href="./">Back to GaugeIQ</a>
 </section>
 
-<script src="js/local-weather.js?v=20261010-admin-history" defer></script>
+<script src="js/noaa-history.js?v=20261011-server-import" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
