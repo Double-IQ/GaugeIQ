@@ -73,8 +73,13 @@ try {
         $value = $stmt->fetchColumn();
         return $value === false ? $fallback : (string)$value;
     };
-    $latitude = (float)$setting('location_latitude', (string)($config['pressure']['latitude'] ?? ''));
-    $longitude = (float)$setting('location_longitude', (string)($config['pressure']['longitude'] ?? ''));
+    $latitudeRaw = trim($setting('location_latitude', (string)($config['pressure']['latitude'] ?? '')));
+    $longitudeRaw = trim($setting('location_longitude', (string)($config['pressure']['longitude'] ?? '')));
+    if ($latitudeRaw === '' || $longitudeRaw === '' || !is_numeric($latitudeRaw) || !is_numeric($longitudeRaw)) {
+        noaaJson(422, ['error' => 'Set a valid single location in Admin before importing NOAA history.']);
+    }
+    $latitude = (float)$latitudeRaw;
+    $longitude = (float)$longitudeRaw;
     if (!is_finite($latitude) || !is_finite($longitude) || abs($latitude) > 90 || abs($longitude) > 180) {
         noaaJson(422, ['error' => 'Set a valid single location in Admin before importing NOAA history.']);
     }
