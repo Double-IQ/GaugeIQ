@@ -161,16 +161,23 @@ final class PressureService
         $changedAt = $changedAtQuery->fetchColumn();
         if (is_string($changedAt) && $changedAt !== '') {
             $previousQuery = $this->db->prepare(
-                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-                 FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+                "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings
+                 WHERE created_at >= ? AND observed_at < ?
+                   AND (source IS NULL OR source <> 'NOAA GSOD')
+                 ORDER BY observed_at DESC, id DESC LIMIT 1"
             );
-            $previousQuery->execute([$changedAt]);
+            $previousQuery->execute([$changedAt, (string)$current['observed_at']]);
             $previous = $previousQuery->fetch();
         } else {
-            $previous = $this->db->query(
-                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-                 FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-            )->fetch();
+            $previousQuery = $this->db->prepare(
+                "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings
+                 WHERE observed_at < ? AND (source IS NULL OR source <> 'NOAA GSOD')
+                 ORDER BY observed_at DESC, id DESC LIMIT 1"
+            );
+            $previousQuery->execute([(string)$current['observed_at']]);
+            $previous = $previousQuery->fetch();
         }
 
         $stmt = $this->db->prepare(
