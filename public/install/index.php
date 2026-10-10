@@ -27,15 +27,6 @@ $defaults = [
     'location_name' => 'My location',
     'latitude' => '',
     'longitude' => '',
-    'threshold_hpa' => '3.0',
-    'humidity_enabled' => '1',
-    'wind_enabled' => '1',
-    'database_driver' => 'sqlite',
-    'database_host' => '127.0.0.1',
-    'database_port' => '3306',
-    'database_name' => '',
-    'database_username' => '',
-    'database_password' => '',
     'admin_username' => 'admin',
     'admin_password' => '',
 ];
@@ -55,29 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Enter a valid longitude.';
     }
 
-    $threshold = filter_var($defaults['threshold_hpa'], FILTER_VALIDATE_FLOAT);
-    if ($threshold === false || $threshold <= 0) {
-        $errors[] = 'Enter a pressure alert threshold greater than zero.';
-    }
-
     if ($defaults['admin_username'] === '' || !preg_match('/^[A-Za-z0-9._-]{3,64}$/', $defaults['admin_username'])) {
         $errors[] = 'Choose an administrator username using 3–64 letters, numbers, dots, underscores, or hyphens.';
     }
 
     if (strlen($defaults['admin_password']) < 12) {
         $errors[] = 'Administrator password must be at least 12 characters long.';
-    }
-
-    if (!in_array($defaults['database_driver'], ['sqlite', 'mysql'], true)) {
-        $errors[] = 'Choose a valid database type.';
-    }
-
-    if ($defaults['database_driver'] === 'mysql') {
-        foreach (['database_name', 'database_username'] as $field) {
-            if ($defaults[$field] === '') {
-                $errors[] = 'MySQL/MariaDB database name and username are required.';
-            }
-        }
     }
 
     if (!$errors) {
@@ -99,29 +73,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'timezone' => 'Africa/Johannesburg',
                 ],
                 'database' => [
-                    'driver' => $defaults['database_driver'],
+                    'driver' => 'sqlite',
                     'path' => $root . '/storage/gaugeiq.sqlite',
-                    'host' => $defaults['database_host'],
-                    'port' => $defaults['database_port'],
-                    'name' => $defaults['database_name'],
-                    'username' => $defaults['database_username'],
-                    'password' => $defaults['database_password'],
-                    'charset' => 'utf8mb4',
                 ],
                 'pressure' => [
                     'latitude' => (float)$defaults['latitude'],
                     'longitude' => (float)$defaults['longitude'],
                     'location_name' => $defaults['location_name'] ?: 'My location',
-                    'threshold_hpa' => (float)$threshold,
+                    'threshold_hpa' => 3.0,
                     'check_interval_minutes' => 30,
                 ],
                 'humidity' => [
-                    'enabled' => $defaults['humidity_enabled'] === '1',
+                    'enabled' => true,
                     'mode' => 'change',
                     'threshold_percent' => 10.0,
                 ],
                 'wind' => [
-                    'enabled' => $defaults['wind_enabled'] === '1',
+                    'enabled' => true,
                     'speed_mode' => 'above',
                     'speed_threshold_kmh' => 40.0,
                     'direction_change_degrees' => 45.0,
@@ -135,17 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
 
             $config['push']['subject'] = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-
-            if ($config['database']['driver'] === 'sqlite') {
-                unset(
-                    $config['database']['host'],
-                    $config['database']['port'],
-                    $config['database']['name'],
-                    $config['database']['username'],
-                    $config['database']['password'],
-                    $config['database']['charset']
-                );
-            }
 
             $db = new Database($config);
             migrateDatabase($db->pdo());
@@ -234,47 +191,23 @@ return " . var_export($config, true) . ";
 
             <button type="button" class="secondary" id="locationButton">Use my current location</button>
 
-            <p class="step" style="margin-top:28px">2 · PRESSURE</p>
-            <label for="threshold_hpa">Alert when pressure changes by</label>
-            <input id="threshold_hpa" name="threshold_hpa" value="<?= htmlspecialchars($defaults['threshold_hpa'], ENT_QUOTES) ?>" type="number" step="0.1" min="0.1" required>
-            <p class="muted">GaugeIQ will check pressure every 30 minutes.</p>
+            <section class="history-option" aria-labelledby="noaaHeading">
+                <p class="step" style="margin-top:28px">2 · HISTORICAL WEATHER DATA</p>
+                <h2 id="noaaHeading">Download a historical file from NOAA</h2>
+                <p class="muted">Open NOAA's official data search to choose a station, dataset, and date range, then download the historical data file.</p>
+                <a class="button secondary-link" href="https://www.ncei.noaa.gov/access/search/data-search" target="_blank" rel="noopener noreferrer">Open NOAA historical data search ↗</a>
+                <p class="muted">This opens NOAA in a new tab. Downloading a file does not automatically import it into GaugeIQ.</p>
+            </section>
 
-            <p class="step" style="margin-top:28px">3 · WEATHER MONITORING</p>
-            <label class="choice"><input type="checkbox" name="humidity_enabled" value="1" <?= $defaults['humidity_enabled'] === '1' ? 'checked' : '' ?>> Monitor humidity</label>
-            <label class="choice"><input type="checkbox" name="wind_enabled" value="1" <?= $defaults['wind_enabled'] === '1' ? 'checked' : '' ?>> Monitor wind speed and direction</label>
-
-            <p class="step" style="margin-top:28px">4 · ADMINISTRATOR</p>
+            <p class="step" style="margin-top:28px">3 · ADMINISTRATOR</p>
             <label for="admin_username">Administrator username</label>
             <input id="admin_username" name="admin_username" value="<?= htmlspecialchars($defaults['admin_username'], ENT_QUOTES) ?>" autocomplete="username" required>
             <label for="admin_password">Administrator password</label>
             <input id="admin_password" name="admin_password" type="password" autocomplete="new-password" minlength="12" required>
             <p class="muted">Use at least 12 characters. This account protects administration and future update controls.</p>
 
-            <p class="step" style="margin-top:28px">5 · DATABASE</p>
-            <label for="database_driver">Database</label>
-            <select id="database_driver" name="database_driver">
-                <option value="sqlite" <?= $defaults['database_driver'] === 'sqlite' ? 'selected' : '' ?>>SQLite — easiest</option>
-                <option value="mysql" <?= $defaults['database_driver'] === 'mysql' ? 'selected' : '' ?>>Existing MySQL / MariaDB database</option>
-            </select>
-
-            <div id="mysqlFields" hidden>
-                <label for="database_host">Database host</label>
-                <input id="database_host" name="database_host" value="<?= htmlspecialchars($defaults['database_host'], ENT_QUOTES) ?>">
-                <div class="grid">
-                    <div>
-                        <label for="database_port">Port</label>
-                        <input id="database_port" name="database_port" value="<?= htmlspecialchars($defaults['database_port'], ENT_QUOTES) ?>">
-                    </div>
-                    <div>
-                        <label for="database_name">Database name</label>
-                        <input id="database_name" name="database_name" value="<?= htmlspecialchars($defaults['database_name'], ENT_QUOTES) ?>">
-                    </div>
-                </div>
-                <label for="database_username">Username</label>
-                <input id="database_username" name="database_username" value="<?= htmlspecialchars($defaults['database_username'], ENT_QUOTES) ?>">
-                <label for="database_password">Password</label>
-                <input id="database_password" name="database_password" type="password" value="<?= htmlspecialchars($defaults['database_password'], ENT_QUOTES) ?>">
-            </div>
+            <p class="step" style="margin-top:28px">4 · DATABASE</p>
+            <p class="muted">GaugeIQ will use SQLite. The database file is created automatically during installation.</p>
 
             <button type="submit">Install GaugeIQ</button>
         </form>
