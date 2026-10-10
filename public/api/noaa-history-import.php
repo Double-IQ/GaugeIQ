@@ -176,8 +176,8 @@ try {
     $insert = $pdo->prepare(
         'INSERT INTO gaugeiq_pressure_readings
          (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees,
-          rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $update = $pdo->prepare(
         'UPDATE gaugeiq_pressure_readings SET
@@ -190,7 +190,7 @@ try {
            rainfall_mm = COALESCE(?, rainfall_mm),
            cloud_cover_percent = COALESCE(?, cloud_cover_percent),
            weather_code = COALESCE(?, weather_code),
-           source = 'NOAA GSOD'
+           source = ?
          WHERE observed_at = ?'
     );
     $find = $pdo->prepare('SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? ORDER BY id DESC LIMIT 1');
@@ -206,7 +206,7 @@ try {
                 $row['cloud_cover_percent'], $row['weather_code'],
             ];
             if ($existing !== false) {
-                $update->execute([...$values, $row['observed_at']]);
+                $update->execute([...$values, 'NOAA GSOD', $row['observed_at']]);
                 $updated++;
             } else {
                 $insert->execute([...$values, $row['observed_at'], $row['observed_at'], 'NOAA GSOD']);
