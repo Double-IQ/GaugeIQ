@@ -32,7 +32,18 @@ function gaugeIqEnsureColumn(PDO $db, string $table, string $column, string $def
         throw new RuntimeException('Unsupported database driver: ' . $driver);
     }
 
-    $db->exec('ALTER TABLE `' . $table . '` ADD COLUMN `' . $column . '` ' . $definition);
+    try {
+        $db->exec('ALTER TABLE `' . $table . '` ADD COLUMN `' . $column . '` ' . $definition);
+    } catch (PDOException $e) {
+        // SQLite can report a duplicate column if the schema changed between
+        // PRAGMA inspection and ALTER TABLE, or if a partial install already
+        // added it. Treat that specific condition as an already-completed
+        // migration; rethrow every other database error.
+        if ($driver === 'sqlite' && stripos($e->getMessage(), 'duplicate column name: ' . $column) !== false) {
+            return;
+        }
+        throw $e;
+    }
 }
 
 function migrateDatabase(PDO $db): void
