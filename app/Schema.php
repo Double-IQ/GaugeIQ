@@ -237,9 +237,6 @@ SQL);
         $version = 6;
     }
 
-}
-
-
     if ($version === 6) {
         if ($driver === 'mysql') {
             $db->exec("ALTER TABLE gaugeiq_pressure_readings
@@ -254,4 +251,4 @@ SQL);
         $db->exec("UPDATE gaugeiq_schema SET version = 7");
         $version = 7;
     }
-
+}
