@@ -1,13 +1,3 @@
-const driver=document.getElementById('database_driver');
-const fields=document.getElementById('mysqlFields');
-
-function updateDatabaseFields(){
-    if(fields&&driver)fields.hidden=driver.value!=='mysql';
-}
-
-driver?.addEventListener('change',updateDatabaseFields);
-updateDatabaseFields();
-
 document.getElementById('locationButton')?.addEventListener('click',()=>{
     const button=document.getElementById('locationButton');
     const latitude=document.getElementById('latitude');

@@ -21,14 +21,22 @@ final class PressureService
             $settings[(string)$setting['key']] = (string)$setting['value'];
         }
 
-        // A browser-selected IndexedDB location is synced to active_location_*.
-        // Keep the existing configured location as a backward-compatible fallback.
-        $latitude = $settings['active_location_latitude']
-            ?? $settings['location_latitude']
+        // Admin's single configured location is authoritative. Older releases
+        // may have saved browser-selected coordinates in active_location_*;
+        // retain those only as a fallback when the configured value is absent.
+        $latitude = $settings['location_latitude']
+            ?? $settings['active_location_latitude']
             ?? (string)$this->config['pressure']['latitude'];
-        $longitude = $settings['active_location_longitude']
-            ?? $settings['location_longitude']
+        $longitude = $settings['location_longitude']
+            ?? $settings['active_location_longitude']
             ?? (string)$this->config['pressure']['longitude'];
+
+        if (trim($latitude) === '') {
+            $latitude = $settings['active_location_latitude'] ?? (string)$this->config['pressure']['latitude'];
+        }
+        if (trim($longitude) === '') {
+            $longitude = $settings['active_location_longitude'] ?? (string)$this->config['pressure']['longitude'];
+        }
 
         return [$latitude, $longitude];
     }
@@ -153,22 +161,29 @@ final class PressureService
         $changedAt = $changedAtQuery->fetchColumn();
         if (is_string($changedAt) && $changedAt !== '') {
             $previousQuery = $this->db->prepare(
-                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-                 FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+                "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings
+                 WHERE created_at >= ? AND observed_at < ?
+                   AND (source IS NULL OR source = 'Open-Meteo')
+                 ORDER BY observed_at DESC, id DESC LIMIT 1"
             );
-            $previousQuery->execute([$changedAt]);
+            $previousQuery->execute([$changedAt, (string)$current['observed_at']]);
             $previous = $previousQuery->fetch();
         } else {
-            $previous = $this->db->query(
-                'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
-                 FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
-            )->fetch();
+            $previousQuery = $this->db->prepare(
+                "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
+                 FROM gaugeiq_pressure_readings
+                 WHERE observed_at < ? AND (source IS NULL OR source = 'Open-Meteo')
+                 ORDER BY observed_at DESC, id DESC LIMIT 1"
+            );
+            $previousQuery->execute([(string)$current['observed_at']]);
+            $previous = $previousQuery->fetch();
         }
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
-             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $current['temperature_c'],
@@ -182,6 +197,7 @@ final class PressureService
             $current['weather_code'],
             $current['observed_at'],
             gmdate('c'),
+            'Open-Meteo',
         ]);
 
         return $previous ?: null;

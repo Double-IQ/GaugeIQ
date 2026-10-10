@@ -237,9 +237,6 @@ SQL);
         $version = 6;
     }
 
-}
-
-
     if ($version === 6) {
         if ($driver === 'mysql') {
             $db->exec("ALTER TABLE gaugeiq_pressure_readings
@@ -255,3 +252,13 @@ SQL);
         $version = 7;
     }
 
+    if ($version === 7) {
+        if ($driver === 'mysql') {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN source VARCHAR(64) NULL");
+        } else {
+            $db->exec("ALTER TABLE gaugeiq_pressure_readings ADD COLUMN source TEXT NULL");
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 8");
+        $version = 8;
+    }
+}

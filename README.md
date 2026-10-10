@@ -70,33 +70,32 @@ A first-run installer is available at `/install/`. It can create the initial con
 
 The installer supports:
 
-- SQLite for a simple personal installation
-- An existing MySQL/MariaDB database
+- SQLite storage, created automatically during installation
 - Browser location permission for easy coordinate setup
-- Initial pressure, humidity, and wind monitoring choices
+- Optional NOAA GHCNh fixed-station observation import into the same server database used by live monitoring
 
 The installer locks itself after successful installation.
 
-Production release packages bundle Composer dependencies, including vendor/, so non-technical cPanel users do not need to install Composer.
+Production release packages bundle Composer dependencies, including vendor/, so non-technical cPanel users do not need to install Composer. The first-run installer uses SQLite only and enables the standard pressure, humidity, and wind monitoring defaults without asking users to configure those options.
 
 ## Alert settings
 
 The browser settings page is available at `/alerts.php`. It provides a mobile-friendly interface for creating, enabling, disabling, and deleting alert rules. Direction values are stored as degrees internally so the alert engine can handle the 0°/360° boundary correctly.
 
-## Local weather history
+## Historical station observations and unified timeline
 
-GaugeIQ can keep imported Open-Meteo hourly weather history in the browser's IndexedDB database on each device. This local dataset is separate from the server database used by scheduled monitoring, alert evaluation, and push notifications.
+GaugeIQ's Admin page can discover nearby stations in NOAA's **Global Historical Climatology Network hourly (GHCNh)** collection, preview a selected station's coverage for a date range, and import its actual station reports into the configured server database.
 
-Historical data management is in the **Admin** area:
-- Import Open-Meteo historical data from supported CSV or JSON files. CSV imports ask for the timezone used by the file.
-- Download historical weather data from Open-Meteo for a selected location and date range.
-- Choose a history location and source when viewing or managing local readings.
-- Export a JSON backup of locally stored locations and readings, and restore it by importing the backup.
-- Request persistent browser storage where supported and review the browser storage estimate when available.
+- GHCNh is a collection of observations from fixed, land-based weather stations. It contains hourly and synoptic reports; not every station reports every hour or every variable.
+- The station list is ranked by distance from the single location configured in Admin. Review the station ID, name, distance, dates, and variable counts before importing. A nearby station is not guaranteed to represent the exact conditions at the configured property.
+- Imports use station/year files and preserve each source observation timestamp in UTC. Values carrying non-empty quality flags are excluded.
+- GaugeIQ requires station-level pressure for its current readings table. It does **not** silently substitute sea-level pressure, because those are different measurements. Rows without valid station-level pressure are not imported.
+- Available fields are used only when the station reports them: temperature, dew point, station-level pressure, relative humidity, wind speed/direction, and precipitation. Missing measurements remain missing. Wind speed is converted from m/s to km/h.
+- Historical and live readings share `gaugeiq_pressure_readings`. Imports are deduplicated by observation timestamp and never replace an existing reading's pressure or source. They may fill missing non-pressure fields on an existing timestamp.
+- The dashboard's **All history** graphs query the unified server database. Imported station records are excluded from the live short-window weather-change score and live alert baselines, while the scheduled Open-Meteo monitor continues running.
+- The import preview is important: station distance, data availability, reporting frequency, and variable coverage vary by location and date. A preview is not a guarantee of complete hourly coverage.
 
-The dashboard keeps the historical graphs and their range controls; importing, downloading, exporting, and protecting local history are Admin tasks. The selected location's local history can also feed the dashboard's history-based weather insights.
-
-Local data is not uploaded to GaugeIQ's server. IndexedDB quota and persistence are controlled by the browser and device; users should export backups regularly, especially before clearing site data or changing devices. Restoring a backup merges records by location ID and timestamp rather than deleting other local records. Browser storage is not a substitute for an independent backup.
+The standard short-range graphs and weather-change calculations use live monitor readings. **All history** displays the imported-plus-live timeline.
 
 ## Weather monitoring and dashboard insights
 
@@ -123,4 +122,4 @@ When the reason cards are opened, unchanged/zero-severity signals are hidden. Ai
 
 ## Project status
 
-Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes historical readings, recent alert history, light/dark/follow-device appearance controls, scheduled monitoring health information, and release update notifications. Production releases are packaged with Composer dependencies bundled.
+Foundation, Web Push delivery, SQLite/MySQL database support, first-run installation, humidity monitoring, wind speed monitoring, wind direction monitoring, configurable alert rules, cooldowns, alert-event storage, and the initial mobile alert settings screen are implemented. The dashboard includes a unified historical-plus-live timeline, recent alert history, light/dark/follow-device appearance controls, scheduled monitoring health information, and release update notifications. Production releases are packaged with Composer dependencies bundled.

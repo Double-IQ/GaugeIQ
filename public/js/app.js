@@ -802,12 +802,15 @@ async function loadWeatherChange() {
             const data = await response.json();
             allReadings = Array.isArray(data.readings) ? data.readings : [];
         }
-        const latestTime = allReadings.reduce((latest, item) => {
+        // Imported station observations belong in history graphs, not the live
+        // short-window change score. Legacy source-less live records remain eligible.
+        const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
+        const latestTime = liveReadings.reduce((latest, item) => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
         }, 0);
         const currentWindowStart = latestTime - 6 * 60 * 60 * 1000;
-        const readings = allReadings.filter(item => {
+        const readings = liveReadings.filter(item => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= latestTime;
         });
@@ -815,7 +818,7 @@ async function loadWeatherChange() {
         const trend = weatherConditionsTrend(readings);
         const baselineElement = document.getElementById('weatherBaselineStatus');
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
-            const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
+            const baseline = weatherLocalBaseline(liveReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
             baselineElement.textContent = (isLocalHistory ? 'Selected location history: ' : '') + baseline.text + (ageMinutes > 90
                 ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
@@ -1039,7 +1042,7 @@ async function loadHistory(hours = 24) {
             const locations = await window.GaugeIQLocalWeather.allLocations();
             chartTimezone = locations.find(location => location.id === selectedLocation)?.timezone || null;
         } else {
-            const requestedHours = hours === 'all' ? 336 : Math.min(336, Math.max(1, Number(hours) || 24));
+            const requestedHours = hours === 'all' ? 'all' : Math.min(8760, Math.max(1, Number(hours) || 24));
             const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
             if (!response.ok) throw new Error('History unavailable.');
             const data = await response.json();
@@ -1057,7 +1060,7 @@ async function loadHistory(hours = 24) {
             if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone);
         });
 
-        const rangeLabel = hours === 'all' ? 'all imported history'
+        const rangeLabel = hours === 'all' ? 'all history'
             : hours === 168 ? '7 days'
             : hours === 720 ? '30 days'
             : hours === 2160 ? '90 days'
