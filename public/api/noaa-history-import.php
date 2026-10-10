@@ -40,7 +40,12 @@ function noaaFetch(string $url, int $timeout = 45): string {
 
 function noaaNumber(array $row, string $field, float $missingLimit = 9998.0): ?float {
     $value = trim((string)($row[$field] ?? ''));
-    if ($value === '' || !is_numeric($value)) return null;
+    if ($value === '') return null;
+    // GSOD precipitation values can carry a trailing measurement flag, e.g. 0.00I.
+    if (!is_numeric($value) && preg_match('/^[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)/', $value, $match)) {
+        $value = $match[0];
+    }
+    if (!is_numeric($value)) return null;
     $number = (float)$value;
     return $number >= $missingLimit ? null : $number;
 }
