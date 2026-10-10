@@ -7,3 +7,4 @@ label{display:block;font-weight:700;margin:18px 0 7px}input,select{width:100%;pa
 button{width:100%;border:0;border-radius:13px;padding:14px 16px;font:inherit;font-weight:800;background:#111827;color:#fff;margin-top:22px;cursor:pointer}
 .secondary{background:#e5e7eb;color:#111827;margin-top:10px}.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:14px;border-radius:14px}.success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:16px;border-radius:14px}
 @media(max-width:560px){.grid{grid-template-columns:1fr}}
+.history-option{margin-top:24px;padding:18px;border:1px solid #e5e7eb;border-radius:16px;background:#f9fafb}.history-option h2{font-size:18px;margin:8px 0}.secondary-link{display:block;text-align:center;text-decoration:none;padding:13px 16px;border-radius:12px;font-weight:800;background:#e5e7eb;color:#111827;margin-top:14px}.secondary-link:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
