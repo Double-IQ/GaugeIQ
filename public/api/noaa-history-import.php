@@ -154,7 +154,8 @@ try {
                 $windKnots = noaaNumber($row, 'WDSP', 98.0);
                 $rainInches = noaaNumber($row, 'PRCP', 99.0);
                 $candidateRows[] = [
-                    'observed_at' => $date . 'T12:00:00Z',
+                    'observed_at' => $date,
+                    'created_at' => $date . 'T00:00:00Z',
                     'temperature_c' => $temperatureF !== null ? ($temperatureF - 32) * 5 / 9 : null,
                     'dew_point_c' => $dewpointF !== null ? ($dewpointF - 32) * 5 / 9 : null,
                     'pressure_hpa' => $pressure,
@@ -214,7 +215,7 @@ try {
                 $update->execute([...$values, 'NOAA GSOD', $row['observed_at']]);
                 $updated++;
             } else {
-                $insert->execute([...$values, $row['observed_at'], $row['observed_at'], 'NOAA GSOD']);
+                $insert->execute([...$values, $row['observed_at'], $row['created_at'], 'NOAA GSOD']);
                 $inserted++;
             }
         }
