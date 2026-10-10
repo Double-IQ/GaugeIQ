@@ -193,10 +193,8 @@ return " . var_export($config, true) . ";
 
             <section class="history-option" aria-labelledby="noaaHeading">
                 <p class="step" style="margin-top:28px">2 · HISTORICAL WEATHER DATA</p>
-                <h2 id="noaaHeading">Download a historical file from NOAA</h2>
-                <p class="muted">Open NOAA's official data search to choose a station, dataset, and date range, then download the historical data file.</p>
-                <a class="button secondary-link" href="https://www.ncei.noaa.gov/access/search/data-search" target="_blank" rel="noopener noreferrer">Open NOAA historical data search ↗</a>
-                <p class="muted">This opens NOAA in a new tab. Downloading a file does not automatically import it into GaugeIQ.</p>
+                <h2 id="noaaHeading">Import historical weather after setup</h2>
+                <p class="muted">After installation, open Admin → Historical data to download observations from a nearby NOAA station directly into GaugeIQ's server database. Scheduled live monitoring will continue using that same database.</p>
             </section>
 
             <p class="step" style="margin-top:28px">3 · ADMINISTRATOR</p>
