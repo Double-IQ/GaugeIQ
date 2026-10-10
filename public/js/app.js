@@ -802,12 +802,15 @@ async function loadWeatherChange() {
             const data = await response.json();
             allReadings = Array.isArray(data.readings) ? data.readings : [];
         }
-        const latestTime = allReadings.reduce((latest, item) => {
+        // NOAA GSOD records are daily aggregates. Keep them in the unified
+        // history charts, but do not mix them into the short-window live change score.
+        const liveReadings = allReadings.filter(item => item.source !== 'NOAA GSOD');
+        const latestTime = liveReadings.reduce((latest, item) => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
         }, 0);
         const currentWindowStart = latestTime - 6 * 60 * 60 * 1000;
-        const readings = allReadings.filter(item => {
+        const readings = liveReadings.filter(item => {
             const timestamp = new Date(item.created_at || item.observed_at).getTime();
             return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= latestTime;
         });
@@ -815,7 +818,7 @@ async function loadWeatherChange() {
         const trend = weatherConditionsTrend(readings);
         const baselineElement = document.getElementById('weatherBaselineStatus');
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
-            const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
+            const baseline = weatherLocalBaseline(liveReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
             baselineElement.textContent = (isLocalHistory ? 'Selected location history: ' : '') + baseline.text + (ageMinutes > 90
                 ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
