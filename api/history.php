@@ -17,7 +17,7 @@ try {
         // Return the full timeline in observation-time order for the History graphs.
         $stmt = $pdo->query(
             'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
-                    wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
+                    wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source
              FROM gaugeiq_pressure_readings
              ORDER BY observed_at ASC, id ASC'
         );
