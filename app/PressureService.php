@@ -167,8 +167,8 @@ final class PressureService
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
-             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $current['temperature_c'],
@@ -182,6 +182,7 @@ final class PressureService
             $current['weather_code'],
             $current['observed_at'],
             gmdate('c'),
+            'Open-Meteo',
         ]);
 
         return $previous ?: null;
