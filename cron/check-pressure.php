@@ -67,7 +67,7 @@ if ($targetTimestamp !== false) {
     $baselineSql = "SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
                     FROM gaugeiq_pressure_readings
                     WHERE observed_at <= ? AND observed_at < ?
-                      AND (source IS NULL OR source <> 'NOAA GSOD')";
+                      AND (source IS NULL OR source = 'Open-Meteo')";
     $baselineParams = [
         date('Y-m-d\\TH:i:s', $targetTimestamp),
         (string)$current['observed_at'],
