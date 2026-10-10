@@ -59,12 +59,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($action === 'save_location') {
                 $name = trim((string)($_POST['location_name'] ?? ''));
-                $latitude = (float)($_POST['location_latitude'] ?? 0);
-                $longitude = (float)($_POST['location_longitude'] ?? 0);
+                $latitudeInput = trim((string)($_POST['location_latitude'] ?? ''));
+                $longitudeInput = trim((string)($_POST['location_longitude'] ?? ''));
 
                 if ($name === '') {
                     throw new InvalidArgumentException('Please enter a name for the location.');
                 }
+                if ($latitudeInput === '' || !is_numeric($latitudeInput)) {
+                    throw new InvalidArgumentException('Enter a valid latitude for the configured location.');
+                }
+                if ($longitudeInput === '' || !is_numeric($longitudeInput)) {
+                    throw new InvalidArgumentException('Enter a valid longitude for the configured location.');
+                }
+                $latitude = (float)$latitudeInput;
+                $longitude = (float)$longitudeInput;
                 if ($latitude < -90 || $latitude > 90) {
                     throw new InvalidArgumentException('Latitude must be between -90 and 90.');
                 }
