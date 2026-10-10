@@ -254,31 +254,36 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
  <section class="card history-management-card" aria-labelledby="historyManagementTitle">
     <div class="section-heading">
         <div>
-            <h2 id="historyManagementTitle">Historical data</h2>
-            <p class="muted">Download NOAA historical observations directly into GaugeIQ's server database. The same database continues receiving live Open-Meteo readings through the existing cron monitor.</p>
+            <h2 id="historyManagementTitle">Historical station observations</h2>
+            <p class="muted">Import actual NOAA fixed-station observations into the same server database used by GaugeIQ's live monitor. No gridded weather-model estimates are imported.</p>
         </div>
     </div>
-    <div class="local-weather-tools" aria-label="NOAA historical data import">
+    <div class="local-weather-tools" aria-label="NOAA hourly station history import">
         <p><strong>Configured location:</strong> <?= h($locationName) ?> · <?= h($locationLatitude) ?>, <?= h($locationLongitude) ?></p>
-        <input type="hidden" id="noaaHistoryCsrf" value="<?= h($csrf) ?>">
+        <input type="hidden" id="stationHistoryCsrf" value="<?= h($csrf) ?>">
+        <div>
+            <label for="stationHistoryStation">Nearby observation station</label>
+            <select id="stationHistoryStation" disabled><option>Finding nearby stations…</option></select>
+        </div>
         <div class="local-weather-api-options">
             <div>
-                <label for="noaaHistoryStart">Start date</label>
-                <input id="noaaHistoryStart" type="date" min="1973-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="1973-01-01">
+                <label for="stationHistoryStart">Start date</label>
+                <input id="stationHistoryStart" type="date" min="1750-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('-1 year'))) ?>">
             </div>
             <div>
-                <label for="noaaHistoryEnd">End date</label>
-                <input id="noaaHistoryEnd" type="date" min="1973-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>">
+                <label for="stationHistoryEnd">End date</label>
+                <input id="stationHistoryEnd" type="date" min="1750-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>">
             </div>
         </div>
         <div class="local-weather-actions">
-            <button type="button" id="noaaHistoryImport">Download and import NOAA history</button>
+            <button type="button" id="stationHistoryPreview">Preview station coverage</button>
+            <button type="button" id="stationHistoryImport" disabled>Import actual observations</button>
         </div>
-        <p id="noaaHistoryStatus" class="muted" role="status" aria-live="polite">Historical records will be saved to the same server database as live readings.</p>
-        <p class="muted local-weather-help">GaugeIQ finds a nearby NOAA station and imports daily observations. NOAA provides temperature, dew point, pressure, wind speed, and precipitation when available; fields not provided by NOAA remain empty. Imports are deduplicated by observation timestamp. Large date ranges are processed in batches, and live monitoring is not paused.</p>
+        <pre id="stationHistoryPreviewResult" class="muted" role="status" aria-live="polite" hidden style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+        <p id="stationHistoryStatus" class="muted" role="status" aria-live="polite">Finding nearby stations. Choose a station and preview its coverage before importing.</p>
+        <p class="muted local-weather-help">GaugeIQ searches NOAA's Global Historical Climatology Network hourly (GHCNh), a collection of actual station reports that may be hourly or synoptic (for example, every three hours). Coverage and available variables vary by station and date. Values with non-empty quality flags are excluded. GaugeIQ requires station-level pressure for its pressure history and never substitutes sea-level pressure. Missing measurements remain missing. Live monitoring is not paused.</p>
     </div>
 </section>
-
 <section class="card monitoring-card" aria-labelledby="monitoringTitle">
     <div class="section-heading">
         <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
@@ -486,7 +491,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <a class="secondary button-link" href="./">Back to GaugeIQ</a>
 </section>
 
-<script src="js/noaa-history.js?v=20261011-server-import" defer></script>
+<script src="js/noaa-history.js?v=20261011-ghcnh-station-preview" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
