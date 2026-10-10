@@ -145,7 +145,8 @@ try {
                 $row = array_combine($columns, array_slice(array_pad($values, count($columns), ''), 0, count($columns)));
                 $date = trim((string)($row['DATE'] ?? ''));
                 if ($date < $startDate || $date > $endDate) continue;
-                $pressure = noaaNumber($row, 'SLP');
+                // STP is station-level pressure, which is the closer match for GaugeIQ's surface-pressure series.
+                $pressure = noaaNumber($row, 'STP');
                 // GaugeIQ's existing primary weather table requires pressure.
                 // Skip rows with NOAA's missing-value sentinel rather than fabricate a reading.
                 if ($pressure === null || $pressure <= 0 || $pressure > 1200) continue;
