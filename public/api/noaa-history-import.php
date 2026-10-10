@@ -60,6 +60,7 @@ function historyStationList(): array {
     $handle = fopen('php://temp', 'r+'); fwrite($handle, $csv); rewind($handle);
     $headers = fgetcsv($handle);
     if (!is_array($headers)) { fclose($handle); throw new RuntimeException('NOAA station directory is empty or unreadable.'); }
+    $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string)$headers[0]);
     $headers = array_map(static fn($v) => strtoupper(trim((string)$v)), $headers);
     $stations = [];
     while (($values = fgetcsv($handle)) !== false) {
@@ -123,7 +124,6 @@ function historyObservation(array $r): ?array {
     $wind = historyNumber($r, 'wind_speed');
     $direction = historyNumber($r, 'wind_direction');
     $rain = historyNumber($r, 'precipitation');
-    $cloud = historyNumber($r, 'sky_cover_summation_1');
     // Station pressure is required by GaugeIQ's current schema. Never substitute
     // sea-level pressure: that is a different measurement basis.
     if ($stationPressure === null || $stationPressure <= 0 || $stationPressure > 1200) return null;
@@ -137,7 +137,6 @@ function historyObservation(array $r): ?array {
         'wind_speed_kmh' => $wind !== null && $wind >= 0 ? $wind * 3.6 : null,
         'wind_direction_degrees' => $direction !== null && $direction >= 0 && $direction <= 360 ? $direction : null,
         'rainfall_mm' => $rain !== null && $rain >= 0 ? $rain : null,
-        'cloud_cover_percent' => $cloud !== null && $cloud >= 0 && $cloud <= 100 ? $cloud : null,
         'weather_code' => null,
     ];
 }
@@ -186,7 +185,7 @@ try {
             else throw $e;
         }
     }
-    $observations = []; $variableCounts = ['temperature' => 0, 'dew_point_temperature' => 0, 'station_level_pressure' => 0, 'relative_humidity' => 0, 'wind_speed' => 0, 'wind_direction' => 0, 'precipitation' => 0, 'sky_cover_summation_1' => 0];
+    $observations = []; $variableCounts = ['temperature' => 0, 'dew_point_temperature' => 0, 'station_level_pressure' => 0, 'relative_humidity' => 0, 'wind_speed' => 0, 'wind_direction' => 0, 'precipitation' => 0];
     foreach ($yearRows as $rows) foreach ($rows as $raw) {
         $timeText = trim((string)($raw['DATE'] ?? $raw['DATE_TIME'] ?? ''));
         if ($timeText === '') {
