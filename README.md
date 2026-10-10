@@ -70,14 +70,13 @@ A first-run installer is available at `/install/`. It can create the initial con
 
 The installer supports:
 
-- SQLite for a simple personal installation
-- An existing MySQL/MariaDB database
+- SQLite storage, created automatically during installation
 - Browser location permission for easy coordinate setup
-- Initial pressure, humidity, and wind monitoring choices
+- A link to NOAA's official historical data search so users can download station/date-range files separately
 
 The installer locks itself after successful installation.
 
-Production release packages bundle Composer dependencies, including vendor/, so non-technical cPanel users do not need to install Composer.
+Production release packages bundle Composer dependencies, including vendor/, so non-technical cPanel users do not need to install Composer. The first-run installer uses SQLite only and enables the standard pressure, humidity, and wind monitoring defaults without asking users to configure those options.
 
 ## Alert settings
 
