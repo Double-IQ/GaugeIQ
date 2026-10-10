@@ -46,7 +46,7 @@
             for (const station of data.stations || []) {
                 const option = document.createElement('option');
                 option.value = station.id;
-                option.textContent = station.name + ' · ' + station.distance_km + ' km · ' + station.id;
+                option.textContent = station.name + ' · ' + station.distance_km + ' km' + (station.elevation_m !== null ? ' · ' + station.elevation_m + ' m elev.' : '') + ' · ' + station.id;
                 option.dataset.station = JSON.stringify(station);
                 stationSelect.appendChild(option);
             }
@@ -64,6 +64,7 @@
         const lines = [
             'Station: ' + station.name + ' (' + station.id + ')',
             'Distance: ' + station.distance_km + ' km from your configured location',
+            'Station elevation: ' + (station.elevation_m === null ? 'not listed' : station.elevation_m + ' m'),
             'Period checked: ' + data.start_date + ' to ' + data.end_date,
             'Usable records with valid station pressure: ' + Number(data.records_with_valid_station_pressure || 0).toLocaleString(),
             '',
