@@ -181,7 +181,10 @@ try {
     for ($year = (int)$start->format('Y'); $year <= (int)$end->format('Y'); $year++) {
         try { $yearRows[$year] = historyStationFile($stationId, $year); }
         catch (Throwable $e) {
-            if ($action === 'preview' && str_contains($e->getMessage(), 'HTTP 404')) $yearRows[$year] = [];
+            // A station may not have a file for every requested year. A 404
+            // means no file for that station/year, not a reason to discard
+            // other years in the selected range.
+            if (str_contains($e->getMessage(), 'HTTP 404')) $yearRows[$year] = [];
             else throw $e;
         }
     }
