@@ -205,45 +205,36 @@ The installer creates an administrator account. Use:
 https://YOUR-GAUGЕIQ-URL/login.php
 ```
 
-The admin session uses secure, HTTP-only, SameSite cookies and CSRF protection. The administrator area is required for application updates.
+The admin session uses secure, HTTP-only, SameSite cookies and CSRF protection. Administrator login is required to install an update.
 
-From **Admin → Updates**, GaugeIQ can install a published release after downloading the official package and checksum. The updater:
+From **Admin → Updates**, GaugeIQ checks the latest stable GitHub Release. If a newer release is published and its package assets are ready, Admin offers the existing **Install update** action. The server resolves the official release URLs itself; the browser cannot choose arbitrary package URLs.
 
-- accepts only HTTPS GitHub release downloads
-- verifies the SHA-256 checksum before installation
-- validates the archive structure and rejects unsafe paths
-- preserves config/local.php, config/installed.lock, and storage/
-- creates an application backup before replacement
-- attempts a rollback if replacement fails
-- runs database migrations when the updated application is next loaded
+The updater:
 
-Keep the administrator password private. Do not share the admin session or expose update endpoints to unauthenticated users.
+- verifies the official release package's SHA-256 checksum before installation
+- accepts only the expected versioned GaugeIQ release assets over HTTPS
+- validates archive paths and rejects entries outside the expected root or symbolic links
+- preserves `config/local.php`, `config/installed.lock`, and `storage/`
+- makes an application backup and a consistent SQLite database snapshot before replacing files
+- runs the database migration with the PHP CLI interpreter and checks the installed version, dependencies, configuration, and database
+- attempts to restore the application and SQLite snapshot if installation, migration, or health checks fail
+- retains the three most recent successful update backups
 
-## 14. Updating GaugeIQ
+The updater never regenerates the VAPID keys or replaces the SQLite database with an empty one. Keep the administrator password private and do not expose update endpoints to unauthenticated users.
 
-GaugeIQ can check the official GitHub Releases feed and display an update notification on the dashboard when a newer release is available. The notification links to the published release so the package and checksum can be reviewed before installation.
+## 14. Automatic release updates
 
-For a manual update:
+The existing scheduled deployment script checks the official GitHub Releases feed and automatically installs a newer stable release when its package and checksum assets are ready. It retries on the next scheduled run if GitHub has published the release but is still preparing those assets.
 
-1. Back up config/local.php.
-2. Keep the existing storage/ directory and database.
-3. Upload the new release files.
-4. Keep your existing config/local.php.
-5. Keep your existing VAPID keys.
-6. Run php database/migrate.php if the release includes database migrations.
-7. Run php bin/check-requirements.php.
-8. Verify the dashboard and cron monitoring.
+A new release is picked up on the next cron run, so the delay depends on the configured schedule. For example, a 30-minute schedule normally means a new release is found within about 30 minutes.
 
-The bundled vendor/ directory means Composer is not required when updating from an official release package.
+Only published stable Releases with the versioned ZIP and SHA-256 checksum are installed. A commit pushed to `main` on its own is no longer a production update after the release-based workflow is deployed. Publish a versioned GitHub Release to distribute production changes.
 
-Do not replace the existing SQLite database with a new empty database and do not regenerate VAPID keys.
+The existing **Admin → Updates → Install update** action remains available for a manual update; it uses the same updater as the scheduled task.
 
-The in-app release check is informational; it must not expose configuration, VAPID credentials, database contents, or internal exception details.
+## 15. Scheduled release updates for `weather.bichet.co.za`
 
-
-## 15. Automatically sync cPanel with GitHub main
-
-For the deployment at `weather.bichet.co.za`, the Git working copy is:
+The GaugeIQ repository checkout is:
 
 ```
 /home/bicheveb/GaugeIQ
@@ -255,27 +246,24 @@ The subdomain document root should remain:
 /home/bicheveb/GaugeIQ/public
 ```
 
-The repository includes `cron/update-from-github.sh`. It fetches `origin/main` and updates the checkout only when Git can do a safe fast-forward. It does not reset the checkout or overwrite edits to tracked files. If the branch has diverged, tracked local edits exist, or the fetch fails, it stops and writes the reason to:
-
-```
-/home/bicheveb/logs/gaugeiq-auto-update.log
-```
-
-### Add the separate deployment cron
-
-In cPanel, open **Cron Jobs** and add a job that runs every 30 minutes. Use this command:
+Keep the existing cPanel deployment cron command:
 
 ```
 /bin/bash /home/bicheveb/GaugeIQ/cron/update-from-github.sh
 ```
 
-Set the minute field to `*/30` and the hour, day, month, and weekday fields to `*`.
+Set it to the interval you prefer (currently every 30 minutes). Despite the legacy filename, `update-from-github.sh` no longer runs `git pull`; it invokes the shared PHP release updater and logs results to:
 
-This deployment cron is independent of `cron/check-pressure.php`, which continues to collect/check weather data on its own schedule. Do not replace or remove the weather-monitor cron.
+```
+/home/bicheveb/logs/gaugeiq-auto-update.log
+```
 
-The Git updater advances tracked files from `main`; it does not run Composer or perform arbitrary database migrations. Review changes that introduce dependencies or require manual migration steps. Keep local configuration and persistent storage backed up as usual.
+The script uses cPanel's PHP 8.4 CLI at `/opt/cpanel/ea-php84/root/usr/bin/php` when available. If your hosting account changes PHP versions, set `GAUGEIQ_PHP_BIN` in the cron environment or update the path in the script.
 
+This release-update cron is independent of `cron/check-pressure.php`, which continues collecting weather readings and processing notifications on its own schedule. Do not replace or remove the weather-monitor cron.
 
+The existing Git-based script can deploy this transition one final time. After the new script is deployed, production updates come from published GitHub Releases using the release-package updater, not commits pulled directly from `main`. The scheduled automatic installer is currently enabled for SQLite installations because it can create and restore a consistent database snapshot; non-SQLite installations are not automatically updated by this cron runner.
+ 
 ## Security rules
 
 - Use HTTPS.
