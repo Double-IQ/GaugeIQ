@@ -17,20 +17,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         if (!response.ok) throw new Error();
 
+        if (!data.ok) throw new Error(data.error || 'Update check failed.');
+
         if (!data.update_available) {
             status.textContent = 'GaugeIQ is up to date (v' + data.current_version + ').';
             return;
         }
 
-        if (!data.package_url || !data.checksum_url) {
-            status.textContent = 'An update was found, but its release package or checksum is missing.';
+        if (!data.package_ready) {
+            status.textContent = 'Version ' + data.latest_version + ' was found, but GitHub is still preparing its release package. GaugeIQ will check again later.';
             return;
         }
 
         document.getElementById('adminLatestVersion').textContent = 'Version ' + data.latest_version + ' is available.';
         document.getElementById('adminUpdateVersion').value = data.latest_version;
-        document.getElementById('adminPackageUrl').value = data.package_url;
-        document.getElementById('adminChecksumUrl').value = data.checksum_url;
         details.hidden = false;
         status.textContent = '';
     } catch {
