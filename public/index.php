@@ -43,31 +43,52 @@ $locationName = $storedCoordinates['active_location_name']
 $dashboardTimezone = $storedCoordinates['active_location_timezone'] ?? $dashboardTimezone;
 
 try {
-    $current = $service->fetchCurrent();
     $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
     $changedAtStmt->execute();
     $activeLocationChangedAt = $changedAtStmt->fetchColumn();
     if (is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
         $latestStmt = $pdo->prepare(
-            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
-             FROM gaugeiq_pressure_readings WHERE created_at >= ? ORDER BY id DESC LIMIT 1'
+            "SELECT * FROM gaugeiq_pressure_readings
+             WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo')
+             ORDER BY id DESC LIMIT 1"
         );
         $latestStmt->execute([$activeLocationChangedAt]);
         $latest = $latestStmt->fetch() ?: null;
         $rangeStmt = $pdo->prepare(
-            'SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
-             FROM gaugeiq_pressure_readings WHERE created_at >= ?'
+            "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
+             FROM gaugeiq_pressure_readings
+             WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo')"
         );
         $rangeStmt->execute([$activeLocationChangedAt]);
         $pressureHistory = $rangeStmt->fetch() ?: [];
     } else {
         $latest = $pdo->query(
-            'SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at FROM gaugeiq_pressure_readings ORDER BY id DESC LIMIT 1'
+            "SELECT * FROM gaugeiq_pressure_readings
+             WHERE source IS NULL OR source = 'Open-Meteo'
+             ORDER BY id DESC LIMIT 1"
         )->fetch() ?: null;
-        $pressureHistory = $pdo->query('SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high FROM gaugeiq_pressure_readings')->fetch() ?: [];
+        $pressureHistory = $pdo->query(
+            "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
+             FROM gaugeiq_pressure_readings WHERE source IS NULL OR source = 'Open-Meteo'"
+        )->fetch() ?: [];
     }
 
-    $change = $latest ? $current['pressure_hpa'] - (float)$latest['pressure_hpa'] : 0.0;
+    $current = $latest;
+    if ($current) {
+        $decodedForecast = json_decode((string)($current['forecast_json'] ?? '[]'), true);
+        $current['forecast'] = is_array($decodedForecast) ? $decodedForecast : [];
+    }
+    $change = 0.0;
+    if ($latest) {
+        $previousStmt = $pdo->prepare(
+            "SELECT pressure_hpa FROM gaugeiq_pressure_readings
+             WHERE id < ? AND (source IS NULL OR source = 'Open-Meteo')
+             ORDER BY id DESC LIMIT 1"
+        );
+        $previousStmt->execute([(int)$latest['id']]);
+        $previousPressure = $previousStmt->fetchColumn();
+        $change = $previousPressure === false ? 0.0 : (float)$latest['pressure_hpa'] - (float)$previousPressure;
+    }
 
     $settings = [];
     foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
@@ -142,7 +163,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <?php
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
     $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
-    $feelsLikeC = $current ? (float)($current['feels_like_c'] ?? $temperatureC) : 0.0;
+    $feelsLikeC = $current && isset($current['feels_like_c']) ? (float)$current['feels_like_c'] : $temperatureC;
     $forecastHighC = $current ? ($current['forecast_high_c'] ?? null) : null;
     $forecastLowC = $current ? ($current['forecast_low_c'] ?? null) : null;
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
@@ -601,6 +622,16 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
 
+    <?php
+    $lastRefreshedLabel = 'Not refreshed yet — waiting for the first scheduled server check';
+    if ($current && !empty($current['observed_at'])) {
+        $lastRefreshedTimestamp = strtotime((string)$current['observed_at']);
+        if ($lastRefreshedTimestamp !== false) {
+            $lastRefreshedLabel = 'Last refreshed at ' . date('d M Y, H:i', $lastRefreshedTimestamp);
+        }
+    }
+    ?>
+    <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
