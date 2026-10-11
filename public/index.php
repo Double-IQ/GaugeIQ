@@ -179,7 +179,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261011-compass-origin-fix-forecast-fallback">
+<link rel="stylesheet" href="css/app.css?v=20261011-wind-dot-arrow-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -441,7 +441,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <?php endforeach; ?>
                         </g>
                         <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                            <path class="wind-direction-from-arrow" d="M50 17.5 L44 28 L48 25 L48 36 L52 36 L52 25 L56 28 Z"></path>
+                            <circle class="wind-direction-from-dot" cx="50" cy="19.5" r="2.1"></circle>
                             <path class="wind-direction-to-marker" d="M50 82.5 L56 72 L52 75 L52 64 L48 64 L48 75 L44 72 Z"></path>
                         </g>
                     </g>
