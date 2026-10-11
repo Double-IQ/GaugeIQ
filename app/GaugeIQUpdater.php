@@ -206,7 +206,7 @@ final class GaugeIQUpdater
         }
         $zip->close();
 
-        $backup = $this->storage . '/backup-' . gmdate('Ymd-His');
+        $backup = $this->storage . '/backup-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(3));
         if (!mkdir($backup, 0750, true) && !is_dir($backup)) {
             throw new RuntimeException('Unable to create the update backup.');
         }
@@ -233,6 +233,7 @@ final class GaugeIQUpdater
             throw $e;
         }
 
+        $this->pruneBackups(3);
         return ['version' => $version];
         } finally {
             $this->removeTree($stage);
@@ -495,6 +496,20 @@ final class GaugeIQUpdater
         @unlink($this->storage . '/update.lock');
     }
 
+
+
+    private function pruneBackups(int $keep): void
+    {
+        try {
+            $backups = glob($this->storage . '/backup-*', GLOB_ONLYDIR) ?: [];
+            rsort($backups, SORT_STRING);
+            foreach (array_slice($backups, max(0, $keep)) as $oldBackup) {
+                $this->removeTree($oldBackup);
+            }
+        } catch (Throwable $e) {
+            error_log('GaugeIQ could not prune old update backups: ' . $e->getMessage());
+        }
+    }
 
     private function backupDatabase(string $backup): ?array
     {
