@@ -473,7 +473,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </label>
             <label class="daily-forecast-option">
                 <input type="checkbox" name="daily_forecast_alert_severe" value="1" <?= $dailyForecastAlertSevere ? 'checked' : '' ?>>
-                <span><strong>Severe weather</strong><small>Forecast heavy precipitation, violent showers, heavy snow or thunderstorms.</small></span>
+                <span><strong>Severe weather</strong><small>Heavy precipitation, violent showers, heavy snow, thunderstorms or gusts reaching 70 km/h.</small></span>
             </label>
         </fieldset>
 
