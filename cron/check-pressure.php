@@ -29,6 +29,174 @@ function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
     $stmt->execute([$key, $value]);
 }
 
+function getGaugeIqSetting(PDO $pdo, string $key, string $fallback = ''): string
+{
+    $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value === false ? $fallback : (string)$value;
+}
+
+/**
+ * Evaluate the opt-in daily forecast notification once the user's local time is
+ * reached. Uses the same current Open-Meteo forecast already fetched for the
+ * regular monitor and never changes the ordinary alert rules.
+ */
+function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): void
+{
+    if (getGaugeIqSetting($pdo, 'daily_forecast_alert_enabled', '0') !== '1') {
+        return;
+    }
+
+    $scheduledTime = getGaugeIqSetting($pdo, 'daily_forecast_alert_time', '07:00');
+    if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $scheduledTime)) {
+        $scheduledTime = '07:00';
+    }
+
+    try {
+        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+    } catch (Throwable) {
+        $timezone = new DateTimeZone('UTC');
+    }
+
+    $now = new DateTimeImmutable('now', $timezone);
+    $today = $now->format('Y-m-d');
+    if ($now->format('H:i') < $scheduledTime) {
+        return;
+    }
+    if (getGaugeIqSetting($pdo, 'daily_forecast_alert_last_evaluated_date') === $today) {
+        return;
+    }
+
+    $selected = [
+        'rain' => getGaugeIqSetting($pdo, 'daily_forecast_alert_rain', '1') === '1',
+        'wind' => getGaugeIqSetting($pdo, 'daily_forecast_alert_wind', '1') === '1',
+        'severe' => getGaugeIqSetting($pdo, 'daily_forecast_alert_severe', '1') === '1',
+    ];
+    if (!in_array(true, $selected, true)) {
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No forecast conditions selected.');
+        return;
+    }
+
+    $forecastDays = is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
+    $forecast = null;
+    foreach ($forecastDays as $day) {
+        if (is_array($day) && (string)($day['date'] ?? '') === $today) {
+            $forecast = $day;
+            break;
+        }
+    }
+    if ($forecast === null && isset($forecastDays[0]) && is_array($forecastDays[0])) {
+        $firstDate = (string)($forecastDays[0]['date'] ?? '');
+        if ($firstDate === '' || $firstDate >= $today) {
+            $forecast = $forecastDays[0];
+        }
+    }
+    if ($forecast === null) {
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', 'No forecast values were available for the current local date.');
+        error_log('GaugeIQ daily forecast alert skipped: no forecast values for ' . $today . '.');
+        return;
+    }
+
+    $rainProbability = is_numeric($forecast['rain_probability_percent'] ?? null)
+        ? (float)$forecast['rain_probability_percent']
+        : null;
+    $rainMm = is_numeric($forecast['rain_mm'] ?? null)
+        ? (float)$forecast['rain_mm']
+        : null;
+    $windMax = is_numeric($forecast['wind_speed_max_kmh'] ?? null)
+        ? (float)$forecast['wind_speed_max_kmh']
+        : null;
+    $gustMax = is_numeric($forecast['wind_gusts_max_kmh'] ?? null)
+        ? (float)$forecast['wind_gusts_max_kmh']
+        : null;
+    $weatherCode = is_numeric($forecast['weather_code'] ?? null)
+        ? (int)$forecast['weather_code']
+        : null;
+
+    $matches = [];
+    if ($selected['rain'] &&
+        (($rainProbability !== null && $rainProbability >= 50.0) ||
+         ($rainMm !== null && $rainMm >= 1.0))) {
+        $rainDetail = 'Rain expected';
+        $rainParts = [];
+        if ($rainProbability !== null) {
+            $rainParts[] = 'up to ' . (int)round($rainProbability) . '% chance';
+        }
+        if ($rainMm !== null) {
+            $rainParts[] = number_format($rainMm, 1) . ' mm forecast';
+        }
+        if ($rainParts !== []) {
+            $rainDetail .= ' (' . implode(', ', $rainParts) . ')';
+        }
+        $matches[] = $rainDetail;
+    }
+
+    if ($selected['wind'] &&
+        (($windMax !== null && $windMax >= 40.0) ||
+         ($gustMax !== null && $gustMax >= 60.0))) {
+        $windDetail = 'Strong winds';
+        $windParts = [];
+        if ($windMax !== null) {
+            $windParts[] = 'maximum ' . number_format($windMax, 0) . ' km/h';
+        }
+        if ($gustMax !== null) {
+            $windParts[] = 'gusts up to ' . number_format($gustMax, 0) . ' km/h';
+        }
+        if ($windParts !== []) {
+            $windDetail .= ' (' . implode(', ', $windParts) . ')';
+        }
+        $matches[] = $windDetail;
+    }
+
+    $severeWeatherCodes = [65, 67, 75, 82, 86, 95, 96, 99];
+    if ($selected['severe'] &&
+        (($weatherCode !== null && in_array($weatherCode, $severeWeatherCodes, true)) ||
+         ($gustMax !== null && $gustMax >= 70.0))) {
+        $matches[] = 'Severe weather risk (heavy precipitation, violent showers, heavy snow or thunderstorms)';
+    }
+
+    $locationName = getGaugeIqSetting(
+        $pdo,
+        'location_name',
+        (string)($config['pressure']['location_name'] ?? 'your location')
+    );
+    if ($matches === []) {
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No selected conditions met for ' . $today . '.');
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
+        printf("Daily forecast alert: no selected conditions met for %s.\\n", $today);
+        return;
+    }
+
+    $message = "Today's forecast for " . ($locationName !== '' ? $locationName : 'your location') .
+        ': ' . implode('; ', $matches) . '.';
+
+    try {
+        $push = new PushService($config, $pdo);
+        $result = $push->sendDetailed('GaugeIQ daily forecast', $message);
+        $sent = (int)($result['sent'] ?? 0);
+        $subscriptions = (int)($result['subscriptions'] ?? 0);
+        $status = $sent > 0
+            ? 'Sent to ' . $sent . ' device(s): ' . implode('; ', $matches) . '.'
+            : ($subscriptions === 0
+                ? 'Conditions matched, but no devices are subscribed.'
+                : 'Conditions matched, but push delivery failed for the subscribed device(s).');
+
+        // Mark the date once the scheduled evaluation/push attempt is complete.
+        // This prevents the existing half-hour cron from generating duplicates.
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', $status);
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
+        printf("Daily forecast alert: %s\\n", $status);
+    } catch (Throwable $e) {
+        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', $e->getMessage());
+        error_log('GaugeIQ daily forecast alert failed: ' . $e->getMessage());
+        // Leave the date unevaluated so the next scheduled cron may retry.
+    }
+}
+
 // Refresh the temporary, model-derived hourly backfill at most about once an hour.
 // This is deliberately non-fatal: an unavailable fallback must never stop normal
 // live monitoring or alert evaluation.
@@ -70,6 +238,10 @@ try {
     fwrite(STDERR, "Weather monitoring failed: " . $e->getMessage() . "\n");
     exit(1);
 }
+
+// Daily forecast notifications are independent of ordinary event-triggered alerts.
+// This call occurs before the normal alert code can exit early when no rule matches.
+evaluateDailyForecastAlert($pdo, $config, $current);
 
 $lookbackHours = 3;
 $lookbackSetting = $pdo->prepare(
