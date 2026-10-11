@@ -978,46 +978,10 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
             selector.dataset.serverLocationName = String(location.name || 'Saved location');
             selector.dataset.serverTimezone = String(location.timezone || 'auto');
         }
-        // A full page render updates all server-rendered gauges and their derived
-        // indicators together. Do this on explicit user selection, or if a
-        // remembered local location had drifted from the server's active one.
-        if (reloadAfterSync || serverCoordinatesChanged) {
-            window.location.reload();
-            return;
-        }
-        const p = new URLSearchParams({
-            latitude: String(location.latitude), longitude: String(location.longitude),
-            current: 'temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m',
-            daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum',
-            forecast_days: '4', wind_speed_unit: 'kmh',
-            timezone: location.timezone && location.timezone !== 'auto' ? location.timezone : 'auto'
-        });
-        const response = await fetch('https://api.open-meteo.com/v1/forecast?' + p, {cache:'no-store'});
-        const data = await response.json();
-        if (!response.ok || data.error || !data.current) throw new Error(data.reason || 'Weather data unavailable.');
-        const c = data.current, d = data.daily || {};
-        const fmt = (v, n=1) => Number.isFinite(Number(v)) ? Number(v).toFixed(n) : '—';
-        const put = (q, v) => { const e=document.querySelector(q); if(e)e.textContent=v; };
-        put('.temperature-summary-current > strong', fmt(c.temperature_2m)+'°C');
-        put('.temperature-feels-like-row span', 'Feels like '+fmt(c.apparent_temperature)+'°C');
-        const ranges=document.querySelectorAll('.temperature-summary-range div strong');
-        if(ranges[0])ranges[0].textContent=fmt(d.temperature_2m_max?.[0])+'°';
-        if(ranges[1])ranges[1].textContent=fmt(d.temperature_2m_min?.[0])+'°';
-        put('.pressure-readout-row .metric-value', fmt(c.surface_pressure)+' hPa');
-        put('.wind-heading-readout', Math.round(c.wind_direction_10m)+'° '+['N','NE','E','SE','S','SW','W','NW'][Math.round((((c.wind_direction_10m%360)+360)%360)/45)%8]);
-        put('.wind-speed-readout', fmt(c.wind_speed_10m)+' km/h wind');
-        const arrows=document.querySelector('.wind-direction-arrows');
-        if(arrows){
-            const bearing=((Number(c.wind_direction_10m)%360)+360)%360;
-            arrows.setAttribute('data-wind-degrees',String(bearing));
-            arrows.setAttribute('transform','rotate('+bearing+' 50 50)');
-        }
-        const score=document.getElementById('rainProbabilityScore'), fill=document.getElementById('rainProbabilityFill');
-        const prob=Number(d.precipitation_probability_max?.[0]);
-        if(score)score.textContent=Number.isFinite(prob)?Math.round(prob)+'%':'—';
-        if(fill)fill.style.width=(Number.isFinite(prob)?Math.max(0,Math.min(100,prob)):0)+'%';
-        if(name)name.textContent=location.name+' · '+Number(location.latitude).toFixed(3)+', '+Number(location.longitude).toFixed(3);
-        if(window.GaugeIQLoadHistory)window.GaugeIQLoadHistory(document.querySelector('.history-range-button.active')?.dataset.hours||24);
+        // Weather observations are captured by the scheduled server cron only.
+        // Reload to display the latest stored reading; never fetch live weather here.
+        window.location.reload();
+        return;
     } catch (error) {
         if(name)name.textContent=location.name+' · dashboard refresh failed';
         const status=document.getElementById('localWeatherStatus');
@@ -1131,28 +1095,8 @@ if (cronCopyButton && cronCommand) {
 }
 
 
-let gaugeIqHiddenAt = null;
-
-function refreshGaugeIqWhenReturning() {
-    if (gaugeIqHiddenAt === null) return;
-    const hiddenFor = Date.now() - gaugeIqHiddenAt;
-    gaugeIqHiddenAt = null;
-    if (hiddenFor >= 60 * 1000) {
-        window.location.reload();
-    }
-}
-
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        gaugeIqHiddenAt = Date.now();
-    } else if (document.visibilityState === 'visible') {
-        refreshGaugeIqWhenReturning();
-    }
-});
-
-window.addEventListener('pageshow', () => {
-    refreshGaugeIqWhenReturning();
-});
+// Returning to the app does not trigger a weather refresh. The scheduled
+// server monitor remains the sole source of new observations.
 
 
 const deviceViewButton = document.getElementById('deviceViewButton');
