@@ -886,9 +886,15 @@ async function loadWeatherChange() {
             const stabilityFill = document.getElementById('weatherStabilityFill');
             const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
             if (stabilityFill) {
-                stabilityFill.style.width = (100 - result.score * 10) + '%';
+                const score = Math.max(0, Math.min(10, Number(result.score) || 0));
+                stabilityFill.style.width = (100 - score * 10) + '%';
+
+                // Colour reflects the weather-change score; the alert flash is independent.
+                stabilityFill.classList.toggle('changing', score >= 4 && score < 7);
+                stabilityFill.classList.toggle('unstable', score >= 7);
+
                 const alertThreshold = Number(stabilityTrack?.dataset.weatherChangeAlertThreshold);
-                const warningActive = Number.isFinite(alertThreshold) && result.score >= alertThreshold;
+                const warningActive = Number.isFinite(alertThreshold) && alertThreshold > 0 && score >= alertThreshold;
                 stabilityFill.classList.toggle('warning', warningActive);
                 stabilityTrack?.classList.toggle('warning', warningActive);
             }
