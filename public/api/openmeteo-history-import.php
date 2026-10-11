@@ -82,11 +82,11 @@ try {
     $pdo = $db->pdo();
     migrateDatabase($pdo);
 
-    $settings = $pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude','active_location_longitude','active_location_name','active_location_timezone')")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $latitude = isset($settings['active_location_latitude']) ? (float)$settings['active_location_latitude'] : (float)($config['pressure']['latitude'] ?? NAN);
-    $longitude = isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN);
-    $locationName = (string)($settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
-    $timezone = 'UTC'; // Store canonical UTC timestamps so imported and live readings can be compared reliably.
+    $settings = $pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('location_latitude','location_longitude','location_name','active_location_latitude','active_location_longitude','active_location_name')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $latitude = isset($settings['location_latitude']) ? (float)$settings['location_latitude'] : (isset($settings['active_location_latitude']) ? (float)$settings['active_location_latitude'] : (float)($config['pressure']['latitude'] ?? NAN));
+    $longitude = isset($settings['location_longitude']) ? (float)$settings['location_longitude'] : (isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN));
+    $locationName = (string)($settings['location_name'] ?? $settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
+    $timezone = (string)($config['app']['timezone'] ?? 'UTC');
     if (!is_finite($latitude) || $latitude < -90 || $latitude > 90 || !is_finite($longitude) || $longitude < -180 || $longitude > 180) {
         openMeteoHistoryReply(422, ['error' => 'Configure valid location coordinates in GaugeIQ before importing history.']);
     }
@@ -124,7 +124,6 @@ try {
         if (!is_string($time) || $time === '') { $skipped++; continue; }
         $observedAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
         if (strlen($observedAt) === 16) $observedAt .= ':00';
-        if (!preg_match('/(?:Z|[+-]\\d{2}:?\\d{2})$/', $observedAt)) $observedAt .= 'Z';
         $exists->execute([$observedAt]);
         if ($exists->fetchColumn() !== false) { $skipped++; continue; }
         $val = static function (string $key) use ($hourly, $i): ?float {
