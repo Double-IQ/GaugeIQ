@@ -286,8 +286,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </div>
     <div class="local-weather-tools">
-        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Not confirmed yet — open the dashboard to start the automatic download.' ?></span></p>
-        <p><strong>Historical Forecast:</strong> <span id="historicalForecastStatus" role="status" aria-live="polite"><?= $historicalForecastCount >= 5000 ? 'Available — ' . number_format($historicalForecastCount) . ' hourly forecasts found.' : 'Checking and importing the last year automatically…' ?></span></p>
+        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Waiting for the automatic dashboard download to finish.' ?></span></p>
+        <p><strong>Historical Forecast:</strong> <span id="historicalForecastStatus" role="status" aria-live="polite"><?= $historicalForecastCount >= 5000 ? 'Available — ' . number_format($historicalForecastCount) . ' hourly forecasts found.' : 'Waiting for the automatic dashboard download to finish.' ?></span></p>
         <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Forecast probabilities are kept in a separate dataset so they cannot replace historical weather observations.</p>
     </div>
 </section>
