@@ -173,6 +173,34 @@ return " . var_export($config, true) . ";
                 $initialWeatherStatus = 'pending';
             }
 
+            // Prepare a recent hourly model fallback immediately during installation.
+            // It is best-effort: a provider failure must not invalidate the installation,
+            // and the scheduled monitor will retry it later.
+            $initialBackfillStatus = 'pending';
+            $initialBackfillCount = 0;
+            try {
+                $initialBackfillService = new PressureService($config, $db->pdo());
+                $initialBackfillCount = $initialBackfillService->refreshRecentBackfill(24);
+
+                $backfillStatusStmt = $db->pdo()->prepare(
+                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`'
+                );
+                $backfillStatusStmt->execute(['recent_backfill_last_success_at', gmdate('c')]);
+                $backfillStatusStmt->execute(['recent_backfill_last_error', '']);
+                $initialBackfillStatus = 'success';
+            } catch (Throwable $initialBackfillError) {
+                try {
+                    $backfillErrorStmt = $db->pdo()->prepare(
+                        'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                         ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`'
+                    );
+                    $backfillErrorStmt->execute(['recent_backfill_last_error', $initialBackfillError->getMessage()]);
+                } catch (Throwable) {
+                    // Recent fallback status is optional during installation.
+                }
+            }
+
             $success = true;
         } catch (Throwable $e) {
             $errors[] = $e->getMessage();
@@ -205,6 +233,11 @@ return " . var_export($config, true) . ";
                 <p>Your first live weather reading has been downloaded and saved.</p>
             <?php else: ?>
                 <p>The installation is complete, but the first live weather check could not finish yet. GaugeIQ will retry on its next scheduled check.</p>
+            <?php endif; ?>
+            <?php if (($initialBackfillStatus ?? 'pending') === 'success'): ?>
+                <p>The temporary recent-hourly fallback is ready (<?= (int)($initialBackfillCount ?? 0) ?> readings). The two meters will use it only if live readings are insufficient.</p>
+            <?php else: ?>
+                <p>The recent-hourly fallback could not be downloaded yet. GaugeIQ will retry it during scheduled monitoring.</p>
             <?php endif; ?>
             <p>Open the GaugeIQ home page and enable notifications on your iPhone.</p>
             <a class="button" href="../index.php">Open GaugeIQ</a>
