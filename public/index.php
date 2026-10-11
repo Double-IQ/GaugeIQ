@@ -628,7 +628,25 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
     <p id="status" class="status"></p>
 </main>
+<?php
+$historyAutoStart = gmdate('Y-m-d', strtotime('-1 year'));
+$historyAutoEnd = gmdate('Y-m-d', strtotime('yesterday'));
+$historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
+$historyWeatherCountStmt->execute(['Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
+$historyWeatherCount = (int)$historyWeatherCountStmt->fetchColumn();
+$historyForecastCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at >= ? AND forecast_at <= ?");
+$historyForecastCountStmt->execute([$historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
+$historyForecastCount = (int)$historyForecastCountStmt->fetchColumn();
+?>
+<div id="historicalDatasetStatus"
+     hidden
+     data-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>"
+     data-start="<?= htmlspecialchars($historyAutoStart, ENT_QUOTES) ?>"
+     data-end="<?= htmlspecialchars($historyAutoEnd, ENT_QUOTES) ?>"
+     data-weather-count="<?= $historyWeatherCount ?>"
+     data-forecast-count="<?= $historyForecastCount ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
+<script src="js/openmeteo-history.js?v=20261011-dashboard-auto-backfill"></script>
 <script src="js/app.js?v=20261011-admin-location-history"></script>
 </body>
 </html>
