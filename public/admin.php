@@ -548,8 +548,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <form method="post" action="admin-update.php">
             <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
             <input type="hidden" name="version" id="adminUpdateVersion">
-            <input type="hidden" name="package_url" id="adminPackageUrl">
-            <input type="hidden" name="checksum_url" id="adminChecksumUrl">
             <button type="submit">Install update</button>
         </form>
     </div>
