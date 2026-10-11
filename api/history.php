@@ -11,6 +11,8 @@ try {
     $db = new Database($config);
     $pdo = $db->pdo();
     $allHistory = strtolower(trim((string)($_GET['hours'] ?? '24'))) === 'all';
+    $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
+    try { $historyTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 
     if ($allHistory) {
         // Historical imports and live cron observations share this same table.
@@ -30,19 +32,20 @@ try {
     }
 
     $hours = min(8760, max(1, (int)($_GET['hours'] ?? 24)));
-    $since = gmdate('c', time() - ($hours * 3600));
+    $since = (new DateTimeImmutable('now', $historyTimezone))->modify('-' . $hours . ' hours')->format('Y-m-d H:i:s');
+    $sinceDay = substr($since, 0, 10);
 
-    // For recent windows, created_at is the UTC ingestion/check time used by
-    // GaugeIQ's live monitor. Imported station observations use their observation date
-    // as created_at, so they naturally appear only in matching recent ranges.
+    // Filter by observation time, not ingestion time, so historical imports appear
+    // in the correct graph range. Date-prefix matching handles legacy ISO timestamps
+    // (with T/Z) alongside imported local timestamps (with a space).
     $stmt = $pdo->prepare(
         'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
                 wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source
          FROM gaugeiq_pressure_readings
-         WHERE created_at >= ?
+         WHERE observed_at >= ?
          ORDER BY observed_at ASC, id ASC'
     );
-    $stmt->execute([$since]);
+    $stmt->execute([$sinceDay]);
 
     echo json_encode([
         'hours' => $hours,
