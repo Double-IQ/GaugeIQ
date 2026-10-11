@@ -61,7 +61,14 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
 
     $now = new DateTimeImmutable('now', $timezone);
     $today = $now->format('Y-m-d');
-    if ($now->format('H:i') < $scheduledTime) {
+    $scheduledDateTime = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $today . ' ' . $scheduledTime, $timezone);
+    if (!$scheduledDateTime || $now < $scheduledDateTime) {
+        return;
+    }
+    // Allow the next normal half-hour cron check to deliver the alert. If the
+    // chosen time was missed by more than an hour, skip the stale notification.
+    $minutesLate = (int)floor(($now->getTimestamp() - $scheduledDateTime->getTimestamp()) / 60);
+    if ($minutesLate > 59) {
         return;
     }
     if (getGaugeIqSetting($pdo, 'daily_forecast_alert_last_evaluated_date') === $today) {
