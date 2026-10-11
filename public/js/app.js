@@ -156,7 +156,7 @@ function handleWindDeviceOrientation(event) {
         // second orientation event stream overwrite it with a different alpha
         // value and make the dial appear to jump.
         windCompassNativeHeadingSeen = true;
-        heading = event.webkitCompassHeading + screenOffset;
+        heading = event.webkitCompassHeading; // Native iOS heading is already the compass heading; do not apply screen rotation twice.
     } else if (!windCompassNativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
         // Fallback for devices without a native compass heading. Never use
         // relative alpha because it does not reliably identify geographic north.
