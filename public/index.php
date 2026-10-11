@@ -644,9 +644,11 @@ $historyForecastCount = (int)$historyForecastCountStmt->fetchColumn();
      data-start="<?= htmlspecialchars($historyAutoStart, ENT_QUOTES) ?>"
      data-end="<?= htmlspecialchars($historyAutoEnd, ENT_QUOTES) ?>"
      data-weather-count="<?= $historyWeatherCount ?>"
-     data-forecast-count="<?= $historyForecastCount ?>"></div>
+     data-forecast-count="<?= $historyForecastCount ?>"
+     data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>"
+     data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/openmeteo-history.js?v=20261011-dashboard-auto-backfill"></script>
+<script src="js/openmeteo-history.js?v=20261011-dashboard-auto-backfill-2"></script>
 <script src="js/app.js?v=20261011-admin-location-history"></script>
 </body>
 </html>
