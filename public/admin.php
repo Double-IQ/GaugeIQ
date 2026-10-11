@@ -234,6 +234,7 @@ $dailyForecastAlertWind = gaugeSetting($pdo, 'daily_forecast_alert_wind', '1') =
 $dailyForecastAlertSevere = gaugeSetting($pdo, 'daily_forecast_alert_severe', '1') === '1';
 $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_evaluated_date', '') ?? '';
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
+$dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' ? (int)$stabilityAlertThresholdValue : null;
 $allRules = $rules->all();
@@ -480,6 +481,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="alert-help muted">The daily check runs with your existing scheduled monitor. With a 30-minute cron, delivery is at the first check at or after your chosen time (normally within 30 minutes). Only selected conditions trigger a notification; if several match, GaugeIQ combines them into one message.</p>
         <?php if ($dailyForecastAlertLastDate !== ''): ?>
             <p class="daily-forecast-last-status" role="status">Last daily forecast check: <?= h($dailyForecastAlertLastDate) ?><?= $dailyForecastAlertLastStatus !== '' ? ' · ' . h($dailyForecastAlertLastStatus) : '' ?></p>
+        <?php endif; ?>
+        <?php if ($dailyForecastAlertLastError !== ''): ?>
+            <p class="monitor-warning">Daily forecast alert issue: <?= h($dailyForecastAlertLastError) ?></p>
         <?php endif; ?>
     </form>
 </section>
