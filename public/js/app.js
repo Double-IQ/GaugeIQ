@@ -554,6 +554,14 @@ function weatherCodeSeverity(code) {
     return 0;
 }
 
+function weatherReadingTimestamp(item) {
+    // Prefer the source's observation timestamp so hourly backfilled estimates
+    // remain in their true time window instead of appearing newly created.
+    const value = item?.timestamp || item?.observed_at || item?.created_at;
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : NaN;
+}
+
 function weatherReadingsWindow(readings) {
     const fields = {
         temperature: 'temperature_c',
@@ -566,15 +574,28 @@ function weatherReadingsWindow(readings) {
         cloud: 'cloud_cover_percent',
         weatherCode: 'weather_code'
     };
-    return readings
+    const sorted = readings
         .map(item => {
-            const row = {};
+            const row = { source: item.source ?? null };
             Object.entries(fields).forEach(([key, source]) => { row[key] = weatherNumeric(item[source]); });
-            row.time = new Date(item.created_at || item.observed_at).getTime();
+            row.time = weatherReadingTimestamp(item);
             return row;
         })
         .filter(row => Number.isFinite(row.time))
         .sort((a, b) => a.time - b.time);
+
+    // Prefer actual live readings at duplicated timestamps and prevent model
+    // backfill duplicates from giving one hourly period extra weight.
+    const byTime = new Map();
+    sorted.forEach(row => {
+        const existing = byTime.get(row.time);
+        if (!existing ||
+            (existing.source === 'Open-Meteo Recent Backfill' && row.source !== 'Open-Meteo Recent Backfill') ||
+            existing.source === row.source) {
+            byTime.set(row.time, row);
+        }
+    });
+    return [...byTime.values()].sort((a, b) => a.time - b.time);
 }
 
 function weatherFieldPair(readings, field) {
@@ -784,7 +805,7 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     for (let day = 1; day <= 14; day++) {
         const windowEnd = latestTime - day * dayMs;
         const windowReadings = readings.filter(item => {
-            const timestamp = new Date(item.created_at || item.observed_at).getTime();
+            const timestamp = weatherReadingTimestamp(item);
             return Number.isFinite(timestamp) && timestamp >= windowEnd - windowMs && timestamp <= windowEnd;
         });
         const result = weatherChangeScore(windowReadings);
@@ -824,35 +845,63 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=336&include_recent_backfill=1', { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
-        // Imported station observations belong in history graphs, not the live
-        // short-window change score. Legacy source-less live records remain eligible.
+        // Imported station observations stay out of the live meter window.
+        // Recent model backfill is considered only when live-only calculations
+        // cannot produce their required result.
         const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
+        const responseTime = new Date(data.to || Date.now()).getTime();
+        const referenceTime = Number.isFinite(responseTime) ? responseTime : Date.now();
+        const currentWindowStart = referenceTime - 6 * 60 * 60 * 1000;
+        const inCurrentWindow = item => {
+            const timestamp = weatherReadingTimestamp(item);
+            return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= referenceTime + 300000;
+        };
+        const readings = liveReadings.filter(inCurrentWindow);
+        const liveResult = weatherChangeScore(readings);
+        const liveTrend = weatherConditionsTrend(readings);
+        let result = liveResult;
+        let trend = liveTrend;
+        let usedRecentBackfillForScore = false;
+        let usedRecentBackfillForTrend = false;
+        const recentBackfill = allReadings.filter(item =>
+            item.source === 'Open-Meteo Recent Backfill' && inCurrentWindow(item)
+        );
+
+        if ((liveResult.score === null || liveTrend.score === null) && recentBackfill.length > 0) {
+            const combinedReadings = [...readings, ...recentBackfill];
+            if (liveResult.score === null) {
+                result = weatherChangeScore(combinedReadings);
+                usedRecentBackfillForScore = true;
+            }
+            if (liveTrend.score === null) {
+                trend = weatherConditionsTrend(combinedReadings);
+                usedRecentBackfillForTrend = true;
+            }
+        }
+
         const latestTime = liveReadings.reduce((latest, item) => {
-            const timestamp = new Date(item.created_at || item.observed_at).getTime();
+            const timestamp = weatherReadingTimestamp(item);
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
         }, 0);
-        const currentWindowStart = latestTime - 6 * 60 * 60 * 1000;
-        const readings = liveReadings.filter(item => {
-            const timestamp = new Date(item.created_at || item.observed_at).getTime();
-            return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= latestTime;
-        });
-        const result = weatherChangeScore(readings);
-        const trend = weatherConditionsTrend(readings);
         const baselineElement = document.getElementById('weatherBaselineStatus');
-        if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
+        if (baselineElement && latestTime > 0 && Number.isFinite(result.score) && !usedRecentBackfillForScore) {
             const baseline = weatherLocalBaseline(liveReadings, result.score, latestTime);
-            const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
+            const ageMinutes = Math.max(0, Math.round((referenceTime - latestTime) / 60000));
             baselineElement.textContent = baseline.text + (ageMinutes > 90
-                ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
+                ? ' Latest live reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
-            baselineElement.textContent = latestTime > 0
-                ? 'Not enough valid current readings to compare against the recent local pattern.'
-                : 'No historical readings are available yet to establish a local baseline.';
+            if (usedRecentBackfillForScore) {
+                baselineElement.textContent = 'Recent hourly model estimates are temporarily included because the live reading window is insufficient. The live-only local baseline comparison is paused until enough live readings return.';
+            } else {
+                baselineElement.textContent = latestTime > 0
+                    ? 'Not enough valid current readings to compare against the recent local pattern.'
+                    : 'No live readings are available yet to establish a local baseline.';
+            }
         }
 
         const conditionsElement = document.getElementById('weatherConditions');
@@ -862,14 +911,18 @@ async function loadWeatherChange() {
 
         if (result.score === null) {
             scoreElement.textContent = '—';
-            summaryElement.textContent = result.summary;
+            summaryElement.textContent = result.summary + (usedRecentBackfillForScore
+                ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
+                : '');
             reasonsElement.innerHTML = '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>';
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
             scoreElement.textContent = result.score.toFixed(1);
             scoreElement.setAttribute('aria-label', 'Weather change intensity ' + result.score.toFixed(1) + ' out of 10');
-            summaryElement.textContent = result.summary;
+            summaryElement.textContent = result.summary + (usedRecentBackfillForScore
+                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+                : '');
             const level = result.score >= 6 ? 'high' : result.score >= 3 ? 'moderate' : 'low';
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(result.score));
@@ -933,7 +986,9 @@ async function loadWeatherChange() {
         }
 
         if (trend.score === null) {
-            if (trendSummary) trendSummary.textContent = 'Gathering more valid readings…';
+            if (trendSummary) trendSummary.textContent = 'Gathering more valid readings…' + (usedRecentBackfillForTrend
+                ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
+                : '');
             if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
             if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>→ Gathering readings…</b>';
@@ -943,7 +998,9 @@ async function loadWeatherChange() {
                 trendIcon.dataset.trend = trend.label.toLowerCase();
                 trendIcon.setAttribute('aria-label', trend.label);
             }
-            if (trendSummary) trendSummary.textContent = trend.label + ' · ' + trend.explanation;
+            if (trendSummary) trendSummary.textContent = trend.label + ' · ' + trend.explanation + (usedRecentBackfillForTrend
+                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+                : '');
             if (trendReasons) {
                 trendReasons.innerHTML = trend.reasons.length
                     ? trend.reasons.map(reason => '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong> (' + (reason.points > 0 ? '+' : '') + reason.points + ' weighted trend points (weight ' + reason.weight + '): ' + reason.explanation + '</span></div>').join('')
