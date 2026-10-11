@@ -31,7 +31,7 @@ function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
 
 try {
     $current = $service->fetchCurrent();
-$previous = $service->record($current);
+    $previous = $service->record($current);
     setGaugeIqStatus($pdo, 'monitor_last_success_at', gmdate('c'));
     setGaugeIqStatus($pdo, 'monitor_last_error', '');
 
@@ -43,6 +43,32 @@ $previous = $service->record($current);
     }
     fwrite(STDERR, "Weather monitoring failed: " . $e->getMessage() . "\n");
     exit(1);
+}
+
+// Refresh the temporary, model-derived hourly backfill at most about once an hour.
+ // This is deliberately non-fatal: an unavailable fallback must never stop normal
+ // live monitoring or alert evaluation.
+try {
+    $backfillStatusQuery = $pdo->prepare(
+        "SELECT value FROM gaugeiq_settings WHERE `key` = 'recent_backfill_last_success_at' LIMIT 1"
+    );
+    $backfillStatusQuery->execute();
+    $lastBackfillValue = $backfillStatusQuery->fetchColumn();
+    $lastBackfillTime = is_string($lastBackfillValue) ? strtotime($lastBackfillValue) : false;
+
+    if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
+        $backfillCount = $service->refreshRecentBackfill(24);
+        setGaugeIqStatus($pdo, 'recent_backfill_last_success_at', gmdate('c'));
+        setGaugeIqStatus($pdo, 'recent_backfill_last_error', '');
+        printf("Recent hourly fallback refreshed: %d rows.\\n", $backfillCount);
+    }
+} catch (Throwable $backfillError) {
+    try {
+        setGaugeIqStatus($pdo, 'recent_backfill_last_error', $backfillError->getMessage());
+    } catch (Throwable) {
+        // A fallback-status failure must not interrupt the live monitor.
+    }
+    fwrite(STDERR, "Recent hourly fallback refresh failed (live monitoring continues): " . $backfillError->getMessage() . "\\n");
 }
 
 $lookbackHours = 3;
