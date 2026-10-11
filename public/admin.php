@@ -96,6 +96,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt->execute([(string)$hours]);
                 $notice = 'Alert comparison window saved.';
+            } elseif ($action === 'save_stability_threshold') {
+                $thresholdInput = trim((string)($_POST['stability_alert_threshold'] ?? ''));
+                if ($thresholdInput === '') {
+                    saveGaugeSetting($pdo, 'stability_alert_threshold', '');
+                    $notice = 'Stability bar alert threshold disabled.';
+                } else {
+                    if (!is_numeric($thresholdInput) || (float)$thresholdInput < 1 || (float)$thresholdInput > 10) {
+                        throw new InvalidArgumentException('The stability alert threshold must be between 1 and 10, or left disabled.');
+                    }
+                    $threshold = (int)round((float)$thresholdInput);
+                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)$threshold);
+                    $notice = 'Stability bar alert threshold saved.';
+                }
             } elseif ($action === 'delete') {
                 $rules->delete((int)$_POST['id']);
                 $notice = 'Alert deleted.';
@@ -172,6 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $lookbackHours = alertLookback($pdo);
+$stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
+$stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' ? (int)$stabilityAlertThresholdValue : null;
 $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
 
@@ -361,6 +376,30 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <button type="submit">Save window</button>
         </div>
         <p class="alert-help muted">For example, with a 60-minute cron and a 3-hour window, a new reading is compared with the reading closest to 3 hours earlier. Range: 1–168 hours.</p>
+    </form>
+</section>
+
+<section class="card alert-window-card">
+    <div class="section-heading">
+        <div>
+            <h2>Stability bar alert threshold</h2>
+            <p class="muted">Choose the weather-change score at which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
+        </div>
+    </div>
+    <form method="post" class="lookback-form">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="save_stability_threshold">
+        <label for="stability_alert_threshold">Flash when the weather-change score reaches</label>
+        <div class="lookback-controls">
+            <select id="stability_alert_threshold" name="stability_alert_threshold">
+                <option value="" <?= $stabilityAlertThreshold === null ? 'selected' : '' ?>>Disabled</option>
+                <?php for ($thresholdOption = 1; $thresholdOption <= 10; $thresholdOption++): ?>
+                    <option value="<?= $thresholdOption ?>" <?= $stabilityAlertThreshold === $thresholdOption ? 'selected' : '' ?>><?= $thresholdOption ?> / 10</option>
+                <?php endfor; ?>
+            </select>
+            <button type="submit">Save threshold</button>
+        </div>
+        <p class="alert-help muted">The bar keeps its green, yellow or red colour. Reaching this score adds the flashing warning and yellow track border. Leave it disabled if you do not want the bar to flash.</p>
     </form>
 </section>
 
