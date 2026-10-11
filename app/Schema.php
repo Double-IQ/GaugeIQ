@@ -270,4 +270,39 @@ SQL);
         $db->exec("UPDATE gaugeiq_schema SET version = 9");
         $version = 9;
     }
+
+    if ($version === 9) {
+        if ($driver === 'mysql') {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_rain_forecasts (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    forecast_at VARCHAR(64) NOT NULL,
+    precipitation_probability_percent DOUBLE NOT NULL,
+    precipitation_mm DOUBLE NULL,
+    rain_mm DOUBLE NULL,
+    temperature_c DOUBLE NULL,
+    source VARCHAR(64) NOT NULL,
+    created_at VARCHAR(64) NOT NULL,
+    UNIQUE KEY uq_gaugeiq_rain_forecast_time (forecast_at),
+    INDEX idx_gaugeiq_rain_forecast_source (source)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL);
+        } else {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_rain_forecasts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    forecast_at TEXT NOT NULL UNIQUE,
+    precipitation_probability_percent REAL NOT NULL,
+    precipitation_mm REAL NULL,
+    rain_mm REAL NULL,
+    temperature_c REAL NULL,
+    source TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_gaugeiq_rain_forecast_source ON gaugeiq_rain_forecasts(source);
+SQL);
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 10");
+        $version = 10;
+    }
 }
