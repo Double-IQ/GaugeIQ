@@ -8,6 +8,7 @@ $lockPath = $configDir . '/installed.lock';
 
 require_once $root . '/app/Database.php';
 require_once $root . '/app/Schema.php';
+require_once $root . '/app/PressureService.php';
 
 $autoload = $root . '/vendor/autoload.php';
 if (is_file($autoload)) {
@@ -136,6 +137,35 @@ return " . var_export($config, true) . ";
                 throw new RuntimeException('GaugeIQ could not lock the installer.');
             }
 
+            // Take the first live weather snapshot as part of installation,
+            // after configuration, database schema, and location are ready.
+            // A temporary provider/network failure must not invalidate installation:
+            // save the error for diagnostics and let normal monitoring retry later.
+            try {
+                $initialService = new PressureService($config, $db->pdo());
+                $initialReading = $initialService->fetchCurrent();
+                $initialService->record($initialReading);
+
+                $statusStmt = $db->pdo()->prepare(
+                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`'
+                );
+                $statusStmt->execute(['monitor_last_success_at', gmdate('c')]);
+                $statusStmt->execute(['monitor_last_error', '']);
+                $initialWeatherStatus = 'success';
+            } catch (Throwable $initialWeatherError) {
+                try {
+                    $statusStmt = $db->pdo()->prepare(
+                        'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                         ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`'
+                    );
+                    $statusStmt->execute(['monitor_last_error', $initialWeatherError->getMessage()]);
+                } catch (Throwable) {
+                    // Do not fail installation because status reporting also failed.
+                }
+                $initialWeatherStatus = 'pending';
+            }
+
             $success = true;
         } catch (Throwable $e) {
             $errors[] = $e->getMessage();
@@ -161,6 +191,11 @@ return " . var_export($config, true) . ";
         <section class="card success">
             <strong>GaugeIQ is installed.</strong>
             <p>Your database and configuration are ready.</p>
+            <?php if (($initialWeatherStatus ?? 'pending') === 'success'): ?>
+                <p>Your first live weather reading has been downloaded and saved.</p>
+            <?php else: ?>
+                <p>The installation is complete, but the first live weather check could not finish yet. GaugeIQ will retry on its next scheduled check.</p>
+            <?php endif; ?>
             <p>Open the GaugeIQ home page and enable notifications on your iPhone.</p>
             <a class="button" href="../index.php">Open GaugeIQ</a>
         </section>
