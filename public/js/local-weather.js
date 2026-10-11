@@ -11,7 +11,6 @@
         option.textContent = select.dataset.serverLocationName || select.dataset.configLocationName || 'Configured GaugeIQ location';
         select.replaceChildren(option);
         select.value = 'server-current';
-        window.GaugeIQSelectDashboardLocation?.('server-current', null);
     }
 
     if (document.readyState === 'loading') {
