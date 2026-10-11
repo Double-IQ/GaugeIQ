@@ -175,7 +175,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No selected conditions met for ' . $today . '.');
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
-        printf("Daily forecast alert: no selected conditions met for %s.\\n", $today);
+        printf("Daily forecast alert: no selected conditions met for %s.\n", $today);
         return;
     }
 
@@ -198,7 +198,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', $status);
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
-        printf("Daily forecast alert: %s\\n", $status);
+        printf("Daily forecast alert: %s\n", $status);
     } catch (Throwable $e) {
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', $e->getMessage());
         error_log('GaugeIQ daily forecast alert failed: ' . $e->getMessage());
