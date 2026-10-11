@@ -534,10 +534,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <button type="button" class="history-range-button active" data-hours="24">24h</button>
             <button type="button" class="history-range-button" data-hours="48">48h</button>
             <button type="button" class="history-range-button" data-hours="168">7d</button>
-            <button type="button" class="history-range-button" data-hours="720" data-local-range="true" hidden>30d</button>
-            <button type="button" class="history-range-button" data-hours="2160" data-local-range="true" hidden>90d</button>
-            <button type="button" class="history-range-button" data-hours="8760" data-local-range="true" hidden>1y</button>
-            <button type="button" class="history-range-button" data-hours="all" data-local-range="true" hidden>All</button>
+            <button type="button" class="history-range-button" data-hours="720">30d</button>
+            <button type="button" class="history-range-button" data-hours="2160">90d</button>
+            <button type="button" class="history-range-button" data-hours="8760">1y</button>
+            <button type="button" class="history-range-button" data-hours="all">All</button>
         </div>
         <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
