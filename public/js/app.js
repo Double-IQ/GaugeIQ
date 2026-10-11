@@ -1026,7 +1026,7 @@ async function loadHistory(hours = 24) {
     historyStatus.textContent = 'Loading history…';
 
     try {
-        const requestedHours = hours === 'all' ? 'all' : Math.min(8760, Math.max(1, Number(hours) || 24));
+        const requestedHours = Math.min(720, Math.max(1, Number(hours) || 24));
         const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
         if (!response.ok) throw new Error('History unavailable.');
         const data = await response.json();
@@ -1044,12 +1044,7 @@ async function loadHistory(hours = 24) {
             if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone);
         });
 
-        const rangeLabel = hours === 'all' ? 'all history'
-            : hours === 168 ? '7 days'
-            : hours === 720 ? '30 days'
-            : hours === 2160 ? '90 days'
-            : hours === 8760 ? '1 year'
-            : hours + ' hours';
+        const rangeLabel = hours >= 720 ? '30 days' : hours === 168 ? '7 days' : hours + ' hours';
         historyStatus.textContent = readings.length
             ? rangeLabel.charAt(0).toUpperCase() + rangeLabel.slice(1) + ' · ' + readings.length + ' server readings'
             : 'No server readings have been recorded for this time range yet.';
@@ -1070,7 +1065,7 @@ document.querySelectorAll('.history-range-button').forEach(button => {
         if (button.hidden) return;
         document.querySelectorAll('.history-range-button').forEach(item => item.classList.remove('active'));
         button.classList.add('active');
-        loadHistory(button.dataset.hours === 'all' ? 'all' : Number(button.dataset.hours));
+        loadHistory(Math.min(720, Number(button.dataset.hours) || 24));
     });
 });
 
