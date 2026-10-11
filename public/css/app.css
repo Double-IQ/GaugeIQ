@@ -208,7 +208,8 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-direction-to-marker{fill:#facc15;stroke:#facc15;stroke-width:.4px}
 .wind-compass-labels .minor{font-size:3.2px}
 .wind-center{fill:var(--card);stroke:var(--border);stroke-width:1}
-.wind-direction-arrows{transform-box:view-box;transform-origin:50px 50px}
+/* The SVG needle uses rotate(angle 50 50) in viewBox units.
+   Do not override its origin in CSS pixels; that offsets the needle when rotated. */
 .wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding:1px 0 0}
 .wind-gauge-center .wind-heading-readout{font-size:clamp(17px,4.6vw,25px);line-height:1;letter-spacing:-.045em;color:var(--text);font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
 .wind-gauge-center .wind-speed-readout{font-size:9px;line-height:1.2;font-weight:750;color:var(--muted);margin-top:7px;letter-spacing:.01em;white-space:nowrap}
