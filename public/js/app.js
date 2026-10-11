@@ -837,7 +837,7 @@ async function loadWeatherChange() {
         } else {
             scoreElement.textContent = result.score.toFixed(1);
             scoreElement.setAttribute('aria-label', 'Weather change intensity ' + result.score.toFixed(1) + ' out of 10');
-            summaryElement.textContent = result.summary + ' · ' + result.score.toFixed(1) + '/10 · ' + result.coverage + '/9 signals available';
+            summaryElement.textContent = result.summary;
             const level = result.score >= 6 ? 'high' : result.score >= 3 ? 'moderate' : 'low';
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(result.score));
