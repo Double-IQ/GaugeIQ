@@ -253,7 +253,7 @@ final class GaugeIQUpdater
                 continue;
             }
             $relative = substr($name, strlen($prefix));
-            if ($relative === '' || str_starts_with($relative, '/') || str_contains($relative, '\')) {
+            if ($relative === '' || str_starts_with($relative, '/') || str_contains($relative, '\\')) {
                 throw new RuntimeException('The release package contains an unsafe path.');
             }
             foreach (explode('/', $relative) as $part) {
