@@ -33,8 +33,8 @@
         return chunks;
     }
 
-    async function importSource(source, label, statusElement) {
-        const chunks = chunksBetween(start, end);
+    async function importSource(source, label, statusElement, from = start, to = end) {
+        const chunks = chunksBetween(from, to);
         let inserted = 0;
         let skipped = 0;
         let covered = 0;
@@ -66,30 +66,51 @@
         return covered;
     }
 
+    function recentRepairStart() {
+        const endTime = new Date(end + 'T00:00:00Z').getTime();
+        const requestedStart = endTime - 6 * 24 * 60 * 60 * 1000;
+        const configuredStart = new Date(start + 'T00:00:00Z').getTime();
+        return dateString(new Date(Math.max(requestedStart, configuredStart)));
+    }
+
+    function coverageIsStale(latestValue) {
+        const latestDate = String(latestValue || '').slice(0, 10);
+        return latestDate === '' || latestDate < end;
+    }
+
     async function run() {
         const weatherCount = Number(panel.dataset.weatherCount) || 0;
         const forecastCount = Number(panel.dataset.forecastCount) || 0;
+        const weatherLatest = panel.dataset.weatherLatest || '';
+        const forecastLatest = panel.dataset.forecastLatest || '';
+        const repairStart = recentRepairStart();
         let completed = [];
 
         try {
             if (weatherCount < 5000) {
                 const count = await importSource('weather', 'Historical Weather', weatherStatus);
                 completed.push('weather (' + count.toLocaleString() + ' records)');
+            } else if (coverageIsStale(weatherLatest)) {
+                const count = await importSource('weather', 'Recent historical weather backfill', weatherStatus, repairStart, end);
+                completed.push('recent weather backfill (' + count.toLocaleString() + ' records)');
             } else {
-                setStatus(weatherStatus, 'Available — ' + weatherCount.toLocaleString() + ' hourly records found.');
+                setStatus(weatherStatus, 'Available — ' + weatherCount.toLocaleString() + ' hourly records found through ' + String(weatherLatest).slice(0, 10) + '.');
             }
 
             if (forecastCount < 5000) {
                 const count = await importSource('forecast', 'Historical Forecast', forecastStatus);
                 completed.push('forecast (' + count.toLocaleString() + ' records)');
+            } else if (coverageIsStale(forecastLatest)) {
+                const count = await importSource('forecast', 'Recent historical forecast backfill', forecastStatus, repairStart, end);
+                completed.push('recent forecast backfill (' + count.toLocaleString() + ' records)');
             } else {
-                setStatus(forecastStatus, 'Available — ' + forecastCount.toLocaleString() + ' hourly forecasts found.');
+                setStatus(forecastStatus, 'Available — ' + forecastCount.toLocaleString() + ' hourly forecasts found through ' + String(forecastLatest).slice(0, 10) + '.');
             }
 
             if (completed.length) {
-                setStatus(message, 'Automatic historical download finished for the configured location. ' + completed.join(' and ') + '.');
+                setStatus(message, 'Automatic historical download/backfill finished for the configured location. ' + completed.join(' and ') + '.');
             } else {
-                setStatus(message, 'Both historical datasets are already present for the configured location and date range. No duplicate import was needed.');
+                setStatus(message, 'Both historical datasets are present through the latest required date. No duplicate import was needed.');
             }
         } catch (error) {
             setStatus(message, (error instanceof Error ? error.message : 'Historical download failed.') + ' Existing records are preserved and duplicate timestamps are skipped.');
