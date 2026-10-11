@@ -10,28 +10,10 @@ header('Cache-Control: no-store');
 try {
     $db = new Database($config);
     $pdo = $db->pdo();
-    $allHistory = strtolower(trim((string)($_GET['hours'] ?? '24'))) === 'all';
     $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
     try { $historyTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 
-    if ($allHistory) {
-        // Historical imports and live cron observations share this same table.
-        // Return the full timeline in observation-time order for the History graphs.
-        $stmt = $pdo->query(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
-                    wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source
-             FROM gaugeiq_pressure_readings
-             ORDER BY observed_at ASC, id ASC'
-        );
-        $readings = $stmt->fetchAll();
-        echo json_encode([
-            'hours' => 'all',
-            'readings' => $readings,
-        ], JSON_UNESCAPED_SLASHES);
-        exit;
-    }
-
-    $hours = min(8760, max(1, (int)($_GET['hours'] ?? 24)));
+    $hours = min(720, max(1, (int)($_GET['hours'] ?? 24)));
     $since = (new DateTimeImmutable('now', $historyTimezone))->modify('-' . $hours . ' hours')->format('Y-m-d H:i:s');
     $sinceDay = substr($since, 0, 10);
 
