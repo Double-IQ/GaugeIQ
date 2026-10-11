@@ -251,6 +251,40 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </form>
 </section>
 
+ <section class="card history-management-card" aria-labelledby="openMeteoHistoryTitle">
+    <div class="section-heading">
+        <div>
+            <h2 id="openMeteoHistoryTitle">Open-Meteo historical weather</h2>
+            <p class="muted">Download historical hourly weather on the server and save it to GaugeIQ's database for the dashboard graphs.</p>
+        </div>
+    </div>
+    <form id="openMeteoHistoryForm" class="local-weather-tools" aria-label="Open-Meteo server-side historical import">
+        <input type="hidden" id="openMeteoHistoryCsrf" value="<?= h($csrf) ?>">
+        <div>
+            <label for="openMeteoHistorySource">Historical source</label>
+            <select id="openMeteoHistorySource" class="theme-select">
+                <option value="weather">Historical Weather (longer archive)</option>
+                <option value="forecast">Historical Forecast (from 2022)</option>
+            </select>
+        </div>
+        <div class="local-weather-api-options">
+            <div>
+                <label for="openMeteoHistoryStart">Start date</label>
+                <input id="openMeteoHistoryStart" type="date" min="1940-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('-1 year'))) ?>">
+            </div>
+            <div>
+                <label for="openMeteoHistoryEnd">End date</label>
+                <input id="openMeteoHistoryEnd" type="date" min="1940-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>">
+            </div>
+        </div>
+        <div class="local-weather-actions">
+            <button type="submit" id="openMeteoHistoryImport">Import to server database</button>
+        </div>
+        <p id="openMeteoHistoryStatus" class="muted" role="status" aria-live="polite">Choose a date range and source. Imports are processed in chunks; existing observation timestamps are not inserted again.</p>
+        <p class="muted local-weather-help">The import uses the configured GaugeIQ location and stores timestamps in UTC. It only imports rows with valid surface pressure because the current readings table requires pressure; it never substitutes sea-level pressure. Live monitoring continues. Historical model estimates and actual NOAA station observations remain distinguishable by their source.</p>
+    </form>
+</section>
+
  <section class="card history-management-card" aria-labelledby="historyManagementTitle">
     <div class="section-heading">
         <div>
@@ -492,6 +526,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 <script src="js/noaa-history.js?v=20261011-ghcnh-station-preview" defer></script>
+<script src="js/openmeteo-history.js?v=20261011-server-history" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
