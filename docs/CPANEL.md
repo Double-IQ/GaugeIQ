@@ -241,6 +241,41 @@ Do not replace the existing SQLite database with a new empty database and do not
 The in-app release check is informational; it must not expose configuration, VAPID credentials, database contents, or internal exception details.
 
 
+## 15. Automatically sync cPanel with GitHub main
+
+For the deployment at `weather.bichet.co.za`, the Git working copy is:
+
+```
+/home/bicheveb/GaugeIQ
+```
+
+The subdomain document root should remain:
+
+```
+/home/bicheveb/GaugeIQ/public
+```
+
+The repository includes `cron/update-from-github.sh`. It fetches `origin/main` and updates the checkout only when Git can do a safe fast-forward. It does not reset the checkout or overwrite edits to tracked files. If the branch has diverged, tracked local edits exist, or the fetch fails, it stops and writes the reason to:
+
+```
+/home/bicheveb/logs/gaugeiq-auto-update.log
+```
+
+### Add the separate deployment cron
+
+In cPanel, open **Cron Jobs** and add a job that runs every 30 minutes. Use this command:
+
+```
+/bin/bash /home/bicheveb/GaugeIQ/cron/update-from-github.sh
+```
+
+Set the minute field to `*/30` and the hour, day, month, and weekday fields to `*`.
+
+This deployment cron is independent of `cron/check-pressure.php`, which continues to collect/check weather data on its own schedule. Do not replace or remove the weather-monitor cron.
+
+The Git updater advances tracked files from `main`; it does not run Composer or perform arbitrary database migrations. Review changes that introduce dependencies or require manual migration steps. Keep local configuration and persistent storage backed up as usual.
+
+
 ## Security rules
 
 - Use HTTPS.
