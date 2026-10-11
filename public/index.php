@@ -655,8 +655,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <?php
-$historyAutoStart = gmdate('Y-m-d', strtotime('-1 year'));
-$historyAutoEnd = gmdate('Y-m-d', strtotime('yesterday'));
+$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+$historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
+$historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
 $historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
 $historyWeatherCountStmt->execute(['Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
 $historyWeatherCount = (int)$historyWeatherCountStmt->fetchColumn();
