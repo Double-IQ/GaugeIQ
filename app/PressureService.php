@@ -48,7 +48,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,rain_sum,wind_speed_10m_max,wind_gusts_10m_max&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -302,6 +302,7 @@ final class PressureService
         $lows = $daily['temperature_2m_min'] ?? [];
         $rainProbabilities = $daily['precipitation_probability_max'] ?? [];
         $rainTotals = $daily['precipitation_sum'] ?? [];
+        $rainOnlyTotals = $daily['rain_sum'] ?? [];
         $windSpeedMaxima = $daily['wind_speed_10m_max'] ?? [];
         $windGustMaxima = $daily['wind_gusts_10m_max'] ?? [];
 
@@ -317,6 +318,7 @@ final class PressureService
                 'temperature_min_c' => isset($lows[$index]) && is_numeric($lows[$index]) ? (float)$lows[$index] : null,
                 'rain_probability_percent' => isset($rainProbabilities[$index]) && is_numeric($rainProbabilities[$index]) ? max(0, min(100, (int)round((float)$rainProbabilities[$index]))) : null,
                 'rain_mm' => isset($rainTotals[$index]) && is_numeric($rainTotals[$index]) ? max(0.0, (float)$rainTotals[$index]) : 0.0,
+                'rain_only_mm' => isset($rainOnlyTotals[$index]) && is_numeric($rainOnlyTotals[$index]) ? max(0.0, (float)$rainOnlyTotals[$index]) : null,
                 'wind_speed_max_kmh' => isset($windSpeedMaxima[$index]) && is_numeric($windSpeedMaxima[$index]) ? max(0.0, (float)$windSpeedMaxima[$index]) : null,
                 'wind_gusts_max_kmh' => isset($windGustMaxima[$index]) && is_numeric($windGustMaxima[$index]) ? max(0.0, (float)$windGustMaxima[$index]) : null,
             ];
