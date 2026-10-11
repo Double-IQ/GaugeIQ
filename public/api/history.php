@@ -51,9 +51,17 @@ try {
 
     $fromTimestamp = $from->getTimestamp();
     $nowTimestamp = $now->getTimestamp();
+    $includeRecentBackfill = (string)($_GET['include_recent_backfill'] ?? '') === '1';
     $readings = [];
 
     foreach ($rows as $row) {
+        // Recent model-derived values are exposed to the meter fallback only
+        // when explicitly requested; they are not presented as observations
+        // on the ordinary history charts.
+        if (!$includeRecentBackfill && ($row['source'] ?? null) === 'Open-Meteo Recent Backfill') {
+            continue;
+        }
+
         $observedAt = trim((string)($row['observed_at'] ?? ''));
         if ($observedAt === '') {
             continue;
