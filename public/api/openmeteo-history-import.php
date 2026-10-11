@@ -31,13 +31,18 @@ $source = (string)($input['source'] ?? 'weather');
 if (!in_array($source, ['weather', 'forecast'], true)) openMeteoHistoryReply(422, ['error' => 'Choose a supported historical data source.']);
 $startText = (string)($input['start_date'] ?? '');
 $endText = (string)($input['end_date'] ?? '');
-$start = DateTimeImmutable::createFromFormat('!Y-m-d', $startText, new DateTimeZone('UTC'));
-$end = DateTimeImmutable::createFromFormat('!Y-m-d', $endText, new DateTimeZone('UTC'));
-$yesterday = new DateTimeImmutable('yesterday', new DateTimeZone('UTC'));
-if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 366) {
-    openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 367 calendar days, ending no later than yesterday.']);
+try {
+    $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+} catch (Throwable) {
+    $historyTimezone = new DateTimeZone('UTC');
 }
-if ($source === 'forecast' && $start < new DateTimeImmutable('2022-01-01', new DateTimeZone('UTC'))) {
+$start = DateTimeImmutable::createFromFormat('!Y-m-d', $startText, $historyTimezone);
+$end = DateTimeImmutable::createFromFormat('!Y-m-d', $endText, $historyTimezone);
+$yesterday = new DateTimeImmutable('yesterday', $historyTimezone);
+if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 366) {
+    openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 367 calendar days, ending no later than yesterday in GaugeIQ\'s configured timezone.']);
+}
+if ($source === 'forecast' && $start < new DateTimeImmutable('2022-01-01', $historyTimezone)) {
     openMeteoHistoryReply(422, ['error' => 'Historical Forecast data is available from 2022 onward.']);
 }
 function openMeteoFetch(string $url): array
