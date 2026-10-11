@@ -374,8 +374,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                             <?php endforeach; ?>
                         </g>
                         <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                            <path class="wind-direction-from-arrow" d="M50 20.5 L44 31 L48 28 L48 39 L52 39 L52 28 L56 31 Z"></path>
-                            <path class="wind-direction-to-marker" d="M50 79.5 L56 69 L52 72 L52 61 L48 61 L48 72 L44 69 Z"></path>
+                            <path class="wind-direction-from-arrow" d="M50 17.5 L44 28 L48 25 L48 36 L52 36 L52 25 L56 28 Z"></path>
+                            <path class="wind-direction-to-marker" d="M50 82.5 L56 72 L52 75 L52 64 L48 64 L48 75 L44 72 Z"></path>
                         </g>
                     </g>
 
