@@ -440,7 +440,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="section-heading">
         <div>
             <h2 id="dailyForecastAlertTitle">Daily forecast notification</h2>
-            <p class="muted">Get one morning notification if any of your selected conditions are forecast for today. This uses the existing push notification setup.</p>
+            <p class="muted">Get one daily notification if any of your selected conditions are forecast for today. This uses the existing push notification setup.</p>
         </div>
         <span class="status-pill <?= $dailyForecastAlertEnabled ? 'status-good' : 'status-warn' ?>"><?= $dailyForecastAlertEnabled ? '● Enabled' : '● Disabled' ?></span>
     </div>
