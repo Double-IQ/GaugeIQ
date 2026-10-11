@@ -77,17 +77,13 @@ try {
     $monitorError = $settings['monitor_last_error'] ?? '';
     $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
     $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
-    $weatherChangeAlertThreshold = null;
-    $weatherChangeAlertRules = $pdo->query("SELECT configuration_json FROM gaugeiq_alert_rules WHERE metric = 'weather_change' AND enabled = 1 AND condition_type = 'above'")->fetchAll();
-    foreach ($weatherChangeAlertRules as $weatherChangeAlertRule) {
-        $weatherChangeConfig = json_decode((string)$weatherChangeAlertRule['configuration_json'], true);
-        $weatherChangeThreshold = isset($weatherChangeConfig['value']) ? (float)$weatherChangeConfig['value'] : null;
-        if ($weatherChangeThreshold !== null && $weatherChangeThreshold >= 1 && $weatherChangeThreshold <= 10) {
-            $weatherChangeAlertThreshold = $weatherChangeAlertThreshold === null
-                ? $weatherChangeThreshold
-                : min($weatherChangeAlertThreshold, $weatherChangeThreshold);
-        }
-    }
+    $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'stability_alert_threshold' LIMIT 1");
+    $stabilityThresholdStmt->execute();
+    $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
+    $weatherChangeAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
+        && (float)$stabilityThresholdValue >= 1 && (float)$stabilityThresholdValue <= 10)
+        ? (int)$stabilityThresholdValue
+        : null;
     $recentAlerts = $pdo->query(
         'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
     )->fetchAll();
