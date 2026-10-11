@@ -608,6 +608,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <p id="status" class="status"></p>
 </main>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/app.js?v=20261011-compass-heading-source"></script>
+<script src="js/app.js?v=20261011-compass-native-heading"></script>
 </body>
 </html>
