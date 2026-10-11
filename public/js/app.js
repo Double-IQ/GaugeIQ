@@ -56,6 +56,9 @@ let windCompassEnabled = windCompassCanRequestPermission
         ? storedWindCompassState === 'true'
         : true;
 let windCompassListening = false;
+// Once the browser supplies iOS's native compass heading, ignore fallback alpha
+// readings from the parallel absolute-orientation event stream.
+let windCompassNativeHeadingSeen = false;
 let windCompassHeading = null;
 let windCompassTargetHeading = null;
 let windCompassRotation = null;
@@ -121,8 +124,8 @@ function applyWindCompassHeading(heading) {
             // keeps its geographic bearing inside that rotating disc.
             const compassDisc = windGauge.querySelector('.wind-compass-orientation');
             if (compassDisc) {
-                // Rotate only the dial face. The wind needle is a separate,
-                // concentric SVG layer so the centre hub cannot cover or offset it.
+                // The dial and wind-direction indicators share this SVG group
+                // and rotate around the same exact centre (50, 50).
                 compassDisc.setAttribute(
                     'transform',
                     'rotate(' + (-windCompassRotation).toFixed(2) + ' 50 50)'
@@ -149,11 +152,14 @@ function handleWindDeviceOrientation(event) {
     const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
 
     if (Number.isFinite(event.webkitCompassHeading)) {
-        // The native heading describes the device's top edge. Offset it so the
-        // dial follows the top edge of the screen in portrait or landscape.
+        // Prefer the iPhone's native compass reading. Once seen, don't let a
+        // second orientation event stream overwrite it with a different alpha
+        // value and make the dial appear to jump.
+        windCompassNativeHeadingSeen = true;
         heading = event.webkitCompassHeading + screenOffset;
-    } else if (event.absolute === true && Number.isFinite(event.alpha)) {
-        // Relative alpha is not geographic north; only use absolute readings.
+    } else if (!windCompassNativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
+        // Fallback for devices without a native compass heading. Never use
+        // relative alpha because it does not reliably identify geographic north.
         heading = 360 - event.alpha + screenOffset;
     }
 
