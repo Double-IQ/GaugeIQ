@@ -109,9 +109,9 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
     $rainProbability = is_numeric($forecast['rain_probability_percent'] ?? null)
         ? (float)$forecast['rain_probability_percent']
         : null;
-    $rainMm = is_numeric($forecast['rain_mm'] ?? null)
-        ? (float)$forecast['rain_mm']
-        : null;
+    $rainMm = is_numeric($forecast['rain_only_mm'] ?? null)
+        ? (float)$forecast['rain_only_mm']
+        : (is_numeric($forecast['rain_mm'] ?? null) ? (float)$forecast['rain_mm'] : null);
     $windMax = is_numeric($forecast['wind_speed_max_kmh'] ?? null)
         ? (float)$forecast['wind_speed_max_kmh']
         : null;
@@ -123,8 +123,10 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         : null;
 
     $matches = [];
+    $snowOnlyWeatherCodes = [71, 73, 75, 77, 85, 86];
+    $snowForecast = $weatherCode !== null && in_array($weatherCode, $snowOnlyWeatherCodes, true);
     if ($selected['rain'] &&
-        (($rainProbability !== null && $rainProbability >= 50.0) ||
+        (($rainProbability !== null && $rainProbability >= 50.0 && !$snowForecast) ||
          ($rainMm !== null && $rainMm >= 1.0))) {
         $rainDetail = 'Rain expected';
         $rainParts = [];
