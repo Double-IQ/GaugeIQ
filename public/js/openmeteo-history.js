@@ -10,6 +10,7 @@
     const weatherStatus = document.getElementById('historicalWeatherStatus');
     const forecastStatus = document.getElementById('historicalForecastStatus');
     const message = document.getElementById('historicalDatasetMessage');
+    const setStatus = (element, text) => { if (element) element.textContent = text; };
 
     const dateString = date => date.toISOString().slice(0, 10);
     const nextDay = value => {
@@ -40,7 +41,7 @@
 
         for (let index = 0; index < chunks.length; index += 1) {
             const [from, to] = chunks[index];
-            statusElement.textContent = 'Downloading ' + label.toLowerCase() + ' (' + (index + 1) + '/' + chunks.length + '): ' + from + ' to ' + to + '…';
+            setStatus(statusElement, 'Downloading ' + label.toLowerCase() + ' (' + (index + 1) + '/' + chunks.length + '): ' + from + ' to ' + to + '…');
             const response = await fetch('api/openmeteo-history-import.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -61,8 +62,7 @@
             covered += Number(result.covered_rows) || 0;
         }
 
-        statusElement.textContent = 'Available — ' + covered.toLocaleString() + ' hourly records. ' +
-            inserted.toLocaleString() + ' added; ' + skipped.toLocaleString() + ' already present or unavailable.';
+        setStatus(statusElement, 'Available — ' + covered.toLocaleString() + ' hourly records. ' + inserted.toLocaleString() + ' added; ' + skipped.toLocaleString() + ' already present or unavailable.');
         return covered;
     }
 
@@ -76,26 +76,24 @@
                 const count = await importSource('weather', 'Historical Weather', weatherStatus);
                 completed.push('weather (' + count.toLocaleString() + ' records)');
             } else {
-                weatherStatus.textContent = 'Available — ' + weatherCount.toLocaleString() + ' hourly records found.';
+                setStatus(weatherStatus, 'Available — ' + weatherCount.toLocaleString() + ' hourly records found.');
             }
 
             if (forecastCount < 5000) {
                 const count = await importSource('forecast', 'Historical Forecast', forecastStatus);
                 completed.push('forecast (' + count.toLocaleString() + ' records)');
             } else {
-                forecastStatus.textContent = 'Available — ' + forecastCount.toLocaleString() + ' hourly forecasts found.';
+                setStatus(forecastStatus, 'Available — ' + forecastCount.toLocaleString() + ' hourly forecasts found.');
             }
 
             if (completed.length) {
-                message.textContent = 'Automatic historical download finished for the configured location. ' +
-                    completed.join(' and ') + '. Reload Admin to refresh the saved dataset counts.';
+                setStatus(message, 'Automatic historical download finished for the configured location. ' + completed.join(' and ') + '.');
             } else {
-                message.textContent = 'Both historical datasets are already present for the configured location and date range. No duplicate import was needed.';
+                setStatus(message, 'Both historical datasets are already present for the configured location and date range. No duplicate import was needed.');
             }
         } catch (error) {
-            message.textContent = (error instanceof Error ? error.message : 'Historical download failed.') +
-                ' Reload Admin to retry; existing records are preserved and duplicate timestamps are skipped.';
-            message.dataset.state = 'error';
+            setStatus(message, (error instanceof Error ? error.message : 'Historical download failed.') + ' Existing records are preserved and duplicate timestamps are skipped.');
+            if (message) message.dataset.state = 'error';
         }
     }
 
