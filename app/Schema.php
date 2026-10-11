@@ -263,4 +263,11 @@ SQL);
         $db->exec("UPDATE gaugeiq_schema SET version = 8");
         $version = 8;
     }
+
+    if ($version === 8) {
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'feels_like_c', $driver === 'mysql' ? 'DOUBLE NULL' : 'REAL NULL');
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'forecast_json', $driver === 'mysql' ? 'LONGTEXT NULL' : 'TEXT NULL');
+        $db->exec("UPDATE gaugeiq_schema SET version = 9");
+        $version = 9;
+    }
 }
