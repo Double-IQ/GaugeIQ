@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../app/AdminAuth.php';
 require_once __DIR__ . '/../../app/GaugeIQUpdater.php';
 require_once __DIR__ . '/../../app/Version.php';
 
@@ -9,11 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
 header('X-Content-Type-Options: nosniff');
 
-if (!AdminAuth::check()) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'Administrator login required.']);
-    exit;
-}
+// Release metadata is public; this endpoint reveals no configuration or secrets.
 
 try {
     $updater = new GaugeIQUpdater(dirname(__DIR__, 2));
