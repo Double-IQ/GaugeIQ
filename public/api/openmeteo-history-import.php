@@ -123,7 +123,6 @@ try {
     foreach ($times as $i => $time) {
         if (!is_string($time) || $time === '') { $skipped++; continue; }
         $observedAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
-        if (strlen($observedAt) === 16) $observedAt .= ':00';
         $exists->execute([$observedAt]);
         if ($exists->fetchColumn() !== false) { $skipped++; continue; }
         $val = static function (string $key) use ($hourly, $i): ?float {
