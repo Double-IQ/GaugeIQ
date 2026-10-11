@@ -661,9 +661,15 @@ $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format
 $historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
 $historyWeatherCountStmt->execute(['Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
 $historyWeatherCount = (int)$historyWeatherCountStmt->fetchColumn();
-$historyForecastCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at >= ? AND forecast_at <= ?");
-$historyForecastCountStmt->execute([$historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
+$historyWeatherLatestStmt = $pdo->prepare("SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE source = ?");
+$historyWeatherLatestStmt->execute(['Open-Meteo Historical Weather']);
+$historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '');
+$historyForecastCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE source = ? AND forecast_at >= ? AND forecast_at <= ?");
+$historyForecastCountStmt->execute(['Open-Meteo Historical Forecast', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
 $historyForecastCount = (int)$historyForecastCountStmt->fetchColumn();
+$historyForecastLatestStmt = $pdo->prepare("SELECT MAX(forecast_at) FROM gaugeiq_rain_forecasts WHERE source = ?");
+$historyForecastLatestStmt->execute(['Open-Meteo Historical Forecast']);
+$historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '');
 ?>
 <div id="historicalDatasetStatus"
      hidden
@@ -672,6 +678,8 @@ $historyForecastCount = (int)$historyForecastCountStmt->fetchColumn();
      data-end="<?= htmlspecialchars($historyAutoEnd, ENT_QUOTES) ?>"
      data-weather-count="<?= $historyWeatherCount ?>"
      data-forecast-count="<?= $historyForecastCount ?>"
+     data-weather-latest="<?= htmlspecialchars($historyWeatherLatest, ENT_QUOTES) ?>"
+     data-forecast-latest="<?= htmlspecialchars($historyForecastLatest, ENT_QUOTES) ?>"
      data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>"
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
