@@ -13,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !AdminAuth::verifyCsrf((string)($_P
 }
 
 $version = trim((string)($_POST['version'] ?? ''));
+if ($version === '') {
+    header('Location: admin.php?update_error=1');
+    exit;
+}
 
 try {
     $updater = new GaugeIQUpdater(dirname(__DIR__));
