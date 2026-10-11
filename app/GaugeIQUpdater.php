@@ -96,13 +96,20 @@ final class GaugeIQUpdater
      * This prevents tampered hidden fields or stale browser data from selecting
      * arbitrary package URLs or an older release.
      */
-    public function installRelease(string $expectedVersion = ''): array
+    public function installRelease(string $expectedVersion): array
     {
+        require_once $this->root . '/app/Version.php';
         $release = $this->latestReleaseInfo();
         $version = ltrim(trim($expectedVersion), 'v');
 
-        if ($version !== '' && !hash_equals($release['latest_version'], $version)) {
+        if ($version === '') {
+            throw new RuntimeException('No release version was selected.');
+        }
+        if (!hash_equals($release['latest_version'], $version)) {
             throw new RuntimeException('The latest GaugeIQ release changed. Refresh Admin and try again.');
+        }
+        if (!version_compare($release['latest_version'], GaugeIQVersion::VERSION, '>')) {
+            throw new RuntimeException('GaugeIQ is already at the latest published stable release.');
         }
         if (!$release['assets_ready']) {
             throw new RuntimeException('The latest GaugeIQ release package or checksum is not ready yet.');
