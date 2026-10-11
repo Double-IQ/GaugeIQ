@@ -73,6 +73,48 @@ try {
         )->fetch() ?: [];
     }
 
+    // On a brand-new installation, fetch one current snapshot immediately
+    // instead of leaving the dashboard empty until the first cron run.
+    // Existing readings are never refreshed just because the dashboard is opened.
+    if (!$latest) {
+        try {
+            $initialReading = $service->fetchCurrent();
+            $service->record($initialReading);
+            $saveStatus = static function (PDO $pdo, string $key, string $value): void {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)'
+                );
+                $stmt->execute([$key, $value]);
+            };
+            $saveStatus($pdo, 'monitor_last_success_at', gmdate('c'));
+            $saveStatus($pdo, 'monitor_last_error', '');
+
+            $latest = $pdo->query(
+                "SELECT * FROM gaugeiq_pressure_readings
+                 WHERE source IS NULL OR source = 'Open-Meteo'
+                 ORDER BY id DESC LIMIT 1"
+            )->fetch() ?: null;
+            if ($latest) {
+                $pressureHistory = [
+                    'pressure_low' => $latest['pressure_hpa'],
+                    'pressure_high' => $latest['pressure_hpa'],
+                ];
+            }
+        } catch (Throwable $initialCheckError) {
+            // Keep the dashboard available even when Open-Meteo is temporarily unavailable.
+            try {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)'
+                );
+                $stmt->execute(['monitor_last_error', $initialCheckError->getMessage()]);
+            } catch (Throwable) {
+                // The primary fetch error is intentionally non-fatal to dashboard rendering.
+            }
+        }
+    }
+
     $current = $latest;
     if ($current) {
         $decodedForecast = json_decode((string)($current['forecast_json'] ?? '[]'), true);
@@ -569,23 +611,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="satellite-caption">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
     </section>
 
-    <?php if (!$monitorHealthy): ?>
-    <section class="card cron-setup-card" aria-labelledby="cronSetupTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="cronSetupTitle">Monitoring setup</h2>
-                <p class="muted">GaugeIQ has not seen a recent successful scheduled check. Make sure the cPanel Cron Job is configured to run every <?= $checkMinutes ?> minutes.</p>
-            </div>
-            <span class="status-pill status-warn">● Cron check needed</span>
-        </div>
-        <div class="cron-command-wrap">
-            <code id="cronCommand"><?= htmlspecialchars($cronCommand, ENT_QUOTES) ?></code>
-            <button type="button" class="secondary cron-copy-button" id="cronCopyButton">Copy command</button>
-        </div>
-        <p class="cron-help">In cPanel, open <strong>Cron Jobs</strong>, choose <strong>Every <?= $checkMinutes ?> minutes</strong>, paste the command above, and save it. You only need to do this once. Once a scheduled check succeeds, this setup reminder will disappear.</p>
-        <p id="cronCopyStatus" class="cron-copy-status" role="status"></p>
-    </section>
-    <?php endif; ?>
+
 
     <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
         <div class="section-heading">
