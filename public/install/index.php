@@ -18,8 +18,15 @@ if (is_file($autoload)) {
 header('Cache-Control: no-store');
 
 if (is_file($lockPath)) {
+    // The installer URL can remain saved in an iPhone Home Screen shortcut.
+    // Once installation is complete, send that shortcut to the real app entry point.
+    if (is_file($configPath)) {
+        header('Location: ../', true, 302);
+        exit;
+    }
+
     http_response_code(404);
-    exit('GaugeIQ is already installed.');
+    exit('GaugeIQ installation is locked. Contact the administrator to restore the existing configuration.');
 }
 
 $errors = [];
@@ -178,7 +185,10 @@ return " . var_export($config, true) . ";
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>Set up GaugeIQ</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GaugeIQ">
+<link rel="manifest" href="../manifest.json">
+<title>GaugeIQ</title>
 <link rel="stylesheet" href="install.css">
 </head>
 <body>
