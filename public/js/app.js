@@ -1001,7 +1001,7 @@ async function loadHistory(hours = 24) {
         if (!response.ok) throw new Error('History unavailable.');
         const data = await response.json();
         const readings = Array.isArray(data.readings) ? data.readings : [];
-        const chartTimezone = document.getElementById('weatherLocationSelect')?.dataset.serverTimezone || null;
+        const chartTimezone = document.querySelector('.history-card')?.dataset.historyTimezone || null;
 
         const charts = [
             ['pressureChart', readings.map(r => ({ value: r.pressure_hpa == null ? NaN : Number(r.pressure_hpa), time: r.timestamp || r.observed_at })), ' hPa', 1],
