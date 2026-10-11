@@ -276,13 +276,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
  <section class="card history-management-card" id="historicalDatasetStatus"
-    data-csrf="<?= h($csrf) ?>"
-    data-start="<?= h($historicalStart) ?>"
-    data-end="<?= h($historicalEnd) ?>"
     data-weather-count="<?= $historicalWeatherCount ?>"
     data-forecast-count="<?= $historicalForecastCount ?>"
-    data-latitude="<?= h($locationLatitude) ?>"
-    data-longitude="<?= h($locationLongitude) ?>"
     aria-labelledby="openMeteoHistoryTitle">
     <div class="section-heading">
         <div>
@@ -291,7 +286,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
     </div>
     <div class="local-weather-tools">
-        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Checking and importing the last year automatically…' ?></span></p>
+        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Not confirmed yet — open the dashboard to start the automatic download.' ?></span></p>
         <p><strong>Historical Forecast:</strong> <span id="historicalForecastStatus" role="status" aria-live="polite"><?= $historicalForecastCount >= 5000 ? 'Available — ' . number_format($historicalForecastCount) . ' hourly forecasts found.' : 'Checking and importing the last year automatically…' ?></span></p>
         <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Forecast probabilities are kept in a separate dataset so they cannot replace historical weather observations.</p>
     </div>
@@ -562,7 +557,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 <script src="js/noaa-history.js?v=20261011-ghcnh-station-preview" defer></script>
-<script src="js/openmeteo-history.js?v=20261011-auto-rain-backfill" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
