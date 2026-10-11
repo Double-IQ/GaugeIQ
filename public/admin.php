@@ -50,6 +50,15 @@ $locationName = gaugeSetting($pdo, 'location_name', (string)$config['pressure'][
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
 
+$historicalStart = gmdate('Y-m-d', strtotime('-1 year'));
+$historicalEnd = gmdate('Y-m-d', strtotime('yesterday'));
+$weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
+$weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
+$historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
+$historicalForecastCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at >= ? AND forecast_at <= ?");
+$historicalForecastCountStmt->execute([$historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
+$historicalForecastCount = (int)$historicalForecastCountStmt->fetchColumn();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
         $errors[] = 'Your session expired. Please try again.';
@@ -266,41 +275,29 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </form>
 </section>
 
- <section class="card history-management-card" aria-labelledby="openMeteoHistoryTitle">
+ <section class="card history-management-card" id="historicalDatasetStatus"
+    data-csrf="<?= h($csrf) ?>"
+    data-start="<?= h($historicalStart) ?>"
+    data-end="<?= h($historicalEnd) ?>"
+    data-weather-count="<?= $historicalWeatherCount ?>"
+    data-forecast-count="<?= $historicalForecastCount ?>"
+    data-latitude="<?= h($locationLatitude) ?>"
+    data-longitude="<?= h($locationLongitude) ?>"
+    aria-labelledby="openMeteoHistoryTitle">
     <div class="section-heading">
         <div>
-            <h2 id="openMeteoHistoryTitle">Open-Meteo historical weather</h2>
-            <p class="muted">Download historical hourly weather on the server and save it to GaugeIQ's database for the dashboard graphs.</p>
+            <h2 id="openMeteoHistoryTitle">Historical weather datasets</h2>
+            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather and historical forecasts for the configured location. Your existing weather records are kept; forecast probabilities are stored separately.</p>
         </div>
     </div>
-    <form id="openMeteoHistoryForm" class="local-weather-tools" aria-label="Open-Meteo server-side historical import">
-        <input type="hidden" id="openMeteoHistoryCsrf" value="<?= h($csrf) ?>">
-        <div>
-            <label for="openMeteoHistorySource">Historical source</label>
-            <select id="openMeteoHistorySource" class="theme-select">
-                <option value="weather">Historical Weather (longer archive)</option>
-                <option value="forecast">Historical Forecast (from 2022)</option>
-            </select>
-        </div>
-        <div class="local-weather-api-options">
-            <div>
-                <label for="openMeteoHistoryStart">Start date</label>
-                <input id="openMeteoHistoryStart" type="date" min="1940-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('-1 year'))) ?>">
-            </div>
-            <div>
-                <label for="openMeteoHistoryEnd">End date</label>
-                <input id="openMeteoHistoryEnd" type="date" min="1940-01-01" max="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>" value="<?= h(gmdate('Y-m-d', strtotime('yesterday'))) ?>">
-            </div>
-        </div>
-        <div class="local-weather-actions">
-            <button type="submit" id="openMeteoHistoryImport">Import to server database</button>
-        </div>
-        <p id="openMeteoHistoryStatus" class="muted" role="status" aria-live="polite">Choose a date range and source. Imports are processed in chunks; existing observation timestamps are not inserted again.</p>
-        <p class="muted local-weather-help">The import uses the configured GaugeIQ location and stores timestamps in UTC. It only imports rows with valid surface pressure because the current readings table requires pressure; it never substitutes sea-level pressure. Live monitoring continues. Historical model estimates and actual NOAA station observations remain distinguishable by their source.</p>
-    </form>
+    <div class="local-weather-tools">
+        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Checking and importing the last year automatically…' ?></span></p>
+        <p><strong>Historical Forecast:</strong> <span id="historicalForecastStatus" role="status" aria-live="polite"><?= $historicalForecastCount >= 5000 ? 'Available — ' . number_format($historicalForecastCount) . ' hourly forecasts found.' : 'Checking and importing the last year automatically…' ?></span></p>
+        <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Forecast probabilities are kept in a separate dataset so they cannot replace historical weather observations.</p>
+    </div>
 </section>
 
- <section class="card history-management-card" aria-labelledby="historyManagementTitle">
+<section class="card history-management-card" aria-labelledby="historyManagementTitle">
     <div class="section-heading">
         <div>
             <h2 id="historyManagementTitle">Historical station observations</h2>
@@ -565,7 +562,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 <script src="js/noaa-history.js?v=20261011-ghcnh-station-preview" defer></script>
-<script src="js/openmeteo-history.js?v=20261011-server-history" defer></script>
+<script src="js/openmeteo-history.js?v=20261011-auto-rain-backfill" defer></script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=4" defer></script>
 </main>
