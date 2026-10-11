@@ -786,22 +786,10 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
-        const isLocalHistory = selectedLocation !== 'server-current' && Boolean(window.GaugeIQLocalWeather);
-        let allReadings;
-        if (isLocalHistory) {
-            const localReadings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, 'all');
-            allReadings = localReadings.map(item => ({
-                ...item,
-                created_at: item.created_at || item.timestamp || item.observed_at,
-                observed_at: item.observed_at || item.timestamp
-            }));
-        } else {
-            const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
-            if (!response.ok) throw new Error('Unable to load recent readings.');
-            const data = await response.json();
-            allReadings = Array.isArray(data.readings) ? data.readings : [];
-        }
+        const response = await fetch('../api/history.php?hours=336', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load recent readings.');
+        const data = await response.json();
+        const allReadings = Array.isArray(data.readings) ? data.readings : [];
         // Imported station observations belong in history graphs, not the live
         // short-window change score. Legacy source-less live records remain eligible.
         const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
@@ -820,7 +808,7 @@ async function loadWeatherChange() {
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
             const baseline = weatherLocalBaseline(liveReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
-            baselineElement.textContent = (isLocalHistory ? 'Selected location history: ' : '') + baseline.text + (ageMinutes > 90
+            baselineElement.textContent = baseline.text + (ageMinutes > 90
                 ? ' Latest stored reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
@@ -938,10 +926,10 @@ async function selectDashboardLocation(locationId, location, reloadAfterSync = f
     const name = document.getElementById('dashboardLocationName');
     if (locationId === 'server-current') {
         location = {
-            name: selector?.dataset.configLocationName || 'Configured GaugeIQ location',
-            latitude: Number(selector?.dataset.configLatitude),
-            longitude: Number(selector?.dataset.configLongitude),
-            timezone: selector?.dataset.configTimezone || 'auto'
+            name: selector?.dataset.serverLocationName || selector?.dataset.configLocationName || 'Configured GaugeIQ location',
+            latitude: Number(selector?.dataset.serverLatitude),
+            longitude: Number(selector?.dataset.serverLongitude),
+            timezone: selector?.dataset.serverTimezone || selector?.dataset.configTimezone || 'auto'
         };
     }
     if (!location || !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) {
@@ -1032,22 +1020,12 @@ async function loadHistory(hours = 24) {
     historyStatus.textContent = 'Loading history…';
 
     try {
-        const selectedLocation = document.getElementById('weatherLocationSelect')?.value || 'server-current';
-        const isLocal = selectedLocation !== 'server-current';
-        let readings;
-        let chartTimezone = null;
-
-        if (isLocal && window.GaugeIQLocalWeather) {
-            readings = await window.GaugeIQLocalWeather.readingsFor(selectedLocation, hours);
-            const locations = await window.GaugeIQLocalWeather.allLocations();
-            chartTimezone = locations.find(location => location.id === selectedLocation)?.timezone || null;
-        } else {
-            const requestedHours = hours === 'all' ? 'all' : Math.min(8760, Math.max(1, Number(hours) || 24));
-            const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
-            if (!response.ok) throw new Error('History unavailable.');
-            const data = await response.json();
-            readings = Array.isArray(data.readings) ? data.readings : [];
-        }
+        const requestedHours = hours === 'all' ? 'all' : Math.min(8760, Math.max(1, Number(hours) || 24));
+        const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
+        if (!response.ok) throw new Error('History unavailable.');
+        const data = await response.json();
+        const readings = Array.isArray(data.readings) ? data.readings : [];
+        const chartTimezone = document.getElementById('weatherLocationSelect')?.dataset.serverTimezone || null;
 
         const charts = [
             ['pressureChart', readings.map(r => ({ value: r.pressure_hpa == null ? NaN : Number(r.pressure_hpa), time: r.timestamp || r.observed_at })), ' hPa', 1],
@@ -1066,10 +1044,9 @@ async function loadHistory(hours = 24) {
             : hours === 2160 ? '90 days'
             : hours === 8760 ? '1 year'
             : hours + ' hours';
-        const sourceLabel = isLocal ? 'local' : 'server';
         historyStatus.textContent = readings.length
-            ? rangeLabel.charAt(0).toUpperCase() + rangeLabel.slice(1) + ' · ' + readings.length + ' readings · ' + sourceLabel
-            : (isLocal ? 'No local readings in this time range. Try a longer range or All imported history.' : 'No readings have been recorded yet.');
+            ? rangeLabel.charAt(0).toUpperCase() + rangeLabel.slice(1) + ' · ' + readings.length + ' server readings'
+            : 'No server readings have been recorded for this time range yet.';
 
         const title = document.getElementById('historyTitle');
         if (title) title.textContent = 'History · ' + rangeLabel;
