@@ -179,7 +179,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261010-compass-rotation-stable">
+<link rel="stylesheet" href="css/app.css?v=20261011-compass-origin-fix-forecast-fallback">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -206,8 +206,13 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
     $dewPointC = $current ? (float)($current['dew_point_c'] ?? 0.0) : 0.0;
     $feelsLikeC = $current && isset($current['feels_like_c']) ? (float)$current['feels_like_c'] : $temperatureC;
-    $forecastHighC = $current ? ($current['forecast_high_c'] ?? null) : null;
-    $forecastLowC = $current ? ($current['forecast_low_c'] ?? null) : null;
+    $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
+    // Daily highs/lows are stored inside forecast_json, not as columns on the
+    // current-reading row. Read the first normalised forecast day for today's card.
+    $forecastHighValue = $forecast[0]['temperature_max_c'] ?? ($current['forecast_high_c'] ?? null);
+    $forecastLowValue = $forecast[0]['temperature_min_c'] ?? ($current['forecast_low_c'] ?? null);
+    $forecastHighC = is_numeric($forecastHighValue) ? (float)$forecastHighValue : null;
+    $forecastLowC = is_numeric($forecastLowValue) ? (float)$forecastLowValue : null;
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation')));
     $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
@@ -217,7 +222,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $pressureHigh = isset($pressureHistory['pressure_high']) ? (float)$pressureHistory['pressure_high'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
     $pressureRange = max(0.1, $pressureHigh - $pressureLow);
     $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
-    $forecast = $current && is_array($current['forecast'] ?? null) ? $current['forecast'] : [];
     $rainForecastAvailable = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm']);
     $rainForecastMm = $rainForecastAvailable ? max(0.0, (float)$forecast[0]['rain_mm']) : 0.0;
     $rainProbabilityPercent = $current && isset($forecast[0]['rain_probability_percent']) && is_numeric($forecast[0]['rain_probability_percent'])
