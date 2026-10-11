@@ -124,6 +124,175 @@ final class PressureService
         ];
     }
 
+    /**
+     * Refresh the last 24 hours of model-derived hourly values used only as a
+     * temporary fallback when live monitoring has too few recent readings.
+     * These rows are deliberately kept under their own source label.
+     */
+    public function refreshRecentBackfill(int $pastHours = 24): int
+    {
+        $pastHours = max(6, min(24, $pastHours));
+        [$latitude, $longitude] = $this->locationCoordinates();
+
+        $timezoneName = (string)($this->config['app']['timezone'] ?? 'UTC');
+        try {
+            $timezone = new DateTimeZone($timezoneName);
+        } catch (Throwable) {
+            $timezone = new DateTimeZone('UTC');
+        }
+
+        $url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'current' => 'temperature_2m',
+            'hourly' => 'temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m,rain,cloud_cover,weather_code',
+            'past_hours' => $pastHours,
+            'forecast_days' => 1,
+            'temperature_unit' => 'celsius',
+            'wind_speed_unit' => 'kmh',
+            'precipitation_unit' => 'mm',
+            'timezone' => $timezone->getName(),
+        ]);
+
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('Recent weather backfill requires PHP cURL.');
+        }
+
+        $curl = curl_init($url);
+        if ($curl === false) {
+            throw new RuntimeException('Could not initialise cURL for recent weather backfill.');
+        }
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_HTTPHEADER => ['User-Agent: GaugeIQ/0.2'],
+        ]);
+
+        $json = curl_exec($curl);
+        $curlError = curl_error($curl);
+        $httpStatus = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        if ($json === false) {
+            throw new RuntimeException(
+                'Recent weather backfill request failed: ' .
+                ($curlError !== '' ? $curlError : 'no cURL error was reported.') .
+                ($httpStatus > 0 ? ' HTTP status ' . $httpStatus . '.' : '')
+            );
+        }
+        if ($httpStatus < 200 || $httpStatus >= 300) {
+            throw new RuntimeException('Recent weather backfill returned HTTP status ' . $httpStatus . '.');
+        }
+
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        $hourly = $data['hourly'] ?? null;
+        $times = is_array($hourly) ? ($hourly['time'] ?? []) : [];
+        if (!is_array($hourly) || !is_array($times) || $times === []) {
+            throw new RuntimeException('Open-Meteo returned no hourly values for recent weather backfill.');
+        }
+
+        $now = new DateTimeImmutable('now', $timezone);
+        $cutoff = $now->modify('-' . ($pastHours + 1) . ' hours');
+        $futureLimit = $now->modify('+5 minutes');
+        $source = 'Open-Meteo Recent Backfill';
+        $createdAt = gmdate('c');
+        $number = static function (mixed $value): ?float {
+            return is_numeric($value) && is_finite((float)$value) ? (float)$value : null;
+        };
+
+        $findExisting = $this->db->prepare(
+            'SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? AND source = ? LIMIT 1'
+        );
+        $update = $this->db->prepare(
+            'UPDATE gaugeiq_pressure_readings
+             SET temperature_c = ?, feels_like_c = ?, dew_point_c = ?, pressure_hpa = ?,
+                 humidity_percent = ?, wind_speed_kmh = ?, wind_direction_degrees = ?,
+                 rainfall_mm = ?, cloud_cover_percent = ?, weather_code = ?, forecast_json = NULL,
+                 created_at = ?
+             WHERE id = ?'
+        );
+        $insert = $this->db->prepare(
+            'INSERT INTO gaugeiq_pressure_readings
+             (temperature_c, feels_like_c, dew_point_c, pressure_hpa, humidity_percent,
+              wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent,
+              weather_code, forecast_json, observed_at, created_at, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)'
+        );
+
+        $written = 0;
+        $this->db->beginTransaction();
+        try {
+            foreach ($times as $index => $time) {
+                if (!is_string($time) || $time === '') {
+                    continue;
+                }
+
+                try {
+                    $observedDate = new DateTimeImmutable($time, $timezone);
+                } catch (Throwable) {
+                    continue;
+                }
+                if ($observedDate < $cutoff || $observedDate > $futureLimit) {
+                    continue;
+                }
+
+                $pressure = $number($hourly['surface_pressure'][$index] ?? null);
+                if ($pressure === null || $pressure <= 0 || $pressure > 1200) {
+                    continue;
+                }
+
+                $temperature = $number($hourly['temperature_2m'][$index] ?? null);
+                $feelsLike = $number($hourly['apparent_temperature'][$index] ?? null);
+                $dewPoint = $number($hourly['dew_point_2m'][$index] ?? null);
+                $humidity = $number($hourly['relative_humidity_2m'][$index] ?? null);
+                $windSpeed = $number($hourly['wind_speed_10m'][$index] ?? null);
+                $windDirection = $number($hourly['wind_direction_10m'][$index] ?? null);
+                $rain = $number($hourly['rain'][$index] ?? null);
+                $cloudCover = $number($hourly['cloud_cover'][$index] ?? null);
+                $weatherCode = $number($hourly['weather_code'][$index] ?? null);
+                $observedAt = $observedDate->format('Y-m-d\\TH:i:s');
+
+                $values = [
+                    $temperature, $feelsLike, $dewPoint, $pressure, $humidity,
+                    $windSpeed, $windDirection, $rain, $cloudCover,
+                    $weatherCode === null ? null : (int)$weatherCode,
+                ];
+
+                $findExisting->execute([$observedAt, $source]);
+                $existingId = $findExisting->fetchColumn();
+                if ($existingId !== false) {
+                    $update->execute([...$values, $createdAt, (int)$existingId]);
+                } else {
+                    $insert->execute([...$values, $observedAt, $createdAt, $source]);
+                }
+                $written++;
+            }
+
+            if ($written === 0) {
+                throw new RuntimeException('Open-Meteo returned no valid hourly pressure readings in the recent backfill window.');
+            }
+
+            // Keep the table bounded; this dataset is a temporary recent fallback,
+            // not a second long-term historical archive.
+            $pruneBefore = $now->modify('-30 hours')->format('Y-m-d\\TH:i:s');
+            $prune = $this->db->prepare(
+                'DELETE FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at < ?'
+            );
+            $prune->execute([$source, $pruneBefore]);
+
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+
+        return $written;
+    }
+
     private function normaliseForecast(array $daily): array
     {
         $days = [];
