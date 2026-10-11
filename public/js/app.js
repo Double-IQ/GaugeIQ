@@ -171,10 +171,9 @@ function handleWindDeviceOrientation(event) {
 function updateWindCompassButton() {
     if (!windCompassButton) return;
 
-    // This is an enable-only control: there is no separate/off state button.
-    windCompassButton.textContent = 'Turn Compass ON';
+    windCompassButton.textContent = windCompassEnabled ? 'Turn Compass OFF' : 'Turn Compass ON';
     windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
-    windCompassButton.disabled = windCompassEnabled;
+    windCompassButton.disabled = !('DeviceOrientationEvent' in window);
     if (windCompassStatus && !windCompassEnabled) windCompassStatus.hidden = true;
 }
 
@@ -187,7 +186,7 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission(true);
+            const permission = await DeviceOrientationEvent.requestPermission();
             if (permission !== 'granted') {
                 throw new Error('Compass permission was not granted.');
             }
@@ -209,9 +208,38 @@ async function enableWindCompass() {
         }
     } catch (error) {
         if (windCompassStatus) {
+            windCompassStatus.hidden = false;
             windCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
         }
+        updateWindCompassButton();
     }
+}
+
+function disableWindCompass() {
+    windCompassEnabled = false;
+    localStorage.setItem(WIND_COMPASS_STORAGE_KEY, 'false');
+
+    if (windCompassListening) {
+        window.removeEventListener('deviceorientation', handleWindDeviceOrientation, true);
+        window.removeEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+        windCompassListening = false;
+    }
+
+    if (windCompassAnimationFrame !== null) {
+        cancelAnimationFrame(windCompassAnimationFrame);
+        windCompassAnimationFrame = null;
+    }
+
+    windCompassNativeHeadingSeen = false;
+    windCompassHeading = null;
+    windCompassTargetHeading = null;
+    windCompassRotation = null;
+
+    const compassDisc = windGauge?.querySelector('.wind-compass-orientation');
+    if (compassDisc) compassDisc.setAttribute('transform', 'rotate(0 50 50)');
+
+    if (windCompassStatus) windCompassStatus.hidden = true;
+    updateWindCompassButton();
 }
 
 if (windGauge) {
@@ -222,7 +250,11 @@ if (windGauge) {
 
     if (windCompassButton) {
         windCompassButton.addEventListener('click', async () => {
-            if (!windCompassEnabled) await enableWindCompass();
+            if (windCompassEnabled) {
+                disableWindCompass();
+            } else {
+                await enableWindCompass();
+            }
         });
         updateWindCompassButton();
     }
