@@ -12,6 +12,109 @@ final class GaugeIQUpdater
         $this->storage = $this->root . '/storage/update';
     }
 
+
+    /**
+     * Retrieve the latest published stable GitHub Release and its expected assets.
+     * Asset names and URLs are derived from the tag, never accepted from the browser.
+     */
+    public function latestReleaseInfo(): array
+    {
+        if (!extension_loaded('curl')) {
+            throw new RuntimeException('The PHP cURL extension is required to check GaugeIQ releases.');
+        }
+
+        $url = 'https://api.github.com/repos/Double-IQ/GaugeIQ/releases/latest';
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_USERAGENT => 'GaugeIQ-Updater',
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/vnd.github+json',
+                'X-GitHub-Api-Version: 2022-11-28',
+            ],
+        ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false || $status !== 200) {
+            throw new RuntimeException(
+                'Unable to check the latest GaugeIQ release.' .
+                ($error !== '' ? ' ' . $error : ' GitHub returned HTTP ' . $status . '.')
+            );
+        }
+
+        $release = json_decode((string)$body, true);
+        if (!is_array($release) || !is_array($release['assets'] ?? null)) {
+            throw new RuntimeException('GitHub returned an invalid GaugeIQ release response.');
+        }
+
+        $tag = (string)($release['tag_name'] ?? '');
+        if (!preg_match('/^v([0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?)$/', $tag, $match)) {
+            throw new RuntimeException('The latest GaugeIQ release has an invalid version tag.');
+        }
+        if (!empty($release['draft']) || !empty($release['prerelease'])) {
+            throw new RuntimeException('The latest GaugeIQ release is not a stable published release.');
+        }
+
+        $version = $match[1];
+        $expectedPackageName = 'GaugeIQ-' . $version . '.zip';
+        $expectedChecksumName = $expectedPackageName . '.sha256';
+        $expectedBaseUrl = 'https://github.com/Double-IQ/GaugeIQ/releases/download/' . $tag . '/';
+        $packageUrl = null;
+        $checksumUrl = null;
+
+        foreach ($release['assets'] as $asset) {
+            if (!is_array($asset)) {
+                continue;
+            }
+            $name = (string)($asset['name'] ?? '');
+            $assetUrl = (string)($asset['browser_download_url'] ?? '');
+            if ($name === $expectedPackageName && $assetUrl === $expectedBaseUrl . $expectedPackageName) {
+                $packageUrl = $assetUrl;
+            } elseif ($name === $expectedChecksumName && $assetUrl === $expectedBaseUrl . $expectedChecksumName) {
+                $checksumUrl = $assetUrl;
+            }
+        }
+
+        return [
+            'latest_version' => $version,
+            'release_tag' => $tag,
+            'release_url' => (string)($release['html_url'] ?? 'https://github.com/Double-IQ/GaugeIQ/releases'),
+            'package_url' => $packageUrl,
+            'checksum_url' => $checksumUrl,
+            'assets_ready' => $packageUrl !== null && $checksumUrl !== null,
+        ];
+    }
+
+    /**
+     * Re-resolve the current latest release on the server before installing.
+     * This prevents tampered hidden fields or stale browser data from selecting
+     * arbitrary package URLs or an older release.
+     */
+    public function installRelease(string $expectedVersion = ''): array
+    {
+        $release = $this->latestReleaseInfo();
+        $version = ltrim(trim($expectedVersion), 'v');
+
+        if ($version !== '' && !hash_equals($release['latest_version'], $version)) {
+            throw new RuntimeException('The latest GaugeIQ release changed. Refresh Admin and try again.');
+        }
+        if (!$release['assets_ready']) {
+            throw new RuntimeException('The latest GaugeIQ release package or checksum is not ready yet.');
+        }
+
+        return $this->installLatest(
+            $release['latest_version'],
+            $release['package_url'],
+            $release['checksum_url']
+        );
+    }
+
     public function installLatest(string $expectedVersion, string $packageUrl, string $checksumUrl): array
     {
         if (!extension_loaded('zip')) {
@@ -23,7 +126,14 @@ final class GaugeIQUpdater
             throw new RuntimeException('Invalid release version.');
         }
 
+        $expectedAssetBase = 'https://github.com/Double-IQ/GaugeIQ/releases/download/v' . $version . '/GaugeIQ-' . $version;
+        if ($packageUrl !== $expectedAssetBase . '.zip' || $checksumUrl !== $expectedAssetBase . '.zip.sha256') {
+            throw new RuntimeException('The package URLs do not match the official GaugeIQ release assets.');
+        }
+
         $this->prepareWorkspace();
+        $stage = $this->storage . '/stage';
+        try {
         $zipPath = $this->storage . '/GaugeIQ-' . $version . '.zip';
         $checksumPath = $zipPath . '.sha256';
         $this->download($packageUrl, $zipPath);
@@ -40,7 +150,6 @@ final class GaugeIQUpdater
             throw new RuntimeException('The release package could not be opened.');
         }
 
-        $stage = $this->storage . '/stage';
         if (is_dir($stage)) {
             $this->removeTree($stage);
         }
@@ -49,10 +158,32 @@ final class GaugeIQUpdater
         $prefix = $this->validateArchive($zip, $version);
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = $zip->getNameIndex($i);
-            if ($name === false || str_ends_with($name, '/')) {
+            if ($name === false || !str_starts_with($name, $prefix)) {
+                $zip->close();
+                throw new RuntimeException('The release package contains an entry outside its expected root folder.');
+            }
+            if (str_ends_with($name, '/')) {
                 continue;
             }
             $relative = substr($name, strlen($prefix));
+            if ($relative === '' || str_starts_with($relative, '/') || str_contains($relative, '\\')) {
+                $zip->close();
+                throw new RuntimeException('The release package contains an unsafe path.');
+            }
+            foreach (explode('/', $relative) as $part) {
+                if ($part === '..' || $part === '') {
+                    $zip->close();
+                    throw new RuntimeException('The release package contains an unsafe path.');
+                }
+            }
+            $opsys = 0;
+            $attributes = 0;
+            if ($zip->getExternalAttributesIndex($i, $opsys, $attributes) &&
+                $opsys === ZipArchive::OPSYS_UNIX &&
+                ((($attributes >> 16) & 0170000) === 0120000)) {
+                $zip->close();
+                throw new RuntimeException('The release package contains an unsupported symbolic link.');
+            }
             $target = $stage . '/' . $relative;
             $dir = dirname($target);
             if (!is_dir($dir)) {
@@ -76,8 +207,11 @@ final class GaugeIQUpdater
         $zip->close();
 
         $backup = $this->storage . '/backup-' . gmdate('Ymd-His');
-        mkdir($backup, 0750, true);
+        if (!mkdir($backup, 0750, true) && !is_dir($backup)) {
+            throw new RuntimeException('Unable to create the update backup.');
+        }
         $this->backupApplication($backup);
+        $databaseBackup = $this->backupDatabase($backup);
 
         try {
             $this->swapApplication($stage);
@@ -87,15 +221,23 @@ final class GaugeIQUpdater
             try {
                 $this->restoreApplication($backup);
             } catch (Throwable $rollbackError) {
-                error_log('GaugeIQ rollback failed: ' . $rollbackError->getMessage());
+                error_log('GaugeIQ application rollback failed: ' . $rollbackError->getMessage());
+            }
+            if (is_array($databaseBackup)) {
+                try {
+                    $this->restoreDatabase($databaseBackup);
+                } catch (Throwable $databaseRollbackError) {
+                    error_log('GaugeIQ database rollback failed: ' . $databaseRollbackError->getMessage());
+                }
             }
             throw $e;
+        }
+
+        return ['version' => $version];
         } finally {
             $this->removeTree($stage);
             $this->releaseLock();
         }
-
-        return ['version' => $version];
     }
 
     private function validateArchive(ZipArchive $zip, string $version): string
@@ -180,6 +322,9 @@ final class GaugeIQUpdater
             is_dir($path) ? $this->removeTree($path) : @unlink($path);
         }
         foreach (array_diff(scandir($backup) ?: [], ['.', '..']) as $entry) {
+            if ($entry === '.database') {
+                continue;
+            }
             $this->copyTree($backup . '/' . $entry, $this->root . '/' . $entry);
         }
 
@@ -292,13 +437,25 @@ final class GaugeIQUpdater
             CURLOPT_USERAGENT => 'GaugeIQ Updater',
             CURLOPT_HTTPHEADER => ['Accept: application/octet-stream'],
         ]);
+        curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+        curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
         $data = curl_exec($ch);
         $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $effectiveUrl = (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $error = curl_error($ch);
         curl_close($ch);
         if ($data === false || $code < 200 || $code >= 300) {
             throw new RuntimeException('Unable to download the GaugeIQ release.' . ($error !== '' ? ' ' . $error : ''));
         }
+        $effectiveHost = strtolower((string)parse_url($effectiveUrl, PHP_URL_HOST));
+        if (!in_array($effectiveHost, [
+            'github.com',
+            'objects.githubusercontent.com',
+            'release-assets.githubusercontent.com',
+        ], true)) {
+            throw new RuntimeException('The release download redirected to an untrusted host.');
+        }
+
         if (file_put_contents($target, $data, LOCK_EX) === false) {
             throw new RuntimeException('Unable to save the GaugeIQ release.');
         }
@@ -338,6 +495,95 @@ final class GaugeIQUpdater
         @unlink($this->storage . '/update.lock');
     }
 
+
+    private function backupDatabase(string $backup): ?array
+    {
+        $configPath = $this->root . '/config/local.php';
+        if (!is_file($configPath)) {
+            throw new RuntimeException('The existing GaugeIQ configuration is missing.');
+        }
+        $config = require $configPath;
+        $database = is_array($config) ? ($config['database'] ?? []) : [];
+        if (strtolower((string)($database['driver'] ?? 'sqlite')) !== 'sqlite') {
+            // Automatic deployment is currently gated to SQLite. The manual
+            // updater retains its existing MySQL support, but no MySQL dump is
+            // claimed to exist when rollback is attempted.
+            return null;
+        }
+
+        $databasePath = (string)($database['path'] ?? '');
+        if ($databasePath === '' || !is_file($databasePath)) {
+            throw new RuntimeException('The existing SQLite database could not be found for backup.');
+        }
+
+        $backupDirectory = $backup . '/.database';
+        if (!is_dir($backupDirectory) && !mkdir($backupDirectory, 0750, true) && !is_dir($backupDirectory)) {
+            throw new RuntimeException('Unable to create the database backup directory.');
+        }
+        $backupPath = $backupDirectory . '/gaugeiq.sqlite';
+        $pdo = new PDO('sqlite:' . $databasePath, null, null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $pdo->exec('PRAGMA wal_checkpoint(FULL)');
+        $pdo->exec('VACUUM INTO ' . $pdo->quote($backupPath));
+        $pdo = null;
+
+        if (!is_file($backupPath) || filesize($backupPath) === 0) {
+            throw new RuntimeException('The SQLite database backup could not be verified.');
+        }
+
+        return [
+            'driver' => 'sqlite',
+            'path' => $databasePath,
+            'backup' => $backupPath,
+        ];
+    }
+
+    private function restoreDatabase(array $databaseBackup): void
+    {
+        if (($databaseBackup['driver'] ?? '') !== 'sqlite') {
+            return;
+        }
+        $source = (string)($databaseBackup['path'] ?? '');
+        $backup = (string)($databaseBackup['backup'] ?? '');
+        if ($source === '' || !is_file($backup)) {
+            throw new RuntimeException('The SQLite rollback snapshot is missing.');
+        }
+
+        $temporary = $source . '.restore-' . bin2hex(random_bytes(6));
+        if (!copy($backup, $temporary)) {
+            throw new RuntimeException('Unable to prepare the SQLite rollback snapshot.');
+        }
+
+        // The updater runs without an open application DB connection here.
+        // Clear SQLite sidecars before replacing the database with its snapshot.
+        @unlink($source . '-wal');
+        @unlink($source . '-shm');
+        if (!rename($temporary, $source)) {
+            @unlink($temporary);
+            throw new RuntimeException('Unable to restore the SQLite database snapshot.');
+        }
+        @chmod($source, 0640);
+    }
+
+    private function cliPhpBinary(): string
+    {
+        $runningBinary = (string)PHP_BINARY;
+        $binaryName = strtolower(basename($runningBinary));
+        if (is_executable($runningBinary) &&
+            !str_contains($binaryName, 'fpm') &&
+            !str_contains($binaryName, 'cgi')) {
+            return $runningBinary;
+        }
+
+        $candidate = rtrim((string)PHP_BINDIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'php';
+        if (is_file($candidate) && is_executable($candidate)) {
+            return $candidate;
+        }
+
+        throw new RuntimeException('The PHP CLI executable could not be located for database migrations.');
+    }
+
     private function runDatabaseMigration(): void
     {
         $script = $this->root . '/database/migrate.php';
@@ -347,7 +593,7 @@ final class GaugeIQUpdater
 
         $pipes = [];
         $process = proc_open(
-            [PHP_BINARY, $script],
+            [$this->cliPhpBinary(), $script],
             [
                 0 => ['pipe', 'r'],
                 1 => ['pipe', 'w'],
