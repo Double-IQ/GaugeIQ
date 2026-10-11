@@ -203,7 +203,7 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-direction-line{fill:none;stroke-width:1.15;stroke-linecap:round}
 .wind-direction-line-from{stroke:#facc15}
 .wind-direction-line-to{stroke:#facc15}
-.wind-direction-from-arrow{fill:#facc15;stroke:#facc15;stroke-width:.5;stroke-linejoin:round;filter:drop-shadow(0 0 1px rgba(0,0,0,.25))}
+.wind-direction-from-dot{fill:#ef4444;stroke:var(--card);stroke-width:.8;filter:drop-shadow(0 0 1px rgba(0,0,0,.3))}
 .wind-direction-marker{fill:#facc15;stroke:var(--card);stroke-width:.7px}
 .wind-direction-to-marker{fill:#facc15;stroke:#facc15;stroke-width:.4px}
 .wind-compass-labels .minor{font-size:3.2px}
