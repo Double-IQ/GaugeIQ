@@ -298,8 +298,10 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-comfort-inline{margin-left:auto}
 .temperature-stability-label{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--text);white-space:nowrap}
 .temperature-stability-track{flex:0 0 100px;width:100px;height:22px;min-width:100px;border-radius:999px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
-.temperature-stability-fill{height:100%;border-radius:999px;background:#22c55e;transition:width .6s ease}
-.temperature-stability-fill.warning{background:#eab308;animation:temperature-stability-warning .8s ease-in-out infinite}
+.temperature-stability-fill{height:100%;border-radius:999px;background:#22c55e;transition:width .6s ease,background-color .3s ease}
+.temperature-stability-fill.changing{background:#eab308}
+.temperature-stability-fill.unstable{background:#ef4444}
+.temperature-stability-fill.warning{animation:temperature-stability-warning .8s ease-in-out infinite}
 .temperature-stability-track.warning{border-color:#eab308}
 @keyframes temperature-stability-warning{0%,100%{opacity:1}50%{opacity:.35}}
 .temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:28px}
