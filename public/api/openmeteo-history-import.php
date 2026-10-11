@@ -110,7 +110,12 @@ try {
         }
     } else {
         $insert = $pdo->prepare('INSERT INTO gaugeiq_pressure_readings (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $exists = $pdo->prepare('SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? LIMIT 1');
+        $exists = $pdo->prepare(
+            "SELECT id FROM gaugeiq_pressure_readings
+             WHERE observed_at = ?
+               AND (source IS NULL OR source <> 'Open-Meteo Recent Backfill')
+             LIMIT 1"
+        );
         $pdo->beginTransaction();
         foreach ($times as $i => $time) {
             if (!is_string($time) || $time === '') { $skipped++; continue; }
