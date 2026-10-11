@@ -50,8 +50,9 @@ $locationName = gaugeSetting($pdo, 'location_name', (string)$config['pressure'][
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
 
-$historicalStart = gmdate('Y-m-d', strtotime('-1 year'));
-$historicalEnd = gmdate('Y-m-d', strtotime('yesterday'));
+$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+$historicalStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
+$historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
 $weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
 $weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
 $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
