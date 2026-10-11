@@ -291,7 +291,7 @@ final class GaugeIQUpdater
 
     private function backupApplication(string $backup): void
     {
-        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage']) as $entry) {
+        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage', '.git', '.github']) as $entry) {
             if ($entry === 'config') {
                 $this->backupConfig($backup . '/config');
                 continue;
@@ -322,7 +322,9 @@ final class GaugeIQUpdater
 
     private function restoreApplication(string $backup): void
     {
-        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage']) as $entry) {
+        // Release packages do not replace repository metadata. Keep the live
+        // cPanel Git checkout intact during rollback rather than copying .git.
+        foreach (array_diff(scandir($this->root) ?: [], ['.', '..', 'storage', '.git', '.github']) as $entry) {
             if ($entry === 'config') {
                 continue;
             }
