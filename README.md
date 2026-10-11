@@ -40,6 +40,12 @@ GaugeIQ stores each weather observation and evaluates saved alert rules during t
 
 Each rule can be enabled or disabled and has its own notification cooldown. Triggered rules are recorded in the alert-event table so notification history can be expanded in the dashboard later.
 
+### Daily forecast notification
+
+Admin includes an optional daily forecast notification with a configurable local time and three selectable categories: rain, strong winds, and severe weather. It uses the existing push subscriptions and the daily forecast from Open-Meteo. Rain is flagged at a forecast precipitation probability of at least 50% or a daily precipitation total of at least 1 mm; strong wind is flagged at a daily maximum wind speed of 40 km/h or gusts of 60 km/h; severe weather includes heavy precipitation, violent showers, heavy snow, thunderstorms, or gusts of at least 70 km/h. If multiple selected categories match, GaugeIQ sends them together in one daily notification.
+
+The existing 30-minute monitoring cron checks the chosen time and sends on the first run at or after that time, normally within 30 minutes. It evaluates at most once per local date and skips the alert if the scheduled time was missed by more than one hour. This feature is opt-in and does not change the existing immediate alert rules.
+
 For installations that have not created custom rules yet, the original pressure-threshold configuration remains available as a compatibility fallback.
 
 Expired push subscriptions are removed automatically when the push service reports them as gone.
