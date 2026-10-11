@@ -106,6 +106,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt->execute([(string)$hours]);
                 $notice = 'Alert comparison window saved.';
+            } elseif ($action === 'save_daily_forecast_alert') {
+                $time = trim((string)($_POST['daily_forecast_alert_time'] ?? '07:00'));
+                if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $time)) {
+                    throw new InvalidArgumentException('Choose a valid daily forecast alert time.');
+                }
+
+                $enabled = isset($_POST['daily_forecast_alert_enabled']);
+                $rain = isset($_POST['daily_forecast_alert_rain']);
+                $wind = isset($_POST['daily_forecast_alert_wind']);
+                $severe = isset($_POST['daily_forecast_alert_severe']);
+                if ($enabled && !$rain && !$wind && !$severe) {
+                    throw new InvalidArgumentException('Select at least one forecast condition, or leave the daily alert disabled.');
+                }
+
+                $pdo->beginTransaction();
+                try {
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_enabled', $enabled ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_time', $time);
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_rain', $rain ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_wind', $wind ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_severe', $severe ? '1' : '0');
+                    $pdo->commit();
+                } catch (Throwable $saveError) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    throw $saveError;
+                }
+                $notice = $enabled ? 'Daily forecast notification settings saved.' : 'Daily forecast notification disabled.';
             } elseif ($action === 'save_stability_threshold') {
                 $thresholdInput = trim((string)($_POST['stability_alert_threshold'] ?? ''));
                 if ($thresholdInput === '') {
@@ -195,6 +224,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $lookbackHours = alertLookback($pdo);
+$dailyForecastAlertEnabled = gaugeSetting($pdo, 'daily_forecast_alert_enabled', '0') === '1';
+$dailyForecastAlertTime = gaugeSetting($pdo, 'daily_forecast_alert_time', '07:00') ?? '07:00';
+if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $dailyForecastAlertTime)) {
+    $dailyForecastAlertTime = '07:00';
+}
+$dailyForecastAlertRain = gaugeSetting($pdo, 'daily_forecast_alert_rain', '1') === '1';
+$dailyForecastAlertWind = gaugeSetting($pdo, 'daily_forecast_alert_wind', '1') === '1';
+$dailyForecastAlertSevere = gaugeSetting($pdo, 'daily_forecast_alert_severe', '1') === '1';
+$dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_evaluated_date', '') ?? '';
+$dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' ? (int)$stabilityAlertThresholdValue : null;
 $allRules = $rules->all();
@@ -221,7 +260,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/alerts.css">
+<link rel="stylesheet" href="css/alerts.css?v=20261011-daily-forecast-alert-1">
 <title>GaugeIQ Admin</title>
 </head>
 <body>
@@ -393,6 +432,55 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <button type="submit">Save threshold</button>
         </div>
         <p class="alert-help muted">The bar keeps its green, yellow or red colour. Reaching this score adds the flashing warning and yellow track border. Leave it disabled if you do not want the bar to flash.</p>
+    </form>
+</section>
+
+<section class="card daily-forecast-alert-card" aria-labelledby="dailyForecastAlertTitle">
+    <div class="section-heading">
+        <div>
+            <h2 id="dailyForecastAlertTitle">Daily forecast notification</h2>
+            <p class="muted">Get one morning notification if any of your selected conditions are forecast for today. This uses the existing push notification setup.</p>
+        </div>
+        <span class="status-pill <?= $dailyForecastAlertEnabled ? 'status-good' : 'status-warn' ?>"><?= $dailyForecastAlertEnabled ? '● Enabled' : '● Disabled' ?></span>
+    </div>
+    <form method="post" class="daily-forecast-form">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="save_daily_forecast_alert">
+
+        <label class="daily-forecast-enable">
+            <input type="checkbox" name="daily_forecast_alert_enabled" value="1" <?= $dailyForecastAlertEnabled ? 'checked' : '' ?>>
+            <span><strong>Enable daily forecast notification</strong><small>GaugeIQ checks today's forecast once per local day.</small></span>
+        </label>
+
+        <div class="daily-forecast-time-row">
+            <div>
+                <label for="daily_forecast_alert_time">Notification time</label>
+                <input id="daily_forecast_alert_time" name="daily_forecast_alert_time" type="time" value="<?= h($dailyForecastAlertTime) ?>" required>
+            </div>
+            <p class="alert-help muted">Timezone: <?= h($historyTimezone->getName()) ?></p>
+        </div>
+
+        <fieldset class="daily-forecast-options">
+            <legend>Notify me when today's forecast includes</legend>
+            <label class="daily-forecast-option">
+                <input type="checkbox" name="daily_forecast_alert_rain" value="1" <?= $dailyForecastAlertRain ? 'checked' : '' ?>>
+                <span><strong>Rain</strong><small>At least 50% forecast chance of precipitation, or 1 mm or more of expected rain.</small></span>
+            </label>
+            <label class="daily-forecast-option">
+                <input type="checkbox" name="daily_forecast_alert_wind" value="1" <?= $dailyForecastAlertWind ? 'checked' : '' ?>>
+                <span><strong>Strong winds</strong><small>Daily maximum wind speed of at least 40 km/h, or gusts reaching 60 km/h.</small></span>
+            </label>
+            <label class="daily-forecast-option">
+                <input type="checkbox" name="daily_forecast_alert_severe" value="1" <?= $dailyForecastAlertSevere ? 'checked' : '' ?>>
+                <span><strong>Severe weather</strong><small>Forecast heavy precipitation, violent showers, heavy snow or thunderstorms.</small></span>
+            </label>
+        </fieldset>
+
+        <button type="submit">Save daily forecast alert</button>
+        <p class="alert-help muted">The daily check runs with your existing scheduled monitor. With a 30-minute cron, delivery is at the first check at or after your chosen time (normally within 30 minutes). Only selected conditions trigger a notification; if several match, GaugeIQ combines them into one message.</p>
+        <?php if ($dailyForecastAlertLastDate !== ''): ?>
+            <p class="daily-forecast-last-status" role="status">Last daily forecast check: <?= h($dailyForecastAlertLastDate) ?><?= $dailyForecastAlertLastStatus !== '' ? ' · ' . h($dailyForecastAlertLastStatus) : '' ?></p>
+        <?php endif; ?>
     </form>
 </section>
 
