@@ -86,7 +86,7 @@ try {
     $latitude = isset($settings['active_location_latitude']) ? (float)$settings['active_location_latitude'] : (float)($config['pressure']['latitude'] ?? NAN);
     $longitude = isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN);
     $locationName = (string)($settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
-    $timezone = (string)($settings['active_location_timezone'] ?? $config['app']['timezone'] ?? 'UTC');
+    $timezone = 'UTC'; // Store canonical UTC timestamps so imported and live readings can be compared reliably.
     if (!is_finite($latitude) || $latitude < -90 || $latitude > 90 || !is_finite($longitude) || $longitude < -180 || $longitude > 180) {
         openMeteoHistoryReply(422, ['error' => 'Configure valid location coordinates in GaugeIQ before importing history.']);
     }
@@ -116,15 +116,16 @@ try {
         (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $exists = $pdo->prepare('SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? AND source = ? LIMIT 1');
+    $exists = $pdo->prepare('SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? LIMIT 1');
     $count = 0;
     $skipped = 0;
     $pdo->beginTransaction();
     foreach ($times as $i => $time) {
         if (!is_string($time) || $time === '') { $skipped++; continue; }
-        $observedAt = str_replace('T', ' ', $time) . ':00';
-        if (strlen($time) >= 16) $observedAt = str_replace('T', ' ', $time) . (strlen($time) === 16 ? ':00' : '');
-        $exists->execute([$observedAt, $sourceLabel]);
+        $observedAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
+        if (strlen($observedAt) === 16) $observedAt .= ':00';
+        if (!preg_match('/(?:Z|[+-]\\d{2}:?\\d{2})$/', $observedAt)) $observedAt .= 'Z';
+        $exists->execute([$observedAt]);
         if ($exists->fetchColumn() !== false) { $skipped++; continue; }
         $val = static function (string $key) use ($hourly, $i): ?float {
             $value = $hourly[$key][$i] ?? null;
