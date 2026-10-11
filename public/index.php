@@ -533,18 +533,12 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </details>
     </section>
 
-    <section class="card history-card">
+    <section class="card history-card" data-history-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>">
         <div class="section-heading">
             <div>
                 <h2 id="historyTitle">Last 24 hours</h2>
                 <p id="historyStatus" class="muted">Loading history…</p>
             </div>
-        </div>
-        <div class="local-weather-tools dashboard-history-location" aria-label="Historical graph location">
-            <label for="weatherLocationSelect">Active dashboard location</label>
-            <select id="weatherLocationSelect" class="theme-select" aria-label="Active dashboard location" data-server-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>" data-server-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>" data-server-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES) ?>" data-server-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>" data-config-latitude="<?= htmlspecialchars((string)($config['pressure']['latitude'] ?? ''), ENT_QUOTES) ?>" data-config-longitude="<?= htmlspecialchars((string)($config['pressure']['longitude'] ?? ''), ENT_QUOTES) ?>" data-config-location-name="<?= htmlspecialchars((string)($config['pressure']['location_name'] ?? 'Configured GaugeIQ location'), ENT_QUOTES) ?>" data-config-timezone="<?= htmlspecialchars((string)($config['app']['timezone'] ?? 'UTC'), ENT_QUOTES) ?>" data-location-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>" data-location-sync-endpoint="save-dashboard-location.php">
-                <option value="server-current">Current GaugeIQ location (server)</option>
-            </select>
         </div>
         <div class="history-range" role="group" aria-label="History range">
             <button type="button" class="history-range-button" data-hours="6">6h</button>
