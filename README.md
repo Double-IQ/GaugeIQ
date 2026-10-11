@@ -95,7 +95,13 @@ GaugeIQ's Admin page can discover nearby stations in NOAA's **Global Historical 
 - The dashboard's **All history** graphs query the unified server database. Imported station records are excluded from the live short-window weather-change score and live alert baselines, while the scheduled Open-Meteo monitor continues running.
 - The import preview is important: station distance, data availability, reporting frequency, and variable coverage vary by location and date. A preview is not a guarantee of complete hourly coverage.
 
-The standard short-range graphs and weather-change calculations use live monitor readings. **All history** displays the imported-plus-live timeline.
+The standard history graphs show recorded readings and omit temporary model backfill rows so estimates are not mistaken for observations. **All history** displays the imported-plus-live observation timeline.
+
+### Temporary recent-reading fallback for dashboard meters
+
+On installation, GaugeIQ makes a best-effort request for the most recent 24 hours of hourly Open-Meteo model values. The scheduled monitor refreshes this separate `Open-Meteo Recent Backfill` dataset about once an hour (using the existing 30-minute cron; only refresh when the previous successful backfill is at least 45 minutes old). On existing installations, the first scheduled run creates it automatically if no recent-backfill success has been recorded.
+
+Weather Change and Conditions Trend first calculate from live monitor readings exactly as before. Only when a live-only calculation cannot produce a result may that meter temporarily retry with recent backfill values in the same six-hour window. Model values retain their actual hourly timestamps, duplicate times prefer live readings, and a visible note identifies when fallback estimates were used. As soon as the live-only calculation can produce a result again, the meter stops using the fallback. These estimates are kept out of ordinary history graphs and do not feed server-side alert baselines. Installation and cron treat this backfill as best-effort, so a provider failure does not interrupt normal live monitoring.
 
 ## Weather monitoring and dashboard insights
 
