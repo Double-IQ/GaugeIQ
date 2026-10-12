@@ -849,7 +849,7 @@ async function loadWeatherChange() {
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
-        // Imported station observations stay out of the live meter window.
+        // Archived historical observations stay out of the live meter window.
         // Recent model backfill is considered only when live-only calculations
         // cannot produce their required result.
         const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
