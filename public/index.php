@@ -552,13 +552,19 @@ if ($current && !empty($current['observed_at'])) {
         <div class="section-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Stability</h2>
-                <p class="muted">A measure of how consistently recent conditions have behaved over six hours — not a rain probability or a safety rating.</p>
+                <p class="muted">A measure of how consistently recent conditions have behaved over six hours — not a safety rating.</p>
             </div>
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
         <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
-        <button type="button" class="secondary weather-change-reasons-toggle" id="weatherChangeReasonsToggle" aria-controls="weatherChangeReasons" aria-expanded="false">Show reasons</button>
+        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show weather stability reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 10.5v6"></path>
+                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+            </svg>
+        </button>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
         <p class="weather-change-note">GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
     </section>
@@ -574,10 +580,9 @@ if ($current && !empty($current['observed_at'])) {
         <div class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</div>
         <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite"></div>
         <details class="algorithm-details">
-            <summary>Show trend rules and weights</summary>
-            <p>This is a separate directional assessment, not the Weather Change score. Pressure trend has weight 2; rainfall trend weight 2; wind-speed trend weight 1; cloud-cover trend weight 1; and change in reported weather severity weight 2.</p>
+            <summary>How the conditions trend is classified</summary>
+            <p>This is a separate directional assessment, not the Weather Change score.</p>
             <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
-            <p>These are provisional rules. Rising pressure or a change in wind/clouds is not universally better or worse, so the explanation shows the evidence and the classification should not be treated as a formal safety warning.</p>
         </details>
     </section>
 
