@@ -145,7 +145,7 @@ try {
     $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'stability_alert_threshold' LIMIT 1");
     $stabilityThresholdStmt->execute();
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
-    $weatherChangeAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
+    $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
         && (float)$stabilityThresholdValue >= 1 && (float)$stabilityThresholdValue <= 10)
         ? (int)$stabilityThresholdValue
         : null;
@@ -327,7 +327,7 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
                 <div class="temperature-stability-row">
                     <div class="temperature-stability-label">Stability</div>
-                    <div class="temperature-stability-track" aria-label="Weather stability" data-weather-change-alert-threshold="<?= $weatherChangeAlertThreshold !== null ? htmlspecialchars((string)$weatherChangeAlertThreshold, ENT_QUOTES) : '' ?>"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
+                    <div class="temperature-stability-track" aria-label="Weather stability" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
                     <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
@@ -685,6 +685,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261012-stability-more-information-1"></script>
+<script src="js/app.js?v=20261012-weather-stability-alert-parity-1"></script>
 </body>
 </html>
