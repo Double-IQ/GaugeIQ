@@ -382,9 +382,9 @@ button:disabled { opacity: .55; cursor: default; }
   .weather-change-summary{grid-area:summary;width:100%;margin-top:0;align-self:center;text-align:center}
 }
 
-.weather-change-score[data-level="low"]{border-color:#22c55e;color:#15803d}
+.weather-change-score[data-level="low"]{border-color:#ef4444;color:#dc2626}
 .weather-change-score[data-level="moderate"]{border-color:#f59e0b;color:#b45309}
-.weather-change-score[data-level="high"]{border-color:#ef4444;color:#dc2626}
+.weather-change-score[data-level="high"]{border-color:#22c55e;color:#15803d}
 
 .wind-summary-line{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:2px;font-size:12px;font-weight:700;color:var(--muted)}
 .wind-summary-line strong{color:var(--text);font-weight:900}
