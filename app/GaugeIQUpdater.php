@@ -558,8 +558,86 @@ final class GaugeIQUpdater
         $pdo = new PDO('sqlite:' . $databasePath, null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
+        $pdo->exec('PRAGMA busy_timeout = 10000');
         $pdo->exec('PRAGMA wal_checkpoint(FULL)');
-        $pdo->exec('VACUUM INTO ' . $pdo->quote($backupPath));
+
+        try {
+            // VACUUM INTO creates a compact, transactionally consistent backup,
+            // but it is unavailable in SQLite versions older than 3.27.0.
+            $pdo->exec('VACUUM INTO ' . $pdo->quote($backupPath));
+        } catch (PDOException $e) {
+            $message = $e->getMessage();
+            $unsupportedVacuumInto = preg_match(
+                '/near\s+["\\']?INTO["\\']?\s*:\s*syntax error|syntax error.*\bINTO\b/i',
+                $message
+            ) === 1;
+
+            if (!$unsupportedVacuumInto) {
+                throw $e;
+            }
+
+            // Compatibility path for older SQLite libraries: checkpoint WAL,
+            // hold a write lock while copying the database file, then verify
+            // the copied database before allowing the update to continue.
+            @unlink($backupPath);
+            $journalMode = strtolower((string)$pdo->query('PRAGMA journal_mode')->fetchColumn());
+            $copied = false;
+
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $checkpoint = $pdo->query('PRAGMA wal_checkpoint(TRUNCATE)')->fetch(PDO::FETCH_NUM);
+                if (!is_array($checkpoint) || (int)($checkpoint[0] ?? 1) !== 0) {
+                    throw new RuntimeException('SQLite could not safely checkpoint the database before the update backup.');
+                }
+
+                $pdo->exec('BEGIN IMMEDIATE');
+                $transactionOpen = true;
+                try {
+                    if ($journalMode === 'wal') {
+                        $walPath = $databasePath . '-wal';
+                        clearstatcache(true, $walPath);
+                        if (is_file($walPath) && (int)filesize($walPath) > 0) {
+                            $pdo->exec('ROLLBACK');
+                            $transactionOpen = false;
+                            continue;
+                        }
+                    }
+
+                    if (!copy($databasePath, $backupPath)) {
+                        throw new RuntimeException('Unable to copy the SQLite database for the update backup.');
+                    }
+
+                    $pdo->exec('COMMIT');
+                    $transactionOpen = false;
+                    $copied = true;
+                    break;
+                } catch (Throwable $copyError) {
+                    if ($transactionOpen) {
+                        try {
+                            $pdo->exec('ROLLBACK');
+                        } catch (Throwable) {
+                            // Preserve the original copy/lock error.
+                        }
+                    }
+                    @unlink($backupPath);
+                    throw $copyError;
+                }
+            }
+
+            if (!$copied) {
+                throw new RuntimeException('SQLite kept receiving writes while the backup was being created. Retry the update when the monitor is idle.');
+            }
+
+            $verify = new PDO('sqlite:' . $backupPath, null, null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $integrity = (string)$verify->query('PRAGMA integrity_check')->fetchColumn();
+            $verify = null;
+            if ($integrity !== 'ok') {
+                @unlink($backupPath);
+                throw new RuntimeException('The copied SQLite database backup failed its integrity check.');
+            }
+        }
+
         $pdo = null;
 
         if (!is_file($backupPath) || filesize($backupPath) === 0) {
