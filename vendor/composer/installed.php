@@ -3,7 +3,7 @@
         'name' => 'btm-sa/gaugeiq',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '4be502c86d8064d4da16c7c65b8eeacb2eaedb58',
+        'reference' => '542656639e0ddc32f5b82323d6e45eaafbfe7678',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'btm-sa/gaugeiq' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '4be502c86d8064d4da16c7c65b8eeacb2eaedb58',
+            'reference' => '542656639e0ddc32f5b82323d6e45eaafbfe7678',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
