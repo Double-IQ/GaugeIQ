@@ -24,7 +24,12 @@ try {
     header('Location: admin.php?updated=' . rawurlencode($result['version']));
     exit;
 } catch (Throwable $e) {
-    error_log('GaugeIQ update failed: ' . $e->getMessage());
+    $logDirectory = dirname(__DIR__) . '/storage/update';
+    if (!is_dir($logDirectory)) { mkdir($logDirectory, 0750, true); }
+    $logFile = $logDirectory . '/manual-update.log';
+    $logEntry = '[' . date('c') . '] ' . get_class($e) . ': ' . $e->getMessage() . PHP_EOL;
+    $logged = file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
+    if ($logged === false) { error_log('GaugeIQ update failed: ' . $e->getMessage()); }
     header('Location: admin.php?update_error=1');
     exit;
 }
