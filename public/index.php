@@ -533,7 +533,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
             <div>
-                <h2 id="weatherChangeTitle">Weather change</h2>
+                <h2 id="weatherChangeTitle">Weather Stability</h2>
                 <p class="muted">A weighted measure of how much recent conditions have changed — not a rain probability.</p>
             </div>
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div>
@@ -542,23 +542,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
         <button type="button" class="secondary weather-change-reasons-toggle" id="weatherChangeReasonsToggle" aria-controls="weatherChangeReasons" aria-expanded="false">Show reasons</button>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
-        <details class="algorithm-details">
-            <summary>Show calculation and weights</summary>
-            <p><strong>Formula:</strong> score = 10 × (sum of each signal's weight × its severity) ÷ (sum of weights for signals with valid readings). Each severity is between 0 and 1. The result is capped at 10 and rounded to one decimal place.</p>
-            <ul>
-                <li>Pressure change: weight 2; meaningful from about 0.3 hPa/hour, maximum severity at 1.5 hPa/hour.</li>
-                <li>Temperature change: weight 1; meaningful from 1°C over a six-hour equivalent, maximum severity at 3°C.</li>
-                <li>Humidity change: weight 1; meaningful from 4 percentage points, maximum severity at 12 points.</li>
-                <li>Wind speed change: weight 2; meaningful from 8 km/h over a six-hour equivalent, maximum severity at 20 km/h.</li>
-                <li>Wind direction shift: weight 1; meaningful from 20°, maximum severity at 90°; angular wrap across north is handled.</li>
-                <li>Temperature/dew-point gap narrowing: weight 1; meaningful from 1°C, maximum severity at 3°C.</li>
-                <li>Rainfall change: weight 2; meaningful from 0.2 mm, maximum severity at 2 mm.</li>
-                <li>Cloud-cover change: weight 1; meaningful from 15 percentage points, maximum severity at 50 points.</li>
-                <li>Weather-code severity change: weight 1; larger changes between clear, cloudy, rain and storm categories count more.</li>
-            </ul>
-            <p><strong>Interpretation:</strong> 0–1.9 stable, 2–3.9 minor, 4–5.9 moderate, 6–7.9 significant, 8–10 very significant change. These initial weights and thresholds are provisional engineering rules, not yet statistically calibrated to local history.</p>\n            <p><strong>Recent baseline:</strong> GaugeIQ calculates the same six-hour score for the previous 14 daily windows and compares the current score with their median. It needs at least 5 valid comparison windows; a difference of 2 or more points is labelled above or below the recent pattern. This context does not change the intensity score, and seasonal comparison is not yet implemented.</p>
-        </details>
-        <p class="weather-change-note">Missing values are excluded rather than treated as zero. GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
+        <p class="weather-change-note">GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
     </section>
 
     <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
@@ -688,6 +672,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261011-recent-backfill-meters-1"></script>
+<script src="js/app.js?v=20261012-weather-stability-baseline-1"></script>
 </body>
 </html>
