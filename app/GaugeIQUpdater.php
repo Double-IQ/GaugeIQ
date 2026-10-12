@@ -406,6 +406,26 @@ final class GaugeIQUpdater
         }
     }
 
+    private function isPublicPath(string $path): bool
+    {
+        $publicRoot = $this->root . '/public';
+        return $path === $publicRoot || str_starts_with($path, $publicRoot . DIRECTORY_SEPARATOR);
+    }
+
+    private function directoryMode(string $path): int
+    {
+        // The web server must be able to traverse public/ and its subfolders.
+        // Keep application/config/storage outside the document root private.
+        return $this->isPublicPath($path) ? 0755 : 0750;
+    }
+
+    private function fileMode(string $path): int
+    {
+        // Apache must be able to read public/.htaccess and served assets on
+        // hosts where the web server does not share the PHP-FPM group.
+        return $this->isPublicPath($path) ? 0644 : 0640;
+    }
+
     private function replaceDirectory(string $source, string $target): void
     {
         if (is_dir($target)) {
@@ -413,7 +433,11 @@ final class GaugeIQUpdater
         } elseif (file_exists($target)) {
             unlink($target);
         }
-        mkdir($target, 0750, true);
+        $mode = $this->directoryMode($target);
+        if (!mkdir($target, $mode, true) && !is_dir($target)) {
+            throw new RuntimeException('Unable to create an application directory.');
+        }
+        @chmod($target, $mode);
         foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $entry) {
             $this->replacePath($source . '/' . $entry, $target . '/' . $entry);
         }
@@ -423,7 +447,10 @@ final class GaugeIQUpdater
     {
         $parent = dirname($target);
         if (!is_dir($parent)) {
-            mkdir($parent, 0750, true);
+            $parentMode = $this->directoryMode($parent);
+            if (!mkdir($parent, $parentMode, true) && !is_dir($parent)) {
+                throw new RuntimeException('Unable to create an application directory.');
+            }
         }
         if (is_dir($source)) {
             $this->replaceDirectory($source, $target);
@@ -435,7 +462,7 @@ final class GaugeIQUpdater
         if (!copy($source, $target)) {
             throw new RuntimeException('Unable to install a release file.');
         }
-        @chmod($target, 0640);
+        @chmod($target, $this->fileMode($target));
     }
 
     private function download(string $url, string $target): void
