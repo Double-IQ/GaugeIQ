@@ -580,7 +580,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite"></div>
         <details class="algorithm-details">
             <summary>How the conditions trend is classified</summary>
-            <p>This is a separate directional assessment, not the Weather Change score.</p>
+            <p>This is a separate directional assessment, not the Weather Stability score.</p>
             <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
         </details>
     </section>
