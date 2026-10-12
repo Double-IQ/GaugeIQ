@@ -259,12 +259,22 @@ final class GaugeIQUpdater
             if ($name === false || !str_starts_with($name, $prefix)) {
                 continue;
             }
+
+            // The ZIP contains an entry for its root folder (for example,
+            // "GaugeIQ-1.0.1/"). It is the expected wrapper directory, not an
+            // empty relative path, and must be allowed.
+            if ($name === $prefix) {
+                continue;
+            }
+
             $relative = substr($name, strlen($prefix));
-            if ($relative === '' || str_starts_with($relative, '/') || str_contains($relative, '\\')) {
+            $isDirectory = str_ends_with($name, '/');
+            $checkedRelative = $isDirectory ? substr($relative, 0, -1) : $relative;
+            if ($checkedRelative === '' || str_starts_with($checkedRelative, '/') || str_contains($relative, '\\')) {
                 throw new RuntimeException('The release package contains an unsafe path.');
             }
-            foreach (explode('/', $relative) as $part) {
-                if ($part === '..' || $part === '') {
+            foreach (explode('/', $checkedRelative) as $part) {
+                if ($part === '..' || $part === '.' || $part === '') {
                     throw new RuntimeException('The release package contains an unsafe path.');
                 }
             }
