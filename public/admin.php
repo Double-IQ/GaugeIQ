@@ -493,7 +493,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
             <div id="valueField">
                 <label for="value">Value</label>
-                <input id="value" name="value" type="number" min="1" max="10" step="1" value="3">
+                <input id="value" name="value" type="number" min="0" max="10" step="1" value="3">
                 <p id="weatherStabilityHelp" class="alert-help muted" hidden>Alert when Weather Stability falls to or below this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
             </div>
             <div id="degreesField" class="full" hidden>
