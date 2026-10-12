@@ -279,7 +279,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <section class="card success"><strong>GaugeIQ was updated to <?= h($updated) ?>.</strong><p>Return to the dashboard to verify the new release.</p></section>
 <?php endif; ?>
 <?php if ($updateError): ?>
-<section class="card error"><strong>GaugeIQ could not complete the update.</strong><p>The detailed error was written to the server log.</p></section>
+<section class="card error"><strong>GaugeIQ could not complete the update.</strong><p>For details, open <code>storage/update/manual-update.log</code> in cPanel File Manager inside the GaugeIQ project folder.</p></section>
 <?php endif; ?>
 <?php if ($notice): ?><div class="notice"><?= h($notice) ?></div><?php endif; ?>
 <?php if ($errors): ?><div class="error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
