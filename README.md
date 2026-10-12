@@ -110,13 +110,13 @@ Alerts can be configured independently. Wind monitoring supports speed threshold
 
 ### Weather Stability score
 
-The dashboard's **Weather Stability** score is the inverse of the weighted weather-change calculation across the latest available observation window (up to six hours): 10 means very stable, and 0 means very unstable. It is an indicator of recent change, not a forecast or probability of rain. Push alerts use the same weighted score and alert when stability falls to or below the configured threshold. The intensity bar has been removed, and the individual reason cards stay hidden until **Show reasons** is pressed.
+The dashboard's **Weather Stability** score is the inverse of the weighted weather-change calculation across the latest available observation window (up to six hours): 10 means very stable, and 0 means very unstable. It is an indicator of recent change, not a forecast or probability of rain. Push alerts use the same weighted score and alert when stability falls to or below the configured threshold. The intensity bar has been removed, and the individual reason cards stay hidden until **More information** is pressed.
 
 For each available signal, GaugeIQ calculates a severity from 0 to 1, applies its configured weight, and normalizes over signals with valid readings:
 
 `score = 10 × weighted severity sum ÷ valid-signal weight sum`
 
-The result is capped at 10 and displayed to one decimal place. Missing readings are excluded rather than treated as zero. Current provisional signal weights and thresholds are documented in the dashboard's **Show calculation and weights** disclosure. These engineering thresholds have not yet been statistically calibrated, so the score should be interpreted as an indicator of recent change rather than a calibrated risk prediction.
+The result is capped at 10 and displayed to one decimal place. Missing readings are excluded rather than treated as zero. Current provisional signal weights and thresholds are documented in the dashboard's **More information** disclosure. These engineering thresholds have not yet been statistically calibrated, so the score should be interpreted as an indicator of recent change rather than a calibrated risk prediction.
 
 When the reason cards are opened, unchanged/zero-severity signals are hidden. Air pressure, temperature, humidity, wind speed, temperature/dew-point gap, rainfall, and cloud cover use an up arrow for increases and a down arrow for decreases; wind direction uses a two-way arrow and reports its shortest angular shift in degrees. Reason cards omit the observation-window duration to keep them concise.
 
