@@ -3,8 +3,56 @@ declare(strict_types=1);
 
 final class AlertRuleService
 {
-    public function __construct(private PDO $db)
+    private DateTimeZone $timezone;
+
+    public function __construct(private PDO $db, ?DateTimeZone $timezone = null)
     {
+        $this->timezone = $timezone ?? new DateTimeZone(date_default_timezone_get());
+        $this->migrateLegacyWeatherChangeRules();
+    }
+
+    /**
+     * Convert saved change-score rules to their inverse Weather Stability
+     * equivalent once, so existing rules keep approximately the same intent.
+     */
+    private function migrateLegacyWeatherChangeRules(): void
+    {
+        $rows = $this->db->query(
+            "SELECT id, condition_type, configuration_json
+             FROM gaugeiq_alert_rules
+             WHERE metric = 'weather_change'"
+        )->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($rows === []) {
+            return;
+        }
+
+        $update = $this->db->prepare(
+            'UPDATE gaugeiq_alert_rules
+             SET metric = ?, condition_type = ?, configuration_json = ?, updated_at = ?
+             WHERE id = ?'
+        );
+
+        foreach ($rows as $row) {
+            if ((string)$row['condition_type'] !== 'above') {
+                continue;
+            }
+
+            $oldConfiguration = json_decode((string)$row['configuration_json'], true);
+            if (!is_array($oldConfiguration) || !isset($oldConfiguration['value']) || !is_numeric($oldConfiguration['value'])) {
+                continue;
+            }
+
+            $oldThreshold = max(1, min(10, (int)round((float)$oldConfiguration['value'])));
+            $stabilityThreshold = 10 - $oldThreshold;
+            $update->execute([
+                'weather_stability',
+                'below',
+                json_encode(['value' => $stabilityThreshold], JSON_THROW_ON_ERROR),
+                gmdate('c'),
+                (int)$row['id'],
+            ]);
+        }
     }
 
     public function all(bool $enabledOnly = false): array
@@ -120,12 +168,12 @@ final class AlertRuleService
         return $matches;
     }
 
-    public function evaluateWeatherChange(): array
+    public function evaluateWeatherStability(): array
     {
         $matches = [];
 
         foreach ($this->all(true) as $rule) {
-            if ((string)$rule['metric'] !== 'weather_change' || !$this->cooldownExpired($rule)) {
+            if ((string)$rule['metric'] !== 'weather_stability' || !$this->cooldownExpired($rule)) {
                 continue;
             }
 
@@ -134,7 +182,7 @@ final class AlertRuleService
                 continue;
             }
 
-            $result = $this->weatherChange((string)$rule['condition_type'], $config);
+            $result = $this->weatherStability((string)$rule['condition_type'], $config);
             if ($result === null) {
                 continue;
             }
@@ -192,7 +240,7 @@ final class AlertRuleService
             'wind_speed' => $this->windSpeed($type, $config, $previous, $current),
             'wind_direction' => $this->windDirection($type, $config, $previous, $current),
             'wind' => $this->combinedWind($type, $config, $previous, $current),
-            'weather_change' => $this->weatherChange($type, $config),
+            'weather_stability' => null,
             default => null,
         };
     }
@@ -275,144 +323,318 @@ final class AlertRuleService
         return null;
     }
 
-    private function weatherChange(string $type, array $c): ?string
+    private function weatherStability(string $type, array $configuration): ?string
     {
-        if ($type !== 'above') {
+        if ($type !== 'below') {
             return null;
         }
 
-        $threshold = max(1.0, min(10.0, (float)($c['value'] ?? 0)));
-        $sinceTimestamp = time() - (6 * 3600);
-        $changedAtQuery = $this->db->prepare(
-            "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
-        );
-        $changedAtQuery->execute();
-        $changedAt = $changedAtQuery->fetchColumn();
-        $changedTimestamp = is_string($changedAt) ? strtotime($changedAt) : false;
-        if ($changedTimestamp !== false) {
-            $sinceTimestamp = max($sinceTimestamp, $changedTimestamp);
-        }
-        $since = gmdate('c', $sinceTimestamp);
-        $stmt = $this->db->prepare(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at
-             FROM gaugeiq_pressure_readings
-             WHERE created_at >= ?
-             ORDER BY created_at ASC, id ASC'
-        );
-        $stmt->execute([$since]);
-        $readings = $stmt->fetchAll();
-
-        $score = $this->weatherChangeScore($readings);
-        if ($score === null || $score < $threshold) {
+        $threshold = max(0.0, min(10.0, (float)($configuration['value'] ?? -1)));
+        $score = $this->currentWeatherStabilityScore();
+        if ($score === null || $score > $threshold) {
             return null;
         }
 
-        return sprintf('Weather change score reached %d/10.', $score);
+        return sprintf(
+            'Weather Stability is %.1f/10 (your alert threshold is %.0f/10).',
+            $score,
+            $threshold
+        );
     }
 
-    private function weatherChangeScore(array $readings): ?int
+    /**
+     * Mirror the weighted six-hour calculation in public/js/app.js.
+     * The alert must use the same live sources, observation timestamps,
+     * duplicate-time handling, signal weights and rounding as the card.
+     */
+    private function currentWeatherStabilityScore(): ?float
     {
+        $now = new DateTimeImmutable('now', $this->timezone);
+        $nowTimestamp = $now->getTimestamp();
+        $fromTimestamp = $nowTimestamp - (6 * 3600);
+        $fromDay = (new DateTimeImmutable('@' . $fromTimestamp))
+            ->setTimezone($this->timezone)
+            ->format('Y-m-d');
+
+        $stmt = $this->db->prepare(
+            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent,
+                    wind_speed_kmh, wind_direction_degrees, rainfall_mm,
+                    cloud_cover_percent, weather_code, observed_at, created_at, source
+             FROM gaugeiq_pressure_readings
+             WHERE observed_at >= ?
+             ORDER BY observed_at ASC, id ASC'
+        );
+        $stmt->execute([$fromDay]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $liveReadings = [];
+        $recentBackfill = [];
+        foreach ($rows as $row) {
+            $source = $row['source'] ?? null;
+            $isLive = $source === null || $source === 'Open-Meteo';
+            $isBackfill = $source === 'Open-Meteo Recent Backfill';
+            if (!$isLive && !$isBackfill) {
+                continue;
+            }
+
+            $observedAt = trim((string)($row['observed_at'] ?? ''));
+            if ($observedAt === '') {
+                continue;
+            }
+            try {
+                $observedDate = new DateTimeImmutable($observedAt, $this->timezone);
+            } catch (Throwable) {
+                continue;
+            }
+
+            $timestamp = $observedDate->getTimestamp();
+            if ($timestamp < $fromTimestamp || $timestamp > $nowTimestamp + 300) {
+                continue;
+            }
+
+            $row['_weather_timestamp'] = $timestamp;
+            if ($isLive) {
+                $liveReadings[] = $row;
+            } else {
+                $recentBackfill[] = $row;
+            }
+        }
+
+        $changeScore = $this->weatherChangeScore($liveReadings);
+        if ($changeScore === null && $recentBackfill !== []) {
+            $changeScore = $this->weatherChangeScore(array_merge($liveReadings, $recentBackfill));
+        }
+        if ($changeScore === null) {
+            return null;
+        }
+
+        return round(10.0 - $changeScore, 1, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * Return the dashboard's 0–10 weighted change score before inversion.
+     * Higher change score means lower Weather Stability.
+     */
+    private function weatherChangeScore(array $readings): ?float
+    {
+        $fields = [
+            'temperature' => 'temperature_c',
+            'dewPoint' => 'dew_point_c',
+            'pressure' => 'pressure_hpa',
+            'humidity' => 'humidity_percent',
+            'wind' => 'wind_speed_kmh',
+            'direction' => 'wind_direction_degrees',
+            'rain' => 'rainfall_mm',
+            'cloud' => 'cloud_cover_percent',
+            'weatherCode' => 'weather_code',
+        ];
+
         $valid = [];
         foreach ($readings as $item) {
-            $time = strtotime((string)($item['created_at'] ?? $item['observed_at'] ?? ''));
+            $time = isset($item['_weather_timestamp']) ? (int)$item['_weather_timestamp'] : false;
             if ($time === false) {
                 continue;
             }
 
-            $valid[] = [
-                'temperature' => (float)$item['temperature_c'],
-                'dewPoint' => (float)$item['dew_point_c'],
-                'pressure' => (float)$item['pressure_hpa'],
-                'humidity' => (float)$item['humidity_percent'],
-                'wind' => (float)$item['wind_speed_kmh'],
-                'direction' => (float)$item['wind_direction_degrees'],
-                'rain' => isset($item['rainfall_mm']) && is_numeric($item['rainfall_mm']) ? (float)$item['rainfall_mm'] : null,
-                'cloud' => isset($item['cloud_cover_percent']) && is_numeric($item['cloud_cover_percent']) ? (float)$item['cloud_cover_percent'] : null,
-                'weatherCode' => isset($item['weather_code']) && is_numeric($item['weather_code']) ? (int)$item['weather_code'] : null,
+            $row = [
+                'source' => $item['source'] ?? null,
                 'time' => $time,
             ];
+            foreach ($fields as $key => $column) {
+                $row[$key] = $this->weatherNumeric($item[$column] ?? null);
+            }
+            $valid[] = $row;
         }
+
+        usort($valid, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
+
+        // Match the dashboard: remove duplicate timestamps and prefer live
+        // observations over temporary model backfill at the same timestamp.
+        $byTime = [];
+        foreach ($valid as $row) {
+            $key = (string)$row['time'];
+            $existing = $byTime[$key] ?? null;
+            if (
+                $existing === null ||
+                (($existing['source'] ?? null) === 'Open-Meteo Recent Backfill' &&
+                    ($row['source'] ?? null) !== 'Open-Meteo Recent Backfill') ||
+                ($existing['source'] ?? null) === ($row['source'] ?? null)
+            ) {
+                $byTime[$key] = $row;
+            }
+        }
+        $valid = array_values($byTime);
+        usort($valid, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
 
         if (count($valid) < 3) {
             return null;
         }
 
-        $first = $valid[0];
-        $last = $valid[count($valid) - 1];
-        $hours = max(0.5, ($last['time'] - $first['time']) / 3600);
-        $score = 0;
-
-        $pressureDelta = $last['pressure'] - $first['pressure'];
-        $pressureRate = abs($pressureDelta) / $hours;
-        if ($pressureRate >= 0.5) $score += $pressureRate >= 1.0 ? 2 : 1;
-        if ($pressureRate >= 1.5) $score += 1;
-
-        $humidityDelta = $last['humidity'] - $first['humidity'];
-        $humidityChange = abs($humidityDelta);
-        if ($humidityChange >= 4) $score += $humidityChange >= 8 ? 2 : 1;
-
-        $temperatureDelta = $last['temperature'] - $first['temperature'];
-        $temperatureChange = abs($temperatureDelta);
-        if ($temperatureChange >= 1) $score += $temperatureChange >= 2 ? 2 : 1;
-
-        $windDelta = $last['wind'] - $first['wind'];
-        $windChange = abs($windDelta);
-        if ($windChange >= 8) $score += $windChange >= 15 ? 2 : 1;
-
-        $directionDifference = $this->directionDifference($first['direction'], $last['direction']);
-        if ($directionDifference >= 30) $score += $directionDifference >= 60 ? 2 : 1;
-
-        $firstSpread = $first['temperature'] - $first['dewPoint'];
-        $lastSpread = $last['temperature'] - $last['dewPoint'];
-        if (($lastSpread - $firstSpread) <= -1.5) {
-            $score += 1;
+        $totalHours = ($valid[count($valid) - 1]['time'] - $valid[0]['time']) / 3600;
+        if ($totalHours < 1) {
+            return null;
         }
 
-        // New precipitation signal: the start or strengthening of rainfall is
-        // a direct indicator that conditions are changing.
-        if ($first['rain'] !== null && $last['rain'] !== null) {
-            $rainDelta = $last['rain'] - $first['rain'];
-            if (($first['rain'] < 0.2 && $last['rain'] >= 0.2) || $rainDelta >= 1.0) {
-                $score += 2;
-            } elseif ($rainDelta >= 0.2) {
-                $score += 1;
+        $weights = [
+            'pressure' => 2,
+            'temperature' => 1,
+            'humidity' => 1,
+            'windSpeed' => 2,
+            'windDirection' => 1,
+            'dewPointSpread' => 1,
+            'rainfall' => 2,
+            'cloudCover' => 1,
+            'weatherCode' => 1,
+        ];
+        $components = [];
+        $addComponent = static function (string $key, ?array $pair, float $severity) use (&$components, $weights): void {
+            if ($pair === null || !is_finite($severity)) {
+                return;
             }
+            $components[] = [
+                'weight' => $weights[$key],
+                'severity' => max(0.0, min(1.0, $severity)),
+            ];
+        };
+
+        $pressure = $this->weatherFieldPair($valid, 'pressure');
+        if ($pressure !== null) {
+            $addComponent('pressure', $pressure, $this->weatherSeverity(abs($pressure['delta']) / $pressure['hours'], 0.3, 1.5));
         }
 
-        // Cloud-cover movement captures a developing or clearing system even
-        // when rainfall has not started yet.
-        if ($first['cloud'] !== null && $last['cloud'] !== null) {
-            $cloudChange = abs($last['cloud'] - $first['cloud']);
-            if ($cloudChange >= 40) {
-                $score += 2;
-            } elseif ($cloudChange >= 20) {
-                $score += 1;
-            }
+        $temperature = $this->weatherFieldPair($valid, 'temperature');
+        if ($temperature !== null) {
+            $addComponent('temperature', $temperature, $this->weatherSeverity(abs($temperature['delta']) * 6 / $temperature['hours'], 1, 3));
         }
 
-        // Weather code is categorical, so use severity transitions rather
-        // than treating the WMO code as a continuous numeric measurement.
-        if ($first['weatherCode'] !== null && $last['weatherCode'] !== null && $first['weatherCode'] !== $last['weatherCode']) {
-            $severity = static function (int $code): int {
-                return match (true) {
-                    in_array($code, [95, 96, 99], true) => 5,
-                    in_array($code, [65, 67, 75, 82, 86], true) => 4,
-                    in_array($code, [61, 63, 66, 71, 73, 77, 80, 81, 85], true) => 3,
-                    in_array($code, [45, 48, 51, 53, 55, 56, 57], true) => 2,
-                    in_array($code, [2, 3], true) => 1,
-                    default => 0,
-                };
-            };
-
-            $severityChange = abs($severity($last['weatherCode']) - $severity($first['weatherCode']));
-            if ($severityChange >= 2) {
-                $score += 2;
-            } else {
-                $score += 1;
-            }
+        $humidity = $this->weatherFieldPair($valid, 'humidity');
+        if ($humidity !== null) {
+            $addComponent('humidity', $humidity, $this->weatherSeverity(abs($humidity['delta']) * 6 / $humidity['hours'], 4, 12));
         }
 
-        return min(10, $score);
+        $wind = $this->weatherFieldPair($valid, 'wind');
+        if ($wind !== null) {
+            $addComponent('windSpeed', $wind, $this->weatherSeverity(abs($wind['delta']) * 6 / $wind['hours'], 8, 20));
+        }
+
+        $direction = $this->weatherFieldPair($valid, 'direction');
+        if ($direction !== null) {
+            $shift = $this->weatherDirectionDifference($direction['first'], $direction['last']);
+            $addComponent('windDirection', $direction, $this->weatherSeverity($shift, 20, 90));
+        }
+
+        $firstTemp = $this->weatherFieldPair($valid, 'temperature');
+        $firstDew = $this->weatherFieldPair($valid, 'dewPoint');
+        if ($firstTemp !== null && $firstDew !== null) {
+            $spreadFirst = $firstTemp['first'] - $firstDew['first'];
+            $spreadLast = $firstTemp['last'] - $firstDew['last'];
+            $narrowing = $spreadFirst - $spreadLast;
+            $addComponent('dewPointSpread', [
+                'first' => $spreadFirst,
+                'last' => $spreadLast,
+                'delta' => $spreadLast - $spreadFirst,
+                'hours' => min($firstTemp['hours'], $firstDew['hours']),
+            ], $this->weatherSeverity($narrowing, 1, 3));
+        }
+
+        $rain = $this->weatherFieldPair($valid, 'rain');
+        if ($rain !== null) {
+            $addComponent('rainfall', $rain, $this->weatherSeverity(abs($rain['delta']) * 6 / $rain['hours'], 0.2, 2));
+        }
+
+        $cloud = $this->weatherFieldPair($valid, 'cloud');
+        if ($cloud !== null) {
+            $addComponent('cloudCover', $cloud, $this->weatherSeverity(abs($cloud['delta']) * 6 / $cloud['hours'], 15, 50));
+        }
+
+        $codes = $this->weatherFieldPair($valid, 'weatherCode');
+        if ($codes !== null) {
+            $severityChange = abs(
+                $this->weatherCodeSeverity((int)$codes['last']) -
+                $this->weatherCodeSeverity((int)$codes['first'])
+            );
+            $changed = (int)$codes['first'] !== (int)$codes['last'];
+            $severity = $changed
+                ? max($severityChange > 0 ? $severityChange / 5 : 0.25, 0.25)
+                : 0.0;
+            $addComponent('weatherCode', $codes, $severity);
+        }
+
+        if (count($components) < 5) {
+            return null;
+        }
+
+        $availableWeight = 0.0;
+        $weightedSeverity = 0.0;
+        foreach ($components as $component) {
+            $availableWeight += $component['weight'];
+            $weightedSeverity += $component['weight'] * $component['severity'];
+        }
+        if ($availableWeight <= 0) {
+            return null;
+        }
+
+        return round(10 * $weightedSeverity / $availableWeight, 1, PHP_ROUND_HALF_UP);
+    }
+
+    private function weatherFieldPair(array $readings, string $field): ?array
+    {
+        $available = array_values(array_filter(
+            $readings,
+            static fn(array $row): bool => $row[$field] !== null && is_finite((float)$row[$field])
+        ));
+        if (count($available) < 2) {
+            return null;
+        }
+
+        $first = $available[0];
+        $last = $available[count($available) - 1];
+        $hours = ($last['time'] - $first['time']) / 3600;
+        if (!is_finite($hours) || $hours <= 0) {
+            return null;
+        }
+
+        return [
+            'first' => (float)$first[$field],
+            'last' => (float)$last[$field],
+            'delta' => (float)$last[$field] - (float)$first[$field],
+            'hours' => $hours,
+        ];
+    }
+
+    private function weatherNumeric(mixed $value): ?float
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return null;
+        }
+        $number = (float)$value;
+        return is_finite($number) ? $number : null;
+    }
+
+    private function weatherSeverity(float $magnitude, float $trigger, float $maximum): float
+    {
+        if (!is_finite($magnitude) || $magnitude < $trigger) {
+            return 0.0;
+        }
+        return max(0.0, min(1.0, $magnitude / $maximum));
+    }
+
+    private function weatherDirectionDifference(float $a, float $b): float
+    {
+        $difference = abs(fmod($a - $b + 360.0, 360.0));
+        return min($difference, 360.0 - $difference);
+    }
+
+    private function weatherCodeSeverity(int $code): int
+    {
+        return match (true) {
+            in_array($code, [95, 96, 99], true) => 5,
+            in_array($code, [65, 67, 75, 82, 86], true) => 4,
+            in_array($code, [61, 63, 66, 71, 73, 77, 80, 81, 85], true) => 3,
+            in_array($code, [45, 48, 51, 53, 55, 56, 57], true) => 2,
+            in_array($code, [2, 3], true) => 1,
+            default => 0,
+        };
     }
 
     private function combinedWind(string $type, array $c, array $p, array $n): ?string
@@ -462,7 +684,7 @@ final class AlertRuleService
 
     private function validate(string $metric, string $type, array $configuration): void
     {
-        $allowedMetrics = ['pressure', 'humidity', 'wind_speed', 'wind_direction', 'wind', 'weather_change'];
+        $allowedMetrics = ['pressure', 'humidity', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
         $allowedTypes = ['change', 'above', 'below', 'specific', 'speed_and_direction'];
 
         if (!in_array($metric, $allowedMetrics, true) || !in_array($type, $allowedTypes, true)) {
@@ -473,8 +695,8 @@ final class AlertRuleService
             throw new InvalidArgumentException('Alert rule configuration cannot be empty.');
         }
 
-        if ($metric === 'weather_change' && ($type !== 'above' || !isset($configuration['value']))) {
-            throw new InvalidArgumentException('Weather change alerts require a score threshold.');
+        if ($metric === 'weather_stability' && ($type !== 'below' || !isset($configuration['value']) || !is_numeric($configuration['value']) || (float)$configuration['value'] < 0 || (float)$configuration['value'] > 10)) {
+            throw new InvalidArgumentException('Weather Stability alerts require a threshold from 0 to 10 and the Falls to or below condition.');
         }
     }
 }
