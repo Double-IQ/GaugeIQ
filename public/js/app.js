@@ -1163,6 +1163,8 @@ if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
         weatherChangeReasonsToggle.setAttribute('aria-expanded', String(willShow));
         weatherChangeReasonsToggle.setAttribute('aria-label', willShow ? 'Hide weather stability reasons' : 'Show weather stability reasons');
         weatherChangeReasonsToggle.title = willShow ? 'Hide information' : 'More information';
+        const label = document.getElementById('weatherChangeReasonsButtonLabel');
+        if (label) label.textContent = willShow ? 'Less information' : 'More information';
     });
 }
 
