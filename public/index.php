@@ -49,8 +49,7 @@ try {
     if (is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
         $latestStmt = $pdo->prepare(
             "SELECT * FROM gaugeiq_pressure_readings
-             WHERE created_at >= ?
-               AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
+             WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo')
              ORDER BY id DESC LIMIT 1"
         );
         $latestStmt->execute([$activeLocationChangedAt]);
@@ -58,7 +57,8 @@ try {
         $rangeStmt = $pdo->prepare(
             "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
              FROM gaugeiq_pressure_readings
-             WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo')"
+             WHERE created_at >= ?
+               AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))"
         );
         $rangeStmt->execute([$activeLocationChangedAt]);
         $pressureHistory = $rangeStmt->fetch() ?: [];
