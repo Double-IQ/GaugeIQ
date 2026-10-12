@@ -146,7 +146,7 @@ try {
     $stabilityThresholdStmt->execute();
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
     $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
-        && (float)$stabilityThresholdValue >= 1 && (float)$stabilityThresholdValue <= 10)
+        && (float)$stabilityThresholdValue >= 0 && (float)$stabilityThresholdValue <= 10)
         ? (int)$stabilityThresholdValue
         : null;
     $recentAlerts = $pdo->query(
