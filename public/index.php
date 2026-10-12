@@ -189,7 +189,7 @@ if ($current && !empty($current['observed_at'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261012-stability-heading-left-1">
+<link rel="stylesheet" href="css/app.css?v=20261012-location-header-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -202,13 +202,11 @@ if ($current && !empty($current['observed_at'])) {
 
     <header>
         <div class="dashboard-heading">
-            <p class="eyebrow">GAUGЕIQ</p>
-            <h1>GaugeIQ</h1>
-            <p class="muted" id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
+            <h1 id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></h1>
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <a href="login.php" class="secondary button-link">Admin</a>
+            <a href="login.php" class="secondary button-link">GaugeIQ</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
