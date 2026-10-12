@@ -567,10 +567,9 @@ final class GaugeIQUpdater
             $pdo->exec('VACUUM INTO ' . $pdo->quote($backupPath));
         } catch (PDOException $e) {
             $message = $e->getMessage();
-            $unsupportedVacuumInto = preg_match(
-                '/near\s+["\\']?INTO["\\']?\s*:\s*syntax error|syntax error.*\bINTO\b/i',
-                $message
-            ) === 1;
+            $unsupportedVacuumInto =
+                stripos($message, 'near "INTO": syntax error') !== false ||
+                (stripos($message, 'syntax error') !== false && stripos($message, 'INTO') !== false);
 
             if (!$unsupportedVacuumInto) {
                 throw $e;
