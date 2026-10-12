@@ -181,7 +181,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261011-wind-dot-arrow-1">
+<link rel="stylesheet" href="css/app.css?v=20261012-stability-score-inversion-1">
 <title>GaugeIQ</title>
 </head>
 <body>
