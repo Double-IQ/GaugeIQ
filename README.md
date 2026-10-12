@@ -95,7 +95,7 @@ GaugeIQ keeps live readings and Open-Meteo historical weather in the server-side
 
 On installation, GaugeIQ makes a best-effort request for the most recent 24 hours of hourly Open-Meteo model values. The scheduled monitor refreshes this separate `Open-Meteo Recent Backfill` dataset about once an hour (using the existing 30-minute cron; only refresh when the previous successful backfill is at least 45 minutes old). On existing installations, the first scheduled run creates it automatically if no recent-backfill success has been recorded.
 
-Weather Change and Conditions Trend first calculate from live monitor readings exactly as before. Only when a live-only calculation cannot produce a result may that meter temporarily retry with recent backfill values in the same six-hour window. Model values retain their actual hourly timestamps, duplicate times prefer live readings, and a visible note identifies when fallback estimates were used. As soon as the live-only calculation can produce a result again, the meter stops using the fallback. These estimates are kept out of ordinary history graphs and do not feed server-side alert baselines. Installation and cron treat this backfill as best-effort, so a provider failure does not interrupt normal live monitoring.
+Weather Stability and Conditions Trend first calculate from live monitor readings exactly as before. Only when a live-only calculation cannot produce a result may that meter temporarily retry with recent backfill values in the same six-hour window. Model values retain their actual hourly timestamps, duplicate times prefer live readings, and a visible note identifies when fallback estimates were used. As soon as the live-only calculation can produce a result again, the meter stops using the fallback. These estimates are kept out of ordinary history graphs and do not feed server-side alert baselines. Installation and cron treat this backfill as best-effort, so a provider failure does not interrupt normal live monitoring.
 
 ## Weather monitoring and dashboard insights
 
@@ -108,9 +108,9 @@ GaugeIQ records:
 
 Alerts can be configured independently. Wind monitoring supports speed thresholds, direction-change thresholds, and specific compass directions. Direction calculations use degrees and correctly handle the 0°/360° boundary.
 
-### Weather Change score
+### Weather Stability score
 
-The dashboard's **Weather Change** score estimates the intensity of change across the latest available observation window (up to six hours). It is a weighted change indicator, not a forecast or probability of rain. The dashboard shows the score in a circle; on mobile, the score and summary are centred. The intensity bar has been removed, and the individual reason cards stay hidden until **Show reasons** is pressed.
+The dashboard's **Weather Stability** score is the inverse of the weighted weather-change calculation across the latest available observation window (up to six hours): 10 means very stable, and 0 means very unstable. It is an indicator of recent change, not a forecast or probability of rain. Push alerts use the same weighted score and alert when stability falls to or below the configured threshold. The intensity bar has been removed, and the individual reason cards stay hidden until **Show reasons** is pressed.
 
 For each available signal, GaugeIQ calculates a severity from 0 to 1, applies its configured weight, and normalizes over signals with valid readings:
 
