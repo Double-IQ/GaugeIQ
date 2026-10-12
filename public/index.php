@@ -536,9 +536,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="section-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Stability</h2>
-                <p class="muted">A weighted measure of how much recent conditions have changed — not a rain probability.</p>
+                <p class="muted">A measure of how consistently recent conditions have behaved over six hours — not a rain probability or a safety rating.</p>
             </div>
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather change score">—</div>
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
         <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
@@ -674,6 +674,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261012-weather-stability-baseline-1"></script>
+<script src="js/app.js?v=20261012-stability-score-inversion-1"></script>
 </body>
 </html>
