@@ -174,6 +174,14 @@ $monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
 $monitorHealthy = $monitorAge !== null && $monitorAge <= ($monitorCronMinutes * 60 * 1.5);
 $cronScript = realpath(__DIR__ . '/../cron/check-pressure.php') ?: (__DIR__ . '/../cron/check-pressure.php');
 $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
+
+$lastRefreshedLabel = 'Last updated — waiting for the first scheduled server check';
+if ($current && !empty($current['observed_at'])) {
+    $lastRefreshedTimestamp = strtotime((string)$current['observed_at']);
+    if ($lastRefreshedTimestamp !== false) {
+        $lastRefreshedLabel = 'Last updated at ' . date('d M Y, H:i', $lastRefreshedTimestamp);
+    }
+}
 ?><!doctype html>
 <html lang="en">
 <head>
@@ -181,7 +189,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261012-stability-score-inversion-1">
+<link rel="stylesheet" href="css/app.css?v=20261012-header-rainfall-notification-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -193,10 +201,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
 
     <header>
-        <div>
+        <div class="dashboard-heading">
             <p class="eyebrow">GAUGЕIQ</p>
             <h1>GaugeIQ</h1>
             <p class="muted" id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></p>
+            <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
             <a href="login.php" class="secondary button-link">Admin</a>
@@ -224,8 +233,19 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     $pressureHigh = isset($pressureHistory['pressure_high']) ? (float)$pressureHistory['pressure_high'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
     $pressureRange = max(0.1, $pressureHigh - $pressureLow);
     $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
-    $rainForecastAvailable = $current && isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm']);
-    $rainForecastMm = $rainForecastAvailable ? max(0.0, (float)$forecast[0]['rain_mm']) : 0.0;
+    $rainForecastValue = null;
+    if ($current && isset($forecast[0]) && is_array($forecast[0])) {
+        // Prefer rain-only daily totals; the precipitation total can also include snow.
+        if (isset($forecast[0]['rain_only_mm']) && is_numeric($forecast[0]['rain_only_mm'])) {
+            $rainForecastValue = (float)$forecast[0]['rain_only_mm'];
+        } elseif (isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm'])) {
+            // Backward compatibility for stored forecasts created before rain_only_mm existed.
+            $rainForecastValue = (float)$forecast[0]['rain_mm'];
+        }
+    }
+    $rainForecastAvailable = $rainForecastValue !== null;
+    $rainForecastMm = $rainForecastAvailable ? max(0.0, $rainForecastValue) : 0.0;
+    $rainForecastRatioPercent = $rainForecastAvailable ? max(0.0, min(100.0, ($rainForecastMm / 10.0) * 100.0)) : 0.0;
     $rainProbabilityPercent = $current && isset($forecast[0]['rain_probability_percent']) && is_numeric($forecast[0]['rain_probability_percent'])
         ? max(0, min(100, (int)$forecast[0]['rain_probability_percent']))
         : null;
@@ -469,17 +489,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         ['label' => 'Cloud cover %', 'value' => $cloudCoverPercent, 'display' => $current ? number_format($cloudCoverPercent, 0) : '—', 'ratio' => $cloudBarRatio, 'decimals' => 0],
     ];
     if ($current && $rainfallMm > 0.0) {
-        $climateBars[] = ['label' => 'Rain mm', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
-    }
-    if ($current && $rainForecastMm > 0.0) {
-        $climateBars[] = [
-            'label' => 'Rain Predicted in mm',
-            'value' => $rainForecastMm,
-            'display' => number_format($rainForecastMm, 2),
-            'ratio' => max(0.0, min(1.0, $rainForecastMm / 10.0)),
-            'decimals' => 2,
-            'kind' => 'predicted-rain',
-        ];
+        $climateBars[] = ['label' => 'Rainfall (mm)', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
     }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
@@ -519,9 +529,15 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" <?= $rainProbabilityPercent !== null ? 'aria-valuenow="' . $rainProbabilityPercent . '"' : 'aria-valuetext="Forecast probability unavailable"' ?> id="rainProbabilityTrack">
             <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%"></div>
         </div>
-        <div class="rain-probability-meta">
-            <span>Forecast rainfall</span>
-            <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
+        <div class="rainfall-forecast-block">
+            <div class="rain-probability-meta">
+                <span>Expected rainfall today</span>
+                <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
+            </div>
+            <div class="insight-meter-track rainfall-forecast-track" role="progressbar" aria-label="Expected rainfall today" aria-valuemin="0" aria-valuemax="10" <?= $rainForecastAvailable ? 'aria-valuenow="' . number_format(min(10.0, $rainForecastMm), 1, '.', '') . '"' : 'aria-valuetext="Forecast rainfall unavailable"' ?> id="rainfallForecastTrack">
+                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%"></div>
+            </div>
+            <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
         </div>
         <p class="weather-change-note">Probability comes from the weather provider's daily forecast; rainfall is the predicted daily total. Neither is calculated from humidity alone.</p>
         <details class="algorithm-details">
@@ -632,17 +648,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
 
-    <?php
-    $lastRefreshedLabel = 'Not refreshed yet — waiting for the first scheduled server check';
-    if ($current && !empty($current['observed_at'])) {
-        $lastRefreshedTimestamp = strtotime((string)$current['observed_at']);
-        if ($lastRefreshedTimestamp !== false) {
-            $lastRefreshedLabel = 'Last refreshed at ' . date('d M Y, H:i', $lastRefreshedTimestamp);
-        }
-    }
-    ?>
-    <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
     <p id="status" class="status"></p>
+    <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
 </main>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
@@ -674,6 +681,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261012-stability-score-inversion-1"></script>
+<script src="js/app.js?v=20261012-header-rainfall-notification-1"></script>
 </body>
 </html>
