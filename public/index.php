@@ -189,7 +189,7 @@ if ($current && !empty($current['observed_at'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261012-stability-info-trend-1">
+<link rel="stylesheet" href="css/app.css?v=20261012-stability-more-information-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -564,6 +564,7 @@ if ($current && !empty($current['observed_at'])) {
                 <path d="M12 10.5v6"></path>
                 <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
             </svg>
+            <span id="weatherChangeReasonsButtonLabel">More information</span>
         </button>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
         <p class="weather-change-note">GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
@@ -686,6 +687,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261012-stability-info-trend-1"></script>
+<script src="js/app.js?v=20261012-stability-more-information-1"></script>
 </body>
 </html>
