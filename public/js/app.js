@@ -845,7 +845,7 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=336&include_recent_backfill=1', { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=360&include_recent_backfill=1', { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
@@ -853,6 +853,14 @@ async function loadWeatherChange() {
         // Recent model backfill is considered only when live-only calculations
         // cannot produce their required result.
         const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
+        // Keep live meters live-only, but let the local stability baseline use
+        // archived observed weather as well. Historical forecasts and temporary
+        // recent-model backfill are not treated as observed baseline readings.
+        const baselineReadings = allReadings.filter(item =>
+            item.source == null ||
+            item.source === 'Open-Meteo' ||
+            item.source === 'Open-Meteo Historical Weather'
+        );
         const responseTime = new Date(data.to || Date.now()).getTime();
         const referenceTime = Number.isFinite(responseTime) ? responseTime : Date.now();
         const currentWindowStart = referenceTime - 6 * 60 * 60 * 1000;
@@ -889,7 +897,7 @@ async function loadWeatherChange() {
         }, 0);
         const baselineElement = document.getElementById('weatherBaselineStatus');
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score) && !usedRecentBackfillForScore) {
-            const baseline = weatherLocalBaseline(liveReadings, result.score, latestTime);
+            const baseline = weatherLocalBaseline(baselineReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((referenceTime - latestTime) / 60000));
             baselineElement.textContent = baseline.text + (ageMinutes > 90
                 ? ' Latest live reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
