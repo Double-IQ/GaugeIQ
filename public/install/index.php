@@ -269,13 +269,8 @@ return " . var_export($config, true) . ";
 
             <button type="button" class="secondary" id="locationButton">Use my current location</button>
 
-            <section class="history-option" aria-labelledby="noaaHeading">
-                <p class="step" style="margin-top:28px">2 · HISTORICAL WEATHER DATA</p>
-                <h2 id="noaaHeading">Import historical weather after setup</h2>
-                <p class="muted">After installation, open Admin → Historical data to download observations from a nearby NOAA station directly into GaugeIQ's server database. Scheduled live monitoring will continue using that same database.</p>
-            </section>
 
-            <p class="step" style="margin-top:28px">3 · ADMINISTRATOR</p>
+            <p class="step" style="margin-top:28px">2 · ADMINISTRATOR</p>
             <label for="admin_username">Administrator username</label>
             <input id="admin_username" name="admin_username" value="<?= htmlspecialchars($defaults['admin_username'], ENT_QUOTES) ?>" autocomplete="username" required>
             <label for="admin_password">Administrator password</label>
