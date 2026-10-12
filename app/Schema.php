@@ -305,4 +305,47 @@ SQL);
         $db->exec("UPDATE gaugeiq_schema SET version = 10");
         $version = 10;
     }
+
+    // The old display called this a change-score threshold, while the card now
+    // shows the inverse Weather Stability score. Convert the saved threshold
+    // once so it continues to represent the same alert point after inversion.
+    $stabilitySemantics = $db->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $stabilitySemantics->execute(['stability_alert_threshold_semantics']);
+    $stabilitySemanticsValue = $stabilitySemantics->fetchColumn();
+
+    if ($stabilitySemanticsValue !== 'weather-stability-v1') {
+        $savedThresholdQuery = $db->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $savedThresholdQuery->execute(['stability_alert_threshold']);
+        $savedThreshold = $savedThresholdQuery->fetchColumn();
+
+        if ($savedThreshold !== false && $savedThreshold !== '' && is_numeric($savedThreshold)) {
+            $oldChangeThreshold = max(0, min(10, (int)round((float)$savedThreshold)));
+            $newStabilityThreshold = 10 - $oldChangeThreshold;
+            if ($driver === 'mysql') {
+                $saveThreshold = $db->prepare(
+                    "INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)"
+                );
+            } else {
+                $saveThreshold = $db->prepare(
+                    "INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                     ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`"
+                );
+            }
+            $saveThreshold->execute(['stability_alert_threshold', (string)$newStabilityThreshold]);
+        }
+
+        if ($driver === 'mysql') {
+            $saveSemantics = $db->prepare(
+                "INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)"
+            );
+        } else {
+            $saveSemantics = $db->prepare(
+                "INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
+                 ON CONFLICT(`key`) DO UPDATE SET `value` = excluded.`value`"
+            );
+        }
+        $saveSemantics->execute(['stability_alert_threshold_semantics', 'weather-stability-v1']);
+    }
 }
