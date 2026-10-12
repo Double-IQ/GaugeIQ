@@ -304,11 +304,17 @@ printf(
     $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
 );
 
-$ruleService = new AlertRuleService($pdo);
+try {
+    $alertTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+} catch (Throwable) {
+    $alertTimezone = new DateTimeZone('UTC');
+}
+
+$ruleService = new AlertRuleService($pdo, $alertTimezone);
 $ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
-$weatherChangeMatches = $ruleService->evaluateWeatherChange();
+$weatherStabilityMatches = $ruleService->evaluateWeatherStability();
 $existingRuleIds = array_map(static fn(array $match): int => (int)$match['id'], $ruleMatches);
-foreach ($weatherChangeMatches as $match) {
+foreach ($weatherStabilityMatches as $match) {
     if (!in_array((int)$match['id'], $existingRuleIds, true)) {
         $ruleMatches[] = $match;
     }
