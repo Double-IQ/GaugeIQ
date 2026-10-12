@@ -926,9 +926,8 @@ async function loadWeatherChange() {
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
-            // The calculation remains a weather-change score (higher = more change).
-            // Present its inverse on this card so Weather Stability reads intuitively:
-            // 10 = very stable, 0 = very unstable. Alert thresholds still use change score.
+            // Calculate recent change, then present its inverse as Weather Stability:
+            // 10 = very stable and 0 = very unstable. Push alerts use this same score.
             const stabilityScore = Math.round((10 - result.score) * 10) / 10;
             scoreElement.textContent = stabilityScore.toFixed(1);
             scoreElement.setAttribute('aria-label', 'Weather stability score ' + stabilityScore.toFixed(1) + ' out of 10');
@@ -1040,7 +1039,7 @@ async function loadWeatherChange() {
         }
     } catch {
         scoreElement.textContent = '—';
-        summaryElement.textContent = 'Weather change indicator unavailable.';
+        summaryElement.textContent = 'Weather Stability indicator unavailable.';
         reasonsElement.innerHTML = '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>';
         const trendSummary = document.getElementById('conditionsTrendSummary');
         const trendReasons = document.getElementById('conditionsTrendReasons');
