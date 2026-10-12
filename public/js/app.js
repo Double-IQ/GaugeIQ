@@ -834,9 +834,7 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     return {
         count: historicalScores.length,
         median,
-        text: 'Recent local pattern: median ' + median.toFixed(1) + '/10 across ' +
-            historicalScores.length + ' comparable six-hour windows. Current change is ' + comparison +
-            '. This is a short-term baseline, not a seasonal climate normal.'
+        text: 'Recent local pattern: median ' + median.toFixed(1) + '/10. Current change is ' + comparison + '.'
     };
 }
 
@@ -1025,7 +1023,13 @@ async function loadWeatherChange() {
                 : '');
             if (trendReasons) {
                 trendReasons.innerHTML = trend.reasons.length
-                    ? trend.reasons.map(reason => '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong> (' + (reason.points > 0 ? '+' : '') + reason.points + ' weighted trend points (weight ' + reason.weight + '): ' + reason.explanation + '</span></div>').join('')
+                    ? trend.reasons.map(reason => {
+                        const explanation = String(reason.explanation || '');
+                        const repeatsLabel = explanation.toLowerCase().startsWith(reason.label.toLowerCase() + ' ');
+                        const detail = repeatsLabel ? explanation.slice(reason.label.length).trimStart() : explanation;
+                        const separator = repeatsLabel ? ' ' : ': ';
+                        return '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong>' + separator + detail + '</span></div>';
+                    }).join('')
                     : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
             }
             if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>' + trend.arrow + ' ' + trend.label + '</b>';
@@ -1157,7 +1161,8 @@ if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
         const willShow = weatherChangeReasonsPanel.hidden;
         weatherChangeReasonsPanel.hidden = !willShow;
         weatherChangeReasonsToggle.setAttribute('aria-expanded', String(willShow));
-        weatherChangeReasonsToggle.textContent = willShow ? 'Hide reasons' : 'Show reasons';
+        weatherChangeReasonsToggle.setAttribute('aria-label', willShow ? 'Hide weather stability reasons' : 'Show weather stability reasons');
+        weatherChangeReasonsToggle.title = willShow ? 'Hide information' : 'More information';
     });
 }
 
