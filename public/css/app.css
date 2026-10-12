@@ -374,6 +374,11 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-direction-arrow{display:inline-block;margin:0 2px;font-size:18px;line-height:1;font-weight:900;color:var(--accent)}
 .weather-change-reasons-toggle{width:100%;margin-top:12px;min-height:42px}
 .weather-change-reasons-toggle[aria-expanded="true"]{margin-bottom:0}
+.weather-change-reasons-toggle.info-icon-button{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--surface);color:var(--muted)}
+.info-icon-button svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.info-icon-button .info-icon-dot{fill:currentColor;stroke:none}
+.info-icon-button:hover{color:var(--text);border-color:var(--text)}
+.info-icon-button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .weather-change-note{margin:12px 0 0;font-size:11px;color:var(--muted)}
 @media(max-width:560px){
   .weather-change-card .section-heading{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "score" "summary";align-items:center;justify-items:center;row-gap:9px}
@@ -438,6 +443,7 @@ button:disabled { opacity: .55; cursor: default; }
   .rain-probability-card .section-heading,.conditions-trend-card .section-heading{align-items:center;gap:10px}
   .rain-probability-score{min-width:68px;min-height:54px;font-size:23px;border-radius:13px}
   .conditions-trend-score{width:56px;height:56px;font-size:27px}
+  .conditions-trend-summary{text-align:center}
   .rain-probability-meta{font-size:12px}
   .algorithm-details{font-size:12px}
 }
