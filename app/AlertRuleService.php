@@ -336,7 +336,7 @@ final class AlertRuleService
         }
 
         return sprintf(
-            'Weather Stability is %.1f/10 (your alert threshold is %.0f/10).',
+            'Weather Stability was %.1f/10 at the latest check (alert threshold: %.0f/10).',
             $score,
             $threshold
         );
