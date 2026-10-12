@@ -359,9 +359,11 @@ final class GaugeIQUpdater
     private function copyTree(string $source, string $target): void
     {
         if (is_dir($source)) {
-            if (!is_dir($target)) {
-                mkdir($target, 0750, true);
+            $mode = $this->directoryMode($target);
+            if (!is_dir($target) && !mkdir($target, $mode, true) && !is_dir($target)) {
+                throw new RuntimeException('Unable to create the update backup.');
             }
+            @chmod($target, $mode);
             foreach (array_diff(scandir($source) ?: [], ['.', '..']) as $entry) {
                 $this->copyTree($source . '/' . $entry, $target . '/' . $entry);
             }
@@ -369,11 +371,15 @@ final class GaugeIQUpdater
         }
         $parent = dirname($target);
         if (!is_dir($parent)) {
-            mkdir($parent, 0750, true);
+            $parentMode = $this->directoryMode($parent);
+            if (!mkdir($parent, $parentMode, true) && !is_dir($parent)) {
+                throw new RuntimeException('Unable to create the update backup.');
+            }
         }
         if (!copy($source, $target)) {
             throw new RuntimeException('Unable to create the update backup.');
         }
+        @chmod($target, $this->fileMode($target));
     }
 
     private function swapApplication(string $stage): void
