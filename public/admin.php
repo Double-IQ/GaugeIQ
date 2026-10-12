@@ -141,8 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     saveGaugeSetting($pdo, 'stability_alert_threshold', '');
                     $notice = 'Stability bar alert threshold disabled.';
                 } else {
-                    if (!is_numeric($thresholdInput) || (float)$thresholdInput < 1 || (float)$thresholdInput > 10) {
-                        throw new InvalidArgumentException('The stability alert threshold must be between 1 and 10, or left disabled.');
+                    if (!is_numeric($thresholdInput) || (float)$thresholdInput < 0 || (float)$thresholdInput > 10) {
+                        throw new InvalidArgumentException('The stability alert threshold must be between 0 and 10, or left disabled.');
                     }
                     $threshold = (int)round((float)$thresholdInput);
                     saveGaugeSetting($pdo, 'stability_alert_threshold', (string)$threshold);
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $metric = (string)$_POST['metric'];
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
-                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_change'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_stability'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
 
-                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_change'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'wind_speed', 'weather_stability'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
@@ -383,17 +383,17 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="section-heading">
         <div>
             <h2>Stability bar alert threshold</h2>
-            <p class="muted">Choose the weather-change score at which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
+            <p class="muted">Choose the Weather Stability score at or below which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
         </div>
     </div>
     <form method="post" class="lookback-form">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
         <input type="hidden" name="action" value="save_stability_threshold">
-        <label for="stability_alert_threshold">Flash when the weather-change score reaches</label>
+        <label for="stability_alert_threshold">Flash when Weather Stability falls to or below</label>
         <div class="lookback-controls">
             <select id="stability_alert_threshold" name="stability_alert_threshold">
                 <option value="" <?= $stabilityAlertThreshold === null ? 'selected' : '' ?>>Disabled</option>
-                <?php for ($thresholdOption = 1; $thresholdOption <= 10; $thresholdOption++): ?>
+                <?php for ($thresholdOption = 0; $thresholdOption <= 10; $thresholdOption++): ?>
                     <option value="<?= $thresholdOption ?>" <?= $stabilityAlertThreshold === $thresholdOption ? 'selected' : '' ?>><?= $thresholdOption ?> / 10</option>
                 <?php endfor; ?>
             </select>
@@ -476,7 +476,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <option value="pressure">Air pressure</option>
                     <option value="humidity">Humidity</option>
                     <option value="wind_speed">Wind speed</option>
-                    <option value="weather_change">Weather change score</option>
+                    <option value="weather_stability">Weather Stability</option>
                     <option value="wind_direction">Wind direction</option>
                     <option value="wind">Wind speed + direction</option>
                 </select>
@@ -494,7 +494,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div id="valueField">
                 <label for="value">Value</label>
                 <input id="value" name="value" type="number" min="1" max="10" step="1" value="3">
-                <p id="weatherChangeHelp" class="alert-help muted" hidden>Alert when the weather change detection score reaches this level (1–10).</p>
+                <p id="weatherStabilityHelp" class="alert-help muted" hidden>Alert when Weather Stability falls to or below this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
             </div>
             <div id="degreesField" class="full" hidden>
                 <label>Specific wind direction</label>
@@ -562,7 +562,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-config readable">
                     <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                     <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
-                    <?php elseif ($rule['metric'] === 'weather_change'): ?>Weather change score reaches <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
+                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Stability falls to or below <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
                     <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                     <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
                     <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
@@ -580,7 +580,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-grid">
                     <div class="full"><label>Alert name</label><input name="name" value="<?= h((string)$rule['name']) ?>" required></div>
                     <div><label>Monitor</label><select name="metric" data-edit-metric>
-                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','weather_change'=>'Weather change score','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','weather_stability'=>'Weather Stability','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div><label>Condition</label><select name="condition_type" data-edit-condition>
                         <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
