@@ -268,7 +268,13 @@ if (windGauge) {
 
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
+const notificationEnabledNote = document.getElementById('notificationEnabledNote');
 const historyStatus = document.getElementById('historyStatus');
+
+function showNotificationsEnabledUI() {
+    if (notifyButton) notifyButton.hidden = true;
+    if (notificationEnabledNote) notificationEnabledNote.hidden = false;
+}
 
 async function getRegistration() {
     if (!('serviceWorker' in navigator)) {
@@ -314,10 +320,8 @@ async function enablePushNotifications() {
 
     if (!saveResponse.ok) throw new Error('GaugeIQ could not save this device for notifications.');
 
-    status.textContent = 'Notifications are enabled for GaugeIQ.';
-    notifyButton.innerHTML = '<span class="alerts-led" aria-hidden="true"></span><span>Alerts on</span>';
-    notifyButton.classList.add('alerts-on');
-    notifyButton.disabled = true;
+    if (status) status.textContent = '';
+    showNotificationsEnabledUI();
 }
 
 if ('serviceWorker' in navigator) {
@@ -331,9 +335,7 @@ async function showAlertsOnIfAlreadyEnabled() {
     try {
         const registration = await getRegistration();
         if (await registration.pushManager.getSubscription()) {
-            notifyButton.innerHTML = '<span class="alerts-led" aria-hidden="true"></span><span>Alerts on</span>';
-            notifyButton.classList.add('alerts-on');
-            notifyButton.disabled = true;
+            showNotificationsEnabledUI();
         }
     } catch {
         // Leave the normal enable button available if the existing subscription cannot be checked.
