@@ -615,7 +615,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 <script src="js/admin.js" defer></script>
-<script src="js/alerts.js?v=4" defer></script>
+<script src="js/alerts.js?v=20261012-weather-stability-alert-1" defer></script>
 </main>
 <script>
 document.getElementById('useCurrentLocation')?.addEventListener('click', () => {
