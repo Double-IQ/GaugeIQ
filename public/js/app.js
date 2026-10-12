@@ -926,18 +926,30 @@ async function loadWeatherChange() {
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
-            scoreElement.textContent = result.score.toFixed(1);
-            scoreElement.setAttribute('aria-label', 'Weather change intensity ' + result.score.toFixed(1) + ' out of 10');
-            summaryElement.textContent = result.summary + (usedRecentBackfillForScore
+            // The calculation remains a weather-change score (higher = more change).
+            // Present its inverse on this card so Weather Stability reads intuitively:
+            // 10 = very stable, 0 = very unstable. Alert thresholds still use change score.
+            const stabilityScore = Math.round((10 - result.score) * 10) / 10;
+            scoreElement.textContent = stabilityScore.toFixed(1);
+            scoreElement.setAttribute('aria-label', 'Weather stability score ' + stabilityScore.toFixed(1) + ' out of 10');
+
+            let stabilitySummary;
+            if (stabilityScore >= 8) stabilitySummary = 'Very stable · little material change detected';
+            else if (stabilityScore >= 6) stabilitySummary = 'Stable · only minor changes detected';
+            else if (stabilityScore >= 4) stabilitySummary = 'Moderately stable · noticeable changes detected';
+            else if (stabilityScore >= 2) stabilitySummary = 'Unstable · significant changes detected';
+            else stabilitySummary = 'Very unstable · substantial changes detected';
+
+            summaryElement.textContent = stabilitySummary + (usedRecentBackfillForScore
                 ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
                 : '');
-            const level = result.score >= 6 ? 'high' : result.score >= 3 ? 'moderate' : 'low';
+            const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
             scoreElement.dataset.level = level;
-            document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(result.score));
-            const changeFill = document.getElementById('weatherChangeFill');
-            if (changeFill) {
-                changeFill.style.width = (result.score * 10) + '%';
-                changeFill.dataset.level = level;
+            document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(stabilityScore));
+            const stabilityScoreFill = document.getElementById('weatherChangeFill');
+            if (stabilityScoreFill) {
+                stabilityScoreFill.style.width = (stabilityScore * 10) + '%';
+                stabilityScoreFill.dataset.level = level;
             }
             reasonsElement.innerHTML = result.components
                 .filter(component => Number.isFinite(component.severity) && component.severity > 0)
