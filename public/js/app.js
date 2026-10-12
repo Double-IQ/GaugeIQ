@@ -934,10 +934,10 @@ async function loadWeatherChange() {
             scoreElement.setAttribute('aria-label', 'Weather stability score ' + stabilityScore.toFixed(1) + ' out of 10');
 
             let stabilitySummary;
-            if (stabilityScore >= 8) stabilitySummary = 'Very stable · little material change detected';
-            else if (stabilityScore >= 6) stabilitySummary = 'Stable · only minor changes detected';
-            else if (stabilityScore >= 4) stabilitySummary = 'Moderately stable · noticeable changes detected';
-            else if (stabilityScore >= 2) stabilitySummary = 'Unstable · significant changes detected';
+            if (stabilityScore > 8) stabilitySummary = 'Very stable · little material change detected';
+            else if (stabilityScore > 6) stabilitySummary = 'Stable · only minor changes detected';
+            else if (stabilityScore > 4) stabilitySummary = 'Moderately stable · noticeable changes detected';
+            else if (stabilityScore > 2) stabilitySummary = 'Unstable · significant changes detected';
             else stabilitySummary = 'Very unstable · substantial changes detected';
 
             summaryElement.textContent = stabilitySummary + (usedRecentBackfillForScore
