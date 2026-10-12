@@ -10,31 +10,31 @@ function refreshFields() {
     const c = condition.value;
     const direction = m === 'wind_direction' && c === 'specific';
     const combined = m === 'wind' && c === 'speed_and_direction';
-    const weatherChange = m === 'weather_change';
+    const weatherStability = m === 'weather_stability';
 
     degreesField.hidden = !direction;
     valueField.hidden = direction || combined;
     speedField.hidden = !combined;
     fromField.hidden = !combined;
 
-    if (weatherChange) {
-        condition.value = 'above';
+    if (weatherStability) {
+        condition.value = 'below';
         valueField.hidden = false;
-        const aboveOption = [...condition.options].find(option => option.value === 'above');
-        if (aboveOption) aboveOption.textContent = 'Reaches score of';
-        const help = document.getElementById('weatherChangeHelp');
+        const belowOption = [...condition.options].find(option => option.value === 'below');
+        if (belowOption) belowOption.textContent = 'Falls to or below';
+        const help = document.getElementById('weatherStabilityHelp');
         if (help) help.hidden = false;
     } else {
-        const aboveOption = [...condition.options].find(option => option.value === 'above');
-        if (aboveOption) aboveOption.textContent = 'Rises above';
-        const help = document.getElementById('weatherChangeHelp');
+        const belowOption = [...condition.options].find(option => option.value === 'below');
+        if (belowOption) belowOption.textContent = 'Falls below';
+        const help = document.getElementById('weatherStabilityHelp');
         if (help) help.hidden = true;
     }
 
     [...condition.options].forEach(option => {
         option.hidden =
-            m === 'weather_change'
-                ? option.value !== 'above'
+            m === 'weather_stability'
+                ? option.value !== 'below'
                 : m === 'wind_direction'
                     ? !['change', 'specific'].includes(option.value)
                     : m === 'wind'
@@ -44,8 +44,8 @@ function refreshFields() {
 
     if (m === 'wind') {
         condition.value = 'speed_and_direction';
-    } else if (m === 'weather_change') {
-        condition.value = 'above';
+    } else if (m === 'weather_stability') {
+        condition.value = 'below';
     } else if (m === 'wind_direction' && !['change', 'specific'].includes(condition.value)) {
         condition.value = 'change';
     } else if (m !== 'wind_direction' && ['specific', 'speed_and_direction'].includes(condition.value)) {
@@ -116,7 +116,7 @@ function setupAlertEditing() {
         const refresh = () => {
             const isWind = metric.value === 'wind';
             const isDirection = metric.value === 'wind_direction';
-            const isWeatherChange = metric.value === 'weather_change';
+            const isWeatherStability = metric.value === 'weather_stability';
             const combined = isWind && condition.value === 'speed_and_direction';
 
             degreesField.hidden = !(isDirection && condition.value === 'specific');
@@ -124,20 +124,20 @@ function setupAlertEditing() {
             speedField.hidden = !combined;
             fromField.hidden = !combined;
 
-            if (isWeatherChange) {
-                condition.value = 'above';
+            if (isWeatherStability) {
+                condition.value = 'below';
                 valueField.hidden = false;
-                const aboveOption = [...condition.options].find(option => option.value === 'above');
-                if (aboveOption) aboveOption.textContent = 'Reaches score of';
+                const belowOption = [...condition.options].find(option => option.value === 'below');
+                if (belowOption) belowOption.textContent = 'Falls to or below';
             } else {
-                const aboveOption = [...condition.options].find(option => option.value === 'above');
-                if (aboveOption) aboveOption.textContent = 'Rises above';
+                const belowOption = [...condition.options].find(option => option.value === 'below');
+                if (belowOption) belowOption.textContent = 'Falls below';
             }
             toField.hidden = !combined;
 
             [...condition.options].forEach(option => {
-                option.hidden = isWeatherChange
-                    ? option.value !== 'above'
+                option.hidden = isWeatherStability
+                    ? option.value !== 'below'
                     : isDirection
                         ? !['change', 'specific'].includes(option.value)
                         : isWind
@@ -145,8 +145,8 @@ function setupAlertEditing() {
                             : ['specific', 'speed_and_direction'].includes(option.value);
             });
 
-            if (isWeatherChange) {
-                condition.value = 'above';
+            if (isWeatherStability) {
+                condition.value = 'below';
             } else if (isWind) {
                 condition.value = 'speed_and_direction';
             } else if (isDirection && !['change', 'specific'].includes(condition.value)) {
