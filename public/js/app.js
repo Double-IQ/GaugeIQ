@@ -994,12 +994,16 @@ async function loadWeatherChange() {
                 const score = Math.max(0, Math.min(10, Number(result.score) || 0));
                 stabilityFill.style.width = (100 - score * 10) + '%';
 
-                // Colour reflects the weather-change score; the alert flash is independent.
+                // Colour reflects recent change intensity. The flash threshold uses
+                // the displayed Weather Stability score (10 = stable, 0 = unstable).
                 stabilityFill.classList.toggle('changing', score >= 4 && score < 7);
                 stabilityFill.classList.toggle('unstable', score >= 7);
 
-                const alertThreshold = Number(stabilityTrack?.dataset.weatherChangeAlertThreshold);
-                const warningActive = Number.isFinite(alertThreshold) && alertThreshold > 0 && score >= alertThreshold;
+                const thresholdValue = stabilityTrack?.dataset.weatherStabilityAlertThreshold;
+                const alertThreshold = thresholdValue === undefined || thresholdValue === ''
+                    ? NaN
+                    : Number(thresholdValue);
+                const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
                 stabilityFill.classList.toggle('warning', warningActive);
                 stabilityTrack?.classList.toggle('warning', warningActive);
             }
