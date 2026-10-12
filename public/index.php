@@ -189,7 +189,7 @@ if ($current && !empty($current['observed_at'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261012-stability-more-information-1">
+<link rel="stylesheet" href="css/app.css?v=20261012-stability-heading-left-1">
 <title>GaugeIQ</title>
 </head>
 <body>
