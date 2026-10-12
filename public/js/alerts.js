@@ -1,6 +1,7 @@
 const metric = document.getElementById('metric');
 const condition = document.getElementById('condition_type');
 const valueField = document.getElementById('valueField');
+const valueInput = document.getElementById('value');
 const degreesField = document.getElementById('degreesField');
 const speedField = document.getElementById('speedField');
 const fromField = document.getElementById('fromField');
@@ -16,6 +17,26 @@ function refreshFields() {
     valueField.hidden = direction || combined;
     speedField.hidden = !combined;
     fromField.hidden = !combined;
+
+    if (valueInput) {
+        if (weatherStability) {
+            valueInput.min = '0';
+            valueInput.max = '10';
+            valueInput.step = '1';
+        } else if (m === 'humidity') {
+            valueInput.min = '0';
+            valueInput.max = '100';
+            valueInput.step = '1';
+        } else if (m === 'wind_speed') {
+            valueInput.min = '0';
+            valueInput.max = '500';
+            valueInput.step = '0.1';
+        } else {
+            valueInput.min = '0';
+            valueInput.removeAttribute('max');
+            valueInput.step = '0.1';
+        }
+    }
 
     if (weatherStability) {
         condition.value = 'below';
@@ -107,6 +128,7 @@ function setupAlertEditing() {
         const metric = form.querySelector('[data-edit-metric]');
         const condition = form.querySelector('[data-edit-condition]');
         const valueField = form.querySelector('[data-edit-value-field]');
+        const valueInput = form.querySelector('input[name="value"]');
         const degreesField = form.querySelector('[data-edit-degrees-field]');
         const speedField = form.querySelector('[data-edit-speed-field]');
         const fromField = form.querySelector('[data-edit-from-field]');
@@ -123,6 +145,26 @@ function setupAlertEditing() {
             valueField.hidden = isDirection || combined;
             speedField.hidden = !combined;
             fromField.hidden = !combined;
+
+            if (valueInput) {
+                if (isWeatherStability) {
+                    valueInput.min = '0';
+                    valueInput.max = '10';
+                    valueInput.step = '1';
+                } else if (metric.value === 'humidity') {
+                    valueInput.min = '0';
+                    valueInput.max = '100';
+                    valueInput.step = '1';
+                } else if (metric.value === 'wind_speed') {
+                    valueInput.min = '0';
+                    valueInput.max = '500';
+                    valueInput.step = '0.1';
+                } else {
+                    valueInput.min = '0';
+                    valueInput.removeAttribute('max');
+                    valueInput.step = '0.1';
+                }
+            }
 
             if (isWeatherStability) {
                 condition.value = 'below';
