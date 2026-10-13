@@ -189,8 +189,6 @@ if ($current && !empty($current['observed_at'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="icons/gaugeiq-icon.svg">
-<link rel="apple-touch-icon" href="icons/gaugeiq-icon.svg">
 <link rel="stylesheet" href="css/app.css?v=20261012-location-header-1">
 <title>GaugeIQ</title>
 </head>
@@ -204,7 +202,6 @@ if ($current && !empty($current['observed_at'])) {
 
     <header>
         <div class="dashboard-heading">
-            <img class="brand-logo" src="images/gaugeiq-logo.svg" width="830" height="220" alt="GaugeIQ" fetchpriority="high">
             <h1 id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></h1>
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
