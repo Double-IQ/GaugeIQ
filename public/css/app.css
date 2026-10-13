@@ -677,3 +677,19 @@ body.gaugeiq-menu-open{overflow:hidden}
     margin-top:0;
   }
 }
+
+
+/* Branded startup/resume screen. It overlays the dashboard without waiting for every asset. */
+.gaugeiq-loading-screen{
+  position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:22px;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));
+  background:#0b1120;color:#f9fafb;opacity:1;visibility:visible;
+  transition:opacity 160ms ease,visibility 160ms ease;
+}
+.gaugeiq-loading-screen.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
+.gaugeiq-loading-screen[hidden]{display:none!important}
+.gaugeiq-loading-screen img{display:block;width:min(300px,76vw);height:auto;max-height:24vh;object-fit:contain}
+.gaugeiq-loading-screen p{margin:0;text-align:center;font-size:14px;font-weight:650;letter-spacing:.01em;color:#d1d5db}
+.gaugeiq-loading-indicator{display:block;width:26px;height:26px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;animation:gaugeiq-loading-spin .8s linear infinite}
+@keyframes gaugeiq-loading-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.gaugeiq-loading-screen{transition:none}.gaugeiq-loading-indicator{animation:none}}
