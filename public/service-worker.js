@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v16';
+const CACHE = 'gaugeiq-v17';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -6,7 +6,7 @@ self.addEventListener('install', event => {
             './',
             './manifest.json',
             './icons/gaugeiq-icon.svg',
-            './images/gaugeiq-logo.webp',
+            './images/gaugeiq-logo.svg',
             './css/app.css',
             './js/local-weather.js',
             './js/app.js'
