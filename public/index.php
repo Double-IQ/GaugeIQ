@@ -188,10 +188,15 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261013-remove-splash-logos-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-startup-loading-1">
 <title>GaugeIQ</title>
 </head>
 <body>
+<div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
+    <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
+    <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
+    <span class="gaugeiq-loading-indicator" aria-hidden="true"></span>
+</div>
 <main class="shell">
     <div id="updateNotice" class="update-notice" hidden role="status">
         <strong id="updateNoticeTitle">GaugeIQ update available</strong>
