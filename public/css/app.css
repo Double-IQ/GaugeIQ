@@ -706,3 +706,52 @@ body.app-loading-active .shell {
     padding-top: 9px;
     border-top: 1px solid var(--border);
 }
+
+
+/* Keep insight-card descriptions narrow on phones so their score stays inline. */
+@media(max-width:560px){
+  .weather-change-card .section-heading,
+  .rain-probability-card .section-heading,
+  .conditions-trend-card .section-heading{
+    display:flex;
+    flex-direction:row;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .weather-change-card .section-heading>div:first-child,
+  .rain-probability-card .section-heading>div:first-child,
+  .conditions-trend-card .section-heading>div:first-child{
+    flex:1 1 auto;
+    min-width:0;
+    width:auto;
+    text-align:left;
+  }
+  .weather-change-card .section-heading p,
+  .rain-probability-card .section-heading p,
+  .conditions-trend-card .section-heading p{
+    width:33vw;
+    max-width:33vw;
+    overflow-wrap:anywhere;
+    line-height:1.35;
+  }
+  .weather-change-card .weather-change-score{
+    grid-area:auto;
+    justify-self:auto;
+    flex:0 0 64px;
+    width:64px;
+    height:64px;
+    margin-top:0;
+  }
+  .rain-probability-card .rain-probability-score{
+    flex:0 0 68px;
+    min-width:68px;
+    margin-top:0;
+  }
+  .conditions-trend-card .conditions-trend-score{
+    flex:0 0 56px;
+    width:56px;
+    height:56px;
+    margin-top:0;
+  }
+}
