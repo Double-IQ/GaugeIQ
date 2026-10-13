@@ -738,8 +738,8 @@ body.app-loading-active .shell {
   .weather-change-card .section-heading p,
   .rain-probability-card .section-heading p,
   .conditions-trend-card .section-heading p{
-    width:33vw;
-    max-width:33vw;
+    width:100%;
+    max-width:100%;
     overflow-wrap:anywhere;
     line-height:1.35;
   }
