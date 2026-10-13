@@ -5,6 +5,11 @@ self.addEventListener('install', event => {
         caches.open(CACHE).then(cache => cache.addAll([
             './',
             './manifest.json',
+            './branding/gaugeiq-logo-dark-background-original.svg',
+            './branding/icon-192.svg',
+            './branding/icon-512.svg',
+            './branding/gaugeiq-app-icon-1024.svg',
+            './branding/apple-touch-icon.svg',
             './css/app.css',
             './js/local-weather.js',
             './js/app.js'
