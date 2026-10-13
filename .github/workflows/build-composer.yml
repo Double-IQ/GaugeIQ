@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    # Composer writes vendor/ back to main. Ignore those generated commits so
+    # the workflow does not keep rebuilding its own generated installed.php.
+    paths-ignore:
+      - 'vendor/**'
   workflow_dispatch:
 
 permissions:
