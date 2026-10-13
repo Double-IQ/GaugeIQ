@@ -3,7 +3,21 @@
   "short_name": "GaugeIQ",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f3f4f6",
-  "theme_color": "#111827",
-  "description": "Atmospheric pressure monitoring and alerts."
-}
+  "background_color": "#061440",
+  "theme_color": "#061440",
+  "description": "Atmospheric pressure monitoring and alerts.",
+  "icons": [
+    {
+      "src": "icons/gaugeiq-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/gaugeiq-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}\n
