@@ -568,7 +568,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="rain-probability-score" id="rainProbabilityScore"><?= $rainProbabilityPercent !== null ? htmlspecialchars((string)$rainProbabilityPercent, ENT_QUOTES) . '%' : '—' ?></div>
         </div>
         <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" <?= $rainProbabilityPercent !== null ? 'aria-valuenow="' . $rainProbabilityPercent . '"' : 'aria-valuetext="Forecast probability unavailable"' ?> id="rainProbabilityTrack">
-            <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%"></div>
+            <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%;min-width:<?= $rainProbabilityPercent !== null && $rainProbabilityPercent > 0 ? '2px' : '0' ?>"></div>
         </div>
         <div class="rainfall-forecast-block">
             <div class="rain-probability-meta">
@@ -576,7 +576,7 @@ if ($current && !empty($current['observed_at'])) {
                 <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
             </div>
             <div class="insight-meter-track rainfall-forecast-track" role="progressbar" aria-label="Expected rainfall today" aria-valuemin="0" aria-valuemax="10" <?= $rainForecastAvailable ? 'aria-valuenow="' . number_format(min(10.0, $rainForecastMm), 1, '.', '') . '"' : 'aria-valuetext="Forecast rainfall unavailable"' ?> id="rainfallForecastTrack">
-                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%"></div>
+                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%;min-width:<?= $rainForecastAvailable && $rainForecastMm > 0 ? '2px' : '0' ?>"></div>
             </div>
             <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
             <div class="rain-probability-meta observed-rainfall-meta">
