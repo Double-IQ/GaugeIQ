@@ -604,3 +604,19 @@ button:disabled { opacity: .55; cursor: default; }
 .rainfall-forecast-block{margin-top:12px}
 .rainfall-forecast-track{margin-top:8px}
 .rainfall-forecast-scale{margin:5px 0 0;font-size:11px;line-height:1.35}
+
+
+/* GaugeIQ logo menu button and compact navigation drawer */
+.header-actions .logo-menu-button{display:inline-flex;align-items:center;justify-content:center;width:112px;height:40px;min-width:112px;padding:0;overflow:hidden;border:0;border-radius:12px;background:#111827;box-shadow:0 1px 2px rgba(0,0,0,.12);cursor:pointer}
+.logo-menu-button img{display:block;width:100%;height:100%;object-fit:contain}
+.logo-menu-button:focus-visible,.gaugeiq-menu-close:focus-visible{outline:3px solid #60a5fa;outline-offset:3px}
+.gaugeiq-menu-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(3,7,18,.48);backdrop-filter:blur(2px)}
+.gaugeiq-menu-backdrop[hidden],.gaugeiq-menu[hidden]{display:none!important}
+.gaugeiq-menu{position:fixed;z-index:1001;top:max(12px,env(safe-area-inset-top));left:max(12px,calc((100vw - 760px)/2 + 18px));width:min(300px,calc(100vw - 24px));padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text);box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.gaugeiq-menu-heading{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 12px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.gaugeiq-menu-heading strong{font-size:17px}
+.gaugeiq-menu-close{width:34px;height:34px;padding:0;border-radius:10px;background:var(--surface);color:var(--text);font-size:25px;line-height:1}
+.gaugeiq-menu>a{display:block;padding:12px 11px;border-radius:10px;color:var(--text);font-weight:700;text-decoration:none}
+.gaugeiq-menu>a:hover,.gaugeiq-menu>a:focus-visible{background:var(--surface);outline:none}
+body.gaugeiq-menu-open{overflow:hidden}
+@media(max-width:560px){.header-actions{flex-direction:row;align-items:center}.header-actions .logo-menu-button{width:112px;min-width:112px;height:40px;padding:0}.header-actions #notifyButton{min-width:0;padding:11px 12px}.gaugeiq-menu{left:12px}}
