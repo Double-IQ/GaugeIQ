@@ -620,3 +620,54 @@ button:disabled { opacity: .55; cursor: default; }
 .gaugeiq-menu>a:hover,.gaugeiq-menu>a:focus-visible{background:var(--surface);outline:none}
 body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.header-actions{flex-direction:row;align-items:center}.header-actions .logo-menu-button{width:112px;min-width:112px;height:40px;padding:0}.header-actions #notifyButton{min-width:0;padding:11px 12px}.gaugeiq-menu{left:12px}}
+
+
+/* GaugeIQ launch and resume screen */
+.app-loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: grid;
+    place-items: center;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    background: #0b1120;
+    color: #f3f4f6;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 460ms ease, visibility 460ms ease;
+}
+.app-loading-screen[hidden] { display: none; }
+.app-loading-screen.is-hiding {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.app-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    width: 100%;
+    text-align: center;
+}
+.app-loading-logo {
+    display: block;
+    width: min(78vw, 336px);
+    height: auto;
+    max-height: 160px;
+    object-fit: contain;
+}
+.app-loading-message {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+body.app-loading-active .shell {
+    visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+    .app-loading-screen { transition: none; }
+}
