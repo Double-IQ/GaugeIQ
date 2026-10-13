@@ -36,6 +36,11 @@ jobs:
           php-version: '8.3'
           tools: composer:v2
 
+      - name: Synchronise with main before installing dependencies
+        run: |
+          git fetch origin main
+          git rebase origin/main
+
       - name: Install production dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
@@ -44,10 +49,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Incorporate any commits that landed after this run was queued.
-          git fetch origin main
-          git rebase origin/main
-
+          # Stage generated files only after the working tree is based on main.
           git add composer.lock
           git add -f vendor
           if git diff --cached --quiet; then
@@ -57,7 +59,8 @@ jobs:
 
           git commit -m "Build Composer dependencies"
 
-          # Retry if an unrelated commit reaches main between fetch and push.
+          # If main advances during this run, rebase the clean committed tree
+          # before retrying the push.
           for attempt in 1 2 3; do
             if git push origin HEAD:main; then
               exit 0
