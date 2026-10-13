@@ -702,7 +702,6 @@ body.app-loading-active .shell {
 .rainfall-forecast-track .insight-meter-fill {
     min-width: 0;
 }
-.rainfall-forecast-track .insight-meter-fill[style*="width:0."] { min-width: 2px; }
 .observed-rainfall-meta {
     padding-top: 9px;
     border-top: 1px solid var(--border);
