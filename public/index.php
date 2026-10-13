@@ -191,10 +191,16 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-logo-menu-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-splash-resume-1">
 <title>GaugeIQ</title>
 </head>
 <body>
+<div id="appLoadingScreen" class="app-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
+    <div class="app-loading-content">
+        <img class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
+        <p id="appLoadingMessage" class="app-loading-message">Loading GaugeIQ…</p>
+    </div>
+</div>
 <main class="shell">
     <div id="updateNotice" class="update-notice" hidden role="status">
         <strong id="updateNoticeTitle">GaugeIQ update available</strong>
@@ -699,7 +705,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261012-weather-stability-alert-parity-1"></script>
+<script src="js/app.js?v=20261013-splash-resume-1"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
@@ -721,6 +727,72 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && !menu.hidden) setOpen(false);
     });
+})();
+</script>
+<script>
+(() => {
+    const screen = document.getElementById('appLoadingScreen');
+    const message = document.getElementById('appLoadingMessage');
+    if (!screen || !message) return;
+
+    let wentToBackground = false;
+    let reloadStarted = false;
+
+    const showLoading = (text) => {
+        message.textContent = text;
+        screen.hidden = false;
+        screen.classList.remove('is-hiding');
+        screen.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('app-loading-active');
+    };
+
+    const hideLoading = () => {
+        if (wentToBackground || reloadStarted) return;
+        screen.classList.add('is-hiding');
+        document.body.classList.remove('app-loading-active');
+        window.setTimeout(() => {
+            if (!wentToBackground && !reloadStarted) {
+                screen.hidden = true;
+                screen.setAttribute('aria-hidden', 'true');
+            }
+        }, 480);
+    };
+
+    const refreshOnResume = () => {
+        if (!wentToBackground || reloadStarted || document.hidden) return;
+        reloadStarted = true;
+        showLoading('Refreshing data…');
+        // Keep the navy screen visible while the browser requests a fresh
+        // server-rendered dashboard instead of exposing the suspended page.
+        window.setTimeout(() => window.location.reload(), 80);
+    };
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            wentToBackground = true;
+            showLoading('Refreshing data…');
+        } else {
+            refreshOnResume();
+        }
+    });
+
+    window.addEventListener('pagehide', () => {
+        wentToBackground = true;
+        showLoading('Refreshing data…');
+    });
+
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            wentToBackground = true;
+            refreshOnResume();
+        }
+    });
+
+    if (document.readyState === 'complete') {
+        window.setTimeout(hideLoading, 450);
+    } else {
+        window.addEventListener('load', () => window.setTimeout(hideLoading, 450), { once: true });
+    }
 })();
 </script>
 </body>
