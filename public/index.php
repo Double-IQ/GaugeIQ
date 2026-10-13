@@ -188,7 +188,7 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
-<link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.svg">
+<link rel="icon" type="image/svg+xml" href="/branding/icon-192.svg">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.svg">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css?v=20261013-branding-mobile-copy-1">
