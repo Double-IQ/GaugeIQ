@@ -186,6 +186,8 @@ if ($current && !empty($current['observed_at'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
+<link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css?v=20261013-remove-splash-logos-1">
 <title>GaugeIQ</title>
 </head>
@@ -203,7 +205,7 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration">GaugeIQ</button>
+            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" style="display:block;width:110px;height:auto;max-width:100%;object-fit:contain"></button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
