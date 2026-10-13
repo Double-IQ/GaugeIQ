@@ -188,16 +188,16 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
-<link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
-<link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.svg">
+<link rel="apple-touch-icon" href="/branding/apple-touch-icon.svg">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fast-hide-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-branding-mobile-copy-1">
 <title>GaugeIQ</title>
 </head>
 <body>
 <div id="appLoadingScreen" class="app-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
     <div class="app-loading-content">
-        <img id="appLoadingLogo" class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
+        <img id="appLoadingLogo" class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.svg" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
         <div id="appLoadingLogoFallback" class="app-loading-logo-fallback" hidden aria-label="GaugeIQ logo"><span class="app-loading-gauge-mark" aria-hidden="true">◉</span><span>Gauge<span class="app-loading-iq">IQ</span></span></div>
         <p id="appLoadingMessage" class="app-loading-message">Loading GaugeIQ…</p>
     </div>
@@ -216,7 +216,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="header-actions">
             <button id="gaugeiqMenuButton" class="logo-menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">
-                <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="" width="112" height="40">
+                <img src="/branding/gaugeiq-logo-dark-background-original.svg" alt="" width="112" height="40">
             </button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
