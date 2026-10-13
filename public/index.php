@@ -185,6 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css?v=20261013-remove-splash-logos-1">
 <title>GaugeIQ</title>
 </head>
@@ -202,15 +203,15 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false" onclick="var m=document.getElementById('gaugeiqMenu'),b=document.getElementById('gaugeiqMenuBackdrop'),o=m.hidden;m.hidden=!o;b.hidden=!o;this.setAttribute('aria-expanded',String(o));document.body.classList.toggle('gaugeiq-menu-open',o);">Menu</button>
+            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">Menu</button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
-    <div id="gaugeiqMenuBackdrop" class="gaugeiq-menu-backdrop" hidden onclick="document.getElementById('gaugeiqMenu').hidden=true;this.hidden=true;document.body.classList.remove('gaugeiq-menu-open');document.getElementById('gaugeiqMenuButton').setAttribute('aria-expanded','false');"></div>
+    <div id="gaugeiqMenuBackdrop" class="gaugeiq-menu-backdrop" hidden></div>
     <nav id="gaugeiqMenu" class="gaugeiq-menu" aria-label="GaugeIQ navigation" hidden>
         <div class="gaugeiq-menu-heading">
             <strong>GaugeIQ</strong>
-            <button id="gaugeiqMenuClose" class="gaugeiq-menu-close" type="button" aria-label="Close menu" onclick="document.getElementById('gaugeiqMenu').hidden=true;document.getElementById('gaugeiqMenuBackdrop').hidden=true;document.body.classList.remove('gaugeiq-menu-open');document.getElementById('gaugeiqMenuButton').setAttribute('aria-expanded','false');">×</button>
+            <button id="gaugeiqMenuClose" class="gaugeiq-menu-close" type="button" aria-label="Close menu">×</button>
         </div>
         <a href="./">Dashboard</a>
         <a href="alerts.php">Alert history</a>
@@ -714,6 +715,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-resume-refresh-fix-2"></script>
+<script src="js/app.js?v=20261013-pwa-menu-csp-fix-1"></script>
 </body>
 </html>
