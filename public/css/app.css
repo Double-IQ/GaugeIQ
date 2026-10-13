@@ -604,6 +604,3 @@ button:disabled { opacity: .55; cursor: default; }
 .rainfall-forecast-block{margin-top:12px}
 .rainfall-forecast-track{margin-top:8px}
 .rainfall-forecast-scale{margin:5px 0 0;font-size:11px;line-height:1.35}
-
-
-/* GaugeIQ approved navy-and-white branding */\n.brand-logo { display:block; width:min(100%, 230px); height:auto; aspect-ratio:830 / 220; object-fit:contain; object-position:left center; margin:0 0 10px; }\n.dashboard-heading { min-width:0; }\n.dashboard-heading h1 { font-size:clamp(21px, 4vw, 30px); overflow-wrap:anywhere; }\n@media (max-width:560px) { .brand-logo { width:min(100%, 190px); margin-bottom:8px; } header { gap:10px; } header .header-actions { flex-shrink:0; } }\n
