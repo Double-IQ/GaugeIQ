@@ -634,7 +634,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     color: #f3f4f6;
     opacity: 1;
     visibility: visible;
-    transition: opacity 460ms ease, visibility 460ms ease;
+    transition: opacity 160ms ease, visibility 160ms ease;
 }
 .app-loading-screen[hidden] { display: none; }
 
