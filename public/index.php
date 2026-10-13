@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/svg+xml" href="/branding/icon-192.svg">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.svg">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-branding-mobile-copy-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-logo-button-click-fix-1">
 <title>GaugeIQ</title>
 </head>
 <body>
