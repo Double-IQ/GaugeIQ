@@ -1,3 +1,64 @@
+// Show the branded screen on every fresh page load, then dismiss it as soon as
+// the dashboard has initialised; do not wait for charts, video, or optional checks.
+(() => {
+    const screen = document.getElementById('gaugeiqLoadingScreen');
+    const message = document.getElementById('gaugeiqLoadingMessage');
+    if (!screen) return;
+
+    let dismissed = false;
+    let reloadStarted = false;
+    let hiddenAt = 0;
+
+    function showLoading(text) {
+        if (message && text) message.textContent = text;
+        screen.hidden = false;
+        screen.classList.remove('is-leaving');
+        screen.setAttribute('aria-hidden', 'false');
+    }
+
+    function dismissLoading() {
+        if (dismissed || reloadStarted) return;
+        dismissed = true;
+        screen.classList.add('is-leaving');
+        window.setTimeout(() => {
+            screen.hidden = true;
+        }, 180);
+    }
+
+    // DOM readiness is sufficient; optional requests and external media can finish later.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => window.setTimeout(dismissLoading, 160), { once: true });
+    } else {
+        window.setTimeout(dismissLoading, 160);
+    }
+
+    // A bfcache-restored page may contain stale suspended dashboard data.
+    // Show the screen and request a fresh server-rendered dashboard instead.
+    function refreshOnResume() {
+        if (reloadStarted) return;
+        reloadStarted = true;
+        showLoading('Refreshing data…');
+        window.setTimeout(() => window.location.reload(), 50);
+    }
+
+    window.addEventListener('pageshow', event => {
+        if (event.persisted) refreshOnResume();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            hiddenAt = Date.now();
+            return;
+        }
+        if (document.visibilityState === 'visible' && hiddenAt && Date.now() - hiddenAt >= 30000) {
+            refreshOnResume();
+        }
+    });
+
+    // Never leave the screen covering the dashboard if readiness events misbehave.
+    window.setTimeout(dismissLoading, 4500);
+})();
+
 const themeSelect = document.getElementById('themeSelect');
 const themeMeta = document.getElementById('themeColorMeta');
 
