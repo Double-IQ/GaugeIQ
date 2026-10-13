@@ -1300,3 +1300,34 @@ if (deviceViewButton && deviceList) {
         if (open) await loadDeviceList();
     });
 }
+
+
+// Navigation menu controls are bound from this external script because the
+// site's Content-Security-Policy intentionally blocks inline event handlers.
+(() => {
+    const button = document.getElementById('gaugeiqMenuButton');
+    const menu = document.getElementById('gaugeiqMenu');
+    const backdrop = document.getElementById('gaugeiqMenuBackdrop');
+    const closeButton = document.getElementById('gaugeiqMenuClose');
+    if (!button || !menu || !backdrop || !closeButton) return;
+
+    const setOpen = open => {
+        menu.hidden = !open;
+        backdrop.hidden = !open;
+        button.setAttribute('aria-expanded', String(open));
+        button.setAttribute('aria-label', open ? 'Close GaugeIQ menu' : 'Open GaugeIQ menu');
+        document.body.classList.toggle('gaugeiq-menu-open', open);
+        if (open) closeButton.focus();
+        else button.focus();
+    };
+
+    button.addEventListener('click', event => {
+        event.preventDefault();
+        setOpen(menu.hidden);
+    });
+    closeButton.addEventListener('click', () => setOpen(false));
+    backdrop.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !menu.hidden) setOpen(false);
+    });
+})();
