@@ -185,20 +185,10 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
-<link rel="icon" type="image/svg+xml" href="/branding/icon-192.svg">
-<link rel="apple-touch-icon" href="/branding/apple-touch-icon.svg">
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-logo-button-resume-fix-2">
+<link rel="stylesheet" href="css/app.css?v=20261013-remove-splash-logos-1">
 <title>GaugeIQ</title>
 </head>
 <body>
-<div id="appLoadingScreen" class="app-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
-    <div class="app-loading-content">
-        <img id="appLoadingLogo" class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.svg" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
-        <div id="appLoadingLogoFallback" class="app-loading-logo-fallback" hidden aria-label="GaugeIQ logo"><span class="app-loading-gauge-mark" aria-hidden="true">◉</span><span>Gauge<span class="app-loading-iq">IQ</span></span></div>
-        <p id="appLoadingMessage" class="app-loading-message">Loading GaugeIQ…</p>
-    </div>
-</div>
 <main class="shell">
     <div id="updateNotice" class="update-notice" hidden role="status">
         <strong id="updateNoticeTitle">GaugeIQ update available</strong>
@@ -212,9 +202,7 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <button id="gaugeiqMenuButton" class="logo-menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">
-                <img src="/branding/gaugeiq-logo-dark-background-original.svg" alt="" width="112" height="40">
-            </button>
+            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">Menu</button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
@@ -747,100 +735,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
     backdrop.addEventListener("click", () => setOpen(false));
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && !menu.hidden) setOpen(false);
-    });
-})();
-</script>
-<script>
-(() => {
-    const screen = document.getElementById('appLoadingScreen');
-    const message = document.getElementById('appLoadingMessage');
-    const logo = document.getElementById('appLoadingLogo');
-    const logoFallback = document.getElementById('appLoadingLogoFallback');
-    if (!screen || !message) return;
-    screen.classList.add('splash-script-ready');
-
-    if (logo && logoFallback) {
-        const showFallback = () => {
-            logo.hidden = true;
-            logoFallback.hidden = false;
-        };
-        logo.addEventListener('error', showFallback, { once: true });
-        if (logo.complete && logo.naturalWidth === 0) showFallback();
-    }
-
-    let wentToBackground = false;
-    let reloadStarted = false;
-    let initialLoadComplete = false;
-    let hideTimer = null;
-
-    const showLoading = (text) => {
-        message.textContent = text;
-        screen.hidden = false;
-        screen.classList.remove('is-hiding');
-        screen.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('app-loading-active');
-    };
-
-    const hideLoading = () => {
-        if (reloadStarted) return;
-        initialLoadComplete = true;
-        screen.classList.add('is-hiding');
-        document.body.classList.remove('app-loading-active');
-        window.setTimeout(() => {
-            if (!wentToBackground && !reloadStarted) {
-                screen.hidden = true;
-                screen.setAttribute('aria-hidden', 'true');
-            }
-        }, 170);
-    };
-
-    const finishInitialLoad = () => {
-        if (initialLoadComplete || wentToBackground || reloadStarted) return;
-        if (hideTimer !== null) window.clearTimeout(hideTimer);
-        hideLoading();
-    };
-
-    const refreshOnResume = () => {
-        if (!wentToBackground || reloadStarted || document.hidden) return;
-        reloadStarted = true;
-        showLoading('Refreshing data…');
-        window.setTimeout(() => window.location.reload(), 80);
-    };
-
-    // DOMContentLoaded does not wait for slow or missing third-party images.
-    // The load event and a short watchdog are additional fallbacks.
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', finishInitialLoad, { once: true });
-    } else {
-        finishInitialLoad();
-    }
-    window.addEventListener('load', finishInitialLoad, { once: true });
-    hideTimer = window.setTimeout(() => {
-        // Last-resort initial dismissal if lifecycle events fail to fire.
-        if (!initialLoadComplete && !reloadStarted) {
-            wentToBackground = false;
-            hideLoading();
-        }
-    }, 5000);
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            // Do not interpret a browser's initial hidden prerender as an app
-            // background/resume cycle before the first dashboard is displayed.
-            if (initialLoadComplete) {
-                wentToBackground = true;
-                showLoading('Refreshing data…');
-            }
-        } else {
-            refreshOnResume();
-        }
-    });
-
-    window.addEventListener('pageshow', (event) => {
-        if (event.persisted && initialLoadComplete) {
-            wentToBackground = true;
-            refreshOnResume();
-        }
     });
 })();
 </script>
