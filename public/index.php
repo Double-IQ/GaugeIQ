@@ -191,13 +191,14 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-splash-resume-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-rain-meter-logo-2">
 <title>GaugeIQ</title>
 </head>
 <body>
 <div id="appLoadingScreen" class="app-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
     <div class="app-loading-content">
-        <img class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
+        <img id="appLoadingLogo" class="app-loading-logo" src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="336" height="120" fetchpriority="high">
+        <div id="appLoadingLogoFallback" class="app-loading-logo-fallback" hidden aria-label="GaugeIQ logo"><span class="app-loading-gauge-mark" aria-hidden="true">◉</span><span>Gauge<span class="app-loading-iq">IQ</span></span></div>
         <p id="appLoadingMessage" class="app-loading-message">Loading GaugeIQ…</p>
     </div>
 </div>
@@ -251,21 +252,43 @@ if ($current && !empty($current['observed_at'])) {
     $pressureHigh = isset($pressureHistory['pressure_high']) ? (float)$pressureHistory['pressure_high'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
     $pressureRange = max(0.1, $pressureHigh - $pressureLow);
     $pressureRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange)) : 0.0;
+    // Resolve today's forecast by date in GaugeIQ's configured local timezone.
+    // Don't blindly use index 0: older stored forecasts can start on a different day.
+    $todayDate = (new DateTimeImmutable('now', new DateTimeZone($dashboardTimezone)))->format('Y-m-d');
+    $todayForecast = null;
+    foreach ($forecast as $forecastDay) {
+        if (!is_array($forecastDay)) {
+            continue;
+        }
+        $forecastDate = (string)($forecastDay['date'] ?? '');
+        if ($forecastDate === $todayDate) {
+            $todayForecast = $forecastDay;
+            break;
+        }
+        if ($todayForecast === null && $forecastDate !== '' && $forecastDate > $todayDate) {
+            $todayForecast = $forecastDay;
+        }
+    }
     $rainForecastValue = null;
-    if ($current && isset($forecast[0]) && is_array($forecast[0])) {
+    if (is_array($todayForecast)) {
         // Prefer rain-only daily totals; the precipitation total can also include snow.
-        if (isset($forecast[0]['rain_only_mm']) && is_numeric($forecast[0]['rain_only_mm'])) {
-            $rainForecastValue = (float)$forecast[0]['rain_only_mm'];
-        } elseif (isset($forecast[0]['rain_mm']) && is_numeric($forecast[0]['rain_mm'])) {
+        if (isset($todayForecast['rain_only_mm']) && is_numeric($todayForecast['rain_only_mm'])) {
+            $rainForecastValue = (float)$todayForecast['rain_only_mm'];
+        } elseif (isset($todayForecast['rain_mm']) && is_numeric($todayForecast['rain_mm'])) {
             // Backward compatibility for stored forecasts created before rain_only_mm existed.
-            $rainForecastValue = (float)$forecast[0]['rain_mm'];
+            $rainForecastValue = (float)$todayForecast['rain_mm'];
         }
     }
     $rainForecastAvailable = $rainForecastValue !== null;
     $rainForecastMm = $rainForecastAvailable ? max(0.0, $rainForecastValue) : 0.0;
     $rainForecastRatioPercent = $rainForecastAvailable ? max(0.0, min(100.0, ($rainForecastMm / 10.0) * 100.0)) : 0.0;
-    $rainProbabilityPercent = $current && isset($forecast[0]['rain_probability_percent']) && is_numeric($forecast[0]['rain_probability_percent'])
-        ? max(0, min(100, (int)$forecast[0]['rain_probability_percent']))
+    $rainProbabilityPercent = is_array($todayForecast) && isset($todayForecast['rain_probability_percent']) && is_numeric($todayForecast['rain_probability_percent'])
+        ? max(0, min(100, (int)$todayForecast['rain_probability_percent']))
+        : null;
+    // Open-Meteo's current rain field is the latest current-period observation,
+    // not the same thing as the forecast daily accumulation.
+    $observedRainfallMm = $current && is_numeric($current['rainfall_mm'] ?? null)
+        ? max(0.0, (float)$current['rainfall_mm'])
         : null;
 
     $forecastCondition = static function (?int $code): array {
@@ -556,6 +579,10 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%"></div>
             </div>
             <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
+            <div class="rain-probability-meta observed-rainfall-meta">
+                <span>Latest observed rainfall</span>
+                <strong><?= $observedRainfallMm !== null ? number_format($observedRainfallMm, 1) . ' mm' : '—' ?></strong>
+            </div>
         </div>
         <p class="weather-change-note">Probability comes from the weather provider's daily forecast; rainfall is the predicted daily total. Neither is calculated from humidity alone.</p>
         <details class="algorithm-details">
@@ -705,7 +732,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-splash-resume-1"></script>
+<script src="js/app.js?v=20261013-rain-meter-logo-2"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
@@ -733,7 +760,18 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 (() => {
     const screen = document.getElementById('appLoadingScreen');
     const message = document.getElementById('appLoadingMessage');
+    const logo = document.getElementById('appLoadingLogo');
+    const logoFallback = document.getElementById('appLoadingLogoFallback');
     if (!screen || !message) return;
+
+    if (logo && logoFallback) {
+        const showFallback = () => {
+            logo.hidden = true;
+            logoFallback.hidden = false;
+        };
+        logo.addEventListener('error', showFallback, { once: true });
+        if (logo.complete && logo.naturalWidth === 0) showFallback();
+    }
 
     let wentToBackground = false;
     let reloadStarted = false;
