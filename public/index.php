@@ -204,7 +204,7 @@ if ($current && !empty($current['observed_at'])) {
 
     <header>
         <div class="dashboard-heading">
-            <img class="brand-logo" src="images/gaugeiq-logo.webp" width="830" height="220" alt="GaugeIQ" fetchpriority="high">
+            <img class="brand-logo" src="images/gaugeiq-logo.svg" width="830" height="220" alt="GaugeIQ" fetchpriority="high">
             <h1 id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></h1>
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
