@@ -9,12 +9,19 @@ on:
 permissions:
   contents: write
 
+# Only one dependency-build job may commit to main at a time.
+concurrency:
+  group: gaugeiq-composer-dependencies-main
+  cancel-in-progress: false
+
 jobs:
   composer:
     runs-on: ubuntu-latest
     steps:
       - name: Check out GaugeIQ
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -29,11 +36,29 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Incorporate any commits that landed after this run was queued.
+          git fetch origin main
+          git rebase origin/main
+
           git add composer.lock
           git add -f vendor
           if git diff --cached --quiet; then
             echo "Composer dependencies are already up to date."
             exit 0
           fi
+
           git commit -m "Build Composer dependencies"
-          git push
+
+          # Retry if an unrelated commit reaches main between fetch and push.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Push failed after 3 attempts."
+              exit 1
+            fi
+            git fetch origin main
+            git rebase origin/main
+          done
