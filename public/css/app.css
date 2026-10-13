@@ -637,6 +637,14 @@ body.gaugeiq-menu-open{overflow:hidden}
     transition: opacity 460ms ease, visibility 460ms ease;
 }
 .app-loading-screen[hidden] { display: none; }
+
+/* CSS-only safety net: if splash JavaScript fails entirely, never trap the user. */
+.app-loading-screen:not(.splash-script-ready) {
+    animation: app-loading-emergency-dismiss 0s linear 8s forwards;
+}
+@keyframes app-loading-emergency-dismiss {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
 .app-loading-screen.is-hiding {
     opacity: 0;
     visibility: hidden;
