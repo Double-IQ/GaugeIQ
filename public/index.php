@@ -75,10 +75,9 @@ try {
         )->fetch() ?: [];
     }
 
-    // On a brand-new installation, fetch one current snapshot immediately
-    // instead of leaving the dashboard empty until the first cron run.
-    // Existing readings are never refreshed just because the dashboard is opened.
-    if (!$latest) {
+    // Refresh the live observation whenever the dashboard is opened or resumed.
+    // This keeps the displayed conditions current instead of waiting for the next cron run.
+    if (true) {
         try {
             $initialReading = $service->fetchCurrent();
             $service->record($initialReading);
