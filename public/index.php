@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fix-2">
+<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fast-hide-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -794,13 +794,13 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
                 screen.hidden = true;
                 screen.setAttribute('aria-hidden', 'true');
             }
-        }, 480);
+        }, 170);
     };
 
     const finishInitialLoad = () => {
         if (initialLoadComplete || wentToBackground || reloadStarted) return;
         if (hideTimer !== null) window.clearTimeout(hideTimer);
-        window.setTimeout(hideLoading, 250);
+        hideLoading();
     };
 
     const refreshOnResume = () => {
