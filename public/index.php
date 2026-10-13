@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fix-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fix-2">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -760,6 +760,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
     const logo = document.getElementById('appLoadingLogo');
     const logoFallback = document.getElementById('appLoadingLogoFallback');
     if (!screen || !message) return;
+    screen.classList.add('splash-script-ready');
 
     if (logo && logoFallback) {
         const showFallback = () => {
@@ -784,7 +785,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
     };
 
     const hideLoading = () => {
-        if (wentToBackground || reloadStarted) return;
+        if (reloadStarted) return;
         initialLoadComplete = true;
         screen.classList.add('is-hiding');
         document.body.classList.remove('app-loading-active');
@@ -817,7 +818,13 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
         finishInitialLoad();
     }
     window.addEventListener('load', finishInitialLoad, { once: true });
-    hideTimer = window.setTimeout(finishInitialLoad, 4000);
+    hideTimer = window.setTimeout(() => {
+        // Last-resort initial dismissal if lifecycle events fail to fire.
+        if (!initialLoadComplete && !reloadStarted) {
+            wentToBackground = false;
+            hideLoading();
+        }
+    }, 5000);
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
