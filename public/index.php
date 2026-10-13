@@ -203,20 +203,10 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">Menu</button>
+            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration">GaugeIQ</button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
-    <div id="gaugeiqMenuBackdrop" class="gaugeiq-menu-backdrop" hidden></div>
-    <nav id="gaugeiqMenu" class="gaugeiq-menu" aria-label="GaugeIQ navigation" hidden>
-        <div class="gaugeiq-menu-heading">
-            <strong>GaugeIQ</strong>
-            <button id="gaugeiqMenuClose" class="gaugeiq-menu-close" type="button" aria-label="Close menu">×</button>
-        </div>
-        <a href="./">Dashboard</a>
-        <a href="alerts.php">Alert history</a>
-        <a href="login.php">Administration</a>
-    </nav>
 
     <?php
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
@@ -715,6 +705,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-pwa-menu-csp-fix-1"></script>
+<script src="js/app.js?v=20261013-admin-button-1"></script>
 </body>
 </html>
