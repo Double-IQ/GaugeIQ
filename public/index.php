@@ -188,8 +188,10 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
+<link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
+<link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261012-location-header-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-logo-menu-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -206,10 +208,22 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <a href="login.php" class="secondary button-link">GaugeIQ</a>
+            <button id="gaugeiqMenuButton" class="logo-menu-button" type="button" aria-label="Open GaugeIQ menu" aria-controls="gaugeiqMenu" aria-expanded="false">
+                <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="" width="112" height="40">
+            </button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
+    <div id="gaugeiqMenuBackdrop" class="gaugeiq-menu-backdrop" hidden></div>
+    <nav id="gaugeiqMenu" class="gaugeiq-menu" aria-label="GaugeIQ navigation" hidden>
+        <div class="gaugeiq-menu-heading">
+            <strong>GaugeIQ</strong>
+            <button id="gaugeiqMenuClose" class="gaugeiq-menu-close" type="button" aria-label="Close menu">×</button>
+        </div>
+        <a href="./">Dashboard</a>
+        <a href="alerts.php">Alert history</a>
+        <a href="login.php">Administration</a>
+    </nav>
 
     <?php
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
@@ -686,5 +700,28 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/app.js?v=20261012-weather-stability-alert-parity-1"></script>
+<script>
+(() => {
+    const button = document.getElementById("gaugeiqMenuButton");
+    const menu = document.getElementById("gaugeiqMenu");
+    const backdrop = document.getElementById("gaugeiqMenuBackdrop");
+    const closeButton = document.getElementById("gaugeiqMenuClose");
+    if (!button || !menu || !backdrop || !closeButton) return;
+    const setOpen = (open) => {
+        menu.hidden = !open;
+        backdrop.hidden = !open;
+        button.setAttribute("aria-expanded", String(open));
+        button.setAttribute("aria-label", open ? "Close GaugeIQ menu" : "Open GaugeIQ menu");
+        document.body.classList.toggle("gaugeiq-menu-open", open);
+        if (open) closeButton.focus(); else button.focus();
+    };
+    button.addEventListener("click", () => setOpen(menu.hidden));
+    closeButton.addEventListener("click", () => setOpen(false));
+    backdrop.addEventListener("click", () => setOpen(false));
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !menu.hidden) setOpen(false);
+    });
+})();
+</script>
 </body>
 </html>
