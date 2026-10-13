@@ -607,8 +607,8 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 /* GaugeIQ logo menu button and compact navigation drawer */
-.header-actions .logo-menu-button{display:inline-flex;align-items:center;justify-content:center;width:112px;height:40px;min-width:112px;padding:0;overflow:hidden;border:0;border-radius:12px;background:#111827;box-shadow:0 1px 2px rgba(0,0,0,.12);cursor:pointer}
-.logo-menu-button img{display:block;width:100%;height:100%;object-fit:contain}
+.header-actions .logo-menu-button{position:relative;z-index:1;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;flex:0 0 112px;width:112px;height:40px;min-width:112px;padding:0;overflow:hidden;border:0;border-radius:12px;background:#111827;box-shadow:0 1px 2px rgba(0,0,0,.12);cursor:pointer;pointer-events:auto;touch-action:manipulation}
+.logo-menu-button img{display:block;flex:none;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .logo-menu-button:focus-visible,.gaugeiq-menu-close:focus-visible{outline:3px solid #60a5fa;outline-offset:3px}
 .gaugeiq-menu-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(3,7,18,.48);backdrop-filter:blur(2px)}
 .gaugeiq-menu-backdrop[hidden],.gaugeiq-menu[hidden]{display:none!important}
