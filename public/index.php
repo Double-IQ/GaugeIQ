@@ -188,7 +188,9 @@ if ($current && !empty($current['observed_at'])) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" id="themeColorMeta">
-<link rel="manifest" href="manifest.json">\n<link rel="icon" type="image/svg+xml" href="icons/gaugeiq-icon.svg">\n<link rel="apple-touch-icon" href="icons/gaugeiq-icon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/gaugeiq-icon.svg">
+<link rel="apple-touch-icon" href="icons/gaugeiq-icon.svg">
 <link rel="stylesheet" href="css/app.css?v=20261012-location-header-1">
 <title>GaugeIQ</title>
 </head>

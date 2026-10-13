@@ -4,7 +4,9 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE).then(cache => cache.addAll([
             './',
-            './manifest.json',\n            './icons/gaugeiq-icon.svg',\n            './images/gaugeiq-logo.svg',
+            './manifest.json',
+            './icons/gaugeiq-icon.svg',
+            './images/gaugeiq-logo.svg',
             './css/app.css',
             './js/local-weather.js',
             './js/app.js'
