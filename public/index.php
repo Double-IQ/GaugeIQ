@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/svg+xml" href="/branding/icon-192.svg">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.svg">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-logo-button-click-fix-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-logo-button-resume-fix-2">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -729,7 +729,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-loading-screen-fix-1"></script>
+<script src="js/app.js?v=20261013-resume-refresh-fix-2"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
@@ -745,7 +745,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
         document.body.classList.toggle("gaugeiq-menu-open", open);
         if (open) closeButton.focus(); else button.focus();
     };
-    button.addEventListener("click", () => setOpen(menu.hidden));
+    button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); setOpen(menu.hidden); });
     closeButton.addEventListener("click", () => setOpen(false));
     backdrop.addEventListener("click", () => setOpen(false));
     document.addEventListener("keydown", (event) => {
