@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-rain-meter-logo-2">
+<link rel="stylesheet" href="css/app.css?v=20261013-rain-meter-logo-3">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -567,9 +567,6 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="rain-probability-score" id="rainProbabilityScore"><?= $rainProbabilityPercent !== null ? htmlspecialchars((string)$rainProbabilityPercent, ENT_QUOTES) . '%' : '—' ?></div>
         </div>
-        <div class="insight-meter-track" role="progressbar" aria-label="Forecast rain probability" aria-valuemin="0" aria-valuemax="100" <?= $rainProbabilityPercent !== null ? 'aria-valuenow="' . $rainProbabilityPercent . '"' : 'aria-valuetext="Forecast probability unavailable"' ?> id="rainProbabilityTrack">
-            <div class="insight-meter-fill rain-meter-fill" id="rainProbabilityFill" style="width:<?= $rainProbabilityPercent !== null ? $rainProbabilityPercent : 0 ?>%;min-width:<?= $rainProbabilityPercent !== null && $rainProbabilityPercent > 0 ? '2px' : '0' ?>"></div>
-        </div>
         <div class="rainfall-forecast-block">
             <div class="rain-probability-meta">
                 <span>Expected rainfall today</span>
@@ -732,7 +729,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-rain-meter-logo-2"></script>
+<script src="js/app.js?v=20261013-rain-meter-logo-3"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
