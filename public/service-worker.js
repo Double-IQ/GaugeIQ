@@ -1,10 +1,15 @@
-const CACHE = 'gaugeiq-v27';
+const CACHE = 'gaugeiq-v28';
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE).then(cache => cache.addAll([
             './',
             './manifest.json',
+            './branding/gaugeiq-logo-dark-background-original.png',
+            './branding/gaugeiq-app-icon-1024.png',
+            './branding/apple-touch-icon.png',
+            './branding/icon-192.png',
+            './branding/icon-512.png',
             './css/app.css',
             './js/local-weather.js',
             './js/app.js'
