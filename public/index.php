@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-mobile-insight-copy-1">
+<link rel="stylesheet" href="css/app.css?v=20261013-loading-screen-fix-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -729,7 +729,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-mobile-insight-copy-1"></script>
+<script src="js/app.js?v=20261013-loading-screen-fix-1"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
@@ -772,6 +772,8 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 
     let wentToBackground = false;
     let reloadStarted = false;
+    let initialLoadComplete = false;
+    let hideTimer = null;
 
     const showLoading = (text) => {
         message.textContent = text;
@@ -783,6 +785,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 
     const hideLoading = () => {
         if (wentToBackground || reloadStarted) return;
+        initialLoadComplete = true;
         screen.classList.add('is-hiding');
         document.body.classList.remove('app-loading-active');
         window.setTimeout(() => {
@@ -793,41 +796,48 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
         }, 480);
     };
 
+    const finishInitialLoad = () => {
+        if (initialLoadComplete || wentToBackground || reloadStarted) return;
+        if (hideTimer !== null) window.clearTimeout(hideTimer);
+        window.setTimeout(hideLoading, 250);
+    };
+
     const refreshOnResume = () => {
         if (!wentToBackground || reloadStarted || document.hidden) return;
         reloadStarted = true;
         showLoading('Refreshing data…');
-        // Keep the navy screen visible while the browser requests a fresh
-        // server-rendered dashboard instead of exposing the suspended page.
         window.setTimeout(() => window.location.reload(), 80);
     };
 
+    // DOMContentLoaded does not wait for slow or missing third-party images.
+    // The load event and a short watchdog are additional fallbacks.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', finishInitialLoad, { once: true });
+    } else {
+        finishInitialLoad();
+    }
+    window.addEventListener('load', finishInitialLoad, { once: true });
+    hideTimer = window.setTimeout(finishInitialLoad, 4000);
+
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            wentToBackground = true;
-            showLoading('Refreshing data…');
+            // Do not interpret a browser's initial hidden prerender as an app
+            // background/resume cycle before the first dashboard is displayed.
+            if (initialLoadComplete) {
+                wentToBackground = true;
+                showLoading('Refreshing data…');
+            }
         } else {
             refreshOnResume();
         }
     });
 
-    window.addEventListener('pagehide', () => {
-        wentToBackground = true;
-        showLoading('Refreshing data…');
-    });
-
     window.addEventListener('pageshow', (event) => {
-        if (event.persisted) {
+        if (event.persisted && initialLoadComplete) {
             wentToBackground = true;
             refreshOnResume();
         }
     });
-
-    if (document.readyState === 'complete') {
-        window.setTimeout(hideLoading, 450);
-    } else {
-        window.addEventListener('load', () => window.setTimeout(hideLoading, 450), { once: true });
-    }
 })();
 </script>
 </body>
