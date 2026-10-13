@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/app.css?v=20261013-rain-meter-logo-3">
+<link rel="stylesheet" href="css/app.css?v=20261013-mobile-insight-copy-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -729,7 +729,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261013-rain-meter-logo-3"></script>
+<script src="js/app.js?v=20261013-mobile-insight-copy-1"></script>
 <script>
 (() => {
     const button = document.getElementById("gaugeiqMenuButton");
