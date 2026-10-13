@@ -20,6 +20,9 @@ concurrency:
 
 jobs:
   composer:
+    # paths-ignore cannot suppress a run when the generated commit also
+    # changes composer.lock. Guard by commit message as a second line of defence.
+    if: github.event_name != 'push' || github.event.head_commit.message != 'Build Composer dependencies'
     runs-on: ubuntu-latest
     steps:
       - name: Check out GaugeIQ
