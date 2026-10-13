@@ -77,9 +77,8 @@ try {
 
     // Refresh the live observation whenever the dashboard is opened or resumed.
     // This keeps the displayed conditions current instead of waiting for the next cron run.
-    if (true) {
-        try {
-            $initialReading = $service->fetchCurrent();
+    try {
+        $initialReading = $service->fetchCurrent();
             $service->record($initialReading);
             $saveStatus = static function (PDO $pdo, string $key, string $value): void {
                 $stmt = $pdo->prepare(
@@ -114,7 +113,6 @@ try {
                 // The primary fetch error is intentionally non-fatal to dashboard rendering.
             }
         }
-    }
 
     $current = $latest;
     if ($current) {
