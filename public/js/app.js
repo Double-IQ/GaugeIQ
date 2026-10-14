@@ -1081,15 +1081,22 @@ async function loadWeatherChange() {
             scoreElement.setAttribute('aria-label', 'Weather stability score ' + stabilityScore.toFixed(1) + ' out of 10');
 
             let stabilitySummary;
-            if (stabilityScore > 8) stabilitySummary = 'Very stable · little material change detected';
+            if (stabilityScore > 8) stabilitySummary = 'Very stable · Small change detected';
             else if (stabilityScore > 6) stabilitySummary = 'Stable · only minor changes detected';
             else if (stabilityScore > 4) stabilitySummary = 'Moderately stable · noticeable changes detected';
             else if (stabilityScore > 2) stabilitySummary = 'Unstable · significant changes detected';
             else stabilitySummary = 'Very unstable · substantial changes detected';
 
-            summaryElement.textContent = stabilitySummary + (usedRecentBackfillForScore
-                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
-                : '');
+            if (stabilityScore > 8) {
+                summaryElement.innerHTML = '<span class="weather-change-summary-prefix">· </span><span class="weather-change-summary-level">Very stable</span><span class="weather-change-summary-separator"> · </span><span class="weather-change-summary-change">Small change detected</span>';
+                if (usedRecentBackfillForScore) {
+                    summaryElement.insertAdjacentText('beforeend', ' · Temporary recent hourly model estimates used because live readings were insufficient.');
+                }
+            } else {
+                summaryElement.textContent = stabilitySummary + (usedRecentBackfillForScore
+                    ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+                    : '');
+            }
             const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
