@@ -341,9 +341,10 @@ const notifyButton = document.getElementById('notifyButton');
 const notificationEnabledNote = document.getElementById('notificationEnabledNote');
 const historyStatus = document.getElementById('historyStatus');
 let deferredInstallPrompt = null;
+let installedThisSession = false;
 
 function isInstalledPWA() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return installedThisSession || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
 function updateInstallButton() {
@@ -420,6 +421,7 @@ window.addEventListener('beforeinstallprompt', event => {
 
 window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
+    installedThisSession = true;
     updateInstallButton();
     if (status) status.textContent = 'GaugeIQ has been installed. Open it from your home screen to enable alerts.';
 });
