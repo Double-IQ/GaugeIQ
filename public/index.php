@@ -351,13 +351,13 @@ if ($current && !empty($current['observed_at'])) {
                             <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
                             <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
                         </div>
-                        <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div>
+                        <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                     </div>
                 </div>
                 <div class="temperature-stability-row">
-                    <div class="temperature-stability-label">Stability</div>
+                    <div class="temperature-stability-label" id="temperatureStabilityLabel">Stability</div>
                     <div class="temperature-stability-track" aria-label="Weather stability" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>"><div class="temperature-stability-fill" id="weatherStabilityFill" style="width:100%"></div></div>
-                    <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
+                    <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b>→ Steady</b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
         </article>
