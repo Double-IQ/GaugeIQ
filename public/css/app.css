@@ -434,6 +434,7 @@ button:disabled { opacity: .55; cursor: default; }
 .rain-probability-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;color:var(--muted)}
 .rain-probability-meta strong{color:var(--text);font-variant-numeric:tabular-nums}
 .conditions-trend-reasons{display:grid;gap:8px;margin-top:12px}
+.conditions-trend-reasons[hidden]{display:none!important}
 .algorithm-details{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);color:var(--text);font-size:12px;line-height:1.55}
 .algorithm-details summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--text);padding:5px 0}
 .algorithm-details p{margin:10px 0;color:var(--muted)}
