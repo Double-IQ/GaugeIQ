@@ -702,6 +702,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/app.js?v=20261014-condition-status-pills-3"></script>
+<script src="js/app.js?v=20261014-weather-stability-copy-1"></script>
 </body>
 </html>
