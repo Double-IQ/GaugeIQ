@@ -272,6 +272,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <h1>Administration</h1>
         <p class="muted">Signed in as <?= h(AdminAuth::username()) ?></p>
     </div>
+    <a class="secondary button-link" href="formulas.php">Formula Console</a>
     <a class="secondary button-link" href="logout.php">Sign out</a>
 </header>
 
