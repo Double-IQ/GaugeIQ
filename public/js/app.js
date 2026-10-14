@@ -1480,3 +1480,17 @@ if (deviceViewButton && deviceList) {
         window.location.href = 'login.php';
     });
 })();
+
+
+// The animated Meteocons are progressive enhancement: keep the original
+// weather emoji available if the CDN is unavailable or the app is offline.
+document.querySelectorAll('.temperature-forecast-icon img').forEach(image => {
+    const fallback = image.parentElement?.querySelector('.temperature-forecast-fallback');
+    if (!fallback) return;
+    const showFallback = () => {
+        image.hidden = true;
+        fallback.hidden = false;
+    };
+    image.addEventListener('error', showFallback, { once: true });
+    if (image.complete && image.naturalWidth === 0) showFallback();
+});
