@@ -898,7 +898,7 @@ function weatherConditionsTrend(readings) {
     if (pressure) {
         const rate = pressure.delta / pressure.hours;
         if (rate <= -weatherFormula('trend_pressure_threshold', 0.3)) addSignal(1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', weatherFormula('trend_pressure_weight', 2), 'Pressure');
-        else if (rate >= weatherFormula('trend_pressure_threshold', 0.3)) addSignal(-1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
+        else if (rate >= weatherFormula('trend_pressure_threshold', 0.3)) addSignal(-1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', weatherFormula('trend_pressure_weight', 2), 'Pressure');
     }
 
     const rain = weatherFieldPair(valid, 'rain');
