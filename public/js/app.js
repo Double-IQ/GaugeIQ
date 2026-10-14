@@ -473,6 +473,12 @@ showAlertsOnIfAlreadyEnabled();
 if (notifyButton) {
     notifyButton.addEventListener('click', async () => {
         try {
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (!isInstalledPWA() && isIOS) {
+                window.location.href = 'https://github.com/Double-IQ/GaugeIQ#install-gaugeiq';
+                return;
+            }
             if (!isInstalledPWA()) {
                 await installGaugeIQ();
                 return;
