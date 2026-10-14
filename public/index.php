@@ -12,6 +12,7 @@ require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/Version.php';
 require __DIR__ . '/../app/AdminAuth.php';
+require_once __DIR__ . '/../app/WeatherFormulaConfig.php';
 date_default_timezone_set($config['app']['timezone']);
 
 $db = new Database($config);
@@ -20,6 +21,8 @@ $csrfToken = AdminAuth::csrfToken();
 $service = new PressureService($config, $db->pdo());
 $pdo = $db->pdo();
 migrateDatabase($pdo);
+$weatherFormulaValues = weatherFormulaValues($pdo);
+$weatherFormulaJson = json_encode($weatherFormulaValues, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
 
 $locationName = (string)$config['pressure']['location_name'];
 $dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
@@ -191,7 +194,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="stylesheet" href="css/app.css?v=20261014-header-mobile-stack-1">
 <title>GaugeIQ</title>
 </head>
-<body>
+<body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
 <div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
     <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
     <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
