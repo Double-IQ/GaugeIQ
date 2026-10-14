@@ -684,7 +684,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .gaugeiq-loading-screen{
   position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:22px;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));
-  background:#0b1120;color:#f9fafb;opacity:1;visibility:visible;
+  background:#061648;color:#f9fafb;opacity:1;visibility:visible;
   transition:opacity 160ms ease,visibility 160ms ease;
 }
 .gaugeiq-loading-screen.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
