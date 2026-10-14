@@ -155,7 +155,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261014-animated-weather-icons-3">
+<link rel="stylesheet" href="css/app.css?v=20261014-weather-stability-copy-1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -557,7 +557,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="section-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Stability</h2>
-                <p class="muted">The degree of change in weather conditions.</p>
+                <p class="muted">Interprets the degree and speed of changing conditions.</p>
             </div>
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
         </div>
