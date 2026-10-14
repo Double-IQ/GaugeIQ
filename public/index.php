@@ -78,44 +78,8 @@ try {
         )->fetch() ?: [];
     }
 
-    // Refresh the live observation whenever the dashboard is opened or resumed.
-    // This keeps the displayed conditions current instead of waiting for the next cron run.
-    try {
-        $initialReading = $service->fetchCurrent();
-            $service->record($initialReading);
-            $saveStatus = static function (PDO $pdo, string $key, string $value): void {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
-                     ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)'
-                );
-                $stmt->execute([$key, $value]);
-            };
-            $saveStatus($pdo, 'monitor_last_success_at', gmdate('c'));
-            $saveStatus($pdo, 'monitor_last_error', '');
-
-            $latest = $pdo->query(
-                "SELECT * FROM gaugeiq_pressure_readings
-                 WHERE source IS NULL OR source = 'Open-Meteo'
-                 ORDER BY id DESC LIMIT 1"
-            )->fetch() ?: null;
-            if ($latest) {
-                $pressureHistory = [
-                    'pressure_low' => $latest['pressure_hpa'],
-                    'pressure_high' => $latest['pressure_hpa'],
-                ];
-            }
-        } catch (Throwable $initialCheckError) {
-            // Keep the dashboard available even when Open-Meteo is temporarily unavailable.
-            try {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?)
-                     ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)'
-                );
-                $stmt->execute(['monitor_last_error', $initialCheckError->getMessage()]);
-            } catch (Throwable) {
-                // The primary fetch error is intentionally non-fatal to dashboard rendering.
-            }
-        }
+    // Dashboard rendering is read-only: display the latest stored reading.
+    // New observations are collected by the scheduled server-side monitor, not on app open.
 
     $current = $latest;
     if ($current) {
