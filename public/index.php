@@ -188,7 +188,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261014-weather-stability-copy-mobile-spacing-1">
+<link rel="stylesheet" href="css/app.css?v=20261014-header-mobile-stack-1">
 <title>GaugeIQ</title>
 </head>
 <body>
