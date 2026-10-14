@@ -48,7 +48,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,rain_sum,wind_speed_10m_max,wind_gusts_10m_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&hourly=weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,rain_sum,wind_speed_10m_max,wind_gusts_10m_max&forecast_days=4"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -106,6 +106,24 @@ final class PressureService
             }
         }
 
+        $forecast = $this->normaliseForecast($data['daily'] ?? []);
+        $hourly = $data['hourly'] ?? [];
+        $hourlyTimes = is_array($hourly['time'] ?? null) ? $hourly['time'] : [];
+        $hourlyCodes = is_array($hourly['weather_code'] ?? null) ? $hourly['weather_code'] : [];
+        $currentTime = strtotime((string)($current['time'] ?? ''));
+        $nextHourWeatherCode = null;
+        foreach ($hourlyTimes as $hourIndex => $hourTime) {
+            $hourTimestamp = is_string($hourTime) ? strtotime($hourTime) : false;
+            if ($hourTimestamp !== false && ($currentTime === false || $hourTimestamp > $currentTime)
+                && isset($hourlyCodes[$hourIndex]) && is_numeric($hourlyCodes[$hourIndex])) {
+                $nextHourWeatherCode = (int)$hourlyCodes[$hourIndex];
+                break;
+            }
+        }
+        if ($nextHourWeatherCode !== null && isset($forecast[0])) {
+            $forecast[0]['next_hour_weather_code'] = $nextHourWeatherCode;
+        }
+
         return [
             'temperature_c' => (float)$current['temperature_2m'],
             'feels_like_c' => (float)$current['apparent_temperature'],
@@ -120,7 +138,7 @@ final class PressureService
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
             'observed_at' => (string)($current['time'] ?? gmdate('c')),
-            'forecast' => $this->normaliseForecast($data['daily'] ?? []),
+            'forecast' => $forecast,
         ];
     }
 
