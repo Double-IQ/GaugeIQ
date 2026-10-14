@@ -5,12 +5,16 @@
     const message = document.getElementById('gaugeiqLoadingMessage');
     if (!screen) return;
 
+    const minimumVisibleMs = 2000;
     let dismissed = false;
     let reloadStarted = false;
     let hiddenAt = 0;
+    let loadingStartedAt = Date.now();
 
     function showLoading(text) {
         if (message && text) message.textContent = text;
+        loadingStartedAt = Date.now();
+        dismissed = false;
         screen.hidden = false;
         screen.classList.remove('is-leaving');
         screen.setAttribute('aria-hidden', 'false');
@@ -18,6 +22,11 @@
 
     function dismissLoading() {
         if (dismissed || reloadStarted) return;
+        const remaining = minimumVisibleMs - (Date.now() - loadingStartedAt);
+        if (remaining > 0) {
+            window.setTimeout(dismissLoading, remaining);
+            return;
+        }
         dismissed = true;
         screen.classList.add('is-leaving');
         window.setTimeout(() => {
@@ -38,7 +47,7 @@
         if (reloadStarted) return;
         reloadStarted = true;
         showLoading('Refreshing data…');
-        window.setTimeout(() => window.location.reload(), 50);
+        window.setTimeout(() => window.location.reload(), minimumVisibleMs);
     }
 
     window.addEventListener('pageshow', event => {
