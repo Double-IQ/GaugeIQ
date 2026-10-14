@@ -444,7 +444,7 @@ button:disabled { opacity: .55; cursor: default; }
   .rain-probability-card .section-heading,.conditions-trend-card .section-heading{align-items:center;gap:10px}
   .rain-probability-score{min-width:68px;min-height:54px;font-size:23px;border-radius:13px}
   .conditions-trend-score{width:56px;height:56px;font-size:27px}
-  .conditions-trend-summary{text-align:center}
+  .conditions-trend-summary{text-align:left}
   .rain-probability-meta{font-size:12px}
   .algorithm-details{font-size:12px}
 }
@@ -658,6 +658,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     overflow-wrap:anywhere;
     line-height:1.35;
   }
+  .weather-change-card .section-heading p{margin-bottom:10px}
   .weather-change-card .weather-change-score{
     grid-area:auto;
     justify-self:auto;
