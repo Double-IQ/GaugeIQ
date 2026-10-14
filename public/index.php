@@ -577,7 +577,6 @@ if ($current && !empty($current['observed_at'])) {
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
-        <div class="weather-baseline-status" id="weatherBaselineStatus" aria-live="polite">Building a recent local baseline…</div>
         <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show weather stability reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="9"></circle>
