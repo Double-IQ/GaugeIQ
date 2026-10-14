@@ -285,12 +285,12 @@ button:disabled { opacity: .55; cursor: default; }
 
 .temperature-summary-card{margin-top:16px;margin-bottom:16px}
 .temperature-card-heading{margin-bottom:8px}
-.temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.temperature-summary-main{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
 .temperature-summary-current{display:flex;flex-direction:column;gap:5px}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
 .temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-summary-forecast{display:flex;align-items:center;gap:12px}.temperature-summary-forecast .temperature-conditions-inline{margin-left:4px;text-align:right}
-.temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;font-size:36px;line-height:1}
+.temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;margin-top:-3px;font-size:36px;line-height:1}
 .temperature-summary-range{display:flex;gap:14px}
 .temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px}
 .temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -313,6 +313,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-comfort-inline .humidity-zone{font-size:10px}
 @media(max-width:560px){
   .temperature-summary-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:10px}
+  .temperature-forecast-icon{margin-top:-6px}
   .temperature-summary-current{min-width:0;width:100%}
   .temperature-summary-current strong{font-size:36px}
   .temperature-feels-like-row{justify-content:space-between;gap:4px;min-width:0}
