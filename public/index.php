@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261014-forecast-icon-alignment-1">
+<link rel="stylesheet" href="css/app.css?v=20261014-animated-meteocons-1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -277,20 +277,22 @@ if ($current && !empty($current['observed_at'])) {
         ? max(0.0, (float)$current['rainfall_mm'])
         : null;
 
-    $forecastCondition = static function (?int $code): array {
+    $forecastCondition = static function (?int $code, bool $isDay = true): array {
+        $clearIcon = $isDay ? 'clear-day' : 'clear-night';
+        $partlyCloudyIcon = $isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
         return match (true) {
-            $code === null => ['icon' => '—', 'label' => 'Unavailable'],
-            $code === 0 => ['icon' => '☀️', 'label' => 'Clear sky'],
-            $code === 1 => ['icon' => '🌤️', 'label' => 'Mainly clear'],
-            $code === 2 => ['icon' => '⛅', 'label' => 'Partly cloudy'],
-            $code === 3 => ['icon' => '☁️', 'label' => 'Overcast'],
-            in_array($code, [45, 48], true) => ['icon' => '🌫️', 'label' => 'Fog'],
-            in_array($code, [51, 53, 55, 56, 57], true) => ['icon' => '🌦️', 'label' => 'Drizzle'],
-            in_array($code, [61, 63, 65, 66, 67], true) => ['icon' => '🌧️', 'label' => 'Rain'],
-            in_array($code, [71, 73, 75, 77, 85, 86], true) => ['icon' => '🌨️', 'label' => 'Snow'],
-            in_array($code, [80, 81, 82], true) => ['icon' => '🌦️', 'label' => 'Rain showers'],
-            in_array($code, [95, 96, 99], true) => ['icon' => '⛈️', 'label' => 'Thunderstorm'],
-            default => ['icon' => '🌤️', 'label' => 'Mixed conditions'],
+            $code === null => ['icon' => '—', 'slug' => null, 'label' => 'Unavailable'],
+            $code === 0 => ['icon' => '☀️', 'slug' => $clearIcon, 'label' => 'Clear sky'],
+            $code === 1 => ['icon' => '🌤️', 'slug' => $partlyCloudyIcon, 'label' => 'Mainly clear'],
+            $code === 2 => ['icon' => '⛅', 'slug' => $partlyCloudyIcon, 'label' => 'Partly cloudy'],
+            $code === 3 => ['icon' => '☁️', 'slug' => 'overcast', 'label' => 'Overcast'],
+            in_array($code, [45, 48], true) => ['icon' => '🌫️', 'slug' => 'fog', 'label' => 'Fog'],
+            in_array($code, [51, 53, 55], true) => ['icon' => '🌦️', 'slug' => 'drizzle', 'label' => 'Drizzle'],
+            in_array($code, [56, 57, 66, 67], true) => ['icon' => '🌧️', 'slug' => 'sleet', 'label' => 'Freezing precipitation'],
+            in_array($code, [61, 63, 65, 80, 81, 82], true) => ['icon' => '🌧️', 'slug' => 'rain', 'label' => 'Rain'],
+            in_array($code, [71, 73, 75, 77, 85, 86], true) => ['icon' => '🌨️', 'slug' => 'snow', 'label' => 'Snow'],
+            in_array($code, [95, 96, 99], true) => ['icon' => '⛈️', 'slug' => 'thunderstorms', 'label' => 'Thunderstorm'],
+            default => ['icon' => '🌤️', 'slug' => $partlyCloudyIcon, 'label' => 'Mixed conditions'],
         };
     };
 
@@ -345,8 +347,21 @@ if ($current && !empty($current['observed_at'])) {
                         <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                     </div>
                     <div class="temperature-summary-forecast">
-                        <?php $nextHourCondition = $forecast ? $forecastCondition($forecast[0]['next_hour_weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
-                        <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>" title="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>"><?= $nextHourCondition['icon'] ?></span>
+                        <?php
+                        $nextHourIsDay = is_array($forecast[0] ?? null) && array_key_exists('next_hour_is_day', $forecast[0])
+                            ? (bool)$forecast[0]['next_hour_is_day']
+                            : true;
+                        $nextHourCondition = $forecast
+                            ? $forecastCondition(isset($forecast[0]['next_hour_weather_code']) && is_numeric($forecast[0]['next_hour_weather_code']) ? (int)$forecast[0]['next_hour_weather_code'] : null, $nextHourIsDay)
+                            : ['icon' => '—', 'slug' => null, 'label' => 'Unavailable'];
+                        ?>
+                        <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>" title="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>">
+                            <?php if (is_string($nextHourCondition['slug'] ?? null)): ?>
+                                <img src="https://cdn.meteocons.com/latest/svg/line/<?= htmlspecialchars($nextHourCondition['slug'], ENT_QUOTES) ?>.svg" alt="" aria-hidden="true" width="48" height="48">
+                            <?php else: ?>
+                                <?= htmlspecialchars($nextHourCondition['icon'], ENT_QUOTES) ?>
+                            <?php endif; ?>
+                        </span>
                         <div class="temperature-summary-range">
                             <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
                             <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
