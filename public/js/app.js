@@ -1091,6 +1091,11 @@ async function loadWeatherChange() {
                 ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
                 : '');
             const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
+            const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
+            if (topStabilityLabel) {
+                topStabilityLabel.textContent = stabilitySummary.split('·')[0].trim();
+                topStabilityLabel.dataset.level = level;
+            }
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(stabilityScore));
             const stabilityScoreFill = document.getElementById('weatherChangeFill');
@@ -1153,6 +1158,7 @@ async function loadWeatherChange() {
                 const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
                 stabilityFill.classList.toggle('warning', warningActive);
                 stabilityTrack?.classList.toggle('warning', warningActive);
+                document.getElementById('temperatureStabilityLabel')?.classList.toggle('warning', warningActive);
             }
         }
 
@@ -1188,6 +1194,12 @@ async function loadWeatherChange() {
     } catch {
         scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather Stability indicator unavailable.';
+        const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
+        if (topStabilityLabel) {
+            topStabilityLabel.textContent = 'Unavailable';
+            topStabilityLabel.dataset.level = 'low';
+            topStabilityLabel.classList.remove('warning');
+        }
         reasonsElement.innerHTML = '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>';
         const trendSummary = document.getElementById('conditionsTrendSummary');
         const trendReasons = document.getElementById('conditionsTrendReasons');
