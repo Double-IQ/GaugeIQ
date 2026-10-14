@@ -586,14 +586,17 @@ if ($current && !empty($current['observed_at'])) {
             <span id="weatherChangeReasonsButtonLabel">More information</span>
         </button>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
-        <p class="weather-change-note">GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
+        <details class="algorithm-details">
+            <summary>How Weather Stability is calculated</summary>
+            <p>GaugeIQ compares the current six-hour change with up to 14 previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
+        </details>
     </section>
 
     <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
         <div class="section-heading">
             <div>
                 <h2 id="conditionsTrendTitle">Conditions trend</h2>
-                <p class="muted">Interprets whether the recent pattern points towards more settled or more unsettled conditions.</p>
+                <p class="muted">Interprets the change in weather conditions.</p>
             </div>
             <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
         </div>
