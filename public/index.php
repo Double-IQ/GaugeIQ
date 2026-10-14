@@ -358,6 +358,7 @@ if ($current && !empty($current['observed_at'])) {
                         <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>" title="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>">
                             <?php if (is_string($nextHourCondition['slug'] ?? null)): ?>
                                 <img src="https://cdn.meteocons.com/latest/svg/line/<?= htmlspecialchars($nextHourCondition['slug'], ENT_QUOTES) ?>.svg" alt="" aria-hidden="true" width="48" height="48">
+                                <span class="temperature-forecast-fallback" aria-hidden="true" hidden><?= htmlspecialchars($nextHourCondition['icon'], ENT_QUOTES) ?></span>
                             <?php else: ?>
                                 <?= htmlspecialchars($nextHourCondition['icon'], ENT_QUOTES) ?>
                             <?php endif; ?>
