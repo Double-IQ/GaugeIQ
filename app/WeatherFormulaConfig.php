@@ -40,7 +40,7 @@ function weatherFormulaFields(): array
         'dew_point_spread' => ['Temperature/dew-point gap', 1, 1, 3],
         'rainfall' => ['Rainfall', 2, 0.2, 2],
         'cloud_cover' => ['Cloud cover', 1, 15, 50],
-        'weather_code' => ['Reported weather condition', 1, 0, 1],
+        'weather_code' => ['Reported weather condition', 1, 1, 5],
     ] as $signal => [$label, $weight, $trigger, $maximum]) {
         $fields['stability_weight_' . $signal] = ['group' => 'Weather Stability · signal weights', 'label' => $label . ' weight', 'default' => $weight, 'min' => 0, 'max' => 10, 'step' => 0.5, 'unit' => 'weight', 'help' => 'Relative influence of this signal in the weighted Weather Stability calculation.'];
         $fields['stability_trigger_' . $signal] = ['group' => 'Weather Stability · signal thresholds', 'label' => $label . ' trigger', 'default' => $trigger, 'min' => 0, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Six-hour-equivalent magnitude below which this signal contributes zero severity.'];
@@ -64,7 +64,7 @@ function weatherFormulaDefaults(): array
         'dew_point_spread' => [1, 1, 3],
         'rainfall' => [2, 0.2, 2],
         'cloud_cover' => [1, 15, 50],
-        'weather_code' => [1, 0, 1],
+        'weather_code' => [1, 1, 5],
     ] as $signal => [$weight, $trigger, $maximum]) {
         $values['stability_weight_' . $signal] = $weight;
         $values['stability_trigger_' . $signal] = $trigger;
