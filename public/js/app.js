@@ -339,6 +339,7 @@ if (windGauge) {
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const notificationEnabledNote = document.getElementById('notificationEnabledNote');
+const temperatureAlertsStatus = document.getElementById('temperatureAlertsStatus');
 const historyStatus = document.getElementById('historyStatus');
 let deferredInstallPrompt = null;
 let installedThisSession = false;
@@ -354,9 +355,17 @@ function updateInstallButton() {
     notifyButton.setAttribute('aria-label', installed ? 'Enable GaugeIQ alerts' : 'Install GaugeIQ as an app');
 }
 
+function setTemperatureAlertsStatus(state) {
+    if (!temperatureAlertsStatus) return;
+    const labels = { enabled: 'Enabled', disabled: 'Disabled', na: 'N/A' };
+    temperatureAlertsStatus.dataset.state = state;
+    temperatureAlertsStatus.innerHTML = 'Alerts: <b>' + (labels[state] || labels.na) + '</b>';
+}
+
 function showNotificationsEnabledUI() {
     if (notifyButton) notifyButton.hidden = true;
     if (notificationEnabledNote) notificationEnabledNote.hidden = false;
+    setTemperatureAlertsStatus('enabled');
 }
 
 async function getRegistration() {
@@ -457,14 +466,17 @@ async function installGaugeIQ() {
 }
 
 async function showAlertsOnIfAlreadyEnabled() {
-    if (!('Notification' in window) || !('PushManager' in window) || Notification.permission !== 'granted') return;
+    if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
+        setTemperatureAlertsStatus('na');
+        return;
+    }
+    setTemperatureAlertsStatus('disabled');
+    if (Notification.permission !== 'granted') return;
     try {
         const registration = await getRegistration();
-        if (await registration.pushManager.getSubscription()) {
-            showNotificationsEnabledUI();
-        }
+        if (await registration.pushManager.getSubscription()) showNotificationsEnabledUI();
     } catch {
-        // Leave the normal enable button available if the existing subscription cannot be checked.
+        // Leave the status as Disabled if an active subscription cannot be confirmed.
     }
 }
 
