@@ -318,7 +318,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-stability-inline .temperature-stability-prefix{color:var(--muted)}
 .temperature-stability-inline #temperatureStabilitySummary{display:inline-block;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:10px;font-weight:900;color:var(--text)}
 
-.temperature-alerts-inline{flex:0 0 auto;text-align:right;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.temperature-alerts-inline{flex:0 0 auto;text-align:right;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;border:1px solid currentColor;border-radius:6px;padding:3px 7px;box-sizing:border-box}
 .temperature-alerts-inline b{font-weight:900}
 .temperature-alerts-inline[data-state="enabled"] b{color:#22c55e}
 .temperature-alerts-inline[data-state="disabled"] b{color:#eab308}
