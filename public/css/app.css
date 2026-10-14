@@ -309,6 +309,13 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:0}
 .temperature-comfort-below{margin-top:10px}
 .temperature-comfort-alerts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.temperature-stability-inline{margin-left:auto;text-align:right;white-space:nowrap}
+.temperature-status-bottom-row{margin-top:10px}
+.temperature-status-bottom-row .temperature-conditions-inline{margin-left:0;text-align:left}
+.temperature-status-bottom-row .temperature-alerts-inline{margin-left:auto}
+.temperature-stability-inline .temperature-stability-prefix{color:var(--muted)}
+.temperature-stability-inline #temperatureStabilitySummary{display:inline-block;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:10px;font-weight:900;color:var(--text)}
+
 .temperature-alerts-inline{flex:0 0 auto;text-align:right;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
 .temperature-alerts-inline b{font-weight:900}
 .temperature-alerts-inline[data-state="enabled"] b{color:#22c55e}
