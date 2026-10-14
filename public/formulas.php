@@ -165,7 +165,7 @@ foreach ($fields as $key => $field) {
         <?php endforeach; ?>
         <div class="formula-actions">
             <button type="submit" name="action" value="save">Save formula parameters</button>
-            <button type="submit" name="action" value="reset" class="secondary" formnovalidate onclick="return confirm('Reset every formula parameter to its default value?')">Reset to defaults</button>
+            <button type="submit" name="action" value="reset" class="secondary" formnovalidate data-confirm="Reset every formula parameter to its default value?">Reset to defaults</button>
         </div>
     </form>
 
