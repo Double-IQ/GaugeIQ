@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v31';
+const CACHE = 'gaugeiq-v32';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -10,6 +10,15 @@ self.addEventListener('install', event => {
             './branding/apple-touch-icon.png',
             './branding/icon-192.png',
             './branding/icon-512.png',
+            './weather-icons/clear-day.svg',
+            './weather-icons/clear-night.svg',
+            './weather-icons/partly-cloudy-day.svg',
+            './weather-icons/partly-cloudy-night.svg',
+            './weather-icons/overcast.svg',
+            './weather-icons/fog.svg',
+            './weather-icons/rain.svg',
+            './weather-icons/snow.svg',
+            './weather-icons/thunderstorm.svg',
             './css/app.css',
             './js/local-weather.js',
             './js/app.js'
