@@ -310,6 +310,8 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-comfort-below{margin-top:10px}
 .temperature-comfort-alerts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
 .temperature-stability-inline{margin-left:auto;text-align:right;white-space:nowrap}
+.temperature-stability-row.temperature-comfort-alerts-row{margin-top:10px;padding-top:0;border-top:0;gap:12px}
+.temperature-stability-row.temperature-comfort-alerts-row .temperature-stability-inline{margin-left:auto}
 .temperature-status-bottom-row{margin-top:10px}
 .temperature-status-bottom-row .temperature-conditions-inline{margin-left:0;text-align:left}
 .temperature-status-bottom-row .temperature-alerts-inline{margin-left:auto}
