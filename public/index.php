@@ -309,7 +309,6 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                        <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                     </div>
                     <div class="temperature-summary-forecast">
                         <?php
@@ -336,6 +335,7 @@ if ($current && !empty($current['observed_at'])) {
                         </div>
                     </div>
                 </div>
+                <div class="temperature-feels-like-row temperature-feels-like-below"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                 <div class="temperature-comfort-inline temperature-comfort-below">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                 <div class="temperature-stability-row" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">Stability: </span><span id="temperatureStabilitySummary">Gathering readings…</span></div>
