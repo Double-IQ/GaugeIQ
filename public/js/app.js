@@ -1094,7 +1094,8 @@ async function loadWeatherChange() {
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
                 topStabilityLabel.textContent = stabilitySummary.split('·')[0].trim();
-                topStabilityLabel.dataset.level = level;
+                const changeSeverity = Number(result.score);
+                topStabilityLabel.dataset.level = changeSeverity >= 7 ? 'low' : changeSeverity >= 4 ? 'moderate' : 'high';
             }
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(stabilityScore));
