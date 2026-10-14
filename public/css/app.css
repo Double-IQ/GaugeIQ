@@ -292,6 +292,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-forecast{display:flex;align-items:center;gap:12px}.temperature-summary-forecast .temperature-conditions-inline{margin-left:4px;text-align:right}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;margin-top:-3px;font-size:36px;line-height:1}
 .temperature-forecast-icon img{display:block;width:48px;height:48px;object-fit:contain}
+.temperature-forecast-icon img[hidden]{display:none}
 .temperature-summary-range{display:flex;gap:14px}
 .temperature-summary-range div{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px}
 .temperature-summary-range span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
