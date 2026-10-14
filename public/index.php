@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261014-stability-outline-1">
+<link rel="stylesheet" href="css/app.css?v=20261014-next-hour-icon-1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -345,8 +345,8 @@ if ($current && !empty($current['observed_at'])) {
                         <div class="temperature-feels-like-row"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                     </div>
                     <div class="temperature-summary-forecast">
-                        <?php $todayCondition = $forecast ? $forecastCondition($forecast[0]['weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
-                        <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars($todayCondition['label'], ENT_QUOTES) ?>"><?= $todayCondition['icon'] ?></span>
+                        <?php $nextHourCondition = $forecast ? $forecastCondition($forecast[0]['next_hour_weather_code'] ?? null) : ['icon' => '—', 'label' => 'Unavailable']; ?>
+                        <span class="temperature-forecast-icon" role="img" aria-label="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>" title="<?= htmlspecialchars('Next hour: ' . $nextHourCondition['label'], ENT_QUOTES) ?>"><?= $nextHourCondition['icon'] ?></span>
                         <div class="temperature-summary-range">
                             <div><span>High</span><strong><?= $forecastHighC !== null ? number_format((float)$forecastHighC, 1) . '°' : '—' ?></strong></div>
                             <div><span>Low</span><strong><?= $forecastLowC !== null ? number_format((float)$forecastLowC, 1) . '°' : '—' ?></strong></div>
