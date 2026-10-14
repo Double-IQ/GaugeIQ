@@ -852,7 +852,7 @@ function weatherChangeScore(readings) {
     if (components.length < weatherFormula('stability_min_signals', 5)) {
         return {
             score: null,
-            summary: 'Insufficient valid signals (' + components.length + '/9). At least 5 are required.',
+            summary: 'Insufficient valid signals (' + components.length + '/9). At least ' + weatherFormula('stability_min_signals', 5) + ' are required.',
             components, reasons: [], coverage: components.length
         };
     }
@@ -965,7 +965,7 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     if (historicalScores.length < weatherFormula('baseline_min_windows', 5)) {
         return {
             count: historicalScores.length,
-            text: 'Building recent local baseline: ' + historicalScores.length + ' comparable six-hour windows available; at least 5 are needed.'
+            text: 'Building recent local baseline: ' + historicalScores.length + ' comparable six-hour windows available; at least ' + weatherFormula('baseline_min_windows', 5) + ' are needed.'
         };
     }
 
