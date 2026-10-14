@@ -1093,9 +1093,13 @@ async function loadWeatherChange() {
             const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
-                topStabilityLabel.textContent = 'Stability: ' + stabilitySummary.split('·')[0].trim();
-                const changeSeverity = Number(result.score);
-                topStabilityLabel.dataset.level = changeSeverity >= 7 ? 'low' : changeSeverity >= 4 ? 'moderate' : 'high';
+                const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
+                if (stabilitySummaryElement) {
+                    stabilitySummaryElement.textContent = stabilitySummary.split('·')[0].trim();
+                    stabilitySummaryElement.className = 'temperature-stability-summary';
+                    const changeSeverity = Number(result.score);
+                    stabilitySummaryElement.dataset.level = changeSeverity >= 7 ? 'low' : changeSeverity >= 4 ? 'moderate' : 'high';
+                }
             }
             scoreElement.dataset.level = level;
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(stabilityScore));
@@ -1147,7 +1151,7 @@ async function loadWeatherChange() {
                 ? NaN
                 : Number(thresholdValue);
             const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
-            document.getElementById('temperatureStabilityLabel')?.classList.toggle('warning', warningActive);
+            document.getElementById('temperatureStabilitySummary')?.classList.toggle('warning', warningActive);
         }
 
         if (trend.score === null) {
@@ -1156,7 +1160,7 @@ async function loadWeatherChange() {
                 : '');
             if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
-            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>→ Gathering readings…</b>';
+            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status gathering">→ Gathering readings…</b>';
         } else {
             if (trendIcon) {
                 trendIcon.textContent = trend.arrow;
@@ -1177,16 +1181,19 @@ async function loadWeatherChange() {
                     }).join('')
                     : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
             }
-            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>' + trend.arrow + ' ' + trend.label + '</b>';
+            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
         }
     } catch {
         scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather Stability indicator unavailable.';
         const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
         if (topStabilityLabel) {
-            topStabilityLabel.textContent = 'Stability: Unavailable';
-            topStabilityLabel.dataset.level = 'low';
-            topStabilityLabel.classList.remove('warning');
+            const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
+            if (stabilitySummaryElement) {
+                stabilitySummaryElement.textContent = 'Unavailable';
+                stabilitySummaryElement.dataset.level = 'low';
+                stabilitySummaryElement.classList.remove('warning');
+            }
         }
         reasonsElement.innerHTML = '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>';
         const trendSummary = document.getElementById('conditionsTrendSummary');
@@ -1194,7 +1201,7 @@ async function loadWeatherChange() {
         if (trendSummary) trendSummary.textContent = 'Conditions trend unavailable.';
         if (trendReasons) trendReasons.innerHTML = '';
         const conditionsElement = document.getElementById('weatherConditions');
-        if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b>→ Unavailable</b>';
+        if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status unavailable">→ Unavailable</b>';
     }
 }
 
