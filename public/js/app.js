@@ -656,16 +656,28 @@ function weatherChangeDirectionLabel(delta, unit, positive = 'increased', negati
         : negative + ' by ' + Math.abs(delta).toFixed(unit === '°C' ? 1 : 1) + unit;
 }
 
+const WEATHER_FORMULA_CONFIG = (() => {
+    try {
+        return JSON.parse(document.body?.dataset.weatherFormulas || '{}');
+    } catch {
+        return {};
+    }
+})();
+function weatherFormula(key, fallback) {
+    const value = Number(WEATHER_FORMULA_CONFIG[key]);
+    return Number.isFinite(value) ? value : fallback;
+}
+
 const WEATHER_CHANGE_WEIGHTS = {
-    pressure: 2,
-    temperature: 1,
-    humidity: 1,
-    windSpeed: 2,
-    windDirection: 1,
-    dewPointSpread: 1,
-    rainfall: 2,
-    cloudCover: 1,
-    weatherCode: 1
+    pressure: weatherFormula('stability_weight_pressure', 2),
+    temperature: weatherFormula('stability_weight_temperature', 1),
+    humidity: weatherFormula('stability_weight_humidity', 1),
+    windSpeed: weatherFormula('stability_weight_wind_speed', 2),
+    windDirection: weatherFormula('stability_weight_wind_direction', 1),
+    dewPointSpread: weatherFormula('stability_weight_dew_point_spread', 1),
+    rainfall: weatherFormula('stability_weight_rainfall', 2),
+    cloudCover: weatherFormula('stability_weight_cloud_cover', 1),
+    weatherCode: weatherFormula('stability_weight_weather_code', 1)
 };
 function weatherNumeric(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -748,12 +760,12 @@ function weatherFieldPair(readings, field) {
 
 function weatherChangeScore(readings) {
     const valid = weatherReadingsWindow(readings);
-    if (valid.length < 3) {
+    if (valid.length < weatherFormula('stability_min_readings', 3)) {
         return { score: null, summary: 'Gathering more readings…', components: [], reasons: [], coverage: 0 };
     }
 
     const totalHours = (valid[valid.length - 1].time - valid[0].time) / 3600000;
-    if (totalHours < 1) {
+    if (totalHours < weatherFormula('stability_min_hours', 1)) {
         return { score: null, summary: 'Gathering a longer observation window…', components: [], reasons: [], coverage: 0 };
     }
 
@@ -769,35 +781,35 @@ function weatherChangeScore(readings) {
     const pressure = weatherFieldPair(valid, 'pressure');
     if (pressure) {
         const rate = pressure.delta / pressure.hours;
-        addComponent('pressure', 'Air pressure', pressure, weatherSeverity(Math.abs(rate), 0.3, 1.5),
+        addComponent('pressure', 'Air pressure', pressure, weatherSeverity(Math.abs(rate), weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)),
             'changed ' + (pressure.delta < 0 ? 'by −' : 'by +') + Math.abs(pressure.delta).toFixed(1) + ' hPa (' + (rate < 0 ? '−' : '+') + Math.abs(rate).toFixed(2) + ' hPa/hour)');
     }
 
     const temperature = weatherFieldPair(valid, 'temperature');
     if (temperature) {
         const scaled = Math.abs(temperature.delta) * 6 / temperature.hours;
-        addComponent('temperature', 'Temperature', temperature, weatherSeverity(scaled, 1, 3),
+        addComponent('temperature', 'Temperature', temperature, weatherSeverity(scaled, weatherFormula('stability_trigger_temperature', 1), weatherFormula('stability_max_temperature', 3)),
             'changed ' + (temperature.delta < 0 ? 'by −' : 'by +') + Math.abs(temperature.delta).toFixed(1) + '°C over ' + temperature.hours.toFixed(1) + ' hours (six-hour equivalent ' + scaled.toFixed(1) + '°C)');
     }
 
     const humidity = weatherFieldPair(valid, 'humidity');
     if (humidity) {
         const scaled = Math.abs(humidity.delta) * 6 / humidity.hours;
-        addComponent('humidity', 'Humidity', humidity, weatherSeverity(scaled, 4, 12),
+        addComponent('humidity', 'Humidity', humidity, weatherSeverity(scaled, weatherFormula('stability_trigger_humidity', 4), weatherFormula('stability_max_humidity', 12)),
             'changed ' + (humidity.delta < 0 ? 'by −' : 'by +') + Math.abs(humidity.delta).toFixed(0) + ' percentage points (six-hour equivalent ' + scaled.toFixed(1) + ')');
     }
 
     const wind = weatherFieldPair(valid, 'wind');
     if (wind) {
         const scaled = Math.abs(wind.delta) * 6 / wind.hours;
-        addComponent('windSpeed', 'Wind speed', wind, weatherSeverity(scaled, 8, 20),
+        addComponent('windSpeed', 'Wind speed', wind, weatherSeverity(scaled, weatherFormula('stability_trigger_wind_speed', 8), weatherFormula('stability_max_wind_speed', 20)),
             'changed ' + (wind.delta < 0 ? 'by −' : 'by +') + Math.abs(wind.delta).toFixed(1) + ' km/h (six-hour equivalent ' + scaled.toFixed(1) + ')');
     }
 
     const direction = weatherFieldPair(valid, 'direction');
     if (direction) {
         const shift = weatherCircularDifference(direction.first, direction.last);
-        addComponent('windDirection', 'Wind direction', direction, weatherSeverity(shift, 20, 90),
+        addComponent('windDirection', 'Wind direction', direction, weatherSeverity(shift, weatherFormula('stability_trigger_wind_direction', 20), weatherFormula('stability_max_wind_direction', 90)),
             'shifted by ' + Math.round(shift) + '° using the shortest compass angle');
     }
 
@@ -810,21 +822,21 @@ function weatherChangeScore(readings) {
         addComponent('dewPointSpread', 'Temperature/dew-point gap', {
             first: spreadFirst, last: spreadLast, delta: spreadLast - spreadFirst,
             hours: Math.min(firstTemp.hours, firstDew.hours)
-        }, weatherSeverity(narrowing, 1, 3),
+        }, weatherSeverity(narrowing, weatherFormula('stability_trigger_dew_point_spread', 1), weatherFormula('stability_max_dew_point_spread', 3)),
         'gap ' + (narrowing >= 0 ? 'narrowed by ' : 'widened by ') + Math.abs(narrowing).toFixed(1) + '°C');
     }
 
     const rain = weatherFieldPair(valid, 'rain');
     if (rain) {
         const scaled = Math.abs(rain.delta) * 6 / rain.hours;
-        addComponent('rainfall', 'Rainfall', rain, weatherSeverity(scaled, 0.2, 2),
+        addComponent('rainfall', 'Rainfall', rain, weatherSeverity(scaled, weatherFormula('stability_trigger_rainfall', 0.2), weatherFormula('stability_max_rainfall', 2)),
             'reading changed by ' + (rain.delta < 0 ? '−' : '+') + Math.abs(rain.delta).toFixed(2) + ' mm (six-hour equivalent ' + scaled.toFixed(2) + ' mm)');
     }
 
     const cloud = weatherFieldPair(valid, 'cloud');
     if (cloud) {
         const scaled = Math.abs(cloud.delta) * 6 / cloud.hours;
-        addComponent('cloudCover', 'Cloud cover', cloud, weatherSeverity(scaled, 15, 50),
+        addComponent('cloudCover', 'Cloud cover', cloud, weatherSeverity(scaled, weatherFormula('stability_trigger_cloud_cover', 15), weatherFormula('stability_max_cloud_cover', 50)),
             'changed by ' + Math.abs(cloud.delta).toFixed(0) + ' percentage points (six-hour equivalent ' + scaled.toFixed(0) + ')');
     }
 
@@ -837,7 +849,7 @@ function weatherChangeScore(readings) {
             changed ? 'condition code changed from ' + codes.first + ' to ' + codes.last + ' (severity-category difference ' + severityChange + ')' : 'condition code stayed the same');
     }
 
-    if (components.length < 5) {
+    if (components.length < weatherFormula('stability_min_signals', 5)) {
         return {
             score: null,
             summary: 'Insufficient valid signals (' + components.length + '/9). At least 5 are required.',
@@ -869,7 +881,7 @@ function weatherChangeScore(readings) {
 
 function weatherConditionsTrend(readings) {
     const valid = weatherReadingsWindow(readings);
-    if (valid.length < 3 || (valid[valid.length - 1].time - valid[0].time) < 3600000) {
+    if (valid.length < weatherFormula('trend_min_readings', 3) || (valid[valid.length - 1].time - valid[0].time) < weatherFormula('trend_min_hours', 1) * 3600000) {
         return { score: null, label: 'Gathering readings…', arrow: '→', reasons: [], mixed: false };
     }
 
@@ -885,44 +897,44 @@ function weatherConditionsTrend(readings) {
     const pressure = weatherFieldPair(valid, 'pressure');
     if (pressure) {
         const rate = pressure.delta / pressure.hours;
-        if (rate <= -0.3) addSignal(1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
-        else if (rate >= 0.3) addSignal(-1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
+        if (rate <= -weatherFormula('trend_pressure_threshold', 0.3)) addSignal(1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', weatherFormula('trend_pressure_weight', 2), 'Pressure');
+        else if (rate >= weatherFormula('trend_pressure_threshold', 0.3)) addSignal(-1, 'Pressure is falling, which can precede unsettled weather.', 'Pressure is rising, which can support more settled weather.', 2, 'Pressure');
     }
 
     const rain = weatherFieldPair(valid, 'rain');
     if (rain) {
         const scaled = rain.delta * 6 / rain.hours;
-        if (rain.first < 0.2 && rain.last >= 0.2) addSignal(1, 'Rain has appeared in the latest reading.', 'Rainfall has eased or stopped.', 2, 'Rainfall');
-        else if (scaled >= 0.2) addSignal(0.5, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
-        else if (scaled <= -0.2) addSignal(-0.5, 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
+        if (rain.first < weatherFormula('trend_rain_onset', 0.2) && rain.last >= weatherFormula('trend_rain_onset', 0.2)) addSignal(1, 'Rain has appeared in the latest reading.', 'Rainfall has eased or stopped.', weatherFormula('trend_rain_weight', 2), 'Rainfall');
+        else if (scaled >= weatherFormula('trend_rain_change_threshold', 0.2)) addSignal(weatherFormula('trend_rain_partial_strength', 0.5), 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', weatherFormula('trend_rain_weight', 2), 'Rainfall');
+        else if (scaled <= -weatherFormula('trend_rain_change_threshold', 0.2)) addSignal(-weatherFormula('trend_rain_partial_strength', 0.5), 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
     }
 
     const wind = weatherFieldPair(valid, 'wind');
     if (wind) {
         const scaled = wind.delta * 6 / wind.hours;
-        if (scaled >= 8) addSignal(1, 'Wind speed is increasing.', 'Wind speed is easing.', 1, 'Wind speed');
-        else if (scaled <= -8) addSignal(-1, 'Wind speed is increasing.', 'Wind speed is easing.', 1, 'Wind speed');
+        if (scaled >= weatherFormula('trend_wind_threshold', 8)) addSignal(1, 'Wind speed is increasing.', 'Wind speed is easing.', weatherFormula('trend_wind_weight', 1), 'Wind speed');
+        else if (scaled <= -weatherFormula('trend_wind_threshold', 8)) addSignal(-1, 'Wind speed is increasing.', 'Wind speed is easing.', 1, 'Wind speed');
     }
 
     const cloud = weatherFieldPair(valid, 'cloud');
     if (cloud) {
         const scaled = cloud.delta * 6 / cloud.hours;
-        if (scaled >= 20) addSignal(1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', 1, 'Cloud cover');
-        else if (scaled <= -20) addSignal(-1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', 1, 'Cloud cover');
+        if (scaled >= weatherFormula('trend_cloud_threshold', 20)) addSignal(1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', weatherFormula('trend_cloud_weight', 1), 'Cloud cover');
+        else if (scaled <= -weatherFormula('trend_cloud_threshold', 20)) addSignal(-1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', 1, 'Cloud cover');
     }
 
     const codes = weatherFieldPair(valid, 'weatherCode');
     if (codes) {
         const delta = weatherCodeSeverity(codes.last) - weatherCodeSeverity(codes.first);
-        if (delta >= 1) addSignal(1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
-        else if (delta <= -1) addSignal(-1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
+        if (delta >= weatherFormula('trend_code_threshold', 1)) addSignal(1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', weatherFormula('trend_code_weight', 2), 'Weather code');
+        else if (delta <= -weatherFormula('trend_code_threshold', 1)) addSignal(-1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
     }
 
     const mixed = reasons.some(reason => reason.points > 0) && reasons.some(reason => reason.points < 0);
     let label = 'Steady';
     let arrow = '→';
-    if (score >= 2) { label = 'Worsening'; arrow = '↘'; }
-    else if (score <= -2) { label = 'Improving'; arrow = '↗'; }
+    if (score >= weatherFormula('trend_classification_threshold', 2)) { label = 'Worsening'; arrow = '↘'; }
+    else if (score <= -weatherFormula('trend_classification_threshold', 2)) { label = 'Improving'; arrow = '↗'; }
     const explanation = mixed && label === 'Steady'
         ? 'Signals are mixed; there is no clear overall trend.'
         : label === 'Steady'
@@ -940,7 +952,7 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     const windowMs = windowHours * 60 * 60 * 1000;
     const historicalScores = [];
 
-    for (let day = 1; day <= 14; day++) {
+    for (let day = 1; day <= weatherFormula('baseline_days', 14); day++) {
         const windowEnd = latestTime - day * dayMs;
         const windowReadings = readings.filter(item => {
             const timestamp = weatherReadingTimestamp(item);
@@ -950,7 +962,7 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
         if (Number.isFinite(result.score)) historicalScores.push(result.score);
     }
 
-    if (historicalScores.length < 5) {
+    if (historicalScores.length < weatherFormula('baseline_min_windows', 5)) {
         return {
             count: historicalScores.length,
             text: 'Building recent local baseline: ' + historicalScores.length + ' comparable six-hour windows available; at least 5 are needed.'
@@ -964,8 +976,8 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
         : (historicalScores[middle - 1] + historicalScores[middle]) / 2;
     const difference = currentScore - median;
     let comparison = 'within the recent pattern';
-    if (difference >= 2) comparison = 'more change than usual in the recent readings';
-    else if (difference <= -2) comparison = 'less change than usual in the recent readings';
+    if (difference >= weatherFormula('baseline_deviation', 2)) comparison = 'more change than usual in the recent readings';
+    else if (difference <= -weatherFormula('baseline_deviation', 2)) comparison = 'less change than usual in the recent readings';
 
     return {
         count: historicalScores.length,
