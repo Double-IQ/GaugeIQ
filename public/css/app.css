@@ -384,7 +384,7 @@ button:disabled { opacity: .55; cursor: default; }
   .weather-change-card .section-heading{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "score" "summary";align-items:center;justify-items:center;row-gap:9px}
   .weather-change-card .section-heading>div:first-child{grid-area:title;width:100%;text-align:left}
   .weather-change-score{grid-area:score;justify-self:center;width:64px;height:64px;font-size:26px}
-  .weather-change-summary{grid-area:summary;width:100%;margin-top:0;align-self:center;text-align:center}
+  .weather-change-summary{grid-area:summary;width:100%;margin-top:0;align-self:center;text-align:left}
 }
 
 .weather-change-score[data-level="low"]{border-color:#ef4444;color:#dc2626}
