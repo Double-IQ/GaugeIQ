@@ -1093,7 +1093,7 @@ async function loadWeatherChange() {
             const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
-                topStabilityLabel.textContent = stabilitySummary.split('·')[0].trim();
+                topStabilityLabel.textContent = 'Stability: ' + stabilitySummary.split('·')[0].trim();
                 const changeSeverity = Number(result.score);
                 topStabilityLabel.dataset.level = changeSeverity >= 7 ? 'low' : changeSeverity >= 4 ? 'moderate' : 'high';
             }
@@ -1141,26 +1141,13 @@ async function loadWeatherChange() {
 
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
                 }).join('');
-            const stabilityFill = document.getElementById('weatherStabilityFill');
-            const stabilityTrack = stabilityFill?.closest('.temperature-stability-track');
-            if (stabilityFill) {
-                const score = Math.max(0, Math.min(10, Number(result.score) || 0));
-                stabilityFill.style.width = (100 - score * 10) + '%';
-
-                // Colour reflects recent change intensity. The flash threshold uses
-                // the displayed Weather Stability score (10 = stable, 0 = unstable).
-                stabilityFill.classList.toggle('changing', score >= 4 && score < 7);
-                stabilityFill.classList.toggle('unstable', score >= 7);
-
-                const thresholdValue = stabilityTrack?.dataset.weatherStabilityAlertThreshold;
-                const alertThreshold = thresholdValue === undefined || thresholdValue === ''
-                    ? NaN
-                    : Number(thresholdValue);
-                const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
-                stabilityFill.classList.toggle('warning', warningActive);
-                stabilityTrack?.classList.toggle('warning', warningActive);
-                document.getElementById('temperatureStabilityLabel')?.classList.toggle('warning', warningActive);
-            }
+            const stabilityRow = document.querySelector('.temperature-stability-row');
+            const thresholdValue = stabilityRow?.dataset.weatherStabilityAlertThreshold;
+            const alertThreshold = thresholdValue === undefined || thresholdValue === ''
+                ? NaN
+                : Number(thresholdValue);
+            const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
+            document.getElementById('temperatureStabilityLabel')?.classList.toggle('warning', warningActive);
         }
 
         if (trend.score === null) {
@@ -1197,7 +1184,7 @@ async function loadWeatherChange() {
         summaryElement.textContent = 'Weather Stability indicator unavailable.';
         const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
         if (topStabilityLabel) {
-            topStabilityLabel.textContent = 'Unavailable';
+            topStabilityLabel.textContent = 'Stability: Unavailable';
             topStabilityLabel.dataset.level = 'low';
             topStabilityLabel.classList.remove('warning');
         }
