@@ -308,6 +308,12 @@ button:disabled { opacity: .55; cursor: default; }
 @keyframes temperature-stability-warning{0%,100%{opacity:1}50%{opacity:.35}}
 .temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:0}
 .temperature-comfort-below{margin-top:10px}
+.temperature-comfort-alerts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.temperature-alerts-inline{flex:0 0 auto;text-align:right;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.temperature-alerts-inline b{font-weight:900}
+.temperature-alerts-inline[data-state="enabled"] b{color:#22c55e}
+.temperature-alerts-inline[data-state="disabled"] b{color:#eab308}
+.temperature-alerts-inline[data-state="na"] b{color:#ef4444}
 .temperature-conditions-inline{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
 .temperature-conditions-inline .conditions-status{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border:1px solid currentColor;border-radius:999px;font-size:10px;line-height:1.1;font-weight:900;background:var(--surface)}
 .temperature-conditions-inline .conditions-status.steady{color:#fff;border-color:#fff}
@@ -733,3 +739,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 .formula-errors{border-color:#c2410c}
 .formula-errors ul{margin-bottom:0}
 @media(max-width:600px){.formula-field{grid-template-columns:minmax(0,1fr);gap:9px}.formula-field-control{max-width:100%}.formula-nav{width:100%}.formula-nav a{flex:1}.formula-actions{flex-direction:column}.formula-actions button{width:100%}}
+
+@media(max-width:560px){.temperature-comfort-alerts-row{gap:8px;justify-content:space-between}.temperature-alerts-inline{font-size:9px}}
