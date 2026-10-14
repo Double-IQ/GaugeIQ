@@ -337,11 +337,11 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
                 <div class="temperature-feels-like-row temperature-feels-like-below"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
-                    <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
+                    <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b class="conditions-status steady">→ Steady</b></div>
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">Stability: </span><span id="temperatureStabilitySummary">Gathering readings…</span></div>
                 </div>
                 <div class="temperature-comfort-alerts-row temperature-status-bottom-row">
-                    <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b class="conditions-status steady">→ Steady</b></div>
+                    <div class="temperature-comfort-inline">Comfort zone: <b class="humidity-zone <?= htmlspecialchars($humidityZoneClass, ENT_QUOTES) ?>"><?= htmlspecialchars($humidityZone, ENT_QUOTES) ?></b></div>
                     <div class="temperature-alerts-inline" id="temperatureAlertsStatus" data-state="disabled" aria-live="polite">Alerts: <b>Disabled</b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
