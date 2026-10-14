@@ -279,11 +279,12 @@ if ($current && !empty($current['observed_at'])) {
 
     $forecastCondition = static function (?int $code, bool $isDay = true): array {
         $clearIcon = $isDay ? 'clear-day' : 'clear-night';
+        $mostlyClearIcon = $isDay ? 'mostly-clear-day' : 'mostly-clear-night';
         $partlyCloudyIcon = $isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
         return match (true) {
             $code === null => ['icon' => '—', 'slug' => null, 'label' => 'Unavailable'],
             $code === 0 => ['icon' => '☀️', 'slug' => $clearIcon, 'label' => 'Clear sky'],
-            $code === 1 => ['icon' => '🌤️', 'slug' => $partlyCloudyIcon, 'label' => 'Mainly clear'],
+            $code === 1 => ['icon' => '🌤️', 'slug' => $mostlyClearIcon, 'label' => 'Mainly clear'],
             $code === 2 => ['icon' => '⛅', 'slug' => $partlyCloudyIcon, 'label' => 'Partly cloudy'],
             $code === 3 => ['icon' => '☁️', 'slug' => 'overcast', 'label' => 'Overcast'],
             in_array($code, [45, 48], true) => ['icon' => '🌫️', 'slug' => 'fog', 'label' => 'Fog'],
