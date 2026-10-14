@@ -1232,6 +1232,20 @@ if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
     });
 }
 
+const conditionsTrendReasonsToggle = document.getElementById('conditionsTrendReasonsToggle');
+const conditionsTrendReasonsPanel = document.getElementById('conditionsTrendReasons');
+if (conditionsTrendReasonsToggle && conditionsTrendReasonsPanel) {
+    conditionsTrendReasonsToggle.addEventListener('click', () => {
+        const willShow = conditionsTrendReasonsPanel.hidden;
+        conditionsTrendReasonsPanel.hidden = !willShow;
+        conditionsTrendReasonsToggle.setAttribute('aria-expanded', String(willShow));
+        conditionsTrendReasonsToggle.setAttribute('aria-label', willShow ? 'Hide conditions trend reasons' : 'Show conditions trend reasons');
+        conditionsTrendReasonsToggle.title = willShow ? 'Hide information' : 'More information';
+        const label = document.getElementById('conditionsTrendReasonsButtonLabel');
+        if (label) label.textContent = willShow ? 'Less information' : 'More information';
+    });
+}
+
 loadHistory();
 loadWeatherChange();
 
