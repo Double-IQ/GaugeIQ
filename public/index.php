@@ -598,7 +598,15 @@ if ($current && !empty($current['observed_at'])) {
             <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
         </div>
         <div class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</div>
-        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite"></div>
+        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 10.5v6"></path>
+                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+            </svg>
+            <span id="conditionsTrendReasonsButtonLabel">More information</span>
+        </button>
+        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden></div>
         <details class="algorithm-details">
             <summary>How the conditions trend is classified</summary>
             <p>This is a separate directional assessment, not the Weather Stability score.</p>
