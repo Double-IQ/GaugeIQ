@@ -2,6 +2,29 @@
 
 GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressure, humidity, and wind, with configurable server-side alerts delivered to supported devices.
 
+## Install GaugeIQ
+
+[![Install GaugeIQ](https://img.shields.io/badge/Install-GaugeIQ-0b8f6a?style=for-the-badge&logo=pwa&logoColor=white)](https://weather.bichet.co.za)
+
+Open GaugeIQ on the device you want to install it on, then follow the platform-specific steps below. The button opens GaugeIQ; the device's browser completes installation after you confirm. This installs the web app when the browser offers its PWA installer, rather than deliberately creating a plain bookmark shortcut.
+
+### Android (Chrome)
+
+1. Open [GaugeIQ](https://weather.bichet.co.za) in **Chrome on Android**.
+2. Tap **Install** in GaugeIQ's header. If Chrome provides its native installation prompt, review it and tap **Install**.
+3. If the in-page button shows instructions instead, open Chrome's **⋮** menu and choose **Install app** if that option is available.
+4. Launch GaugeIQ from the installed app icon. It should open in its own standalone window. If Chrome only offers **Add to Home screen** and does not offer **Install app**, don't use that option if you specifically want the installed PWA experience.
+
+### iPhone and iPad (Safari)
+
+1. Open [GaugeIQ](https://weather.bichet.co.za) in **Safari**. Apple's installation flow does not expose Chrome-style automatic install prompts.
+2. Tap **Share**.
+3. Choose **Add to Home Screen**. If the **Open as Web App** option appears, make sure it is enabled.
+4. Tap **Add**, then launch GaugeIQ from its new Home Screen icon. It should open as a web app rather than in a Safari tab.
+5. Once GaugeIQ is running as an installed app, tap **Enable alerts** and allow notifications when prompted. Web Push on iPhone/iPad requires the web app to be added to the Home Screen and a supported iOS/iPadOS version.
+
+The browser or operating system may require confirmation; websites cannot silently install an app. GaugeIQ changes the header button from **Install** to **Enable alerts** when it detects that it is running in standalone app mode.
+
 ## Architecture
 
 - PHP 8.2+ backend
