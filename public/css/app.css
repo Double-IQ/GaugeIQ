@@ -695,3 +695,30 @@ body.gaugeiq-menu-open{overflow:hidden}
 .gaugeiq-loading-indicator{display:block;width:26px;height:26px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;animation:gaugeiq-loading-spin .8s linear infinite}
 @keyframes gaugeiq-loading-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.gaugeiq-loading-screen{transition:none}.gaugeiq-loading-indicator{animation:none}}
+
+
+/* Private formula console */
+.formula-shell{width:min(980px,100%)}
+.formula-header{align-items:flex-start;flex-wrap:wrap}
+.formula-nav{display:flex;flex-wrap:wrap;gap:8px}
+.formula-nav .secondary{display:inline-flex;align-items:center;justify-content:center;padding:10px 13px;border:1px solid var(--border);border-radius:10px;color:var(--text);background:var(--surface);font-weight:700;text-decoration:none}
+.formula-intro p,.formula-readonly p{line-height:1.55}
+.formula-equation{padding:13px 0;border-top:1px solid var(--border)}
+.formula-equation:first-of-type{margin-top:8px}
+.formula-equation strong{display:block;margin-bottom:7px}
+.formula-equation code{display:block;overflow-wrap:anywhere;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:13px;line-height:1.5;color:var(--text)}
+.formula-equation p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.formula-group h2{margin-top:0;font-size:20px}
+.formula-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,250px);align-items:center;gap:18px;padding:14px 0;border-top:1px solid var(--border)}
+.formula-field-description label{display:block;font-weight:800}
+.formula-field-description p{margin:5px 0 0;font-size:13px;line-height:1.45}
+.formula-field-control{display:flex;align-items:center;gap:10px}
+.formula-field-control input{min-width:0;width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-variant-numeric:tabular-nums}
+.formula-field-control span{flex:0 0 auto;font-size:12px;color:var(--muted)}
+.formula-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
+.formula-actions button{padding:12px 16px;border-radius:10px;font:inherit;font-weight:800;cursor:pointer}
+.formula-actions .secondary{border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.formula-notice{border-color:#25865a;color:var(--text)}
+.formula-errors{border-color:#c2410c}
+.formula-errors ul{margin-bottom:0}
+@media(max-width:600px){.formula-field{grid-template-columns:minmax(0,1fr);gap:9px}.formula-field-control{max-width:100%}.formula-nav{width:100%}.formula-nav a{flex:1}.formula-actions{flex-direction:column}.formula-actions button{width:100%}}
