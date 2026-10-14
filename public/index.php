@@ -559,12 +559,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%;min-width:<?= $rainForecastAvailable && $rainForecastMm > 0 ? '2px' : '0' ?>"></div>
             </div>
             <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
-            <div class="rain-probability-meta observed-rainfall-meta">
-                <span>Latest observed rainfall</span>
-                <strong><?= $observedRainfallMm !== null ? number_format($observedRainfallMm, 1) . ' mm' : '—' ?></strong>
-            </div>
         </div>
-        <p class="weather-change-note">Probability comes from the weather provider's daily forecast; rainfall is the predicted daily total. Neither is calculated from humidity alone.</p>
         <details class="algorithm-details">
             <summary>How this meter is calculated</summary>
             <p><strong>Current method:</strong> use the provider's daily maximum precipitation probability directly (0–100%). Display the predicted daily rainfall amount separately in millimetres.</p>
