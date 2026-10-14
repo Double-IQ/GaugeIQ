@@ -57,6 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $candidate[$key] = $number;
             }
+            $totalStabilityWeight = 0.0;
+            foreach (['pressure', 'temperature', 'humidity', 'wind_speed', 'wind_direction', 'dew_point_spread', 'rainfall', 'cloud_cover', 'weather_code'] as $weightSignal) {
+                $totalStabilityWeight += (float)($candidate['stability_weight_' . $weightSignal] ?? 0);
+            }
+            if ($totalStabilityWeight <= 0) {
+                $errors[] = 'At least one Weather Stability signal weight must be greater than zero.';
+            }
+            if (isset($candidate['baseline_min_windows'], $candidate['baseline_days']) && $candidate['baseline_min_windows'] > $candidate['baseline_days']) {
+                $errors[] = 'Minimum comparable windows cannot exceed the number of look-back days.';
+            }
             foreach ([
                 'pressure', 'temperature', 'humidity', 'wind_speed', 'wind_direction',
                 'dew_point_spread', 'rainfall', 'cloud_cover', 'weather_code'
