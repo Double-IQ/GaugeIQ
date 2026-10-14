@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 function weatherFormulaFields(): array
 {
-    return [
+    $fields = [
         'stability_min_readings' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum unique readings', 'default' => 3, 'min' => 2, 'max' => 20, 'step' => 1, 'unit' => 'readings', 'help' => 'Minimum timestamp-deduplicated observations before scoring.'],
         'stability_min_hours' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum observation span', 'default' => 1, 'min' => 0.25, 'max' => 24, 'step' => 0.25, 'unit' => 'hours', 'help' => 'Minimum elapsed time covered by the readings.'],
         'stability_min_signals' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum valid signals', 'default' => 5, 'min' => 1, 'max' => 9, 'step' => 1, 'unit' => 'of 9', 'help' => 'At least this many of the nine signals must have usable readings.'],
@@ -31,6 +31,22 @@ function weatherFormulaFields(): array
         'trend_code_threshold' => ['group' => 'Conditions Trend · signal thresholds', 'label' => 'Weather-code severity-category change', 'default' => 1, 'min' => 0, 'max' => 5, 'step' => 1, 'unit' => 'categories', 'help' => 'Difference in the weather-code severity category needed to contribute a trend signal.'],
         'trend_code_weight' => ['group' => 'Conditions Trend · signal weights', 'label' => 'Weather-code signal weight', 'default' => 2, 'min' => 0, 'max' => 10, 'step' => 0.5, 'unit' => 'weight', 'help' => 'Influence of the reported weather category on the combined directional score.'],
     ];
+    foreach ([
+        'pressure' => ['Air pressure', 2, 0.3, 1.5],
+        'temperature' => ['Temperature', 1, 1, 3],
+        'humidity' => ['Humidity', 1, 4, 12],
+        'wind_speed' => ['Wind speed', 2, 8, 20],
+        'wind_direction' => ['Wind direction', 1, 20, 90],
+        'dew_point_spread' => ['Temperature/dew-point gap', 1, 1, 3],
+        'rainfall' => ['Rainfall', 2, 0.2, 2],
+        'cloud_cover' => ['Cloud cover', 1, 15, 50],
+        'weather_code' => ['Reported weather condition', 1, 0, 1],
+    ] as $signal => [$label, $weight, $trigger, $maximum]) {
+        $fields['stability_weight_' . $signal] = ['group' => 'Weather Stability · signal weights', 'label' => $label . ' weight', 'default' => $weight, 'min' => 0, 'max' => 10, 'step' => 0.5, 'unit' => 'weight', 'help' => 'Relative influence of this signal in the weighted Weather Stability calculation.'];
+        $fields['stability_trigger_' . $signal] = ['group' => 'Weather Stability · signal thresholds', 'label' => $label . ' trigger', 'default' => $trigger, 'min' => 0, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Six-hour-equivalent magnitude below which this signal contributes zero severity.'];
+        $fields['stability_max_' . $signal] = ['group' => 'Weather Stability · signal thresholds', 'label' => $label . ' full-severity level', 'default' => $maximum, 'min' => 0.1, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Magnitude at which this signal reaches full severity (1.0).'];
+    }
+    return $fields;
 }
 
 function weatherFormulaDefaults(): array
