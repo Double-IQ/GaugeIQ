@@ -844,7 +844,7 @@ function weatherChangeScore(readings) {
     if (codes) {
         const severityChange = Math.abs(weatherCodeSeverity(codes.last) - weatherCodeSeverity(codes.first));
         const changed = codes.first !== codes.last;
-        const severity = changed ? Math.max(severityChange > 0 ? severityChange / 5 : 0.25, 0.25) : 0;
+        const severity = changed ? Math.max(severityChange > 0 ? weatherSeverity(severityChange, weatherFormula('stability_trigger_weather_code', 1), weatherFormula('stability_max_weather_code', 5)) : 0.25, 0.25) : 0;
         addComponent('weatherCode', 'Reported weather condition', codes, severity,
             changed ? 'condition code changed from ' + codes.first + ' to ' + codes.last + ' (severity-category difference ' + severityChange + ')' : 'condition code stayed the same');
     }
@@ -906,28 +906,28 @@ function weatherConditionsTrend(readings) {
         const scaled = rain.delta * 6 / rain.hours;
         if (rain.first < weatherFormula('trend_rain_onset', 0.2) && rain.last >= weatherFormula('trend_rain_onset', 0.2)) addSignal(1, 'Rain has appeared in the latest reading.', 'Rainfall has eased or stopped.', weatherFormula('trend_rain_weight', 2), 'Rainfall');
         else if (scaled >= weatherFormula('trend_rain_change_threshold', 0.2)) addSignal(weatherFormula('trend_rain_partial_strength', 0.5), 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', weatherFormula('trend_rain_weight', 2), 'Rainfall');
-        else if (scaled <= -weatherFormula('trend_rain_change_threshold', 0.2)) addSignal(-weatherFormula('trend_rain_partial_strength', 0.5), 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', 2, 'Rainfall');
+        else if (scaled <= -weatherFormula('trend_rain_change_threshold', 0.2)) addSignal(-weatherFormula('trend_rain_partial_strength', 0.5), 'The recent rainfall reading has increased.', 'The recent rainfall reading has decreased.', weatherFormula('trend_rain_weight', 2), 'Rainfall');
     }
 
     const wind = weatherFieldPair(valid, 'wind');
     if (wind) {
         const scaled = wind.delta * 6 / wind.hours;
         if (scaled >= weatherFormula('trend_wind_threshold', 8)) addSignal(1, 'Wind speed is increasing.', 'Wind speed is easing.', weatherFormula('trend_wind_weight', 1), 'Wind speed');
-        else if (scaled <= -weatherFormula('trend_wind_threshold', 8)) addSignal(-1, 'Wind speed is increasing.', 'Wind speed is easing.', 1, 'Wind speed');
+        else if (scaled <= -weatherFormula('trend_wind_threshold', 8)) addSignal(-1, 'Wind speed is increasing.', 'Wind speed is easing.', weatherFormula('trend_wind_weight', 1), 'Wind speed');
     }
 
     const cloud = weatherFieldPair(valid, 'cloud');
     if (cloud) {
         const scaled = cloud.delta * 6 / cloud.hours;
         if (scaled >= weatherFormula('trend_cloud_threshold', 20)) addSignal(1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', weatherFormula('trend_cloud_weight', 1), 'Cloud cover');
-        else if (scaled <= -weatherFormula('trend_cloud_threshold', 20)) addSignal(-1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', 1, 'Cloud cover');
+        else if (scaled <= -weatherFormula('trend_cloud_threshold', 20)) addSignal(-1, 'Cloud cover is increasing.', 'Cloud cover is decreasing.', weatherFormula('trend_cloud_weight', 1), 'Cloud cover');
     }
 
     const codes = weatherFieldPair(valid, 'weatherCode');
     if (codes) {
         const delta = weatherCodeSeverity(codes.last) - weatherCodeSeverity(codes.first);
         if (delta >= weatherFormula('trend_code_threshold', 1)) addSignal(1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', weatherFormula('trend_code_weight', 2), 'Weather code');
-        else if (delta <= -weatherFormula('trend_code_threshold', 1)) addSignal(-1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', 2, 'Weather code');
+        else if (delta <= -weatherFormula('trend_code_threshold', 1)) addSignal(-1, 'The reported weather category has become more severe.', 'The reported weather category has become less severe.', weatherFormula('trend_code_weight', 2), 'Weather code');
     }
 
     const mixed = reasons.some(reason => reason.points > 0) && reasons.some(reason => reason.points < 0);
