@@ -188,7 +188,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261014-loading-navy-2s-1">
+<link rel="stylesheet" href="css/app.css?v=20261014-weather-stability-copy-mobile-spacing-1">
 <title>GaugeIQ</title>
 </head>
 <body>
@@ -572,7 +572,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="section-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Stability</h2>
-                <p class="muted">A measure of how consistently recent conditions have behaved over six hours — not a safety rating.</p>
+                <p class="muted">The degree of change in weather conditions.</p>
             </div>
             <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
         </div>
