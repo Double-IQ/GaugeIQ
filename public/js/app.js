@@ -340,6 +340,18 @@ const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const notificationEnabledNote = document.getElementById('notificationEnabledNote');
 const historyStatus = document.getElementById('historyStatus');
+let deferredInstallPrompt = null;
+
+function isInstalledPWA() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function updateInstallButton() {
+    if (!notifyButton) return;
+    const installed = isInstalledPWA();
+    notifyButton.textContent = installed ? 'Enable alerts' : 'Install';
+    notifyButton.setAttribute('aria-label', installed ? 'Enable GaugeIQ alerts' : 'Install GaugeIQ as an app');
+}
 
 function showNotificationsEnabledUI() {
     if (notifyButton) notifyButton.hidden = true;
@@ -400,6 +412,48 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+window.addEventListener('beforeinstallprompt', event => {
+    // Keep the browser's native install prompt for the user's explicit button tap.
+    event.preventDefault();
+    deferredInstallPrompt = event;
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    updateInstallButton();
+    if (status) status.textContent = 'GaugeIQ has been installed. Open it from your home screen to enable alerts.';
+});
+
+window.matchMedia('(display-mode: standalone)').addEventListener?.('change', updateInstallButton);
+window.addEventListener('pageshow', updateInstallButton);
+updateInstallButton();
+
+async function installGaugeIQ() {
+    if (isInstalledPWA()) return false;
+
+    if (deferredInstallPrompt) {
+        const installPrompt = deferredInstallPrompt;
+        deferredInstallPrompt = null;
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+            if (status) status.textContent = 'Installation accepted. Follow any remaining browser prompts to finish installing GaugeIQ.';
+        } else if (status) {
+            status.textContent = 'Installation was cancelled. You can install GaugeIQ later from this button or your browser menu.';
+        }
+        return true;
+    }
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (status) {
+        status.textContent = isIOS
+            ? 'To install GaugeIQ, open this page in Safari, tap Share, choose Add to Home Screen, and enable Open as Web App if shown.'
+            : 'To install GaugeIQ as an app, open this page in Chrome and use the menu’s “Install app” option if available. If only “Add to Home screen” is offered, the browser has not provided the PWA installer.';
+    }
+    return true;
+}
+
 async function showAlertsOnIfAlreadyEnabled() {
     if (!('Notification' in window) || !('PushManager' in window) || Notification.permission !== 'granted') return;
     try {
@@ -414,17 +468,21 @@ async function showAlertsOnIfAlreadyEnabled() {
 
 showAlertsOnIfAlreadyEnabled();
 
-if (!('Notification' in window) || !('PushManager' in window)) {
-    notifyButton.disabled = true;
-    notifyButton.textContent = 'Notifications unavailable';
-} else {
+if (notifyButton) {
     notifyButton.addEventListener('click', async () => {
         try {
+            if (!isInstalledPWA()) {
+                await installGaugeIQ();
+                return;
+            }
+            if (!('Notification' in window) || !('PushManager' in window)) {
+                throw new Error('This browser does not support Web Push notifications.');
+            }
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') throw new Error('Notification permission was not granted.');
             await enablePushNotifications();
         } catch (error) {
-            status.textContent = error instanceof Error ? error.message : 'Unable to enable notifications.';
+            if (status) status.textContent = error instanceof Error ? error.message : 'Unable to install GaugeIQ or enable notifications.';
         }
     });
 }
