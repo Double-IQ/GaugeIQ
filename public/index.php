@@ -279,20 +279,20 @@ if ($current && !empty($current['observed_at'])) {
 
     $forecastCondition = static function (?int $code, bool $isDay = true): array {
         $clearIcon = $isDay ? 'clear-day' : 'clear-night';
-        $mostlyClearIcon = $isDay ? 'mostly-clear-day' : 'mostly-clear-night';
+        $mostlyClearIcon = $isDay ? 'clear-day' : 'clear-night';
         $partlyCloudyIcon = $isDay ? 'partly-cloudy-day' : 'partly-cloudy-night';
         return match (true) {
             $code === null => ['icon' => '—', 'slug' => null, 'label' => 'Unavailable'],
             $code === 0 => ['icon' => '☀️', 'slug' => $clearIcon, 'label' => 'Clear sky'],
             $code === 1 => ['icon' => '🌤️', 'slug' => $mostlyClearIcon, 'label' => 'Mainly clear'],
             $code === 2 => ['icon' => '⛅', 'slug' => $partlyCloudyIcon, 'label' => 'Partly cloudy'],
-            $code === 3 => ['icon' => '☁️', 'slug' => 'overcast', 'label' => 'Overcast'],
-            in_array($code, [45, 48], true) => ['icon' => '🌫️', 'slug' => 'fog', 'label' => 'Fog'],
-            in_array($code, [51, 53, 55], true) => ['icon' => '🌦️', 'slug' => 'drizzle', 'label' => 'Drizzle'],
-            in_array($code, [56, 57, 66, 67], true) => ['icon' => '🌧️', 'slug' => 'sleet', 'label' => 'Freezing precipitation'],
+            $code === 3 => ['icon' => '☁️', 'slug' => $isDay ? 'overcast-day' : 'overcast-night', 'label' => 'Overcast'],
+            in_array($code, [45, 48], true) => ['icon' => '🌫️', 'slug' => $isDay ? 'fog-day' : 'fog-night', 'label' => 'Fog'],
+            in_array($code, [51, 53, 55], true) => ['icon' => '🌦️', 'slug' => 'rain', 'label' => 'Drizzle'],
+            in_array($code, [56, 57, 66, 67], true) => ['icon' => '🌧️', 'slug' => 'rain', 'label' => 'Freezing precipitation'],
             in_array($code, [61, 63, 65, 80, 81, 82], true) => ['icon' => '🌧️', 'slug' => 'rain', 'label' => 'Rain'],
             in_array($code, [71, 73, 75, 77, 85, 86], true) => ['icon' => '🌨️', 'slug' => 'snow', 'label' => 'Snow'],
-            in_array($code, [95, 96, 99], true) => ['icon' => '⛈️', 'slug' => 'thunderstorms', 'label' => 'Thunderstorm'],
+            in_array($code, [95, 96, 99], true) => ['icon' => '⛈️', 'slug' => $isDay ? 'thunderstorms-day-rain' : 'thunderstorms-night-rain', 'label' => 'Thunderstorm'],
             default => ['icon' => '🌤️', 'slug' => $partlyCloudyIcon, 'label' => 'Mixed conditions'],
         };
     };
