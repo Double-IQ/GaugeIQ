@@ -400,7 +400,7 @@ if ($current && !empty($current['observed_at'])) {
                 "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                  FROM gaugeiq_pressure_readings
                  WHERE observed_at >= ? AND observed_at <= ?
-                   AND (source IS NULL OR source = 'Open-Meteo')
+                   AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
                  ORDER BY ABS(UNIX_TIMESTAMP(observed_at) - ?) ASC, id DESC LIMIT 1"
             );
             if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
@@ -408,7 +408,7 @@ if ($current && !empty($current['observed_at'])) {
                     "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
-                       AND (source IS NULL OR source = 'Open-Meteo')
+                       AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
                      ORDER BY ABS(strftime('%s', observed_at) - ?) ASC, id DESC LIMIT 1"
                 );
             }
@@ -444,9 +444,9 @@ if ($current && !empty($current['observed_at'])) {
         ];
     };
     $climateBars = [
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°C', 1),
-        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ' pp'),
-        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ' pp'),
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '', 0),
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ''),
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ''),
     ];
     if ($current && $rainfallMm > 0.0) {
         $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm', 2) + ['kind' => 'current-rain'];
