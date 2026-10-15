@@ -428,8 +428,8 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-bars{display:flex;flex-direction:column;gap:16px;margin-top:18px}
 .climate-bar-row{display:grid;grid-template-columns:90px minmax(0,1fr) 58px 68px;align-items:center;gap:9px;min-width:0}
 .climate-bar-label{font-size:13px;font-weight:750;color:var(--text);line-height:1.2}
-.climate-segment-track{display:grid;grid-template-columns:repeat(40,minmax(0,1fr));gap:3px;min-width:0;align-items:center}
-.climate-segment{display:block;height:13px;min-width:0;border-radius:2px;background:color-mix(in srgb,var(--muted) 22%,transparent);transition:background-color .2s ease}
+.climate-segment-track{display:grid;grid-template-columns:repeat(40,minmax(0,1fr));gap:2px;min-width:0;align-items:center}
+.climate-segment{display:block;height:16px;min-width:0;border-radius:0;background:color-mix(in srgb,var(--muted) 22%,transparent);transition:background-color .2s ease}
 .climate-segment.active{background:#22c55e}
 .climate-segment.change{background:#facc15}
 .climate-bar-change,.climate-bar-value{min-width:0;font-size:13px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
@@ -440,8 +440,8 @@ button:disabled { opacity: .55; cursor: default; }
   .climate-bars{gap:15px;margin-top:14px}
   .climate-bar-row{grid-template-columns:70px minmax(0,1fr) 38px 48px;gap:6px}
   .climate-bar-label{font-size:10px}
-  .climate-segment-track{gap:2px}
-  .climate-segment{height:11px}
+  .climate-segment-track{gap:1px}
+  .climate-segment{height:14px}
   .climate-bar-change,.climate-bar-value{font-size:11px}
 }
 
