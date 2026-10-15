@@ -756,3 +756,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.temperature-comfort-alerts-row{gap:8px;justify-content:space-between}.temperature-alerts-inline{font-size:9px}}
 
 .temperature-comfort-inline .humidity-zone.humid-high{background:transparent;border:0;padding:0}
+
+
+/* CSP-safe replacements for former inline style attributes. */
+.menu-logo{display:block;width:110px;height:auto;max-width:100%;object-fit:contain}
