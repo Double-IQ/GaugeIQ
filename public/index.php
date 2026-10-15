@@ -383,34 +383,30 @@ if ($current && !empty($current['observed_at'])) {
 
     <?php
     // Compare against a stored observation within 30 minutes of the one-hour
-    // target. If history has no observation in that window, show no delta rather
-    // than accidentally comparing against an arbitrarily old reading.
+    // target. This lookup must never prevent the rest of the dashboard rendering.
     $climatePrior = null;
-    if ($current && !empty($current['observed_at'])) {
-        $currentTimestamp = strtotime((string)$current['observed_at']);
-        if ($currentTimestamp !== false) {
-            $targetTimestamp = $currentTimestamp - 3600;
-            $windowStart = date('Y-m-d H:i:s', $targetTimestamp - 1800);
-            $windowEnd = date('Y-m-d H:i:s', $targetTimestamp + 1800);
-            $climatePriorStmt = $pdo->prepare(
-                "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
-                 FROM gaugeiq_pressure_readings
-                 WHERE observed_at >= ? AND observed_at <= ?
-                   AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
-                 ORDER BY ABS(UNIX_TIMESTAMP(observed_at) - ?) ASC, id DESC LIMIT 1"
-            );
-            if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+    try {
+        if ($current && !empty($current['observed_at'])) {
+            $currentTimestamp = strtotime((string)$current['observed_at']);
+            if ($currentTimestamp !== false) {
+                $targetTimestamp = $currentTimestamp - 3600;
+                $windowStart = date('Y-m-d H:i:s', $targetTimestamp - 1800);
+                $windowEnd = date('Y-m-d H:i:s', $targetTimestamp + 1800);
                 $climatePriorStmt = $pdo->prepare(
                     "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
-                     ORDER BY ABS(strftime('%s', observed_at) - ?) ASC, id DESC LIMIT 1"
+                     ORDER BY observed_at DESC, id DESC LIMIT 1"
                 );
+                $climatePriorStmt->execute([$windowStart, $windowEnd]);
+                $climatePrior = $climatePriorStmt->fetch() ?: null;
             }
-            $climatePriorStmt->execute([$windowStart, $windowEnd, $targetTimestamp]);
-            $climatePrior = $climatePriorStmt->fetch() ?: null;
         }
+    } catch (Throwable $e) {
+        // Environmental change deltas are optional; keep rendering the dashboard
+        // with unavailable deltas if this historical lookup fails.
+        $climatePrior = null;
     }
     $climateDelta = static function (string $field) use ($current, $climatePrior): ?float {
         if (!$current || !$climatePrior || !is_numeric($current[$field] ?? null) || !is_numeric($climatePrior[$field] ?? null)) {
