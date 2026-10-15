@@ -309,7 +309,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
                         <strong><?= number_format($temperatureC, 1) ?>°C</strong>
-                    </div>
+                            </div>
                     <div class="temperature-summary-forecast">
                         <?php
                         $nextHourIsDay = is_array($forecast[0] ?? null) && array_key_exists('next_hour_is_day', $forecast[0])
