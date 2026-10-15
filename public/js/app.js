@@ -1179,7 +1179,7 @@ async function loadWeatherChange() {
                 : '');
             if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
-            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status gathering">→ Gathering readings…</b>';
+            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
         } else {
             if (trendIcon) {
                 trendIcon.textContent = trend.arrow;
@@ -1200,7 +1200,7 @@ async function loadWeatherChange() {
                     }).join('')
                     : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
             }
-            if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
+            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
         }
     } catch {
         scoreElement.textContent = '—';
@@ -1220,7 +1220,7 @@ async function loadWeatherChange() {
         if (trendSummary) trendSummary.textContent = 'Conditions trend unavailable.';
         if (trendReasons) trendReasons.innerHTML = '';
         const conditionsElement = document.getElementById('weatherConditions');
-        if (conditionsElement) conditionsElement.innerHTML = 'Conditions: <b class="conditions-status unavailable">→ Unavailable</b>';
+        if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status unavailable">→ Unavailable</b>';
     }
 }
 
