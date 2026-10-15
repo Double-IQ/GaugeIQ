@@ -433,8 +433,6 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-segment.active{background:#22c55e}
 .climate-segment.change{background:#facc15}
 .climate-bar-change,.climate-bar-value{min-width:0;font-size:13px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
-.climate-bar-change.rise{color:#15803d}
-.climate-bar-change.fall{color:#b45309}
 .climate-bar-change.unavailable{color:var(--muted)}
 @media(max-width:560px){
   .climate-bars{gap:15px;margin-top:14px}
