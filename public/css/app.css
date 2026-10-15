@@ -289,7 +289,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-current{display:flex;flex-direction:column;gap:5px}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
 .temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
-.temperature-feels-like-below{margin-top:6px;justify-content:flex-start}.temperature-feels-like-below>span{font-size:12px;font-weight:700;color:var(--muted)}
+.temperature-feels-like-below{margin-top:0;justify-content:flex-start}.temperature-feels-like-below>span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-summary-forecast{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateY(-30px)}.temperature-summary-forecast-details{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.temperature-summary-forecast .temperature-conditions-inline{margin-left:0;text-align:center}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;margin-top:0;font-size:36px;line-height:1}
 .temperature-forecast-icon img{display:block;width:48px;height:48px;object-fit:contain}
