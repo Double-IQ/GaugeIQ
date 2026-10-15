@@ -1513,3 +1513,40 @@ document.querySelectorAll('.temperature-forecast-icon img').forEach(image => {
     image.addEventListener('error', showFallback, { once: true });
     if (image.complete && image.naturalWidth === 0) showFallback();
 });
+
+
+// Estimate network upload throughput with a small, non-persistent same-origin upload.
+async function updateNetworkUplinkStatus() {
+    const output = document.getElementById('networkUplinkStatus');
+    if (!output) return;
+
+    const payload = new Uint8Array(32 * 1024);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+    const startedAt = performance.now();
+
+    try {
+        const response = await fetch('network-speed-test.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/octet-stream' },
+            body: payload,
+            cache: 'no-store',
+            credentials: 'same-origin',
+            signal: controller.signal
+        });
+        if (!response.ok) throw new Error('Upload test failed.');
+
+        const elapsedSeconds = (performance.now() - startedAt) / 1000;
+        if (elapsedSeconds <= 0) throw new Error('Invalid upload timing.');
+        const kilobitsPerSecond = Math.round((payload.byteLength * 8) / elapsedSeconds / 1000);
+        output.textContent = 'Network uplink speed: ~' + kilobitsPerSecond.toLocaleString() + ' kb/s';
+        output.dataset.state = 'measured';
+    } catch {
+        output.textContent = 'Network uplink speed: unavailable';
+        output.dataset.state = 'error';
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+}
+
+updateNetworkUplinkStatus();
