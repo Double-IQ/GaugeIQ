@@ -155,15 +155,11 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261015-csp-style-fix">
+<link rel="stylesheet" href="css/app.css?v=20261015-loading-overlay-disabled">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
-<div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
-    <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
-    <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
-    <span class="gaugeiq-loading-indicator" aria-hidden="true"></span>
-</div>
+<!-- Loading overlay temporarily disabled for troubleshooting. -->
 <main class="shell">
     <div id="updateNotice" class="update-notice" hidden role="status">
         <strong id="updateNoticeTitle">GaugeIQ update available</strong>
@@ -762,7 +758,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
-<script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
 <script src="js/app.js?v=20261015-trend-label-1"></script>
 </body>
 </html>
