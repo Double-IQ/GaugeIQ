@@ -177,7 +177,7 @@ if ($current && !empty($current['observed_at'])) {
             <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
         </div>
         <div class="header-actions">
-            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" style="display:block;width:110px;height:auto;max-width:100%;object-fit:contain"></button>
+            <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" class="menu-logo"></button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
@@ -600,7 +600,7 @@ if ($current && !empty($current['observed_at'])) {
                 <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
             </div>
             <div class="insight-meter-track rainfall-forecast-track" role="progressbar" aria-label="Expected rainfall today" aria-valuemin="0" aria-valuemax="10" <?= $rainForecastAvailable ? 'aria-valuenow="' . number_format(min(10.0, $rainForecastMm), 1, '.', '') . '"' : 'aria-valuetext="Forecast rainfall unavailable"' ?> id="rainfallForecastTrack">
-                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" style="width:<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>%;min-width:<?= $rainForecastAvailable && $rainForecastMm > 0 ? '2px' : '0' ?>"></div>
+                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" data-meter-width="<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>" data-meter-min-width="<?= $rainForecastAvailable && $rainForecastMm > 0 ? '2px' : '0' ?>"></div>
             </div>
             <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
         </div>
@@ -762,6 +762,7 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
+<script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
 <script src="js/app.js?v=20261015-trend-label-1"></script>
 </body>
 </html>
