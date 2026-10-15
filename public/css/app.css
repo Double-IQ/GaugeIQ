@@ -631,6 +631,8 @@ button:disabled { opacity: .55; cursor: default; }
 @media(max-width:560px){.dashboard-heading #dashboardLocationName{font-size:28px}}
 .notification-enabled-note{margin:18px 0 4px;text-align:center;color:var(--muted);font-size:13px;line-height:1.4;font-weight:600}
 .notification-enabled-note[hidden]{display:none}
+.network-uplink-status{margin:4px 0 10px;text-align:center;color:var(--muted);font-size:12px;line-height:1.4;font-weight:500}
+.network-uplink-status[data-state="error"]{opacity:.8}
 
 /* Daily expected rainfall has its own scale, separate from rain probability */
 .rainfall-forecast-block{margin-top:12px}
