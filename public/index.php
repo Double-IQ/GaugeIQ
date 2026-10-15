@@ -741,6 +741,7 @@ if ($current && !empty($current['observed_at'])) {
 
     <p id="status" class="status"></p>
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
+    <p id="networkUplinkStatus" class="network-uplink-status" aria-live="polite">Network uplink speed: Measuring…</p>
 </main>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
@@ -773,6 +774,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
-<script src="js/app.js?v=20261015-trend-label-1"></script>
+<script src="js/app.js?v=20261015-uplink-speed-1"></script>
 </body>
 </html>
