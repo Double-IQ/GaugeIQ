@@ -421,7 +421,8 @@ if ($current && !empty($current['observed_at'])) {
                             </radialGradient>
                         </defs>
                         <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
-                        <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
+                    </g>
+                    <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
                             <?php for ($segment = 0; $segment < 120; $segment++):
                                 $segmentAngle = ($segment * 3.0) - 90.0;
                                 $segmentStart = $windGaugePoint($segmentAngle, 44.7);
@@ -439,6 +440,7 @@ if ($current && !empty($current['observed_at'])) {
                                 <text x="<?= number_format($speedX, 3, '.', '') ?>" y="<?= number_format($speedY, 3, '.', '') ?>"><?= $speedMark ?></text>
                             <?php endfor; ?>
                         </g>
+                    <g class="wind-compass-orientation">
                         <circle class="wind-compass-ring" cx="50" cy="50" r="29.5"></circle>
                         <g class="wind-compass-ticks">
                             <?php
