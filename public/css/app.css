@@ -285,11 +285,11 @@ button:disabled { opacity: .55; cursor: default; }
 
 .temperature-summary-card{margin-top:16px;margin-bottom:16px}
 .temperature-card-heading{margin-bottom:8px}
-.temperature-summary-main{display:flex;align-items:center;justify-content:space-between;gap:20px}
-.temperature-summary-current{display:flex;flex-direction:column;gap:5px}
+.temperature-summary-main{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.temperature-summary-current{display:flex;flex-direction:column;gap:0}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
 .temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
-.temperature-feels-like-below{margin-top:0;justify-content:flex-start}.temperature-feels-like-below>span{font-size:12px;font-weight:700;color:var(--muted)}
+.temperature-feels-like-below{margin-top:-2px;justify-content:flex-start;line-height:1.15}.temperature-feels-like-below>span{font-size:12px;font-weight:700;color:var(--muted);line-height:1.15}
 .temperature-summary-forecast{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateY(-30px)}.temperature-summary-forecast-details{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.temperature-summary-forecast .temperature-conditions-inline{margin-left:0;text-align:center}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;margin-top:0;font-size:36px;line-height:1}
 .temperature-forecast-icon img{display:block;width:48px;height:48px;object-fit:contain}
@@ -332,7 +332,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-conditions-inline .conditions-status.unavailable,.temperature-conditions-inline .conditions-status.gathering{color:var(--text);border-color:var(--border)}
 .temperature-comfort-inline .humidity-zone{font-size:10px}
 @media(max-width:560px){
-  .temperature-summary-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px}
+  .temperature-summary-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:10px}
   .temperature-forecast-icon{margin-top:0}
   .temperature-summary-current{min-width:0;width:100%}
   .temperature-summary-current strong{font-size:36px}
