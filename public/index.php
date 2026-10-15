@@ -465,7 +465,7 @@ if ($current && !empty($current['observed_at'])) {
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
-                <h2 id="climateGaugeTitle">Environmental conditions</h2>
+                <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
             </div>
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
