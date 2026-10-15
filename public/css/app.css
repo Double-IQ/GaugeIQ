@@ -689,7 +689,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     overflow-wrap:anywhere;
     line-height:1.35;
   }
-  .weather-change-card .section-heading p{margin-bottom:10px}
+  .weather-change-card .section-heading p{margin-bottom:10px;font-size:14px}
   .weather-change-card .weather-change-score{
     grid-area:auto;
     justify-self:auto;
