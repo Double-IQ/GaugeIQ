@@ -194,8 +194,8 @@ if ($current && !empty($current['observed_at'])) {
     $forecastHighC = is_numeric($forecastHighValue) ? (float)$forecastHighValue : null;
     $forecastLowC = is_numeric($forecastLowValue) ? (float)$forecastLowValue : null;
     $humidityPercent = $current ? max(0.0, min(100.0, (float)$current['humidity_percent'])) : 0.0;
-    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : ($humidityPercent < 75 ? 'Humid' : 'Condensation')));
-    $humidityZoneClass = strtolower(str_replace(' ', '-', $humidityZone));
+    $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : 'Humid'));
+    $humidityZoneClass = !$current ? 'unavailable' : ($humidityPercent >= 75 ? 'humid-high' : strtolower(str_replace(' ', '-', $humidityZone)));
     $rainfallMm = $current ? max(0.0, (float)($current['rainfall_mm'] ?? 0.0)) : 0.0;
     $cloudCoverPercent = $current ? max(0.0, min(100.0, (float)($current['cloud_cover_percent'] ?? 0.0))) : 0.0;
     $pressureLow = isset($pressureHistory['pressure_low']) ? (float)$pressureHistory['pressure_low'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
