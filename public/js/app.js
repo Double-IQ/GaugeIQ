@@ -1538,8 +1538,27 @@ async function updateNetworkUplinkStatus() {
 
         const elapsedSeconds = (performance.now() - startedAt) / 1000;
         if (elapsedSeconds <= 0) throw new Error('Invalid upload timing.');
-        const kilobitsPerSecond = Math.round((payload.byteLength * 8) / elapsedSeconds / 1000);
-        output.textContent = 'Network uplink speed: ~' + kilobitsPerSecond.toLocaleString() + ' kb/s';
+        const bitsPerSecond = (payload.byteLength * 8) / elapsedSeconds;
+        let speed;
+        let unit;
+        if (bitsPerSecond >= 1_000_000_000) {
+            speed = bitsPerSecond / 1_000_000_000;
+            unit = 'Gb/s';
+        } else if (bitsPerSecond >= 1_000_000) {
+            speed = bitsPerSecond / 1_000_000;
+            unit = 'Mb/s';
+        } else if (bitsPerSecond >= 1_000) {
+            speed = bitsPerSecond / 1_000;
+            unit = 'kb/s';
+        } else {
+            speed = bitsPerSecond;
+            unit = 'b/s';
+        }
+        const decimals = speed >= 100 ? 0 : speed >= 10 ? 1 : 2;
+        output.textContent = 'Network uplink speed: ~' + speed.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: decimals
+        }) + ' ' + unit;
         output.dataset.state = 'measured';
     } catch {
         output.textContent = 'Network uplink speed: unavailable';
