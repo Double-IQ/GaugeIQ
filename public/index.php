@@ -402,10 +402,22 @@ if ($current && !empty($current['observed_at'])) {
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather', 'Open-Meteo Recent Backfill'))
-                     ORDER BY ABS(UNIX_TIMESTAMP(observed_at) - ?) ASC, id DESC LIMIT 1"
+                     ORDER BY observed_at ASC, id ASC"
                 );
-                $climatePriorStmt->execute([$windowStart, $windowEnd, $targetTimestamp]);
-                $climatePrior = $climatePriorStmt->fetch() ?: null;
+                $climatePriorStmt->execute([$windowStart, $windowEnd]);
+                $climateCandidates = $climatePriorStmt->fetchAll();
+                $closestDistance = PHP_INT_MAX;
+                foreach ($climateCandidates as $candidate) {
+                    $candidateTimestamp = strtotime((string)($candidate['observed_at'] ?? ''));
+                    if ($candidateTimestamp === false) {
+                        continue;
+                    }
+                    $distance = abs($candidateTimestamp - $targetTimestamp);
+                    if ($distance < $closestDistance) {
+                        $closestDistance = $distance;
+                        $climatePrior = $candidate;
+                    }
+                }
             }
         }
     } catch (Throwable $e) {
