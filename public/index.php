@@ -385,6 +385,46 @@ if ($current && !empty($current['observed_at'])) {
        </div>
         </article>
 
+    <?php
+    $dewBarRatio = max(0.0, min(1.0, $dewPointC / 40.0));
+    $humidityBarRatio = $humidityPercent / 100.0;
+    $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
+    $cloudBarRatio = $cloudCoverPercent / 100.0;
+    $climateBars = [
+        ['label' => 'Dew point °C', 'value' => $dewPointC, 'display' => $current ? number_format($dewPointC, 1) : '—', 'ratio' => $dewBarRatio, 'decimals' => 1],
+        ['label' => 'Humidity %', 'value' => $humidityPercent, 'display' => $current ? number_format($humidityPercent, 1) : '—', 'ratio' => $humidityBarRatio, 'decimals' => 1],
+        ['label' => 'Cloud cover %', 'value' => $cloudCoverPercent, 'display' => $current ? number_format($cloudCoverPercent, 0) : '—', 'ratio' => $cloudBarRatio, 'decimals' => 0],
+    ];
+    if ($current && $rainfallMm > 0.0) {
+        $climateBars[] = ['label' => 'Rainfall (mm)', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
+    }
+    ?>
+    <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
+        <div class="section-heading">
+            <div>
+                <h2 id="climateGaugeTitle">Environmental conditions</h2>
+                <p class="muted">Current dew point, humidity, rainfall and cloud cover.</p>
+            </div>
+        </div>
+        <div class="climate-bars" aria-label="Current environmental conditions">
+            <?php foreach ($climateBars as $bar): ?>
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
+                    <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
+                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
+                        <?php for ($segment = 0; $segment < 40; $segment++):
+                            $segmentThreshold = ($segment + 1) / 40.0;
+                            $segmentActive = $current && $bar['ratio'] >= $segmentThreshold;
+                            $segmentDanger = $segment >= 36;
+                        ?>
+                            <span class="climate-segment<?= $segmentActive ? ' active' : '' ?><?= $segmentDanger ? ' danger' : '' ?>"></span>
+                        <?php endfor; ?>
+                    </div>
+                    <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
     <section class="measurement-grid">
 
 
@@ -486,45 +526,7 @@ if ($current && !empty($current['observed_at'])) {
         </article>
     </section>
 
-    <?php
-    $dewBarRatio = max(0.0, min(1.0, $dewPointC / 40.0));
-    $humidityBarRatio = $humidityPercent / 100.0;
-    $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
-    $cloudBarRatio = $cloudCoverPercent / 100.0;
-    $climateBars = [
-        ['label' => 'Dew point °C', 'value' => $dewPointC, 'display' => $current ? number_format($dewPointC, 1) : '—', 'ratio' => $dewBarRatio, 'decimals' => 1],
-        ['label' => 'Humidity %', 'value' => $humidityPercent, 'display' => $current ? number_format($humidityPercent, 1) : '—', 'ratio' => $humidityBarRatio, 'decimals' => 1],
-        ['label' => 'Cloud cover %', 'value' => $cloudCoverPercent, 'display' => $current ? number_format($cloudCoverPercent, 0) : '—', 'ratio' => $cloudBarRatio, 'decimals' => 0],
-    ];
-    if ($current && $rainfallMm > 0.0) {
-        $climateBars[] = ['label' => 'Rainfall (mm)', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
-    }
-    ?>
-    <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="climateGaugeTitle">Environmental conditions</h2>
-                <p class="muted">Current dew point, humidity, rainfall and cloud cover.</p>
-            </div>
-        </div>
-        <div class="climate-bars" aria-label="Current environmental conditions">
-            <?php foreach ($climateBars as $bar): ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
-                    <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
-                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
-                        <?php for ($segment = 0; $segment < 40; $segment++):
-                            $segmentThreshold = ($segment + 1) / 40.0;
-                            $segmentActive = $current && $bar['ratio'] >= $segmentThreshold;
-                            $segmentDanger = $segment >= 36;
-                        ?>
-                            <span class="climate-segment<?= $segmentActive ? ' active' : '' ?><?= $segmentDanger ? ' danger' : '' ?>"></span>
-                        <?php endfor; ?>
-                    </div>
-                    <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </section>
+
 
     <section class="card rain-probability-card" aria-labelledby="rainProbabilityTitle">
         <div class="section-heading">
