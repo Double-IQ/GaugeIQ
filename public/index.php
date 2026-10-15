@@ -386,21 +386,35 @@ if ($current && !empty($current['observed_at'])) {
         </article>
 
     <?php
-    // Compare each current reading with the closest stored observation at least
-    // one hour earlier. Dashboard rendering remains read-only.
+    // Compare against a stored observation within 30 minutes of the one-hour
+    // target. If history has no observation in that window, show no delta rather
+    // than accidentally comparing against an arbitrarily old reading.
     $climatePrior = null;
     if ($current && !empty($current['observed_at'])) {
-        $observedAt = (string)$current['observed_at'];
-        $dateSeparator = str_contains($observedAt, 'T') ? 'T' : ' ';
-        $oneHourBefore = date('Y-m-d' . $dateSeparator . 'H:i:s', strtotime($observedAt) - 3600);
-        $climatePriorStmt = $pdo->prepare(
-            "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm
-             FROM gaugeiq_pressure_readings
-             WHERE observed_at <= ? AND (source IS NULL OR source = 'Open-Meteo')
-             ORDER BY observed_at DESC, id DESC LIMIT 1"
-        );
-        $climatePriorStmt->execute([$oneHourBefore]);
-        $climatePrior = $climatePriorStmt->fetch() ?: null;
+        $currentTimestamp = strtotime((string)$current['observed_at']);
+        if ($currentTimestamp !== false) {
+            $targetTimestamp = $currentTimestamp - 3600;
+            $windowStart = date('Y-m-d H:i:s', $targetTimestamp - 1800);
+            $windowEnd = date('Y-m-d H:i:s', $targetTimestamp + 1800);
+            $climatePriorStmt = $pdo->prepare(
+                "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                 FROM gaugeiq_pressure_readings
+                 WHERE observed_at >= ? AND observed_at <= ?
+                   AND (source IS NULL OR source = 'Open-Meteo')
+                 ORDER BY ABS(UNIX_TIMESTAMP(observed_at) - ?) ASC, id DESC LIMIT 1"
+            );
+            if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+                $climatePriorStmt = $pdo->prepare(
+                    "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                     FROM gaugeiq_pressure_readings
+                     WHERE observed_at >= ? AND observed_at <= ?
+                       AND (source IS NULL OR source = 'Open-Meteo')
+                     ORDER BY ABS(strftime('%s', observed_at) - ?) ASC, id DESC LIMIT 1"
+                );
+            }
+            $climatePriorStmt->execute([$windowStart, $windowEnd, $targetTimestamp]);
+            $climatePrior = $climatePriorStmt->fetch() ?: null;
+        }
     }
     $climateDelta = static function (string $field) use ($current, $climatePrior): ?float {
         if (!$current || !$climatePrior || !is_numeric($current[$field] ?? null) || !is_numeric($climatePrior[$field] ?? null)) {
@@ -417,7 +431,7 @@ if ($current && !empty($current['observed_at'])) {
     $humidityBarRatio = $humidityPercent / 100.0;
     $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
     $cloudBarRatio = $cloudCoverPercent / 100.0;
-    $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, string $unit = '') use ($current): array {
+    $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, string $unit = '', int $deltaDecimals = 0) use ($current): array {
         $deltaRatio = $delta === null ? 0.0 : min($ratio, abs($delta) / $scale);
         return [
             'label' => $label,
@@ -425,17 +439,17 @@ if ($current && !empty($current['observed_at'])) {
             'display' => $display,
             'ratio' => $ratio,
             'delta' => $delta,
-            'deltaDisplay' => $delta === null ? '—' : (($delta > 0 ? '+' : '') . number_format($delta, 1) . $unit),
+            'deltaDisplay' => $delta === null ? '—' : (($delta > 0 ? '+' : '') . number_format($delta, $deltaDecimals) . $unit),
             'deltaRatio' => $current ? $deltaRatio : 0.0,
         ];
     };
     $climateBars = [
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°'),
-        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ''),
-        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ''),
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°C', 1),
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ' pp'),
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ' pp'),
     ];
     if ($current && $rainfallMm > 0.0) {
-        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm') + ['kind' => 'current-rain'];
+        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm', 2) + ['kind' => 'current-rain'];
     }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
