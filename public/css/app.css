@@ -311,7 +311,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-comfort-alerts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
 .temperature-stability-inline{margin-left:0;text-align:left;white-space:nowrap;border:1px solid currentColor;border-radius:6px;padding:3px 7px;box-sizing:border-box}
 .temperature-stability-row.temperature-comfort-alerts-row{margin-top:10px;padding-top:0;border-top:0;gap:12px}
-.temperature-stability-row.temperature-comfort-alerts-row .temperature-stability-inline{margin-left:auto}
+.temperature-stability-row.temperature-comfort-alerts-row .temperature-stability-inline{margin-left:0}
 .temperature-status-bottom-row{margin-top:10px}
 .temperature-status-bottom-row .temperature-conditions-inline{margin-left:0;text-align:left}
 .temperature-status-bottom-row .temperature-alerts-inline{margin-left:auto}
