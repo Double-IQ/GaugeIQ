@@ -528,6 +528,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
+<?php if ($rainProbabilityPercent === null || $rainProbabilityPercent >= 5): ?>
     <section class="card rain-probability-card" aria-labelledby="rainProbabilityTitle">
         <div class="section-heading">
             <div>
@@ -553,6 +554,7 @@ if ($current && !empty($current['observed_at'])) {
             <p><strong>Limitation:</strong> this is the forecast's daily maximum probability, not a calibrated GaugeIQ prediction for a particular hour. Forecast calibration needs saved forecast snapshots and later observations.</p>
         </details>
     </section>
+<?php endif; ?>
 
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
