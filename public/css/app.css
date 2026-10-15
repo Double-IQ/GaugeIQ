@@ -256,7 +256,7 @@ button:disabled { opacity: .55; cursor: default; }
 .humidity-zone.dry{border-color:#f59e0b;color:#b45309}
 .humidity-zone.comfortable{border-color:#22c55e;color:#15803d}
 .humidity-zone.humid{border-color:#f97316;color:#ea580c}
-.humidity-zone.humid-high{border-color:#ef4444;color:#dc2626}
+.humidity-zone.humid-high{border-color:transparent;color:#dc2626}
 :root{--climate-dew:#2563eb;--climate-cool:#60a5fa;--climate-neutral:#94a3b8;--climate-warm:#ef4444}
 :root[data-theme="dark"]{--climate-dew:#60a5fa;--climate-cool:#38bdf8;--climate-neutral:#94a3b8;--climate-warm:#fb7185}
 @media(max-width:560px){.climate-triple-gauge{width:min(100%,390px)}}
