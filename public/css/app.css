@@ -306,7 +306,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-stability-summary[data-level="low"]{color:#ef4444}
 .temperature-stability-summary.warning{animation:temperature-stability-warning .8s ease-in-out infinite}
 @keyframes temperature-stability-warning{0%,100%{opacity:1}50%{opacity:.35}}
-.temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:0}
+.temperature-comfort-inline{flex:0 0 auto;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;margin-left:0;border:1px solid currentColor;border-radius:6px;padding:3px 7px;box-sizing:border-box}
 .temperature-comfort-below{margin-top:10px}
 .temperature-comfort-alerts-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
 .temperature-stability-inline{margin-left:auto;text-align:right;white-space:nowrap}
