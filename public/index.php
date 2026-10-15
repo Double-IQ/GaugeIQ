@@ -386,24 +386,25 @@ if ($current && !empty($current['observed_at'])) {
         </article>
 
     <?php
-    // Compare against a stored observation within 30 minutes of the one-hour
-    // target. This lookup must never prevent the rest of the dashboard rendering.
+    // Compare against the closest stored observation within 30 minutes of the one-hour
+    // target. Keep timestamp formatting consistent with Open-Meteo's ISO timestamps
+    // (T separator); space-separated bounds silently excluded same-day readings.
     $climatePrior = null;
     try {
         if ($current && !empty($current['observed_at'])) {
             $currentTimestamp = strtotime((string)$current['observed_at']);
             if ($currentTimestamp !== false) {
                 $targetTimestamp = $currentTimestamp - 3600;
-                $windowStart = date('Y-m-d H:i:s', $targetTimestamp - 1800);
-                $windowEnd = date('Y-m-d H:i:s', $targetTimestamp + 1800);
+                $windowStart = date('Y-m-d\\TH:i:s', $targetTimestamp - 1800);
+                $windowEnd = date('Y-m-d\\TH:i:s', $targetTimestamp + 1800);
                 $climatePriorStmt = $pdo->prepare(
                     "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
-                       AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))
-                     ORDER BY observed_at DESC, id DESC LIMIT 1"
+                       AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather', 'Open-Meteo Recent Backfill'))
+                     ORDER BY ABS(UNIX_TIMESTAMP(observed_at) - ?) ASC, id DESC LIMIT 1"
                 );
-                $climatePriorStmt->execute([$windowStart, $windowEnd]);
+                $climatePriorStmt->execute([$windowStart, $windowEnd, $targetTimestamp]);
                 $climatePrior = $climatePriorStmt->fetch() ?: null;
             }
         }
