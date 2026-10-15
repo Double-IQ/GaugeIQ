@@ -411,17 +411,15 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
                 <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                    <g class="wind-compass-orientation">
-                        <defs>
-                            <radialGradient id="windCompassGlass" cx="38%" cy="28%" r="72%">
-                                <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
-                                <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
-                                <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
-                                <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
-                            </radialGradient>
-                        </defs>
-                        <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
-                    </g>
+                    <defs>
+                        <radialGradient id="windCompassGlass" cx="38%" cy="28%" r="72%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
+                            <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
+                            <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
+                        </radialGradient>
+                    </defs>
+                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
                     <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
                             <?php for ($segment = 0; $segment < 120; $segment++):
                                 $segmentAngle = ($segment * 3.0) - 90.0;
