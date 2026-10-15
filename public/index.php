@@ -337,7 +337,7 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
                 <div class="temperature-feels-like-row temperature-feels-like-below"><span>Feels like <?= number_format($feelsLikeC, 1) ?>°C</span></div>
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
-                    <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Conditions: <b class="conditions-status steady">→ Steady</b></div>
+                    <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">Stability: </span><span id="temperatureStabilitySummary">Gathering readings…</span></div>
                 </div>
                 <div class="temperature-comfort-alerts-row temperature-status-bottom-row">
