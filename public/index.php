@@ -386,39 +386,82 @@ if ($current && !empty($current['observed_at'])) {
         </article>
 
     <?php
+    // Compare each current reading with the closest stored observation at least
+    // one hour earlier. Dashboard rendering remains read-only.
+    $climatePrior = null;
+    if ($current && !empty($current['observed_at'])) {
+        $observedAt = (string)$current['observed_at'];
+        $dateSeparator = str_contains($observedAt, 'T') ? 'T' : ' ';
+        $oneHourBefore = date('Y-m-d' . $dateSeparator . 'H:i:s', strtotime($observedAt) - 3600);
+        $climatePriorStmt = $pdo->prepare(
+            "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm
+             FROM gaugeiq_pressure_readings
+             WHERE observed_at <= ? AND (source IS NULL OR source = 'Open-Meteo')
+             ORDER BY observed_at DESC, id DESC LIMIT 1"
+        );
+        $climatePriorStmt->execute([$oneHourBefore]);
+        $climatePrior = $climatePriorStmt->fetch() ?: null;
+    }
+    $climateDelta = static function (string $field) use ($current, $climatePrior): ?float {
+        if (!$current || !$climatePrior || !is_numeric($current[$field] ?? null) || !is_numeric($climatePrior[$field] ?? null)) {
+            return null;
+        }
+        return (float)$current[$field] - (float)$climatePrior[$field];
+    };
+    $dewDelta = $climateDelta('dew_point_c');
+    $humidityDelta = $climateDelta('humidity_percent');
+    $cloudDelta = $climateDelta('cloud_cover_percent');
+    $rainDelta = $climateDelta('rainfall_mm');
+
     $dewBarRatio = max(0.0, min(1.0, $dewPointC / 40.0));
     $humidityBarRatio = $humidityPercent / 100.0;
     $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
     $cloudBarRatio = $cloudCoverPercent / 100.0;
+    $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, string $unit = '') use ($current): array {
+        $deltaRatio = $delta === null ? 0.0 : min($ratio, abs($delta) / $scale);
+        return [
+            'label' => $label,
+            'value' => $value,
+            'display' => $display,
+            'ratio' => $ratio,
+            'delta' => $delta,
+            'deltaDisplay' => $delta === null ? '—' : (($delta > 0 ? '+' : '') . number_format($delta, 1) . $unit),
+            'deltaRatio' => $current ? $deltaRatio : 0.0,
+        ];
+    };
     $climateBars = [
-        ['label' => 'Dew point °C', 'value' => $dewPointC, 'display' => $current ? number_format($dewPointC, 1) : '—', 'ratio' => $dewBarRatio, 'decimals' => 1],
-        ['label' => 'Humidity %', 'value' => $humidityPercent, 'display' => $current ? number_format($humidityPercent, 1) : '—', 'ratio' => $humidityBarRatio, 'decimals' => 1],
-        ['label' => 'Cloud cover %', 'value' => $cloudCoverPercent, 'display' => $current ? number_format($cloudCoverPercent, 0) : '—', 'ratio' => $cloudBarRatio, 'decimals' => 0],
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°'),
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ''),
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ''),
     ];
     if ($current && $rainfallMm > 0.0) {
-        $climateBars[] = ['label' => 'Rainfall (mm)', 'value' => $rainfallMm, 'display' => number_format($rainfallMm, 2), 'ratio' => $rainBarRatio, 'decimals' => 2, 'kind' => 'current-rain'];
+        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm') + ['kind' => 'current-rain'];
     }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
             <div>
                 <h2 id="climateGaugeTitle">Environmental conditions</h2>
-                <p class="muted">Current dew point, humidity, rainfall and cloud cover.</p>
             </div>
         </div>
-        <div class="climate-bars" aria-label="Current environmental conditions">
-            <?php foreach ($climateBars as $bar): ?>
+        <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
+            <?php foreach ($climateBars as $bar):
+                $activeSegments = (int)round($bar['ratio'] * 40);
+                $changeSegments = (int)round($bar['deltaRatio'] * 40);
+                $greenSegments = max(0, $activeSegments - $changeSegments);
+                $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
+            ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
-                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
+                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < 40; $segment++):
-                            $segmentThreshold = ($segment + 1) / 40.0;
-                            $segmentActive = $current && $bar['ratio'] >= $segmentThreshold;
-                            $segmentDanger = $segment >= 36;
+                            $segmentActive = $segment < $activeSegments;
+                            $segmentChange = $segment >= $greenSegments && $segment < $activeSegments && $changeSegments > 0;
                         ?>
-                            <span class="climate-segment<?= $segmentActive ? ' active' : '' ?><?= $segmentDanger ? ' danger' : '' ?>"></span>
+                            <span class="climate-segment<?= $segmentActive ? ($segmentChange ? ' change' : ' active') : '' ?>"></span>
                         <?php endfor; ?>
                     </div>
+                    <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                 </div>
             <?php endforeach; ?>
