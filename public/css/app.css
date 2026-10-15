@@ -290,7 +290,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
 .temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-feels-like-below{margin-top:6px;justify-content:flex-start}.temperature-feels-like-below>span{font-size:12px;font-weight:700;color:var(--muted)}
-.temperature-summary-forecast{display:flex;align-items:center;gap:12px}.temperature-summary-forecast-details{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}.temperature-summary-forecast .temperature-conditions-inline{margin-left:4px;text-align:right}
+.temperature-summary-forecast{display:flex;flex-direction:column;align-items:center;gap:2px}.temperature-summary-forecast-details{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.temperature-summary-forecast .temperature-conditions-inline{margin-left:0;text-align:center}
 .temperature-forecast-icon{display:grid;place-items:center;width:48px;height:48px;margin-top:0;font-size:36px;line-height:1}
 .temperature-forecast-icon img{display:block;width:48px;height:48px;object-fit:contain}
 .temperature-forecast-icon img[hidden]{display:none}
@@ -340,9 +340,9 @@ button:disabled { opacity: .55; cursor: default; }
   .temperature-feels-like-row>span{flex:0 0 auto;white-space:nowrap;font-size:11px}
   .temperature-conditions-inline{flex:0 1 auto;min-width:0;margin-left:0;text-align:left;font-size:10px}
   .temperature-conditions-inline .conditions-status{white-space:nowrap}
-  .temperature-summary-forecast{justify-self:end;min-width:0;display:flex;align-items:center;gap:10px}
+  .temperature-summary-forecast{justify-self:end;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
   .temperature-summary-forecast .temperature-conditions-inline{grid-column:1 / -1;justify-self:end;margin-left:0;text-align:right;font-size:10px}
-  .temperature-summary-forecast-details{align-items:flex-start}.temperature-comfort-below{margin-left:0;text-align:left}
+  .temperature-summary-forecast-details{align-items:center}.temperature-comfort-below{margin-left:0;text-align:left}
   .temperature-forecast-icon{flex:0 0 48px;width:48px;height:48px;font-size:36px}
   .temperature-summary-range{gap:14px}
   .temperature-summary-range div{min-width:40px}
