@@ -449,7 +449,7 @@ if ($current && !empty($current['observed_at'])) {
             'display' => $display,
             'ratio' => $ratio,
             'delta' => $delta,
-            'deltaDisplay' => $delta === null ? '—' : (($delta > 0 ? '+' : '') . number_format($delta, $deltaDecimals) . $unit),
+            'deltaDisplay' => $delta === null ? '—' : (round($delta, $deltaDecimals) == 0.0 ? '-' : (($delta > 0 ? '+' : '') . number_format($delta, $deltaDecimals) . $unit)),
             'deltaRatio' => $current ? $deltaRatio : 0.0,
         ];
     };
