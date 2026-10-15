@@ -750,3 +750,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:600px){.formula-field{grid-template-columns:minmax(0,1fr);gap:9px}.formula-field-control{max-width:100%}.formula-nav{width:100%}.formula-nav a{flex:1}.formula-actions{flex-direction:column}.formula-actions button{width:100%}}
 
 @media(max-width:560px){.temperature-comfort-alerts-row{gap:8px;justify-content:space-between}.temperature-alerts-inline{font-size:9px}}
+
+.temperature-comfort-inline .humidity-zone.humid-high{background:transparent;border:0;padding:0}
