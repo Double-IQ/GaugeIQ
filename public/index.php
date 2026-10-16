@@ -454,9 +454,9 @@ if ($current && !empty($current['observed_at'])) {
         ];
     };
     $climateBars = [
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '', 0),
-        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ''),
-        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ''),
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°C', 1),
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ' pp'),
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ' pp'),
     ];
     if ($current && ($rainfallMm > 0.0 || ($rainDelta !== null && abs($rainDelta) > 0.0))) {
         $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm', 2) + ['kind' => 'current-rain'];
