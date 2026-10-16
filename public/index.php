@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261016-current-level-and-hourly-change">
+<link rel="stylesheet" href="css/app.css?v=20261016-right-side-change-no-units">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -471,7 +471,7 @@ if ($current && !empty($current['observed_at'])) {
     $humidityBarRatio = $humidityPercent / 100.0;
     $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
     $cloudBarRatio = $cloudCoverPercent / 100.0;
-    $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, string $unit = '', int $deltaDecimals = 0) use ($current): array {
+    $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, int $deltaDecimals = 0) use ($current): array {
         $deltaRatio = $delta === null ? 0.0 : min(1.0, abs($delta) / $scale);
         return [
             'label' => $label,
@@ -479,17 +479,17 @@ if ($current && !empty($current['observed_at'])) {
             'display' => $display,
             'ratio' => $ratio,
             'delta' => $delta,
-            'deltaDisplay' => $delta === null ? '—' : (round($delta, $deltaDecimals) == 0.0 ? '-' : (($delta > 0 ? '+' : '') . number_format($delta, $deltaDecimals) . $unit)),
+            'deltaDisplay' => $delta === null ? '—' : (round($delta, $deltaDecimals) == 0.0 ? '-' : (($delta > 0 ? '+' : '') . number_format($delta, $deltaDecimals))),
             'deltaRatio' => $current ? $deltaRatio : 0.0,
         ];
     };
     $climateBars = [
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, '°C', 1),
-        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta, ' pp'),
-        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta, ' pp'),
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1),
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta),
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta),
     ];
     if ($current && ($rainfallMm > 0.0 || ($rainDelta !== null && abs($rainDelta) > 0.0))) {
-        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, ' mm', 2) + ['kind' => 'current-rain'];
+        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, 2) + ['kind' => 'current-rain'];
     }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
@@ -512,7 +512,7 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < 40; $segment++):
                             $segmentActive = $segment < $activeSegments;
-                            $segmentChange = $segment < $changeSegments;
+                            $segmentChange = $segmentActive && $segment >= ($activeSegments - $changeSegments);
                         ?>
                             <span class="climate-segment<?= $segmentActive ? ($segmentChange ? ' change' : ' active') : '' ?>"></span>
                         <?php endfor; ?>
