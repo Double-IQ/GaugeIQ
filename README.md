@@ -141,7 +141,7 @@ For each available signal, GaugeIQ calculates a severity from 0 to 1, applies it
 
 `wviScore = changeScore`
 
-The WVI is rounded to one decimal place and limited to the 0–10 range. Missing readings are excluded rather than treated as zero. Current provisional signal weights and thresholds are documented in the dashboard's **More information** disclosure. These engineering thresholds have not yet been statistically calibrated, so Weather Volatility Index (WVI) should be interpreted as an indicator of recent change rather than a calibrated risk prediction.
+The WVI is rounded to one decimal place and limited to the 0–10 range. Missing readings are excluded rather than treated as zero. Current provisional signal weights and thresholds are documented in the dashboard's **More information** disclosure. These engineering thresholds have not yet been statistically calibrated, so WVI should be interpreted as an indicator of recent change rather than a calibrated risk prediction.
 
 When the reason cards are opened, unchanged/zero-severity signals are hidden. Air pressure, temperature, humidity, wind speed, temperature/dew-point gap, rainfall, and cloud cover use an up arrow for increases and a down arrow for decreases; wind direction uses a two-way arrow and reports its shortest angular shift in degrees. Reason cards omit the observation-window duration to keep them concise.
 
