@@ -1086,45 +1086,37 @@ async function loadWeatherChange() {
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
-            // Calculate recent change, then present its inverse as Weather Stability:
-            // 10 = very stable and 0 = very unstable. Push alerts use this same score.
-            const stabilityScore = Math.round((10 - result.score) * 10) / 10;
-            scoreElement.textContent = stabilityScore.toFixed(1);
-            scoreElement.setAttribute('aria-label', 'Weather stability score ' + stabilityScore.toFixed(1) + ' out of 10');
+            // The weighted change score is the Weather Volatility Index (WVI):
+            // 0 = little recent change; 10 = high recent volatility. Push alerts use this same score.
+            const volatilityScore = Math.round(result.score * 10) / 10;
+            scoreElement.textContent = volatilityScore.toFixed(1);
+            scoreElement.setAttribute('aria-label', 'Weather Volatility Index score ' + volatilityScore.toFixed(1) + ' out of 10');
 
-            let stabilitySummary;
-            if (stabilityScore > 8) stabilitySummary = 'Very stable · Small change detected';
-            else if (stabilityScore > 6) stabilitySummary = 'Stable · only minor changes detected';
-            else if (stabilityScore > 4) stabilitySummary = 'Moderately stable · noticeable changes detected';
-            else if (stabilityScore > 2) stabilitySummary = 'Unstable · significant changes detected';
-            else stabilitySummary = 'Very unstable · substantial changes detected';
+            let volatilitySummary;
+            if (volatilityScore > 8) volatilitySummary = 'Very high volatility · Substantial changes detected';
+            else if (volatilityScore > 6) volatilitySummary = 'High volatility · Significant changes detected';
+            else if (volatilityScore > 4) volatilitySummary = 'Moderate volatility · Noticeable changes detected';
+            else if (volatilityScore > 2) volatilitySummary = 'Low volatility · Only minor changes detected';
+            else volatilitySummary = 'Very low volatility · Small change detected';
 
-            if (stabilityScore > 8) {
-                summaryElement.innerHTML = '<span class="weather-change-summary-prefix">· </span><span class="weather-change-summary-level">Very stable</span><span class="weather-change-summary-separator"> · </span><span class="weather-change-summary-change">Small change detected</span>';
-                if (usedRecentBackfillForScore) {
-                    summaryElement.insertAdjacentText('beforeend', ' · Temporary recent hourly model estimates used because live readings were insufficient.');
-                }
-            } else {
-                summaryElement.textContent = stabilitySummary + (usedRecentBackfillForScore
-                    ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
-                    : '');
-            }
-            const level = stabilityScore >= 7 ? 'high' : stabilityScore >= 4 ? 'moderate' : 'low';
+            summaryElement.textContent = volatilitySummary + (usedRecentBackfillForScore
+                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+                : '');
+            const level = volatilityScore >= 7 ? 'low' : volatilityScore >= 4 ? 'moderate' : 'high';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
                 const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
                 if (stabilitySummaryElement) {
-                    stabilitySummaryElement.textContent = stabilitySummary.split('·')[0].trim();
+                    stabilitySummaryElement.textContent = volatilitySummary.split('·')[0].trim();
                     stabilitySummaryElement.className = 'temperature-stability-summary';
-                    const changeSeverity = Number(result.score);
-                    stabilitySummaryElement.dataset.level = changeSeverity >= 7 ? 'low' : changeSeverity >= 4 ? 'moderate' : 'high';
+                    stabilitySummaryElement.dataset.level = level;
                 }
             }
             scoreElement.dataset.level = level;
-            document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(stabilityScore));
+            document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', String(volatilityScore));
             const stabilityScoreFill = document.getElementById('weatherChangeFill');
             if (stabilityScoreFill) {
-                stabilityScoreFill.style.width = (stabilityScore * 10) + '%';
+                stabilityScoreFill.style.width = (volatilityScore * 10) + '%';
                 stabilityScoreFill.dataset.level = level;
             }
             reasonsElement.innerHTML = result.components
@@ -1169,7 +1161,7 @@ async function loadWeatherChange() {
             const alertThreshold = thresholdValue === undefined || thresholdValue === ''
                 ? NaN
                 : Number(thresholdValue);
-            const warningActive = Number.isFinite(alertThreshold) && stabilityScore <= alertThreshold;
+            const warningActive = Number.isFinite(alertThreshold) && volatilityScore >= alertThreshold;
             document.getElementById('temperatureStabilitySummary')?.classList.toggle('warning', warningActive);
         }
 
@@ -1204,7 +1196,7 @@ async function loadWeatherChange() {
         }
     } catch {
         scoreElement.textContent = '—';
-        summaryElement.textContent = 'Weather Stability indicator unavailable.';
+        summaryElement.textContent = 'Weather Volatility Index (WVI) indicator unavailable.';
         const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
         if (topStabilityLabel) {
             const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
@@ -1338,7 +1330,7 @@ if (weatherChangeReasonsToggle && weatherChangeReasonsPanel) {
         const willShow = weatherChangeReasonsPanel.hidden;
         weatherChangeReasonsPanel.hidden = !willShow;
         weatherChangeReasonsToggle.setAttribute('aria-expanded', String(willShow));
-        weatherChangeReasonsToggle.setAttribute('aria-label', willShow ? 'Hide weather stability reasons' : 'Show weather stability reasons');
+        weatherChangeReasonsToggle.setAttribute('aria-label', willShow ? 'Hide Weather Volatility Index reasons' : 'Show Weather Volatility Index reasons');
         weatherChangeReasonsToggle.title = willShow ? 'Hide information' : 'More information';
         const label = document.getElementById('weatherChangeReasonsButtonLabel');
         if (label) label.textContent = willShow ? 'Less information' : 'More information';
