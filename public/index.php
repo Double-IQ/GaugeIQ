@@ -141,7 +141,7 @@ try {
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
     $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
         && (float)$stabilityThresholdValue >= 0 && (float)$stabilityThresholdValue <= 10)
-        ? (int)$stabilityThresholdValue
+        ? 10 - (int)$stabilityThresholdValue
         : null;
     $recentAlerts = $pdo->query(
         'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
