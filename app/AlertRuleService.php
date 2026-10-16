@@ -12,14 +12,16 @@ final class AlertRuleService
     }
 
     /**
-     * Convert legacy weather-change rules to the WVI metric once, so existing rules keep approximately the same intent.
+     * Convert legacy change/stability alert rules to the current WVI direction.
+     * Existing low-stability rules are inverted once so their intent is preserved.
      */
     private function migrateLegacyWeatherChangeRules(): void
     {
         $rows = $this->db->query(
-            "SELECT id, condition_type, configuration_json
+            "SELECT id, metric, condition_type, configuration_json
              FROM gaugeiq_alert_rules
-             WHERE metric = 'weather_change'"
+             WHERE metric = 'weather_change'
+                OR (metric = 'weather_stability' AND condition_type = 'below')"
         )->fetchAll(PDO::FETCH_ASSOC);
 
         if ($rows === []) {
@@ -33,21 +35,20 @@ final class AlertRuleService
         );
 
         foreach ($rows as $row) {
-            if ((string)$row['condition_type'] !== 'above') {
-                continue;
-            }
-
             $oldConfiguration = json_decode((string)$row['configuration_json'], true);
             if (!is_array($oldConfiguration) || !isset($oldConfiguration['value']) || !is_numeric($oldConfiguration['value'])) {
                 continue;
             }
 
-            $oldThreshold = max(1, min(10, (int)round((float)$oldConfiguration['value'])));
-            $stabilityThreshold = 10 - $oldThreshold;
+            $threshold = max(0.0, min(10.0, (float)$oldConfiguration['value']));
+            if ((string)$row['metric'] === 'weather_stability' && (string)$row['condition_type'] === 'below') {
+                $threshold = 10.0 - $threshold;
+            }
+
             $update->execute([
                 'weather_stability',
-                'below',
-                json_encode(['value' => $stabilityThreshold], JSON_THROW_ON_ERROR),
+                'above',
+                json_encode(['value' => $threshold], JSON_THROW_ON_ERROR),
                 gmdate('c'),
                 (int)$row['id'],
             ]);
