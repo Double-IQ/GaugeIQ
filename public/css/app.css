@@ -763,3 +763,47 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* CSP-safe replacements for former inline style attributes. */
 .menu-logo{display:block;width:110px;height:auto;max-width:100%;object-fit:contain}
+
+
+/* Temporary glass treatment preview for the first dashboard card only. */
+.temperature-summary-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .42);
+    border: 1px solid rgba(255, 255, 255, .78);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .9),
+        inset 0 -1px 0 rgba(255, 255, 255, .24),
+        0 12px 32px rgba(15, 23, 42, .13);
+    -webkit-backdrop-filter: blur(18px) saturate(155%);
+    backdrop-filter: blur(18px) saturate(155%);
+}
+.temperature-summary-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(128deg, rgba(255, 255, 255, .66) 0%, rgba(255, 255, 255, .2) 32%, transparent 60%),
+        radial-gradient(ellipse at 8% 0%, rgba(255, 255, 255, .42), transparent 58%);
+}
+.temperature-summary-card > * {
+    position: relative;
+    z-index: 1;
+}
+:root[data-theme="dark"] .temperature-summary-card {
+    background: rgba(25, 38, 57, .48);
+    border-color: rgba(255, 255, 255, .2);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .22),
+        inset 0 -1px 0 rgba(255, 255, 255, .04),
+        0 12px 32px rgba(0, 0, 0, .24);
+}
+:root[data-theme="dark"] .temperature-summary-card::before {
+    background:
+        linear-gradient(128deg, rgba(255, 255, 255, .2) 0%, rgba(255, 255, 255, .055) 32%, transparent 60%),
+        radial-gradient(ellipse at 8% 0%, rgba(255, 255, 255, .12), transparent 58%);
+}
