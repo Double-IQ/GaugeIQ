@@ -86,16 +86,46 @@ try {
         $decodedForecast = json_decode((string)($current['forecast_json'] ?? '[]'), true);
         $current['forecast'] = is_array($decodedForecast) ? $decodedForecast : [];
     }
+    // Show the pressure change over approximately one hour, using only
+    // readings stored by the regular Open-Meteo cron. The ±30-minute window
+    // accommodates the 30-minute collection cadence without fetching on open.
     $change = 0.0;
-    if ($latest) {
-        $previousStmt = $pdo->prepare(
-            "SELECT pressure_hpa FROM gaugeiq_pressure_readings
-             WHERE id < ? AND (source IS NULL OR source = 'Open-Meteo')
-             ORDER BY id DESC LIMIT 1"
-        );
-        $previousStmt->execute([(int)$latest['id']]);
-        $previousPressure = $previousStmt->fetchColumn();
-        $change = $previousPressure === false ? 0.0 : (float)$latest['pressure_hpa'] - (float)$previousPressure;
+    if ($latest && !empty($latest['observed_at'])) {
+        $latestTimestamp = strtotime((string)$latest['observed_at']);
+        if ($latestTimestamp !== false) {
+            $targetTimestamp = $latestTimestamp - 3600;
+            $windowStart = date('Y-m-d\\TH:i:s', $targetTimestamp - 1800);
+            $windowEnd = date('Y-m-d\\TH:i:s', $targetTimestamp + 1800);
+            $pressurePriorSql = "SELECT pressure_hpa, observed_at
+                                 FROM gaugeiq_pressure_readings
+                                 WHERE observed_at >= ? AND observed_at <= ?
+                                   AND (source IS NULL OR source = 'Open-Meteo')";
+            $pressurePriorParams = [$windowStart, $windowEnd];
+            if (isset($activeLocationChangedAt) && is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+                $pressurePriorSql .= ' AND created_at >= ?';
+                $pressurePriorParams[] = $activeLocationChangedAt;
+            }
+            $pressurePriorSql .= ' ORDER BY observed_at ASC, id ASC';
+            $pressurePriorStmt = $pdo->prepare($pressurePriorSql);
+            $pressurePriorStmt->execute($pressurePriorParams);
+            $pressurePriorRows = $pressurePriorStmt->fetchAll();
+            $closestPressurePrior = null;
+            $closestPressureDistance = PHP_INT_MAX;
+            foreach ($pressurePriorRows as $pressurePriorRow) {
+                $pressurePriorTimestamp = strtotime((string)($pressurePriorRow['observed_at'] ?? ''));
+                if ($pressurePriorTimestamp === false) {
+                    continue;
+                }
+                $distance = abs($pressurePriorTimestamp - $targetTimestamp);
+                if ($distance < $closestPressureDistance) {
+                    $closestPressureDistance = $distance;
+                    $closestPressurePrior = $pressurePriorRow;
+                }
+            }
+            if ($closestPressurePrior !== null) {
+                $change = (float)$latest['pressure_hpa'] - (float)$closestPressurePrior['pressure_hpa'];
+            }
+        }
     }
 
     $settings = [];
