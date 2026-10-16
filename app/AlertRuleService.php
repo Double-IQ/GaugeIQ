@@ -12,8 +12,7 @@ final class AlertRuleService
     }
 
     /**
-     * Convert saved change-score rules to their inverse Weather Stability
-     * equivalent once, so existing rules keep approximately the same intent.
+     * Convert legacy weather-change rules to the WVI metric once, so existing rules keep approximately the same intent.
      */
     private function migrateLegacyWeatherChangeRules(): void
     {
@@ -325,18 +324,18 @@ final class AlertRuleService
 
     private function weatherStability(string $type, array $configuration): ?string
     {
-        if ($type !== 'below') {
+        if ($type !== 'above') {
             return null;
         }
 
         $threshold = max(0.0, min(10.0, (float)($configuration['value'] ?? -1)));
         $score = $this->currentWeatherStabilityScore();
-        if ($score === null || $score > $threshold) {
+        if ($score === null || $score < $threshold) {
             return null;
         }
 
         return sprintf(
-            'Weather Stability was %.1f/10 at the latest check (alert threshold: %.0f/10).',
+            'Weather Volatility Index (WVI) was %.1f/10 at the latest check (alert threshold: %.0f/10).',
             $score,
             $threshold
         );
@@ -408,12 +407,11 @@ final class AlertRuleService
             return null;
         }
 
-        return round(10.0 - $changeScore, 1, PHP_ROUND_HALF_UP);
+        return round($changeScore, 1, PHP_ROUND_HALF_UP);
     }
 
     /**
-     * Return the dashboard's 0–10 weighted change score before inversion.
-     * Higher change score means lower Weather Stability.
+     * Return the dashboard's 0–10 weighted change score. Higher means greater weather volatility.
      */
     private function weatherChangeScore(array $readings): ?float
     {
@@ -695,8 +693,8 @@ final class AlertRuleService
             throw new InvalidArgumentException('Alert rule configuration cannot be empty.');
         }
 
-        if ($metric === 'weather_stability' && ($type !== 'below' || !isset($configuration['value']) || !is_numeric($configuration['value']) || (float)$configuration['value'] < 0 || (float)$configuration['value'] > 10)) {
-            throw new InvalidArgumentException('Weather Stability alerts require a threshold from 0 to 10 and the Falls to or below condition.');
+        if ($metric === 'weather_stability' && ($type !== 'above' || !isset($configuration['value']) || !is_numeric($configuration['value']) || (float)$configuration['value'] < 0 || (float)$configuration['value'] > 10)) {
+            throw new InvalidArgumentException('Weather Volatility Index (WVI) alerts require a threshold from 0 to 10 and the Falls to or below condition.');
         }
     }
 }
