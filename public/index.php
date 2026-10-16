@@ -658,13 +658,13 @@ if ($current && !empty($current['observed_at'])) {
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
             <div>
-                <h2 id="weatherChangeTitle">Weather Stability</h2>
+                <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
                 <p class="muted">Interprets the degree and speed of changing conditions.</p>
             </div>
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather stability score">—</div>
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
         </div>
         <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
-        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show weather stability reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
+        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="9"></circle>
                 <path d="M12 10.5v6"></path>
@@ -674,7 +674,7 @@ if ($current && !empty($current['observed_at'])) {
         </button>
         <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
         <details class="algorithm-details">
-            <summary>How Weather Stability is calculated</summary>
+            <summary>How Weather Volatility Index (WVI) is calculated</summary>
             <p>GaugeIQ compares the current six-hour change with up to <?= (int)$weatherFormulaValues['baseline_days'] ?> previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
         </details>
     </section>
@@ -699,7 +699,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden></div>
         <details class="algorithm-details">
             <summary>How the conditions trend is classified</summary>
-            <p>This is a separate directional assessment, not the Weather Stability score.</p>
+            <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
             <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
         </details>
     </section>
@@ -806,6 +806,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
-<script src="js/app.js?v=20261015-uplink-speed-2"></script>
+<script src="js/app.js?v=20261016-wvi-renaming"></script>
 </body>
 </html>
