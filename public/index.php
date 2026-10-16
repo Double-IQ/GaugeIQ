@@ -368,7 +368,7 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
 
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
-                    <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">Stability: </span><span id="temperatureStabilitySummary">Gathering readings…</span></div>
+                    <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
                     <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
