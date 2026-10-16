@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261016-standard-temperature-card">
+<link rel="stylesheet" href="css/app.css?v=20261016-current-level-and-hourly-change">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -500,11 +500,11 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
-                // The bar fill represents the full magnitude of the one-hour change,
-                // independently of the current value shown at the right.
-                $activeSegments = (int)round($bar['deltaRatio'] * 40);
-                $changeSegments = $activeSegments;
-                $greenSegments = 0;
+                // Fill the bar to the current reading. Highlight the portion equivalent
+                // to the absolute one-hour change in yellow, keeping the rest of the
+                // current reading green and the unused scale grey.
+                $activeSegments = (int)round($bar['ratio'] * 40);
+                $changeSegments = min($activeSegments, (int)round($bar['deltaRatio'] * 40));
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
@@ -512,7 +512,7 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < 40; $segment++):
                             $segmentActive = $segment < $activeSegments;
-                            $segmentChange = $segment < $activeSegments && $changeSegments > 0;
+                            $segmentChange = $segment < $changeSegments;
                         ?>
                             <span class="climate-segment<?= $segmentActive ? ($segmentChange ? ' change' : ' active') : '' ?>"></span>
                         <?php endfor; ?>
