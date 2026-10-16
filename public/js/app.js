@@ -1104,9 +1104,18 @@ async function loadWeatherChange() {
             else if (volatilityScore > 2) volatilitySummary = 'Low volatility · Only minor changes detected';
             else volatilitySummary = 'Very low volatility · Small change detected';
 
-            summaryElement.textContent = volatilitySummary + (usedRecentBackfillForScore
-                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+            const summaryParts = volatilitySummary.split('·');
+            const summaryLabel = document.createElement('span');
+            summaryLabel.textContent = summaryParts.shift().trim();
+            summaryElement.replaceChildren(summaryLabel);
+            const summaryDetail = document.createElement('span');
+            summaryDetail.className = 'weather-change-summary-change';
+            summaryDetail.textContent = summaryParts.join('·').trim() + (usedRecentBackfillForScore
+                ? (summaryParts.length ? ' · ' : '') + 'Temporary recent hourly model estimates used because live readings were insufficient.'
                 : '');
+            if (summaryDetail.textContent) {
+                summaryElement.append(document.createTextNode(' · '), summaryDetail);
+            }
             const level = volatilityScore >= 7 ? 'low' : volatilityScore >= 4 ? 'moderate' : 'high';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
