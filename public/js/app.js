@@ -1121,7 +1121,7 @@ async function loadWeatherChange() {
             if (topStabilityLabel) {
                 const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
                 if (stabilitySummaryElement) {
-                    stabilitySummaryElement.textContent = volatilitySummary.split('·')[0].trim();
+                    stabilitySummaryElement.textContent = volatilityScore.toFixed(1);
                     stabilitySummaryElement.className = 'temperature-stability-summary';
                     stabilitySummaryElement.dataset.level = level;
                 }
