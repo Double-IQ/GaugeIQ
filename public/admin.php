@@ -384,7 +384,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="section-heading">
         <div>
             <h2>Stability bar alert threshold</h2>
-            <p class="muted">Choose the Weather Volatility Index (WVI) score at or below which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
+            <p class="muted">Choose the WVI score at or above which the WVI indicator starts flashing. This is separate from push-notification alert rules.</p>
         </div>
     </div>
     <form method="post" class="lookback-form">
@@ -495,7 +495,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div id="valueField">
                 <label for="value">Value</label>
                 <input id="value" name="value" type="number" min="0" max="10" step="1" value="3">
-                <p id="weatherStabilityHelp" class="alert-help muted" hidden>Alert when Weather Volatility Index (WVI) falls to or below this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
+                <p id="weatherVolatilityHelp" class="alert-help muted" hidden>Alert when the WVI rises to or above this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
             </div>
             <div id="degreesField" class="full" hidden>
                 <label>Specific wind direction</label>
@@ -563,7 +563,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-config readable">
                     <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                     <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
-                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) falls to or below <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
+                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
                     <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                     <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
                     <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
