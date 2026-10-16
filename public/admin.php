@@ -383,7 +383,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <section class="card alert-window-card">
     <div class="section-heading">
         <div>
-            <h2>Stability bar alert threshold</h2>
+            <h2>WVI alert threshold</h2>
             <p class="muted">Choose the WVI score at or above which the WVI indicator starts flashing. This is separate from push-notification alert rules.</p>
         </div>
     </div>
