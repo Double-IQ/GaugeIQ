@@ -409,7 +409,7 @@ if ($current && !empty($current['observed_at'])) {
                         </div>
                         <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
                             <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                            <?php if ($latest): ?><strong><?= $change >= 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa</strong><?php endif; ?>
+                            <?php if ($latest): ?><strong><?= $change > 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa<?= abs($change) > 0.000001 ? '/Hr' : '' ?></strong><?php endif; ?>
                         </div>
                     <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
                 </div>
