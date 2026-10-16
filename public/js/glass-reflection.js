@@ -1,15 +1,32 @@
-/* GaugeIQ: interactive specular reflection on the Temperature glass card. */
+/* GaugeIQ: persistent, device-responsive specular reflection on the Temperature card. */
 (() => {
     const card = document.querySelector('.temperature-summary-card');
     if (!card || card.querySelector('.temperature-glass-shine')) return;
 
+    const STORAGE_KEY = 'gaugeiq.glassMotionConsent.v1';
     const shine = document.createElement('span');
     shine.className = 'temperature-glass-shine';
     shine.setAttribute('aria-hidden', 'true');
     card.insertBefore(shine, card.firstChild);
 
     let orientationEnabled = false;
-    let permissionRequested = false;
+    let permissionCheckInProgress = false;
+    let hasStoredConsent = false;
+
+    try {
+        hasStoredConsent = window.localStorage.getItem(STORAGE_KEY) === 'granted';
+    } catch (_) {
+        // Storage can be unavailable in private browsing; motion still works this session.
+    }
+
+    const storeConsent = () => {
+        hasStoredConsent = true;
+        try {
+            window.localStorage.setItem(STORAGE_KEY, 'granted');
+        } catch (_) {
+            // Do not block the reflection if persistent storage is unavailable.
+        }
+    };
 
     const setPosition = (x, y, active = true) => {
         const clamp = value => Math.max(4, Math.min(96, value));
@@ -18,7 +35,7 @@
         card.classList.toggle('glass-motion-active', active);
     };
 
-    // Desktop: the reflection tracks the pointer across the glass.
+    // Desktop: track the mouse across the glass.
     card.addEventListener('pointermove', event => {
         if (event.pointerType !== 'mouse' || orientationEnabled) return;
         const bounds = card.getBoundingClientRect();
@@ -34,33 +51,62 @@
 
     const handleOrientation = event => {
         if (event.gamma === null || event.beta === null) return;
-        // Convert tilt into a gentle, bounded reflection shift; avoid abrupt jumps.
         const x = 50 + Math.max(-35, Math.min(35, event.gamma)) * 1.15;
         const y = 48 + Math.max(-35, Math.min(35, event.beta - 35)) * .9;
         setPosition(x, y);
     };
 
     const enableOrientation = () => {
-        if (orientationEnabled) return;
-        orientationEnabled = true;
-        window.addEventListener('deviceorientation', handleOrientation, true);
+        if (!orientationEnabled) {
+            orientationEnabled = true;
+            window.addEventListener('deviceorientation', handleOrientation, true);
+        }
+        storeConsent();
         card.classList.add('glass-motion-active');
     };
 
-    // iOS requires permission to be requested during a user gesture. A tap on
-    // the card surface enables tilt; ordinary dashboard controls are excluded.
-    card.addEventListener('pointerdown', () => {
-        if (permissionRequested || !('DeviceOrientationEvent' in window)) return;
+    const startOrCheckMotion = () => {
+        if (permissionCheckInProgress || orientationEnabled ||
+            !('DeviceOrientationEvent' in window)) return;
+
         const orientation = window.DeviceOrientationEvent;
         if (typeof orientation.requestPermission !== 'function') {
+            // Browsers without an explicit permission API can start automatically.
             enableOrientation();
             return;
         }
-        permissionRequested = true;
+
+        // iOS requires a user gesture for this check. If the user already
+        // granted access, this should return the saved browser permission
+        // without another prompt; it also reattaches the listener for this page.
+        permissionCheckInProgress = true;
         orientation.requestPermission().then(permission => {
-            if (permission === 'granted') enableOrientation();
+            if (permission === 'granted') {
+                enableOrientation();
+            } else {
+                card.classList.remove('glass-motion-active');
+            }
         }).catch(() => {
-            // Keep pointer-driven/static glass if motion permission is declined.
+            // Permission checks can fail outside a valid gesture; try on a later tap.
+        }).finally(() => {
+            permissionCheckInProgress = false;
         });
-    }, { passive: true });
+    };
+
+    if (hasStoredConsent) {
+        // Non-iOS browsers can restore motion immediately. iOS waits for the
+        // first natural tap/click because its API requires transient user activation.
+        if ('DeviceOrientationEvent' in window &&
+            typeof window.DeviceOrientationEvent.requestPermission !== 'function') {
+            startOrCheckMotion();
+        }
+        const resumeFromGesture = () => {
+            if (hasStoredConsent && !orientationEnabled) startOrCheckMotion();
+        };
+        document.addEventListener('pointerdown', resumeFromGesture, { passive: true, capture: true });
+        document.addEventListener('touchend', resumeFromGesture, { passive: true, capture: true, once: true });
+    } else {
+        // First-time opt-in: tapping the glass asks for motion access where required.
+        card.addEventListener('pointerdown', startOrCheckMotion, { passive: true });
+    }
 })();
