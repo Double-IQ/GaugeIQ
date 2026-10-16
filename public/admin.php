@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $notice = 'Stability bar alert threshold disabled.';
                 } else {
                     if (!is_numeric($thresholdInput) || (float)$thresholdInput < 0 || (float)$thresholdInput > 10) {
-                        throw new InvalidArgumentException('The stability alert threshold must be between 0 and 10, or left disabled.');
+                        throw new InvalidArgumentException('The WVI alert threshold must be between 0 and 10, or left disabled.');
                     }
                     $threshold = (int)round((float)$thresholdInput);
                     saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10 - $threshold));
@@ -559,7 +559,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <h3><?= h((string)$rule['name']) ?></h3>
                     <span class="alert-state <?= (int)$rule['enabled'] ? 'on' : 'off' ?>"><?= (int)$rule['enabled'] ? 'Enabled' : 'Disabled' ?></span>
                 </div>
-                <div class="alert-meta"><?= h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?> · cooldown <?= (int)$rule['cooldown_minutes'] ?> min</div>
+                <div class="alert-meta"><?= $rule['metric'] === 'weather_stability' ? 'Weather Volatility Index (WVI)' : h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?> · cooldown <?= (int)$rule['cooldown_minutes'] ?> min</div>
                 <div class="alert-config readable">
                     <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                     <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
@@ -616,7 +616,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 <script src="js/admin.js" defer></script>
-<script src="js/alerts.js?v=20261012-weather-stability-alert-1" defer></script>
+<script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
 <script>
 document.getElementById('useCurrentLocation')?.addEventListener('click', () => {
