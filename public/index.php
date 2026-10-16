@@ -806,6 +806,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
-<script src="js/app.js?v=20261016-wvi-renaming"></script>
+<script src="js/app.js?v=20261016-samsung-pwa-install"></script>
 </body>
 </html>
