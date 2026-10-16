@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new InvalidArgumentException('The stability alert threshold must be between 0 and 10, or left disabled.');
                     }
                     $threshold = (int)round((float)$thresholdInput);
-                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)$threshold);
+                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10 - $threshold));
                     $notice = 'Stability bar alert threshold saved.';
                 }
             } elseif ($action === 'delete') {
@@ -236,7 +236,7 @@ $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_eval
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
-$stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' ? (int)$stabilityAlertThresholdValue : null;
+$stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10 - (int)$stabilityAlertThresholdValue : null;
 $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
 
@@ -384,13 +384,13 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="section-heading">
         <div>
             <h2>Stability bar alert threshold</h2>
-            <p class="muted">Choose the Weather Stability score at or below which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
+            <p class="muted">Choose the Weather Volatility Index (WVI) score at or below which the Stability bar starts flashing. This is separate from push-notification alert rules.</p>
         </div>
     </div>
     <form method="post" class="lookback-form">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
         <input type="hidden" name="action" value="save_stability_threshold">
-        <label for="stability_alert_threshold">Flash when Weather Stability falls to or below</label>
+        <label for="stability_alert_threshold">Flash when Weather Volatility Index (WVI) rises to or above</label>
         <div class="lookback-controls">
             <select id="stability_alert_threshold" name="stability_alert_threshold">
                 <option value="" <?= $stabilityAlertThreshold === null ? 'selected' : '' ?>>Disabled</option>
@@ -477,7 +477,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <option value="pressure">Air pressure</option>
                     <option value="humidity">Humidity</option>
                     <option value="wind_speed">Wind speed</option>
-                    <option value="weather_stability">Weather Stability</option>
+                    <option value="weather_stability">Weather Volatility Index (WVI)</option>
                     <option value="wind_direction">Wind direction</option>
                     <option value="wind">Wind speed + direction</option>
                 </select>
@@ -495,7 +495,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <div id="valueField">
                 <label for="value">Value</label>
                 <input id="value" name="value" type="number" min="0" max="10" step="1" value="3">
-                <p id="weatherStabilityHelp" class="alert-help muted" hidden>Alert when Weather Stability falls to or below this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
+                <p id="weatherStabilityHelp" class="alert-help muted" hidden>Alert when Weather Volatility Index (WVI) falls to or below this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
             </div>
             <div id="degreesField" class="full" hidden>
                 <label>Specific wind direction</label>
@@ -563,7 +563,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-config readable">
                     <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                     <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
-                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Stability falls to or below <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
+                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) falls to or below <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
                     <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                     <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
                     <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
@@ -581,7 +581,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-grid">
                     <div class="full"><label>Alert name</label><input name="name" value="<?= h((string)$rule['name']) ?>" required></div>
                     <div><label>Monitor</label><select name="metric" data-edit-metric>
-                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','weather_stability'=>'Weather Stability','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','wind_speed'=>'Wind speed','weather_stability'=>'Weather Volatility Index (WVI)','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div><label>Condition</label><select name="condition_type" data-edit-condition>
                         <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
