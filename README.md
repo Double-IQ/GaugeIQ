@@ -8,12 +8,14 @@ GaugeIQ is a mobile-first Progressive Web App for monitoring atmospheric pressur
 
 Open GaugeIQ on the device you want to install it on, then follow the platform-specific steps below. The button opens GaugeIQ; the device's browser completes installation after you confirm. This installs the web app when the browser offers its PWA installer, rather than deliberately creating a plain bookmark shortcut.
 
-### Android (Chrome)
+### Android (Chrome recommended)
 
-1. Open [GaugeIQ](https://weather.bichet.co.za) in **Chrome on Android**.
+1. Open [GaugeIQ](https://weather.bichet.co.za) in **Google Chrome on Android**.
 2. Tap **Install** in GaugeIQ's header. If Chrome provides its native installation prompt, review it and tap **Install**.
 3. If the in-page button shows instructions instead, open Chrome's **⋮** menu and choose **Install app** if that option is available.
 4. Launch GaugeIQ from the installed app icon. It should open in its own standalone window. If Chrome only offers **Add to Home screen** and does not offer **Install app**, don't use that option if you specifically want the installed PWA experience.
+
+**Samsung Internet users:** use Google Chrome to install GaugeIQ instead. Samsung Internet has a reported issue where its generated PWA installation wrapper can trigger Google Play Protect's “built for an older version of Android” warning. GaugeIQ's Install button will not invoke Samsung Internet's native install prompt; it will show guidance to install through Chrome. This avoids the affected installation path rather than disabling or bypassing Android security checks.
 
 ### iPhone and iPad (Safari)
 
