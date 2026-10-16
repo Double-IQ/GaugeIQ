@@ -2,19 +2,19 @@
 declare(strict_types=1);
 
 /**
- * Tunable inputs used by the dashboard's Weather Stability and Conditions Trend
+ * Tunable inputs used by the dashboard's Weather Volatility Index (WVI) and Conditions Trend
  * calculations. Keep validation bounds here so the private formula page and
  * dashboard use the same defaults and allowed ranges.
  */
 function weatherFormulaFields(): array
 {
     $fields = [
-        'stability_min_readings' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum unique readings', 'default' => 3, 'min' => 2, 'max' => 20, 'step' => 1, 'unit' => 'readings', 'help' => 'Minimum timestamp-deduplicated observations before scoring.'],
-        'stability_min_hours' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum observation span', 'default' => 1, 'min' => 0.25, 'max' => 24, 'step' => 0.25, 'unit' => 'hours', 'help' => 'Minimum elapsed time covered by the readings.'],
-        'stability_min_signals' => ['group' => 'Weather Stability · data requirements', 'label' => 'Minimum valid signals', 'default' => 5, 'min' => 1, 'max' => 9, 'step' => 1, 'unit' => 'of 9', 'help' => 'At least this many of the nine signals must have usable readings.'],
-        'baseline_days' => ['group' => 'Weather Stability · local baseline', 'label' => 'Look-back days', 'default' => 14, 'min' => 1, 'max' => 60, 'step' => 1, 'unit' => 'days', 'help' => 'How many previous days are searched for comparable six-hour windows.'],
-        'baseline_min_windows' => ['group' => 'Weather Stability · local baseline', 'label' => 'Minimum comparable windows', 'default' => 5, 'min' => 1, 'max' => 60, 'step' => 1, 'unit' => 'windows', 'help' => 'Minimum historical scores needed before showing a baseline median.'],
-        'baseline_deviation' => ['group' => 'Weather Stability · local baseline', 'label' => 'Meaningful difference from median', 'default' => 2, 'min' => 0, 'max' => 10, 'step' => 0.1, 'unit' => 'score points', 'help' => 'Absolute score difference that marks current change as more or less than usual.'],
+        'stability_min_readings' => ['group' => 'Weather Volatility Index (WVI) · data requirements', 'label' => 'Minimum unique readings', 'default' => 3, 'min' => 2, 'max' => 20, 'step' => 1, 'unit' => 'readings', 'help' => 'Minimum timestamp-deduplicated observations before scoring.'],
+        'stability_min_hours' => ['group' => 'Weather Volatility Index (WVI) · data requirements', 'label' => 'Minimum observation span', 'default' => 1, 'min' => 0.25, 'max' => 24, 'step' => 0.25, 'unit' => 'hours', 'help' => 'Minimum elapsed time covered by the readings.'],
+        'stability_min_signals' => ['group' => 'Weather Volatility Index (WVI) · data requirements', 'label' => 'Minimum valid signals', 'default' => 5, 'min' => 1, 'max' => 9, 'step' => 1, 'unit' => 'of 9', 'help' => 'At least this many of the nine signals must have usable readings.'],
+        'baseline_days' => ['group' => 'Weather Volatility Index (WVI) · local baseline', 'label' => 'Look-back days', 'default' => 14, 'min' => 1, 'max' => 60, 'step' => 1, 'unit' => 'days', 'help' => 'How many previous days are searched for comparable six-hour windows.'],
+        'baseline_min_windows' => ['group' => 'Weather Volatility Index (WVI) · local baseline', 'label' => 'Minimum comparable windows', 'default' => 5, 'min' => 1, 'max' => 60, 'step' => 1, 'unit' => 'windows', 'help' => 'Minimum historical scores needed before showing a baseline median.'],
+        'baseline_deviation' => ['group' => 'Weather Volatility Index (WVI) · local baseline', 'label' => 'Meaningful difference from median', 'default' => 2, 'min' => 0, 'max' => 10, 'step' => 0.1, 'unit' => 'score points', 'help' => 'Absolute score difference that marks current change as more or less than usual.'],
         'trend_min_readings' => ['group' => 'Conditions Trend · data requirements', 'label' => 'Minimum unique readings', 'default' => 3, 'min' => 2, 'max' => 20, 'step' => 1, 'unit' => 'readings', 'help' => 'Minimum timestamp-deduplicated observations before classifying a trend.'],
         'trend_min_hours' => ['group' => 'Conditions Trend · data requirements', 'label' => 'Minimum observation span', 'default' => 1, 'min' => 0.25, 'max' => 24, 'step' => 0.25, 'unit' => 'hours', 'help' => 'Minimum elapsed time covered by the readings.'],
         'trend_classification_threshold' => ['group' => 'Conditions Trend · classification', 'label' => 'Classification score threshold', 'default' => 2, 'min' => 0.5, 'max' => 20, 'step' => 0.5, 'unit' => 'points', 'help' => 'A positive score at or above this value is Worsening; a negative score at or below its negative is Improving.'],
@@ -42,9 +42,9 @@ function weatherFormulaFields(): array
         'cloud_cover' => ['Cloud cover', 1, 15, 50],
         'weather_code' => ['Reported weather condition', 1, 1, 5],
     ] as $signal => [$label, $weight, $trigger, $maximum]) {
-        $fields['stability_weight_' . $signal] = ['group' => 'Weather Stability · signal weights', 'label' => $label . ' weight', 'default' => $weight, 'min' => 0, 'max' => 10, 'step' => 0.5, 'unit' => 'weight', 'help' => 'Relative influence of this signal in the weighted Weather Stability calculation.'];
-        $fields['stability_trigger_' . $signal] = ['group' => 'Weather Stability · signal thresholds', 'label' => $label . ' trigger', 'default' => $trigger, 'min' => 0, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Six-hour-equivalent magnitude below which this signal contributes zero severity.'];
-        $fields['stability_max_' . $signal] = ['group' => 'Weather Stability · signal thresholds', 'label' => $label . ' full-severity level', 'default' => $maximum, 'min' => 0.1, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Magnitude at which this signal reaches full severity (1.0).'];
+        $fields['stability_weight_' . $signal] = ['group' => 'Weather Volatility Index (WVI) · signal weights', 'label' => $label . ' weight', 'default' => $weight, 'min' => 0, 'max' => 10, 'step' => 0.5, 'unit' => 'weight', 'help' => 'Relative influence of this signal in the weighted Weather Volatility Index (WVI) calculation.'];
+        $fields['stability_trigger_' . $signal] = ['group' => 'Weather Volatility Index (WVI) · signal thresholds', 'label' => $label . ' trigger', 'default' => $trigger, 'min' => 0, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Six-hour-equivalent magnitude below which this signal contributes zero severity.'];
+        $fields['stability_max_' . $signal] = ['group' => 'Weather Volatility Index (WVI) · signal thresholds', 'label' => $label . ' full-severity level', 'default' => $maximum, 'min' => 0.1, 'max' => 1000, 'step' => 0.1, 'unit' => 'signal units', 'help' => 'Magnitude at which this signal reaches full severity (1.0).'];
     }
     return $fields;
 }
