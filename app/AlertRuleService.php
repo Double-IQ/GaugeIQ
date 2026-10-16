@@ -695,7 +695,7 @@ final class AlertRuleService
         }
 
         if ($metric === 'weather_stability' && ($type !== 'above' || !isset($configuration['value']) || !is_numeric($configuration['value']) || (float)$configuration['value'] < 0 || (float)$configuration['value'] > 10)) {
-            throw new InvalidArgumentException('Weather Volatility Index (WVI) alerts require a threshold from 0 to 10 and the Falls to or below condition.');
+            throw new InvalidArgumentException('Weather Volatility Index (WVI) alerts require a threshold from 0 to 10 and the Rises to or above condition.');
         }
     }
 }
