@@ -831,3 +831,34 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="dark"] .temperature-summary-card::after {
     background: rgba(255,255,255,.08);
 }
+
+/* Moving specular reflection for the Temperature card's glass surface. */
+.temperature-summary-card .temperature-glass-shine {
+    position: absolute;
+    inset: -35%;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: .72;
+    background:
+        radial-gradient(ellipse 24% 62% at var(--glass-x, 22%) var(--glass-y, 12%),
+            rgba(255,255,255,.34) 0%,
+            rgba(255,255,255,.14) 24%,
+            rgba(255,255,255,.045) 48%,
+            transparent 72%);
+    mix-blend-mode: screen;
+    transform: translate3d(0,0,0);
+    transition: background-position 120ms ease-out, opacity 220ms ease;
+}
+.temperature-summary-card.glass-motion-active .temperature-glass-shine { opacity: .95; }
+:root[data-theme="dark"] .temperature-summary-card .temperature-glass-shine {
+    background:
+        radial-gradient(ellipse 24% 62% at var(--glass-x, 22%) var(--glass-y, 12%),
+            rgba(255,255,255,.25) 0%,
+            rgba(255,255,255,.10) 24%,
+            rgba(255,255,255,.03) 48%,
+            transparent 72%);
+}
+@media (prefers-reduced-motion: reduce) {
+    .temperature-summary-card .temperature-glass-shine { transition: none; }
+}
