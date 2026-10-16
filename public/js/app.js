@@ -422,10 +422,15 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+function isSamsungInternet() {
+    return /SamsungBrowser/i.test(navigator.userAgent);
+}
+
 window.addEventListener('beforeinstallprompt', event => {
-    // Keep the browser's native install prompt for the user's explicit button tap.
+    // Samsung Internet has a reported Android PWA wrapper issue that can trigger
+    // Play Protect's outdated-target warning. Prefer Chrome's installer there.
     event.preventDefault();
-    deferredInstallPrompt = event;
+    deferredInstallPrompt = isSamsungInternet() ? null : event;
 });
 
 window.addEventListener('appinstalled', () => {
