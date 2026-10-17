@@ -441,7 +441,7 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-bar-label{font-size:13px;font-weight:750;color:var(--text);line-height:1.2}
 .climate-segment-track{display:grid;grid-template-columns:repeat(40,minmax(0,1fr));gap:2px;min-width:0;align-items:center}
 .climate-segment{display:block;height:16px;min-width:0;border-radius:0;background:color-mix(in srgb,var(--muted) 22%,transparent);transition:background-color .2s ease}
-.climate-segment.active{background:#22c55e}
+.climate-segment.active{background:#047857}
 .climate-segment.change{background:#facc15}
 .climate-bar-change,.climate-bar-value{min-width:0;font-size:13px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
 .climate-bar-change.rise{color:#eab308}
