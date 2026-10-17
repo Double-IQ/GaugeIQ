@@ -664,7 +664,7 @@ if ($current && !empty($current['observed_at'])) {
                     <span class="forecast-day-name"><?= htmlspecialchars($previewDate->format('D'), ENT_QUOTES) ?></span>
                     <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($previewCondition['label'], ENT_QUOTES) ?>">
                         <?php if (is_string($previewCondition['slug'] ?? null)): ?>
-                            <img src="weather-icons/<?= htmlspecialchars($previewCondition['slug'], ENT_QUOTES) ?>.svg" alt="" aria-hidden="true" width="42" height="42">
+                            <img src="weather-icons/<?= htmlspecialchars($previewCondition['slug'], ENT_QUOTES) ?>.svg" alt="" aria-hidden="true" width="44" height="44">
                         <?php else: ?>
                             <?= htmlspecialchars($previewCondition['icon'], ENT_QUOTES) ?>
                         <?php endif; ?>
