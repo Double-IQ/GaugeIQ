@@ -424,6 +424,10 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-summary-card:has(#temperatureStabilitySummary[data-level="low"]){border-color:#ef4444}
 .temperature-summary-card:has(#temperatureStabilitySummary[data-level="moderate"]){border-color:#f59e0b}
 .temperature-summary-card:has(#temperatureStabilitySummary[data-level="high"]){border-color:#22c55e}
+.temperature-stability-row:has(#temperatureStabilitySummary[data-level="low"]){border-color:#ef4444}
+.temperature-stability-row:has(#temperatureStabilitySummary[data-level="moderate"]){border-color:#f59e0b}
+.temperature-stability-row:has(#temperatureStabilitySummary[data-level="high"]){border-color:#22c55e}
+
 
 
 .wind-summary-line{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:2px;font-size:14px;font-weight:400;color:var(--muted)}
