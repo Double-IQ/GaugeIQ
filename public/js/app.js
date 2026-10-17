@@ -1124,6 +1124,7 @@ async function loadWeatherChange() {
                     stabilitySummaryElement.textContent = volatilityScore.toFixed(1);
                     stabilitySummaryElement.className = 'temperature-stability-summary';
                     stabilitySummaryElement.dataset.level = level;
+                    stabilitySummaryElement.dataset.outlineLevel = volatilityScore >= 7 ? 'low' : volatilityScore >= 6 ? 'moderate' : 'normal';
                 }
             }
             scoreElement.dataset.level = level;
@@ -1217,6 +1218,7 @@ async function loadWeatherChange() {
             if (stabilitySummaryElement) {
                 stabilitySummaryElement.textContent = 'Unavailable';
                 stabilitySummaryElement.dataset.level = 'low';
+                stabilitySummaryElement.dataset.outlineLevel = 'normal';
                 stabilitySummaryElement.classList.remove('warning');
             }
         }
