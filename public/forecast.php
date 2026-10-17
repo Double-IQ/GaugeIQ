@@ -89,7 +89,7 @@ $formatHour = static function (?string $time): string {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261017-notification-forecast">
+<link rel="stylesheet" href="css/app.css?v=20261017-forecast-icons-50">
 <title>7-day forecast · GaugeIQ</title>
 </head>
 <body>
@@ -203,6 +203,6 @@ $formatHour = static function (?string $time): string {
         <p class="muted forecast-disclaimer">Forecasts are model guidance and can change as new weather data arrives. GaugeIQ refreshes stored forecasts through its scheduled monitor; opening this page does not trigger a weather fetch.</p>
     <?php endif; ?>
 </main>
-<script src="js/app.js?v=20261016-top-card-wvi"></script>
+<script src="js/app.js?v=20261017-svg-animation-resume"></script>
 </body>
 </html>
