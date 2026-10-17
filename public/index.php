@@ -420,7 +420,7 @@ if ($current && !empty($current['observed_at'])) {
                 <p class="muted forecast-preview-unavailable">Forecast data will appear after the next scheduled weather update.</p>
             <?php endif; ?>
         </div>
-        <div class="forecast-preview-footer"><span>Tap to explore the full 7-day forecast</span><span aria-hidden="true">View details&nbsp; →</span></div>
+        <div class="forecast-preview-footer"><span aria-hidden="true">View details&nbsp; →</span></div>
     </a>
 
         <article class="card metric-card pressure-card">
