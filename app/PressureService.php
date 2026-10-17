@@ -48,7 +48,7 @@ final class PressureService
         $lon = rawurlencode($longitude);
 
         $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&hourly=weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,rain_sum,wind_speed_10m_max,wind_gusts_10m_max&forecast_days=4"
+            . "&current=temperature_2m,apparent_temperature,dew_point_2m,surface_pressure,relative_humidity_2m,rain,cloud_cover,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,snowfall,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,surface_pressure,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,rain_sum,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset,uv_index_max,precipitation_hours&forecast_days=7"
             . "&wind_speed_unit=kmh&timezone=auto";
 
         if (!function_exists('curl_init')) {
@@ -111,6 +111,44 @@ final class PressureService
         $hourlyTimes = is_array($hourly['time'] ?? null) ? $hourly['time'] : [];
         $hourlyCodes = is_array($hourly['weather_code'] ?? null) ? $hourly['weather_code'] : [];
         $hourlyDayFlags = is_array($hourly['is_day'] ?? null) ? $hourly['is_day'] : [];
+        $hourlyFields = [
+            'temperature_2m' => 'temperature_c',
+            'apparent_temperature' => 'feels_like_c',
+            'dew_point_2m' => 'dew_point_c',
+            'relative_humidity_2m' => 'humidity_percent',
+            'precipitation_probability' => 'precipitation_probability_percent',
+            'precipitation' => 'precipitation_mm',
+            'rain' => 'rain_mm',
+            'showers' => 'showers_mm',
+            'snowfall' => 'snowfall_cm',
+            'cloud_cover' => 'cloud_cover_percent',
+            'wind_speed_10m' => 'wind_speed_kmh',
+            'wind_direction_10m' => 'wind_direction_degrees',
+            'wind_gusts_10m' => 'wind_gusts_kmh',
+            'uv_index' => 'uv_index',
+            'visibility' => 'visibility_m',
+            'surface_pressure' => 'pressure_hpa',
+        ];
+        $hoursByDate = [];
+        foreach ($hourlyTimes as $hourIndex => $hourTime) {
+            if (!is_string($hourTime) || strlen($hourTime) < 13) {
+                continue;
+            }
+            $hour = ['time' => substr($hourTime, 11, 5)];
+            foreach ($hourlyFields as $sourceField => $targetField) {
+                $values = $hourly[$sourceField] ?? [];
+                $hour[$targetField] = isset($values[$hourIndex]) && is_numeric($values[$hourIndex])
+                    ? (float)$values[$hourIndex]
+                    : null;
+            }
+            $hour['weather_code'] = isset($hourlyCodes[$hourIndex]) && is_numeric($hourlyCodes[$hourIndex]) ? (int)$hourlyCodes[$hourIndex] : null;
+            $hour['is_day'] = isset($hourlyDayFlags[$hourIndex]) && is_numeric($hourlyDayFlags[$hourIndex]) ? (int)$hourlyDayFlags[$hourIndex] === 1 : null;
+            $hoursByDate[substr($hourTime, 0, 10)][] = $hour;
+        }
+        foreach ($forecast as &$forecastDay) {
+            $forecastDay['hours'] = $hoursByDate[$forecastDay['date']] ?? [];
+        }
+        unset($forecastDay);
         $currentTime = strtotime((string)($current['time'] ?? ''));
         $nextHourWeatherCode = null;
         $nextHourIsDay = null;
@@ -331,6 +369,10 @@ final class PressureService
         $rainOnlyTotals = $daily['rain_sum'] ?? [];
         $windSpeedMaxima = $daily['wind_speed_10m_max'] ?? [];
         $windGustMaxima = $daily['wind_gusts_10m_max'] ?? [];
+        $sunrises = $daily['sunrise'] ?? [];
+        $sunsets = $daily['sunset'] ?? [];
+        $uvMaxima = $daily['uv_index_max'] ?? [];
+        $precipitationHours = $daily['precipitation_hours'] ?? [];
 
         foreach ($times as $index => $time) {
             if (!is_string($time) || $time === '') {
@@ -347,10 +389,15 @@ final class PressureService
                 'rain_only_mm' => isset($rainOnlyTotals[$index]) && is_numeric($rainOnlyTotals[$index]) ? max(0.0, (float)$rainOnlyTotals[$index]) : null,
                 'wind_speed_max_kmh' => isset($windSpeedMaxima[$index]) && is_numeric($windSpeedMaxima[$index]) ? max(0.0, (float)$windSpeedMaxima[$index]) : null,
                 'wind_gusts_max_kmh' => isset($windGustMaxima[$index]) && is_numeric($windGustMaxima[$index]) ? max(0.0, (float)$windGustMaxima[$index]) : null,
+                'sunrise' => isset($sunrises[$index]) && is_string($sunrises[$index]) ? substr($sunrises[$index], 11, 5) : null,
+                'sunset' => isset($sunsets[$index]) && is_string($sunsets[$index]) ? substr($sunsets[$index], 11, 5) : null,
+                'uv_index_max' => isset($uvMaxima[$index]) && is_numeric($uvMaxima[$index]) ? (float)$uvMaxima[$index] : null,
+                'precipitation_hours' => isset($precipitationHours[$index]) && is_numeric($precipitationHours[$index]) ? (float)$precipitationHours[$index] : null,
+                'hours' => [],
             ];
         }
 
-        return array_slice($days, 0, 4);
+        return array_slice($days, 0, 7);
     }
 
     public function record(array $current): ?array
