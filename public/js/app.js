@@ -1507,18 +1507,70 @@ if (deviceViewButton && deviceList) {
 })();
 
 
-// The animated Meteocons are progressive enhancement: keep the original
-// weather emoji available if the CDN is unavailable or the app is offline.
-document.querySelectorAll('.temperature-forecast-icon img').forEach(image => {
-    const fallback = image.parentElement?.querySelector('.temperature-forecast-fallback');
-    if (!fallback) return;
-    const showFallback = () => {
-        image.hidden = true;
-        fallback.hidden = false;
-    };
-    image.addEventListener('error', showFallback, { once: true });
-    if (image.complete && image.naturalWidth === 0) showFallback();
-});
+// Keep animated weather SVGs running when Safari pauses off-screen images or
+// suspends the PWA in the background. A fragment gives each image a fresh SVG
+// document instance without changing the requested file or its HTTP cache key.
+(() => {
+    const selector = 'img[src*="weather-icons/"]';
+    const images = [...document.querySelectorAll(selector)];
+    if (!images.length) return;
+
+    function sourceFor(image) {
+        if (!image.dataset.weatherIconSource) {
+            image.dataset.weatherIconSource = (image.getAttribute('src') || '').split('#')[0];
+        }
+        return image.dataset.weatherIconSource;
+    }
+
+    function restartAnimation(image) {
+        const source = sourceFor(image);
+        if (!source || image.hidden) return;
+        image.setAttribute('src', source + '#gaugeiq-animation-' + Date.now());
+    }
+
+    function isInViewport(image) {
+        const rect = image.getBoundingClientRect();
+        return rect.bottom > 0 && rect.right > 0
+            && rect.top < window.innerHeight && rect.left < window.innerWidth;
+    }
+
+    // Preserve the emoji fallback on the main temperature card.
+    images.forEach(image => {
+        const fallback = image.parentElement?.querySelector('.temperature-forecast-fallback');
+        if (fallback) {
+            const showFallback = () => {
+                image.hidden = true;
+                fallback.hidden = false;
+            };
+            image.addEventListener('error', showFallback, { once: true });
+            if (image.complete && image.naturalWidth === 0) showFallback();
+        }
+    });
+
+    if ('IntersectionObserver' in window) {
+        const visibility = new WeakMap();
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const wasVisible = visibility.get(entry.target);
+                const visible = entry.isIntersecting;
+                visibility.set(entry.target, visible);
+                if (visible && wasVisible === false) restartAnimation(entry.target);
+            });
+        }, { threshold: 0.01 });
+        images.forEach(image => observer.observe(image));
+    }
+
+    function resumeVisibleAnimations() {
+        images.forEach(image => {
+            if (isInViewport(image)) restartAnimation(image);
+        });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') resumeVisibleAnimations();
+    });
+    window.addEventListener('pageshow', resumeVisibleAnimations);
+})();
 
 
 // Estimate network upload throughput with a small, non-persistent same-origin upload.
