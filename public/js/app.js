@@ -1517,7 +1517,8 @@ if (deviceViewButton && deviceList) {
 
     function sourceFor(image) {
         if (!image.dataset.weatherIconSource) {
-            image.dataset.weatherIconSource = (image.getAttribute('src') || '').split('#')[0];
+            // Keep the original URL so each resume can force a fresh SVG document.
+            image.dataset.weatherIconSource = (image.getAttribute('src') || '').split('#')[0].replace(/([?&])_gqanim=\d+/, '');
         }
         return image.dataset.weatherIconSource;
     }
@@ -1525,7 +1526,10 @@ if (deviceViewButton && deviceList) {
     function restartAnimation(image) {
         const source = sourceFor(image);
         if (!source || image.hidden) return;
-        image.setAttribute('src', source + '#gaugeiq-animation-' + Date.now());
+        // Safari can leave an off-screen SVG's SMIL timeline suspended. A unique
+        // query value forces a new image document when it returns to the viewport.
+        const separator = source.includes('?') ? '&' : '?';
+        image.setAttribute('src', source + separator + '_gqanim=' + Date.now());
     }
 
     function isInViewport(image) {
