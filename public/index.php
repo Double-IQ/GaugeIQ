@@ -575,7 +575,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="forecast-preview-footer"><span>Tap to explore the full 7-day forecast</span><span aria-hidden="true">View details&nbsp; →</span></div>
     </a>
 
-    <a class="card satellite-map-card" href="https://zoom.earth/places/south-africa/" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map for South Africa on Zoom Earth in a new tab">
+    <a class="card satellite-map-card" href="https://zoom.earth/maps/precipitation/" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map for South Africa on Zoom Earth in a new tab">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
