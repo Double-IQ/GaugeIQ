@@ -575,7 +575,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="forecast-preview-footer"><span>Tap to explore the full 7-day forecast</span><span aria-hidden="true">View details&nbsp; →</span></div>
     </a>
 
-    <a class="card satellite-map-card" href="https://zoom.earth/maps/precipitation/" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map for South Africa on Zoom Earth in a new tab">
+    <a class="card satellite-map-card" href="https://www.ventusky.com/?l=satellite" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map on Ventusky in a new tab">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
@@ -593,7 +593,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="satellite-map-card-footer">
             <span>Explore Weather Map</span>
-            <span class="satellite-map-external" aria-hidden="true">Opens Zoom Earth&nbsp; ↗</span>
+            <span class="satellite-map-external" aria-hidden="true">Opens Ventusky&nbsp; ↗</span>
         </div>
     </a>
 
