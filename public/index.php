@@ -577,7 +577,6 @@ if ($current && !empty($current['observed_at'])) {
                             <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
                         </radialGradient>
                     </defs>
-                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
                     <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
                             <?php for ($segment = 0; $segment < 120; $segment++):
                                 $segmentAngle = ($segment * 3.0) - 90.0;
@@ -635,7 +634,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <circle class="wind-center-glass-overlay" cx="50" cy="50" r="18.5"></circle>
+                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
                 </svg>
                 <div class="wind-gauge-center">
                     <small class="wind-unit-readout">km/h</small>
