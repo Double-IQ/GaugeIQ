@@ -421,6 +421,10 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-card:has(.weather-change-score[data-level="low"]){border-color:#ef4444}
 .weather-change-card:has(.weather-change-score[data-level="moderate"]){border-color:#f59e0b}
 .weather-change-card:has(.weather-change-score[data-level="high"]){border-color:#22c55e}
+.temperature-summary-card:has(#temperatureStabilitySummary[data-level="low"]){border-color:#ef4444}
+.temperature-summary-card:has(#temperatureStabilitySummary[data-level="moderate"]){border-color:#f59e0b}
+.temperature-summary-card:has(#temperatureStabilitySummary[data-level="high"]){border-color:#22c55e}
+
 
 .wind-summary-line{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:2px;font-size:14px;font-weight:400;color:var(--muted)}
 .wind-summary-line strong{color:var(--text);font-weight:900}
