@@ -89,7 +89,7 @@ $formatHour = static function (?string $time): string {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261017-seven-day-forecast">
+<link rel="stylesheet" href="css/app.css?v=20261017-notification-forecast">
 <title>7-day forecast · GaugeIQ</title>
 </head>
 <body>
