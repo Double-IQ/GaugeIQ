@@ -772,7 +772,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .forecast-preview-card{display:block;margin-top:16px;color:var(--text);text-decoration:none;cursor:pointer;transition:border-color .15s ease,transform .15s ease}
 .forecast-preview-card:hover{border-color:var(--accent);transform:translateY(-1px)}
 .forecast-preview-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.forecast-preview-heading{align-items:center}
+.forecast-preview-heading{align-items:flex-start;justify-content:flex-start;text-align:left}
+.forecast-preview-heading>div{width:100%;margin:0;text-align:left}
+.forecast-preview-heading .label{display:block;width:100%;margin:0;text-align:left!important}
 .forecast-preview-heading h2{font-size:22px}
 
 .forecast-preview-days{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
