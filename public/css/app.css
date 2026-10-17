@@ -212,8 +212,8 @@ button:disabled { opacity: .55; cursor: default; }
 /* The SVG needle uses rotate(angle 50 50) in viewBox units.
    Do not override its origin in CSS pixels; that offsets the needle when rotated. */
 .wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding:1px 0 0}
-.wind-gauge-center .wind-heading-readout{font-size:clamp(17px,4.6vw,25px);line-height:1;letter-spacing:-.045em;color:var(--text);font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
-.wind-gauge-center .wind-speed-readout{font-size:9px;line-height:1.2;font-weight:750;color:var(--muted);margin-top:7px;letter-spacing:.01em;white-space:nowrap}
+.wind-gauge-center .wind-speed-readout{font-size:clamp(15px,4vw,21px);line-height:1.05;letter-spacing:-.035em;color:var(--text);font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wind-gauge-center .wind-heading-readout{font-size:clamp(9px,2.5vw,12px);line-height:1.2;font-weight:750;color:var(--muted);margin-top:5px;letter-spacing:.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
 @media(max-width:700px){.wind-gauge-card{padding:18px}.wind-gauge{width:min(100%,350px)}}
 
 
