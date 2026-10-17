@@ -575,7 +575,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="forecast-preview-footer"><span>Tap to explore the full 7-day forecast</span><span aria-hidden="true">View details&nbsp; →</span></div>
     </a>
 
-    <a class="card satellite-map-card" href="https://www.ventusky.com/?l=satellite" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map on Ventusky in a new tab">
+    <a class="card satellite-map-card" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Open-Meteo interactive weather maps in a new tab">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
@@ -586,14 +586,14 @@ if ($current && !empty($current['observed_at'])) {
                 </svg>
             </div>
             <div class="satellite-map-copy">
-                <h2>Satellite &amp; Radar</h2>
-                <p class="muted">Track cloud systems, rainfall and approaching weather.</p>
+                <h2>Interactive Weather Maps</h2>
+                <p class="muted">Explore weather-model maps for temperature, wind and precipitation.</p>
             </div>
             <span class="satellite-map-arrow" aria-hidden="true">↗</span>
         </div>
         <div class="satellite-map-card-footer">
             <span>Explore Weather Map</span>
-            <span class="satellite-map-external" aria-hidden="true">Opens Ventusky&nbsp; ↗</span>
+            <span class="satellite-map-external" aria-hidden="true">Opens Open-Meteo&nbsp; ↗</span>
         </div>
     </a>
 
