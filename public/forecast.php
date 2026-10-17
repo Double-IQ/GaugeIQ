@@ -41,10 +41,19 @@ if ($latest) {
     $forecast = is_array($decoded) ? $decoded : [];
 }
 $today = (new DateTimeImmutable('now', new DateTimeZone($timezoneName)))->format('Y-m-d');
+$fromDailyAlert = ($_GET['from'] ?? '') === 'daily-alert';
+$requestedDate = isset($_GET['date']) && is_string($_GET['date']) && preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $_GET['date'])
+    ? $_GET['date']
+    : $today;
 $forecast = array_values(array_filter($forecast, static fn($day): bool =>
     is_array($day) && is_string($day['date'] ?? null) && $day['date'] >= $today
 ));
 $forecast = array_slice($forecast, 0, 7);
+$forecastDates = array_column($forecast, 'date');
+$highlightDate = in_array($requestedDate, $forecastDates, true) ? $requestedDate : $today;
+if (!in_array($highlightDate, $forecastDates, true) && $forecast !== []) {
+    $highlightDate = (string)$forecast[0]['date'];
+}
 
 $condition = static function (?int $code, bool $isDay = true): array {
     $clearIcon = $isDay ? 'clear-day' : 'clear-night';
@@ -88,15 +97,23 @@ $formatHour = static function (?string $time): string {
     <header class="forecast-detail-header">
         <div>
             <p class="eyebrow">GAUGEIQ WEATHER</p>
-            <h1>7-day forecast</h1>
+            <h1><?= $fromDailyAlert ? 'Your daily forecast' : '7-day forecast' ?></h1>
             <p class="muted forecast-location"><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></p>
         </div>
         <a class="secondary forecast-back-link" href="index.php">← Dashboard</a>
     </header>
 
-    <section class="card forecast-detail-intro">
-        <h2>Weather for the week ahead</h2>
-        <p class="muted">Daily outlooks and hourly conditions, including temperature, rain, wind, humidity, cloud cover, UV and visibility.</p>
+    <section class="card forecast-detail-intro<?= $fromDailyAlert ? ' forecast-from-notification' : '' ?>">
+        <?php if ($fromDailyAlert): ?>
+            <div class="forecast-notification-banner">
+                <span class="forecast-notification-kicker">YOUR DAILY WEATHER ALERT</span>
+                <h2>Here’s the forecast behind your notification</h2>
+                <p>Explore today's conditions, the hours ahead and the details that matter for planning your day.</p>
+            </div>
+        <?php else: ?>
+            <h2>Weather for the week ahead</h2>
+            <p class="muted">Daily outlooks and hourly conditions, including temperature, rain, wind, humidity, cloud cover, UV and visibility.</p>
+        <?php endif; ?>
         <?php if (!empty($latest['observed_at'])): ?>
             <p class="forecast-data-time">Forecast last saved with the weather update at <?= htmlspecialchars(date('d M Y, H:i', strtotime((string)$latest['observed_at'])), ENT_QUOTES, 'UTF-8') ?>.</p>
         <?php endif; ?>
@@ -113,7 +130,7 @@ $formatHour = static function (?string $time): string {
             $dailyCondition = $condition(isset($day['weather_code']) && is_numeric($day['weather_code']) ? (int)$day['weather_code'] : null);
             $hours = is_array($day['hours'] ?? null) ? $day['hours'] : [];
         ?>
-            <details class="card forecast-detail-day" <?= $index === 0 ? 'open' : '' ?>>
+            <details class="card forecast-detail-day<?= $fromDailyAlert && (string)$day['date'] === $highlightDate ? ' forecast-alert-focus' : '' ?>" <?= ($index === 0 && !$fromDailyAlert) || ($fromDailyAlert && (string)$day['date'] === $highlightDate) ? 'open' : '' ?>>
                 <summary>
                     <div class="forecast-detail-summary-main">
                         <span class="forecast-detail-date"><?= htmlspecialchars($date->format('l, j M'), ENT_QUOTES, 'UTF-8') ?></span>
