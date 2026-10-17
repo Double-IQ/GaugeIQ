@@ -881,3 +881,6 @@ body.gaugeiq-menu-open{overflow:hidden}
   .satellite-map-arrow{flex-basis:32px;width:32px;height:32px;font-size:21px}
   .satellite-map-card-footer{align-items:flex-start;flex-direction:column;gap:6px}
 }
+
+/* Keep the wind-speed unit above the readout, matching the heading below. */
+.wind-gauge-center .wind-unit-readout{position:absolute;top:calc(50% - 24px);left:50%;transform:translate(-50%,-100%);font-size:clamp(9px,2.5vw,12px);line-height:1.2;font-weight:750;color:var(--muted);margin:0;letter-spacing:.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
