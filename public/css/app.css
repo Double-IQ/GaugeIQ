@@ -774,7 +774,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .forecast-preview-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .forecast-preview-heading{align-items:center}
 .forecast-preview-heading h2{font-size:22px}
-.forecast-preview-arrow{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border:1px solid var(--border);border-radius:50%;background:var(--surface);font-size:23px;font-weight:800}
+
 .forecast-preview-days{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
 .forecast-preview-days .forecast-day{min-height:138px}
 .forecast-preview-days .forecast-icon img{display:block;width:46px;height:46px;object-fit:contain}
