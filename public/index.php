@@ -637,6 +637,7 @@ if ($current && !empty($current['observed_at'])) {
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                 </svg>
                 <div class="wind-gauge-center">
+                    <small class="wind-unit-readout">km/h</small>
                     <strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) : '—' ?></strong>
                     <small class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : 'Wind data unavailable' ?></small>
                 </div>
