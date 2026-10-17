@@ -1116,7 +1116,7 @@ async function loadWeatherChange() {
             if (summaryDetail.textContent) {
                 summaryElement.append(document.createTextNode(' · '), summaryDetail);
             }
-            const level = volatilityScore >= 7 ? 'low' : volatilityScore >= 4 ? 'moderate' : 'high';
+            const level = volatilityScore >= 7 ? 'low' : volatilityScore >= 6 ? 'moderate' : 'high';
             const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
             if (topStabilityLabel) {
                 const stabilitySummaryElement = document.getElementById('temperatureStabilitySummary');
