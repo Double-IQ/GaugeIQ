@@ -842,3 +842,14 @@ body.gaugeiq-menu-open{overflow:hidden}
   .forecast-detail-content{padding:0 12px 14px}
   .forecast-detail-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Daily notification opens the forecast with a focused, welcoming context */
+.forecast-from-notification{position:relative;overflow:hidden}
+.forecast-notification-banner{position:relative;padding:5px 0 3px 18px}
+.forecast-notification-banner:before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:4px;border-radius:8px;background:var(--accent)}
+.forecast-notification-kicker{display:inline-block;margin-bottom:9px;color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.12em}
+.forecast-notification-banner h2{margin:0;font-size:clamp(20px,4vw,26px);line-height:1.2}
+.forecast-notification-banner p{margin:9px 0 0;color:var(--muted);font-size:14px;line-height:1.55}
+.forecast-alert-focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.forecast-alert-focus>summary{background:color-mix(in srgb,var(--accent) 7%,transparent)}
