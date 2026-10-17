@@ -635,6 +635,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
+                    <circle class="wind-center-glass-overlay" cx="50" cy="50" r="18.5"></circle>
                 </svg>
                 <div class="wind-gauge-center">
                     <small class="wind-unit-readout">km/h</small>
