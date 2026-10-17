@@ -541,27 +541,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <a class="card satellite-map-card" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Open-Meteo interactive weather maps in a new tab">
-        <div class="satellite-map-card-main">
-            <div class="satellite-map-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" focusable="false">
-                    <circle cx="24" cy="24" r="8"></circle>
-                    <path d="M18 18 10 10M30 18l8-8M18 30l-8 8M30 30l8 8"></path>
-                    <path d="M7 7l7 1-1 7M41 7l-7 1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
-                    <path d="M21 21h6v6h-6z"></path>
-                </svg>
-            </div>
-            <div class="satellite-map-copy">
-                <h2>Interactive Weather Maps</h2>
-                <p class="muted">Explore weather-model maps for temperature, wind and precipitation.</p>
-            </div>
-            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
-        </div>
-        <div class="satellite-map-card-footer">
-            <span>Explore Weather Map</span>
-            <span class="satellite-map-external" aria-hidden="true">Opens Open-Meteo&nbsp; ↗</span>
-        </div>
-    </a>
+
 
     <section class="measurement-grid">
 
@@ -698,6 +678,49 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="forecast-preview-footer"><span aria-hidden="true">View details&nbsp; →</span></div>
     </a>
+
+    <a class="card satellite-map-card" href="satellite.php" aria-label="Open the MeteoSat-12 satellite stream in GaugeIQ">
+        <div class="satellite-map-card-main">
+            <div class="satellite-map-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false">
+                    <circle cx="24" cy="24" r="15"></circle>
+                    <path d="M9 24h30M24 9c5 5 7 10 7 15s-2 10-7 15M24 9c-5 5-7 10-7 15s2 10 7 15M13 14c3 3 7 4 11 4s8-1 11-4M13 34c3-3 7-4 11-4s8 1 11 4"></path>
+                    <path d="M6 6l7 2-2 7M42 42l-7-2 2-7"></path>
+                </svg>
+            </div>
+            <div class="satellite-map-copy">
+                <h2 id="satelliteTitle">MeteoSat-12</h2>
+                <p class="muted">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
+            </div>
+            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
+        </div>
+        <div class="satellite-map-card-footer">
+            <span>View Satellite Stream</span>
+            <span class="satellite-map-external">Embedded player in GaugeIQ</span>
+        </div>
+    </a>
+
+    <a class="card satellite-map-card" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Open-Meteo interactive weather maps in a new tab">
+        <div class="satellite-map-card-main">
+            <div class="satellite-map-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false">
+                    <circle cx="24" cy="24" r="8"></circle>
+                    <path d="M18 18 10 10M30 18l8-8M18 30l-8 8M30 30l8 8"></path>
+                    <path d="M7 7l7 1-1 7M41 7l-7 1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
+                    <path d="M21 21h6v6h-6z"></path>
+                </svg>
+            </div>
+            <div class="satellite-map-copy">
+                <h2>Interactive Weather Maps</h2>
+                <p class="muted">Explore weather-model maps for temperature, wind and precipitation.</p>
+            </div>
+            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
+        </div>
+        <div class="satellite-map-card-footer">
+            <span>Explore Weather Map</span>
+            <span class="satellite-map-external" aria-hidden="true">Opens Open-Meteo&nbsp; ↗</span>
+        </div>
+    </a>
     </section>
 
 
@@ -772,26 +795,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
 
-    <a class="card satellite-map-card" href="satellite.php" aria-label="Open the MeteoSat-12 satellite stream in GaugeIQ">
-        <div class="satellite-map-card-main">
-            <div class="satellite-map-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" focusable="false">
-                    <circle cx="24" cy="24" r="15"></circle>
-                    <path d="M9 24h30M24 9c5 5 7 10 7 15s-2 10-7 15M24 9c-5 5-7 10-7 15s2 10 7 15M13 14c3 3 7 4 11 4s8-1 11-4M13 34c3-3 7-4 11-4s8 1 11 4"></path>
-                    <path d="M6 6l7 2-2 7M42 42l-7-2 2-7"></path>
-                </svg>
-            </div>
-            <div class="satellite-map-copy">
-                <h2 id="satelliteTitle">MeteoSat-12</h2>
-                <p class="muted">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
-            </div>
-            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
-        </div>
-        <div class="satellite-map-card-footer">
-            <span>View Satellite Stream</span>
-            <span class="satellite-map-external">Embedded player in GaugeIQ</span>
-        </div>
-    </a>
+
 
 
 
