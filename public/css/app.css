@@ -209,6 +209,8 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-direction-to-marker{fill:#facc15;stroke:#facc15;stroke-width:.4px}
 .wind-compass-labels .minor{font-size:3.2px}
 .wind-center{fill:var(--card);stroke:var(--border);stroke-width:1}
+.wind-center-glass-overlay{fill:url(#windCompassGlass);stroke:rgba(255,255,255,.2);stroke-width:.7;opacity:.72;pointer-events:none}
+:root[data-theme="dark"] .wind-center-glass-overlay{stroke:rgba(255,255,255,.16)}
 /* The SVG needle uses rotate(angle 50 50) in viewBox units.
    Do not override its origin in CSS pixels; that offsets the needle when rotated. */
 .wind-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding:1px 0 0}
