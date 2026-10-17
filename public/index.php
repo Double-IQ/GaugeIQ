@@ -540,7 +540,7 @@ if ($current && !empty($current['observed_at'])) {
     <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
         <div class="section-heading forecast-preview-heading">
             <div>
-                <h2>A quick look at the days ahead</h2>
+                <p class="label">A quick look at the days ahead</p>
             </div>
             <span class="forecast-preview-arrow" aria-hidden="true">↗</span>
         </div>
