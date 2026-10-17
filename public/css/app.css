@@ -292,7 +292,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-feels-like-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:nowrap}.temperature-summary-current span{font-size:12px;font-weight:700;color:var(--muted)}
 .temperature-feels-like-below{margin-top:-12px;padding-top:0;justify-content:flex-start;line-height:1}.temperature-feels-like-below>span{display:block;font-size:12px;font-weight:700;color:var(--muted);line-height:1}
 .temperature-summary-forecast{display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateY(-30px);margin-bottom:-30px}.temperature-summary-forecast-details{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.temperature-summary-forecast .temperature-conditions-inline{margin-left:0;text-align:center}
-.temperature-forecast-icon{display:grid;place-items:center;width:64px;height:64px;margin-top:0;font-size:48px;line-height:1}
+.temperature-forecast-icon{display:grid;place-items:center;width:64px;height:64px;margin-top:0;font-size:48px;line-height:1;transform:translateY(-8px)}
 .temperature-forecast-icon img{display:block;width:64px;height:64px;object-fit:contain}
 .temperature-forecast-icon img[hidden]{display:none}
 .temperature-summary-range{display:flex;align-items:center;gap:14px}
@@ -418,6 +418,9 @@ button:disabled { opacity: .55; cursor: default; }
 .weather-change-score[data-level="low"]{border-color:#ef4444;color:#dc2626}
 .weather-change-score[data-level="moderate"]{border-color:#f59e0b;color:#b45309}
 .weather-change-score[data-level="high"]{border-color:#22c55e;color:#15803d}
+.weather-change-card:has(.weather-change-score[data-level="low"]){border-color:#ef4444}
+.weather-change-card:has(.weather-change-score[data-level="moderate"]){border-color:#f59e0b}
+.weather-change-card:has(.weather-change-score[data-level="high"]){border-color:#22c55e}
 
 .wind-summary-line{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:2px;font-size:14px;font-weight:400;color:var(--muted)}
 .wind-summary-line strong{color:var(--text);font-weight:900}
