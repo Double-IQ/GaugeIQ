@@ -17,7 +17,7 @@ final class PushService
         return $this->sendDetailed($title, $body)['sent'];
     }
 
-    public function sendDetailed(string $title, string $body): array
+    public function sendDetailed(string $title, string $body, ?string $url = null): array
     {
         $publicKey = trim((string)$this->config['push']['public_key']);
         $privateKey = trim((string)$this->config['push']['private_key']);
@@ -38,7 +38,7 @@ final class PushService
         $payload = json_encode([
             'title' => $title,
             'body' => $body,
-            'url' => rtrim((string)$this->config['app']['base_url'], '/') . '/',
+            'url' => $url ?? (rtrim((string)$this->config['app']['base_url'], '/') . '/'),
         ], JSON_THROW_ON_ERROR);
 
         $subscriptions = $this->db->query(
