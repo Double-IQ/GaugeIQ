@@ -795,22 +795,26 @@ if ($current && !empty($current['observed_at'])) {
         <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
 
-    <section class="card satellite-card" aria-labelledby="satelliteTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="satelliteTitle">MeteoSat-12</h2>
-                <p class="muted">Updated every 10 minutes</p>
+    <a class="card satellite-map-card" href="https://www.youtube.com/watch?v=U3jRSL3y8Vc" target="_blank" rel="noopener noreferrer" aria-label="Open EUMETSAT's Meteosat-12 Africa satellite stream in a new tab">
+        <div class="satellite-map-card-main">
+            <div class="satellite-map-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false">
+                    <circle cx="24" cy="24" r="15"></circle>
+                    <path d="M9 24h30M24 9c5 5 7 10 7 15s-2 10-7 15M24 9c-5 5-7 10-7 15s2 10 7 15M13 14c3 3 7 4 11 4s8-1 11-4M13 34c3-3 7-4 11-4s8 1 11 4"></path>
+                    <path d="M6 6l7 2-2 7M42 42l-7-2 2-7"></path>
+                </svg>
             </div>
+            <div class="satellite-map-copy">
+                <h2 id="satelliteTitle">MeteoSat-12</h2>
+                <p class="muted">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
+            </div>
+            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
         </div>
-        <div class="satellite-player">
-            <iframe
-                src="https://www.youtube.com/embed/U3jRSL3y8Vc?autoplay=1&mute=1&rel=0&playsinline=1&controls=1&enablejsapi=1"
-                title="EUMETSAT Earth view - Africa"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowfullscreen></iframe>
+        <div class="satellite-map-card-footer">
+            <span>View Satellite Stream</span>
+            <span class="satellite-map-external">Opens EUMETSAT on YouTube&nbsp; ↗</span>
         </div>
-        <p class="satellite-caption">Live Earth imagery from EUMETSAT's Meteosat-12 Africa stream.</p>
-    </section>
+    </a>
 
 
 
