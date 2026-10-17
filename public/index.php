@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261017-compass-speed-center">
+<link rel="stylesheet" href="css/app.css?v=20261017-compass-speed-centered">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -637,7 +637,7 @@ if ($current && !empty($current['observed_at'])) {
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
                 </svg>
                 <div class="wind-gauge-center">
-                    <strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) . ' km/h' : '—' ?></strong>
+                    <strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) : '—' ?></strong>
                     <small class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : 'Wind data unavailable' ?></small>
                 </div>
             </div>
