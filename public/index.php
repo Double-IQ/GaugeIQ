@@ -700,33 +700,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-<?php if ($rainProbabilityPercent === null || $rainProbabilityPercent >= 5): ?>
-    <section class="card rain-probability-card" aria-labelledby="rainProbabilityTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="rainProbabilityTitle">Rain probability</h2>
-                <p class="muted">Today's forecast maximum precipitation probability.</p>
-            </div>
-            <div class="rain-probability-score" id="rainProbabilityScore"><?= $rainProbabilityPercent !== null ? htmlspecialchars((string)$rainProbabilityPercent, ENT_QUOTES) . '%' : '—' ?></div>
-        </div>
-        <div class="rainfall-forecast-block">
-            <div class="rain-probability-meta">
-                <span>Expected rainfall today</span>
-                <strong><?= $rainForecastAvailable ? number_format($rainForecastMm, 1) : '—' ?> mm</strong>
-            </div>
-            <div class="insight-meter-track rainfall-forecast-track" role="progressbar" aria-label="Expected rainfall today" aria-valuemin="0" aria-valuemax="10" <?= $rainForecastAvailable ? 'aria-valuenow="' . number_format(min(10.0, $rainForecastMm), 1, '.', '') . '"' : 'aria-valuetext="Forecast rainfall unavailable"' ?> id="rainfallForecastTrack">
-                <div class="insight-meter-fill rain-meter-fill" id="rainfallForecastFill" data-meter-width="<?= number_format($rainForecastRatioPercent, 1, '.', '') ?>" data-meter-min-width="<?= $rainForecastAvailable && $rainForecastMm > 0 ? '2px' : '0' ?>"></div>
-            </div>
-            <p class="rainfall-forecast-scale muted">The full bar represents 10 mm or more of rain today.</p>
-        </div>
-        <details class="algorithm-details">
-            <summary>How this meter is calculated</summary>
-            <p><strong>Current method:</strong> use the provider's daily maximum precipitation probability directly (0–100%). Display the predicted daily rainfall amount separately in millimetres.</p>
-            <p><strong>Weights:</strong> forecast probability 100% of the displayed probability. Recent rain, humidity, dew point, pressure and cloud cover are not yet used to adjust the percentage; they will be supporting signals only after calibration against observed outcomes.</p>
-            <p><strong>Limitation:</strong> this is the forecast's daily maximum probability, not a calibrated GaugeIQ prediction for a particular hour. Forecast calibration needs saved forecast snapshots and later observations.</p>
-        </details>
-    </section>
-<?php endif; ?>
+
 
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading">
