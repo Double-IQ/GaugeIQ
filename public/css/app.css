@@ -779,7 +779,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 .forecast-preview-days{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
 .forecast-preview-days .forecast-day{min-height:138px}
-.forecast-preview-days .forecast-icon img{display:block;width:50px;height:50px;object-fit:contain}
+.forecast-preview-days .forecast-day{grid-template-rows:18px 60px 20px 16px}
+.forecast-preview-days .forecast-icon{display:grid;place-items:center;width:60px;height:60px;margin:0 auto}
+.forecast-preview-days .forecast-icon img{display:block;width:60px;height:60px;object-fit:contain;margin:0 auto}
 .forecast-preview-days .forecast-temperature{display:flex;align-items:baseline;gap:7px}
 .forecast-preview-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;font-weight:800}
 .forecast-preview-footer span:first-child{color:var(--muted);font-weight:700}
@@ -789,7 +791,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   .forecast-preview-card{padding:17px}
   .forecast-preview-days{gap:5px}
   .forecast-preview-days .forecast-day{min-height:126px;padding:9px 3px}
-  .forecast-preview-days .forecast-icon img{width:46px;height:46px}
+  .forecast-preview-days .forecast-day{grid-template-rows:18px 54px 20px 16px}
+  .forecast-preview-days .forecast-icon{width:54px;height:54px}
+  .forecast-preview-days .forecast-icon img{width:54px;height:54px}
   .forecast-preview-footer{align-items:flex-start;flex-direction:column;gap:6px}
 }
 
