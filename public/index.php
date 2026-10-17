@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261017-seven-day-forecast">
+<link rel="stylesheet" href="css/app.css?v=20261017-satellite-radar-card">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -573,6 +573,28 @@ if ($current && !empty($current['observed_at'])) {
             <?php endif; ?>
         </div>
         <div class="forecast-preview-footer"><span>Tap to explore the full 7-day forecast</span><span aria-hidden="true">View details&nbsp; →</span></div>
+    </a>
+
+    <a class="card satellite-map-card" href="https://zoom.earth/places/south-africa/" target="_blank" rel="noopener noreferrer" aria-label="Open the interactive satellite and weather map for South Africa on Zoom Earth in a new tab">
+        <div class="satellite-map-card-main">
+            <div class="satellite-map-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false">
+                    <circle cx="24" cy="24" r="8"></circle>
+                    <path d="M18 18 10 10M30 18l8-8M18 30l-8 8M30 30l8 8"></path>
+                    <path d="M7 7l7 1-1 7M41 7l-7 1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
+                    <path d="M21 21h6v6h-6z"></path>
+                </svg>
+            </div>
+            <div class="satellite-map-copy">
+                <h2>Satellite &amp; Radar</h2>
+                <p class="muted">Track cloud systems, rainfall and approaching weather.</p>
+            </div>
+            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
+        </div>
+        <div class="satellite-map-card-footer">
+            <span>Explore Weather Map</span>
+            <span class="satellite-map-external" aria-hidden="true">Opens Zoom Earth&nbsp; ↗</span>
+        </div>
     </a>
 
     <section class="measurement-grid">
