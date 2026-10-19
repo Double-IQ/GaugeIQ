@@ -1256,6 +1256,15 @@ async function loadWeatherChange() {
 
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
                 }).join('');
+            reasonsElement.insertAdjacentHTML('afterbegin',
+                '<div class="weather-change-reason"><span><strong>WVI calculation (50/50)</strong>: change score ' +
+                result.magnitudeScore.toFixed(1) + '/10 × 50% + gradient score ' + result.gradientScore.toFixed(1) +
+                '/10 × 50% = <strong>' + volatilityScore.toFixed(1) + '/10</strong></span></div>' +
+                result.gradientComponents
+                    .filter(component => Number.isFinite(component.severity) && component.severity > 0)
+                    .map(component => '<div class="weather-change-reason"><span><strong>Gradient · ' +
+                        component.label + '</strong>: ' + component.evidence + '</span></div>').join('')
+            );
             const stabilityRow = document.querySelector('.temperature-stability-row');
             const thresholdValue = stabilityRow?.dataset.weatherStabilityAlertThreshold;
             const alertThreshold = thresholdValue === undefined || thresholdValue === ''
