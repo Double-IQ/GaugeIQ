@@ -227,6 +227,41 @@ if ($current && !empty($current['observed_at'])) {
     $humidityZone = !$current ? 'Unavailable' : ($humidityPercent < 40 ? 'Dry' : ($humidityPercent < 60 ? 'Comfortable' : 'Humid'));
     $humidityZoneClass = !$current ? 'unavailable' : ($humidityPercent >= 75 ? 'humid-high' : strtolower(str_replace(' ', '-', $humidityZone)));
     $rainfallMm = $current ? max(0.0, (float)($current['rainfall_mm'] ?? 0.0)) : 0.0;
+    // Sum one stored Open-Meteo rainfall sample per hour over the latest 24 hours.
+    // Live refreshes can run every 30 minutes, so keep only the latest sample
+    // within each hour to avoid double-counting the same hourly period.
+    $rainfall24hMm = 0.0;
+    try {
+        if ($current && !empty($current['observed_at'])) {
+            $currentRainTimestamp = strtotime((string)$current['observed_at']);
+            if ($currentRainTimestamp !== false) {
+                $rainfallWindowStart = date('Y-m-d\\TH:i:s', $currentRainTimestamp - 86400);
+                $rainfallWindowEnd = date('Y-m-d\\TH:i:s', $currentRainTimestamp);
+                $rainfall24hStmt = $pdo->prepare(
+                    "SELECT rainfall_mm, observed_at
+                     FROM gaugeiq_pressure_readings
+                     WHERE observed_at > ? AND observed_at <= ?
+                       AND (source IS NULL OR source = 'Open-Meteo')
+                     ORDER BY observed_at ASC, id ASC"
+                );
+                $rainfall24hStmt->execute([$rainfallWindowStart, $rainfallWindowEnd]);
+                $hourlyRainfall = [];
+                foreach ($rainfall24hStmt->fetchAll() as $rainfallRow) {
+                    $rainTimestamp = strtotime((string)($rainfallRow['observed_at'] ?? ''));
+                    if ($rainTimestamp === false || !is_numeric($rainfallRow['rainfall_mm'] ?? null)) {
+                        continue;
+                    }
+                    $hourKey = date('Y-m-d H', $rainTimestamp);
+                    // Ordered ascending, so later samples replace earlier samples in the hour.
+                    $hourlyRainfall[$hourKey] = max(0.0, (float)$rainfallRow['rainfall_mm']);
+                }
+                $rainfall24hMm = array_sum($hourlyRainfall);
+            }
+        }
+    } catch (Throwable $e) {
+        // Keep the dashboard available if the optional rolling rainfall query fails.
+        $rainfall24hMm = $rainfallMm;
+    }
     $cloudCoverPercent = $current ? max(0.0, min(100.0, (float)($current['cloud_cover_percent'] ?? 0.0))) : 0.0;
     $pressureLow = isset($pressureHistory['pressure_low']) ? (float)$pressureHistory['pressure_low'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
     $pressureHigh = isset($pressureHistory['pressure_high']) ? (float)$pressureHistory['pressure_high'] : ($current ? (float)$current['pressure_hpa'] : 0.0);
@@ -484,7 +519,7 @@ if ($current && !empty($current['observed_at'])) {
 
     $dewBarRatio = max(0.0, min(1.0, $dewPointC / 40.0));
     $humidityBarRatio = $humidityPercent / 100.0;
-    $rainBarRatio = max(0.0, min(1.0, $rainfallMm / 10.0));
+    $rainBarRatio = max(0.0, min(1.0, $rainfall24hMm / 10.0));
     $cloudBarRatio = $cloudCoverPercent / 100.0;
     $makeClimateBar = static function (string $label, float $value, string $display, float $ratio, float $scale, ?float $delta, int $deltaDecimals = 0) use ($current): array {
         $deltaRatio = $delta === null ? 0.0 : min(1.0, abs($delta) / $scale);
@@ -503,8 +538,8 @@ if ($current && !empty($current['observed_at'])) {
         $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta),
         $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta),
     ];
-    if ($current && ($rainfallMm > 0.0 || ($rainDelta !== null && abs($rainDelta) > 0.0))) {
-        $climateBars[] = $makeClimateBar('Rainfall', $rainfallMm, number_format($rainfallMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, 2) + ['kind' => 'current-rain'];
+    if ($current && ($rainfall24hMm > 0.0 || ($rainDelta !== null && abs($rainDelta) > 0.0))) {
+        $climateBars[] = $makeClimateBar('Rainfall (24h)', $rainfall24hMm, number_format($rainfall24hMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, 2) + ['kind' => 'current-rain'];
     }
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
