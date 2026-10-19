@@ -775,6 +775,80 @@ function weatherFieldPair(readings, field) {
     return { first: first[field], last: last[field], delta: last[field] - first[field], hours };
 }
 
+function weatherGradientScore(valid) {
+    // Sum absolute movement between successive timestamped readings so reversals
+    // contribute to volatility even when the first and last values are similar.
+    const components = [];
+    const add = (key, label, severity, evidence) => {
+        if (!Number.isFinite(severity)) return;
+        components.push({
+            key, label, weight: WEATHER_CHANGE_WEIGHTS[key],
+            severity: Math.max(0, Math.min(1, severity)), evidence
+        });
+    };
+    const movement = field => {
+        const rows = valid.filter(row => Number.isFinite(row[field]));
+        if (rows.length < 2) return null;
+        let distance = 0;
+        for (let i = 1; i < rows.length; i++) distance += Math.abs(rows[i][field] - rows[i - 1][field]);
+        const hours = (rows[rows.length - 1].time - rows[0].time) / 3600000;
+        return hours > 0 ? { distance, hours, scaled: distance * 6 / hours } : null;
+    };
+
+    const pressure = movement('pressure');
+    if (pressure) add('pressure', 'Air pressure', weatherSeverity(pressure.distance / pressure.hours, weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)), 'cumulative movement ' + pressure.distance.toFixed(1) + ' hPa');
+    const definitions = [
+        ['temperature', 'Temperature', 'temperature', 1, 3, '°C'],
+        ['humidity', 'Humidity', 'humidity', 4, 12, ' percentage points'],
+        ['windSpeed', 'Wind speed', 'wind', 8, 20, ' km/h'],
+        ['rainfall', 'Rainfall', 'rain', 0.2, 2, ' mm'],
+        ['cloudCover', 'Cloud cover', 'cloud', 15, 50, ' percentage points']
+    ];
+    definitions.forEach(([key, label, field, trigger, max, unit]) => {
+        const item = movement(field);
+        if (item) add(key, label, weatherSeverity(item.scaled, weatherFormula('stability_trigger_' + ({
+            temperature: 'temperature', humidity: 'humidity', wind: 'wind_speed', rain: 'rainfall', cloud: 'cloud_cover'
+        }[field]), trigger), weatherFormula('stability_max_' + ({
+            temperature: 'temperature', humidity: 'humidity', wind: 'wind_speed', rain: 'rainfall', cloud: 'cloud_cover'
+        }[field]), max)), 'cumulative movement ' + item.distance.toFixed(1) + unit + ' (six-hour equivalent ' + item.scaled.toFixed(1) + unit + ')');
+    });
+
+    const directions = valid.filter(row => Number.isFinite(row.direction));
+    if (directions.length >= 2) {
+        let distance = 0;
+        for (let i = 1; i < directions.length; i++) distance += weatherCircularDifference(directions[i - 1].direction, directions[i].direction);
+        const hours = (directions[directions.length - 1].time - directions[0].time) / 3600000;
+        if (hours > 0) add('windDirection', 'Wind direction', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_wind_direction', 20), weatherFormula('stability_max_wind_direction', 90)), 'cumulative shortest-angle movement ' + Math.round(distance) + '°');
+    }
+
+    const spreads = valid.filter(row => Number.isFinite(row.temperature) && Number.isFinite(row.dewPoint))
+        .map(row => ({ time: row.time, value: row.temperature - row.dewPoint }));
+    if (spreads.length >= 2) {
+        let distance = 0;
+        for (let i = 1; i < spreads.length; i++) distance += Math.abs(spreads[i].value - spreads[i - 1].value);
+        const hours = (spreads[spreads.length - 1].time - spreads[0].time) / 3600000;
+        if (hours > 0) add('dewPointSpread', 'Temperature/dew-point gap', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_dew_point_spread', 1), weatherFormula('stability_max_dew_point_spread', 3)), 'cumulative gap movement ' + distance.toFixed(1) + '°C');
+    }
+
+    const codes = valid.filter(row => Number.isFinite(row.weatherCode));
+    if (codes.length >= 2) {
+        let distance = 0;
+        for (let i = 1; i < codes.length; i++) distance += Math.abs(weatherCodeSeverity(codes[i].weatherCode) - weatherCodeSeverity(codes[i - 1].weatherCode));
+        const hours = (codes[codes.length - 1].time - codes[0].time) / 3600000;
+        if (hours > 0) {
+            const scaled = distance * 6 / hours;
+            add('weatherCode', 'Reported weather condition', distance > 0 ? Math.max(0.25, weatherSeverity(scaled, weatherFormula('stability_trigger_weather_code', 1), weatherFormula('stability_max_weather_code', 5))) : 0, 'cumulative severity-category movement ' + distance.toFixed(1));
+        }
+    }
+
+    if (components.length < weatherFormula('stability_min_signals', 5)) return { score: null, components, coverage: components.length };
+    const availableWeight = components.reduce((sum, component) => sum + component.weight, 0);
+    const weightedSeverity = components.reduce((sum, component) => sum + component.weight * component.severity, 0);
+    const score = Math.round((10 * weightedSeverity / availableWeight) * 10) / 10;
+    components.forEach(component => { component.contribution = 10 * component.weight * component.severity / availableWeight; });
+    return { score, components, coverage: components.length, availableWeight, weightedSeverity };
+}
+
 function weatherChangeScore(readings) {
     const valid = weatherReadingsWindow(readings);
     if (valid.length < weatherFormula('stability_min_readings', 3)) {
@@ -876,10 +950,20 @@ function weatherChangeScore(readings) {
 
     const availableWeight = components.reduce((sum, component) => sum + component.weight, 0);
     const weightedSeverity = components.reduce((sum, component) => sum + component.weight * component.severity, 0);
-    const score = Math.round((10 * weightedSeverity / availableWeight) * 10) / 10;
+    const magnitudeScore = Math.round((10 * weightedSeverity / availableWeight) * 10) / 10;
     components.forEach(component => {
         component.contribution = 10 * component.weight * component.severity / availableWeight;
     });
+    const gradient = weatherGradientScore(valid);
+    if (!Number.isFinite(gradient.score)) {
+        return {
+            score: null,
+            summary: 'Insufficient valid signals to calculate the gradient score (' + gradient.coverage + '/9).',
+            components, gradientComponents: gradient.components, reasons: [], coverage: components.length
+        };
+    }
+    // Equal weighting keeps endpoint change and cumulative movement equally influential.
+    const score = Math.round(((magnitudeScore * 0.5) + (gradient.score * 0.5)) * 10) / 10;
 
     let summary;
     if (score < 2) summary = 'Stable · no material change detected';
@@ -889,7 +973,8 @@ function weatherChangeScore(readings) {
     else summary = 'Very significant change in recent conditions';
 
     return {
-        score, summary, components, coverage: components.length,
+        score, magnitudeScore, gradientScore: gradient.score, summary, components,
+        gradientComponents: gradient.components, coverage: components.length,
         availableWeight, weightedSeverity,
         reasons: components.filter(component => component.severity > 0)
             .sort((a, b) => b.contribution - a.contribution)
