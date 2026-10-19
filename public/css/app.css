@@ -373,17 +373,17 @@ button:disabled { opacity: .55; cursor: default; }
 
 .forecast-card{margin-top:16px}
 .forecast-days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;align-items:stretch}
-.forecast-day{min-width:0;display:grid;grid-template-rows:18px 42px 20px 16px;align-items:center;justify-items:center;gap:8px;padding:12px 6px;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-align:center}
+.forecast-day{min-width:0;display:grid;grid-template-rows:18px 108px 20px 16px;align-items:center;justify-items:center;gap:8px;padding:12px 6px;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-align:center}
 .forecast-day-name{font-size:12px;font-weight:900;color:var(--text);line-height:18px}
-.forecast-icon{display:grid;place-items:center;width:54px;height:54px;font-size:38px;line-height:1}
+.forecast-icon{display:grid;place-items:center;width:108px;height:108px;font-size:76px;line-height:1}
 .forecast-temperature{font-size:17px;line-height:20px;font-weight:900;color:var(--text);white-space:nowrap}
 .forecast-low{font-size:13px;font-weight:700;color:var(--muted)}
 .forecast-rain{font-size:11px;line-height:16px;font-weight:800;color:#2563eb;white-space:nowrap}
 .forecast-rain-empty{visibility:hidden}
 @media(max-width:560px){
   .forecast-days{gap:5px}
-  .forecast-day{grid-template-rows:18px 50px 20px 16px;padding:10px 3px;gap:6px}
-  .forecast-icon{width:48px;height:48px;font-size:34px}
+  .forecast-day{grid-template-rows:18px 96px 20px 16px;padding:10px 3px;gap:6px}
+  .forecast-icon{width:96px;height:96px;font-size:68px}
   .forecast-temperature{font-size:16px}
   .forecast-low{font-size:12px}
   .forecast-rain{font-size:10px}
