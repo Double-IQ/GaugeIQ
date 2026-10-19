@@ -169,8 +169,16 @@ $formatHour = static function (?string $time): string {
                                     <th>Time</th><th>Conditions</th><th>Temp.</th><th>Feels</th><th>Rain chance</th><th>Rain</th><th>Wind</th><th>Gusts</th><th>Direction</th><th>Humidity</th><th>Cloud</th><th>UV</th><th>Pressure</th><th>Visibility</th>
                                 </tr></thead>
                                 <tbody>
-                                <?php foreach ($hours as $hour):
+                                <?php
+                                $previousHourlyCondition = null;
+                                foreach ($hours as $hour):
                                     $hourCondition = $condition(isset($hour['weather_code']) && is_numeric($hour['weather_code']) ? (int)$hour['weather_code'] : null, !empty($hour['is_day']));
+                                    $currentHourlyCondition = (string)($hourCondition['label'] ?? 'Unavailable');
+                                    // Show the first hour of each condition run, not a repeated row for every unchanged hour.
+                                    if ($previousHourlyCondition === $currentHourlyCondition) {
+                                        continue;
+                                    }
+                                    $previousHourlyCondition = $currentHourlyCondition;
                                     $windDirection = is_numeric($hour['wind_direction_degrees'] ?? null) ? (int)round((float)$hour['wind_direction_degrees']) . '°' : '—';
                                     $visibility = is_numeric($hour['visibility_m'] ?? null) ? ((float)$hour['visibility_m'] >= 1000 ? number_format((float)$hour['visibility_m'] / 1000, 1) . ' km' : number_format((float)$hour['visibility_m'], 0) . ' m') : '—';
                                 ?>
