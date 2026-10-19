@@ -430,9 +430,8 @@ if ($current && !empty($current['observed_at'])) {
                     <p class="label">Air pressure</p>
                     <?php if ($current): ?>
                         <div class="pressure-readout-row">
-                            <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
                             <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
-                                <svg viewBox="0 16 100 50" aria-hidden="true" focusable="false">
+                                <svg viewBox="0 12 100 54" aria-hidden="true" focusable="false">
                                     <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                                     <g class="pressure-range-ticks">
                                         <?php for ($tick = 0; $tick <= 10; $tick++):
@@ -464,6 +463,7 @@ if ($current && !empty($current['observed_at'])) {
                                     <text x="14" y="63">L</text><text x="86" y="63">H</text>
                                 </svg>
                             </div>
+                            <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
                         </div>
                         <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
                             <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
