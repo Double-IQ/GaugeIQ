@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261019-wvi-gradient-5050">
+<link rel="stylesheet" href="css/app.css?v=20261019-wind-orange-30">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -619,7 +619,7 @@ if ($current && !empty($current['observed_at'])) {
                                 $segmentEnd = $windGaugePoint($segmentAngle, 47.8);
                                 $segmentActive = $current && $windSpeed >= (($segment + 1) / 2);
                             ?>
-                                <line class="<?= $segmentActive ? 'active' : '' ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
+                                <line class="<?= $segmentActive ? ('active' . ($windSpeed > 30.0 ? ' high-wind' : '')) : '' ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
                         <g class="wind-speed-scale-labels" aria-label="Wind speed scale labels in kilometres per hour">
