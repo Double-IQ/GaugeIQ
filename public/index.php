@@ -449,9 +449,17 @@ if ($current && !empty($current['observed_at'])) {
                                                   x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                         <?php endfor; ?>
                                     </g>
-                                    <line class="pressure-range-needle" x1="50" y1="55"
-                                          x2="<?= number_format(50 + cos(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"
-                                          y2="<?= number_format(55 + sin(deg2rad(180 + $pressureRatio * 180)) * 28, 3, '.', '') ?>"></line>
+                                    <?php
+                                    $needleAngle = deg2rad(180 + $pressureRatio * 180);
+                                    $needleTipX = 50 + cos($needleAngle) * 29;
+                                    $needleTipY = 55 + sin($needleAngle) * 29;
+                                    $needleBaseX = 50 + cos($needleAngle) * 5;
+                                    $needleBaseY = 55 + sin($needleAngle) * 5;
+                                    $needleHalfWidth = 1.7;
+                                    $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
+                                    $needlePerpY = cos($needleAngle) * $needleHalfWidth;
+                                    ?>
+                                    <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                     <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
                                     <text x="14" y="63">L</text><text x="86" y="63">H</text>
                                 </svg>
