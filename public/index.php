@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261020-pressure-gauge-needle">
+<link rel="stylesheet" href="css/app.css?v=20261020-pressure-card-showcase">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -425,55 +425,76 @@ if ($current && !empty($current['observed_at'])) {
 
 
         <article class="card metric-card pressure-card">
-            <div class="pressure-card-heading">
-                <div>
+            <div class="pressure-card-title-row">
+                <div class="pressure-card-title">
+                    <img src="/branding/icon-192.png" alt="" width="42" height="42">
                     <p class="label">Air pressure</p>
-                    <?php if ($current): ?>
-                        <div class="pressure-readout-row">
-                            <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
-                                <svg viewBox="0 12 100 54" aria-hidden="true" focusable="false">
-                                    <defs><linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient><linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient></defs>
-                                    <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
-                                    <g class="pressure-range-ticks">
-                                        <?php for ($tick = 0; $tick <= 10; $tick++):
-                                            $tickRatio = $tick / 10.0;
-                                            $tickAngle = 180.0 + ($tickRatio * 180.0);
-                                            $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 33;
-                                            $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 33;
-                                            $tickInnerRadius = $tick % 2 === 0 ? 27.5 : 29.5;
-                                            $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
-                                            $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
-                                        ?>
-                                            <line class="<?= $tick % 2 === 0 ? 'major' : '' ?>"
-                                                  x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>"
-                                                  x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
-                                        <?php endfor; ?>
-                                    </g>
-                                    <?php
-                                    $needleAngle = deg2rad(180 + $pressureRatio * 180);
-                                    $needleTipX = 50 + cos($needleAngle) * 29;
-                                    $needleTipY = 55 + sin($needleAngle) * 29;
-                                    $needleBaseX = 50 + cos($needleAngle) * 5;
-                                    $needleBaseY = 55 + sin($needleAngle) * 5;
-                                    $needleHalfWidth = 2.15;
-                                    $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
-                                    $needlePerpY = cos($needleAngle) * $needleHalfWidth;
-                                    ?>
-                                    <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
-                                    <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.8"></circle>
-                                    <circle class="pressure-range-hub" cx="50" cy="55" r="2.15"></circle>
-                                    <text x="14" y="63">L</text><text x="86" y="63">H</text>
-                                </svg>
-                            </div>
-                            <div class="metric-value"><?= number_format($current['pressure_hpa'], 1) ?><span> hPa</span></div>
-                        </div>
-                        <div class="metric-trend <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
-                            <?= $change > 0 ? '↑ Rising' : ($change < 0 ? '↓ Falling' : '→ Stable') ?>
-                            <?php if ($latest): ?><strong><?= $change > 0 ? '+' : '' ?><?= number_format($change, 1) ?> hPa<?= abs($change) > 0.000001 ? '/Hr' : '' ?></strong><?php endif; ?>
-                        </div>
-                    <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
                 </div>
-       </div>
+                <span class="pressure-unit-pill">hPa</span>
+            </div>
+            <?php if ($current): ?>
+                <div class="pressure-showcase">
+                    <div class="pressure-dial-column">
+                        <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
+                            <svg viewBox="0 0 100 82" aria-hidden="true" focusable="false">
+                                <defs>
+                                    <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
+                                    <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
+                                </defs>
+                                <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
+                                <g class="pressure-range-ticks">
+                                    <?php for ($tick = 0; $tick <= 20; $tick++):
+                                        $tickAngle = 180.0 + (($tick / 20.0) * 180.0);
+                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
+                                        $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
+                                        $tickInnerRadius = $tick % 4 === 0 ? 27.5 : ($tick % 2 === 0 ? 29 : 30);
+                                        $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
+                                        $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
+                                    ?>
+                                        <line class="<?= $tick % 4 === 0 ? 'major' : '' ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                    <?php endfor; ?>
+                                </g>
+                                <?php
+                                $needleAngle = deg2rad(180 + $pressureRatio * 180);
+                                $needleTipX = 50 + cos($needleAngle) * 26.5;
+                                $needleTipY = 55 + sin($needleAngle) * 26.5;
+                                $needleBaseX = 50 + cos($needleAngle) * 4.5;
+                                $needleBaseY = 55 + sin($needleAngle) * 4.5;
+                                $needleHalfWidth = 2.0;
+                                $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
+                                $needlePerpY = cos($needleAngle) * $needleHalfWidth;
+                                ?>
+                                <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
+                                <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
+                                <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
+                                <text class="pressure-scale-label" x="25" y="48">980</text>
+                                <text class="pressure-scale-label" x="50" y="30">1010</text>
+                                <text class="pressure-scale-label" x="75" y="48">1040</text>
+                                <text class="pressure-scale-end" x="25" y="69">950</text>
+                                <text class="pressure-scale-end" x="75" y="69">1070</text>
+                            </svg>
+                        </div>
+                        <div class="pressure-showcase-value"><?= number_format((float)$current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                    </div>
+                    <div class="pressure-insights">
+                        <div class="pressure-change-block">
+                            <p class="pressure-insight-label">Change (Last Hour)</p>
+                            <div class="pressure-change-value <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>"><?= $change > 0 ? '+' : '' ?><?= number_format($change, 1) ?><span> hPa</span></div>
+                        </div>
+                        <div class="pressure-trend-block">
+                            <p class="pressure-insight-label">Trend</p>
+                            <div class="pressure-trend-value <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
+                                <span aria-hidden="true"><?= $change > 0 ? '↑' : ($change < 0 ? '↓' : '→') ?></span>
+                                <?= $change > 0 ? 'Rising' : ($change < 0 ? 'Falling' : 'Stable') ?>
+                            </div>
+                            <svg class="pressure-sparkline <?= $change < 0 ? 'falling' : '' ?>" viewBox="0 0 240 56" preserveAspectRatio="none" aria-hidden="true">
+                                <path class="pressure-sparkline-fill" d="<?= $change < 0 ? 'M0 8 L24 13 L48 12 L72 22 L96 20 L120 31 L144 28 L168 39 L192 40 L216 48 L240 52 L240 56 L0 56 Z' : ($change > 0 ? 'M0 50 L24 44 L48 45 L72 34 L96 36 L120 27 L144 28 L168 18 L192 17 L216 9 L240 3 L240 56 L0 56 Z' : 'M0 29 L24 28 L48 30 L72 27 L96 29 L120 28 L144 30 L168 27 L192 29 L216 28 L240 29 L240 56 L0 56 Z') ?>"></path>
+                                <path class="pressure-sparkline-line" d="<?= $change < 0 ? 'M0 8 L24 13 L48 12 L72 22 L96 20 L120 31 L144 28 L168 39 L192 40 L216 48 L240 52' : ($change > 0 ? 'M0 50 L24 44 L48 45 L72 34 L96 36 L120 27 L144 28 L168 18 L192 17 L216 9 L240 3' : 'M0 29 L24 28 L48 30 L72 27 L96 29 L120 28 L144 30 L168 27 L192 29 L216 28 L240 29') ?>"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            <?php else: ?><div class="metric-unavailable">Pressure data unavailable</div><?php endif; ?>
         </article>
 
     <?php
