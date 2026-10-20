@@ -899,3 +899,61 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Keep the wind-speed unit above the readout, matching the heading below. */
 .wind-gauge-center .wind-unit-readout{position:absolute;top:calc(50% - 24px);left:50%;transform:translate(-50%,-100%);font-size:clamp(9px,2.5vw,12px);line-height:1.2;font-weight:750;color:var(--muted);margin:0;letter-spacing:.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+
+/* Pressure card showcase: primary GaugeIQ instrument */
+.pressure-card{position:relative;padding:24px 26px 22px;overflow:hidden;background:radial-gradient(ellipse at 18% 45%,rgba(14,165,233,.12),transparent 48%),linear-gradient(135deg,#07182c 0%,#0a1b32 58%,#06152a 100%);border:1px solid #173d68;border-radius:22px;box-shadow:0 14px 42px rgba(2,8,23,.22),inset 0 1px 0 rgba(125,211,252,.08);color:#f3f7ff}
+.pressure-card .label{color:#e7f1ff}
+.pressure-card-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pressure-card-title{display:flex;align-items:center;gap:12px;min-width:0}
+.pressure-card-title img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(14,165,233,.18))}
+.pressure-card-title .label{font-size:clamp(21px,3.5vw,27px);font-weight:800;letter-spacing:-.035em;margin:0}
+.pressure-unit-pill{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:8px 16px;border-radius:999px;background:rgba(30,64,112,.55);color:#dceaff;font-weight:750;font-size:17px}
+.pressure-showcase{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);align-items:center;gap:24px}
+.pressure-dial-column{min-width:0;text-align:center}
+.pressure-range-gauge{width:100%;max-width:340px;margin:0 auto}
+.pressure-range-gauge svg{display:block;width:100%;height:auto;aspect-ratio:100/82;overflow:visible}
+.pressure-range-track{fill:none;stroke:url(#pressureArcGradient);stroke-linecap:round;stroke-width:4.7;filter:drop-shadow(0 0 2px rgba(14,165,233,.35))}
+.pressure-range-ticks{stroke:#355a88;stroke-width:1.05;stroke-linecap:round}
+.pressure-range-ticks line.major{stroke:#22d3ee;stroke-width:1.65}
+.pressure-range-needle{fill:url(#pressureNeedleGradient);stroke:#b6f36b;stroke-width:.16;stroke-linejoin:miter;stroke-miterlimit:2;filter:drop-shadow(0 0 1.8px rgba(163,230,53,.45))}
+.pressure-range-hub-outer{fill:#0ea5e9;stroke:#22d3ee;stroke-width:.6}
+.pressure-range-hub{fill:#22d3ee;stroke:#061648;stroke-width:.7}
+.pressure-range-gauge text{font-size:5.4px;font-weight:750;fill:#9db9e2;text-anchor:middle}
+.pressure-range-gauge text.pressure-scale-end{font-size:5px;fill:#9db9e2}
+.pressure-showcase-value{font-size:clamp(34px,6vw,48px);font-weight:850;letter-spacing:-.055em;line-height:1;margin-top:-5px;color:#f5f8ff}
+.pressure-showcase-value span{font-size:16px;font-weight:650;letter-spacing:0;color:#9db9e2}
+.pressure-insights{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.pressure-change-block{padding:2px 0 18px;border-bottom:1px solid rgba(66,107,158,.48)}
+.pressure-insight-label{font-size:clamp(13px,2vw,16px);font-weight:650;color:#9db9e2;margin:0 0 8px}
+.pressure-change-value{font-size:clamp(38px,7vw,56px);font-weight:850;letter-spacing:-.055em;line-height:1.06;white-space:nowrap}
+.pressure-change-value span{font-size:clamp(15px,2.4vw,21px);letter-spacing:0;font-weight:700}
+.pressure-card .rise{color:#a3e635}
+.pressure-card .fall{color:#fb923c}
+.pressure-card .steady{color:#b8c7dc}
+.pressure-trend-block{padding-top:16px}
+.pressure-trend-value{display:flex;align-items:center;gap:10px;font-size:clamp(21px,3.6vw,29px);font-weight:800;line-height:1.15}
+.pressure-trend-value span{font-size:1.4em;line-height:.8}
+.pressure-sparkline{display:block;width:100%;height:74px;margin-top:8px;overflow:visible}
+.pressure-sparkline-line{fill:none;stroke:#34e59a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(52,229,154,.2))}
+.pressure-sparkline-fill{fill:rgba(16,185,129,.17)}
+.pressure-sparkline.falling .pressure-sparkline-line{stroke:#fb923c}
+.pressure-sparkline.falling .pressure-sparkline-fill{fill:rgba(249,115,22,.14)}
+@media(max-width:560px){
+ .pressure-card{padding:18px 16px 17px}
+ .pressure-card-title img{width:34px;height:34px}
+ .pressure-card-title .label{font-size:21px}
+ .pressure-unit-pill{min-width:58px;padding:7px 12px;font-size:15px}
+ .pressure-showcase{grid-template-columns:minmax(0,1fr);gap:12px}
+ .pressure-dial-column{max-width:340px;width:100%;margin:0 auto}
+ .pressure-range-gauge{max-width:300px}
+ .pressure-showcase-value{font-size:42px;margin-top:-8px}
+ .pressure-insights{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;border-top:1px solid rgba(66,107,158,.48);padding-top:14px}
+ .pressure-change-block{padding:0 10px 0 0;border:0;border-right:1px solid rgba(66,107,158,.48);min-width:0}
+ .pressure-change-value{font-size:clamp(30px,9vw,40px)}
+ .pressure-change-value span{font-size:14px}
+ .pressure-trend-block{padding:0;min-width:0}
+ .pressure-trend-value{font-size:20px;gap:6px}
+ .pressure-sparkline{height:46px;margin-top:10px}
+}
+@media(min-width:561px) and (max-width:700px){.pressure-showcase{gap:16px}.pressure-card{padding:20px}.pressure-sparkline{height:58px}}
