@@ -432,6 +432,7 @@ if ($current && !empty($current['observed_at'])) {
                         <div class="pressure-readout-row">
                             <div class="pressure-range-gauge" aria-label="<?= $current ? htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) : 'Pressure range unavailable' ?>">
                                 <svg viewBox="0 12 100 54" aria-hidden="true" focusable="false">
+                                    <defs><linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient><linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient></defs>
                                     <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                                     <g class="pressure-range-ticks">
                                         <?php for ($tick = 0; $tick <= 10; $tick++):
@@ -454,12 +455,13 @@ if ($current && !empty($current['observed_at'])) {
                                     $needleTipY = 55 + sin($needleAngle) * 29;
                                     $needleBaseX = 50 + cos($needleAngle) * 5;
                                     $needleBaseY = 55 + sin($needleAngle) * 5;
-                                    $needleHalfWidth = 1.7;
+                                    $needleHalfWidth = 2.15;
                                     $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
                                     $needlePerpY = cos($needleAngle) * $needleHalfWidth;
                                     ?>
                                     <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
-                                    <circle class="pressure-range-hub" cx="50" cy="55" r="2.8"></circle>
+                                    <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.8"></circle>
+                                    <circle class="pressure-range-hub" cx="50" cy="55" r="2.15"></circle>
                                     <text x="14" y="63">L</text><text x="86" y="63">H</text>
                                 </svg>
                             </div>
