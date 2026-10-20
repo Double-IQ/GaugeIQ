@@ -915,7 +915,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-range-gauge svg{display:block;width:100%;height:auto;aspect-ratio:100/82;overflow:visible}
 .pressure-range-track{fill:none;stroke:url(#pressureArcGradient);stroke-linecap:round;stroke-width:4.7;filter:drop-shadow(0 0 2px rgba(14,165,233,.35))}
 .pressure-range-ticks{stroke:#355a88;stroke-width:1.05;stroke-linecap:round}
-.pressure-range-ticks line.major{stroke:#22d3ee;stroke-width:1.65}
+.pressure-range-ticks line.medium{stroke:#5279a8;stroke-width:1.15}.pressure-range-ticks line.major{stroke:#22d3ee;stroke-width:1.7}
 .pressure-range-needle{fill:url(#pressureNeedleGradient);stroke:#b6f36b;stroke-width:.16;stroke-linejoin:miter;stroke-miterlimit:2;filter:drop-shadow(0 0 1.8px rgba(163,230,53,.45))}
 .pressure-range-hub-outer{fill:#0ea5e9;stroke:#22d3ee;stroke-width:.6}
 .pressure-range-hub{fill:#22d3ee;stroke:#061648;stroke-width:.7}
