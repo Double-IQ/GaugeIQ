@@ -944,16 +944,18 @@ body.gaugeiq-menu-open{overflow:hidden}
  .pressure-card-title img{width:34px;height:34px}
  .pressure-card-title .label{font-size:21px}
  .pressure-unit-pill{min-width:58px;padding:7px 12px;font-size:15px}
- .pressure-showcase{grid-template-columns:minmax(0,1fr);gap:12px}
- .pressure-dial-column{max-width:340px;width:100%;margin:0 auto}
- .pressure-range-gauge{max-width:300px}
- .pressure-showcase-value{font-size:42px;margin-top:-8px}
- .pressure-insights{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;border-top:1px solid rgba(66,107,158,.48);padding-top:14px}
- .pressure-change-block{padding:0 10px 0 0;border:0;border-right:1px solid rgba(66,107,158,.48);min-width:0}
- .pressure-change-value{font-size:clamp(30px,9vw,40px)}
+ .pressure-showcase{grid-template-columns:minmax(0,.88fr) minmax(0,1fr);gap:10px;align-items:center}
+ .pressure-dial-column{max-width:220px;width:100%;margin:0 auto;justify-self:center}
+ .pressure-range-gauge{width:100%;max-width:220px;margin:0 auto}
+ .pressure-range-gauge svg{width:100%;max-height:175px}
+ .pressure-showcase-value{font-size:clamp(25px,7.5vw,36px);margin-top:-7px;white-space:nowrap}
+ .pressure-showcase-value span{font-size:12px}
+ .pressure-insights{display:flex;flex-direction:column;gap:12px;align-items:stretch;border-top:0;padding-top:0}
+ .pressure-change-block{padding:0 0 12px;border:0;border-bottom:1px solid rgba(66,107,158,.48);min-width:0}
+ .pressure-change-value{font-size:clamp(27px,7.5vw,36px)}
  .pressure-change-value span{font-size:14px}
  .pressure-trend-block{padding:0;min-width:0}
- .pressure-trend-value{font-size:20px;gap:6px}
- .pressure-sparkline{height:46px;margin-top:10px}
+ .pressure-trend-value{font-size:clamp(17px,4.8vw,21px);gap:6px}
+ .pressure-sparkline{height:34px;margin-top:6px}
 }
 @media(min-width:561px) and (max-width:700px){.pressure-showcase{gap:16px}.pressure-card{padding:20px}.pressure-sparkline{height:58px}}
