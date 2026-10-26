@@ -441,7 +441,7 @@ if ($current && !empty($current['observed_at'])) {
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
                                 </defs>
-                                <circle class="pressure-range-outer-ring" cx="50" cy="55" r="45.5"></circle>
+                                <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
                                 <path class="pressure-range-track" d="M 22.42 82.58 A 39 39 0 1 1 77.58 82.58"></path>
                                 <g class="pressure-range-ticks">
                                     <?php for ($tick = 0; $tick <= 36; $tick++):
