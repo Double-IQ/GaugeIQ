@@ -443,15 +443,15 @@ if ($current && !empty($current['observed_at'])) {
                                 </defs>
                                 <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                                 <g class="pressure-range-ticks">
-                                    <?php for ($tick = 0; $tick <= 24; $tick++):
-                                        $tickAngle = 180.0 + (($tick / 24.0) * 180.0);
+                                    <?php for ($tick = 0; $tick <= 18; $tick++):
+                                        $tickAngle = 180.0 + (($tick / 18.0) * 180.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = $tick % 6 === 0 ? 27.2 : ($tick % 3 === 0 ? 28.8 : 30.2);
+                                        $tickInnerRadius = in_array($tick, [3, 9, 15], true) ? 26.8 : (in_array($tick, [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17], true) ? 29.0 : 30.3);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
-                                        <line class="<?= $tick % 6 === 0 ? 'major' : ($tick % 3 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <line class="<?= in_array($tick, [3, 9, 15], true) ? 'major' : '' ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
                                 </g>
                                 <?php
