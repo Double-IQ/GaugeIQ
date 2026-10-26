@@ -1113,3 +1113,18 @@ body.gaugeiq-menu-open{overflow:hidden}
 .temperature-summary-current strong{color:#2563eb}
 .temperature-summary-card .temperature-summary-range strong{color:#3b82f6}
 .temperature-summary-card .temperature-card-heading .label{color:var(--text)}
+
+/* Match the temperature card's full surface, outline and text treatment to Air pressure. */
+.temperature-summary-card{
+  background:radial-gradient(ellipse at 30% 48%,rgba(0,74,160,.20),transparent 44%),linear-gradient(115deg,#031126 0%,#061a36 60%,#03132b 100%);
+  border:2px solid #073f80;
+  border-radius:20px;
+  box-shadow:inset 0 1px 0 rgba(125,211,252,.10),0 10px 28px rgba(2,8,23,.18);
+  color:#f4f7ff;
+}
+.temperature-summary-card .temperature-card-heading .label{color:#e7f1ff}
+.temperature-summary-card .temperature-summary-current strong{color:#f4f7ff}
+.temperature-summary-card .temperature-feels-like-direct{color:#9db9e2}
+.temperature-summary-card .temperature-summary-range span{color:#9db9e2}
+.temperature-summary-card .temperature-summary-range strong{color:#f4f7ff}
+.temperature-summary-card .temperature-stability-summary{background:rgba(3,19,43,.72);border-color:rgba(34,211,238,.42);color:#e7f1ff}
