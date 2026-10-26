@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-dial-geometry">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-dial-270">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -436,15 +436,15 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="pressure-showcase">
                     <div class="pressure-dial-column">
                         <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
-                            <svg viewBox="0 0 100 82" aria-hidden="true" focusable="false">
+                            <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                                 <defs>
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
                                 </defs>
-                                <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
+                                <path class="pressure-range-track" d="M 27.37 77.63 A 32 32 0 1 1 72.63 77.63"></path>
                                 <g class="pressure-range-ticks">
                                     <?php for ($tick = 0; $tick <= 36; $tick++):
-                                        $tickAngle = 180.0 + (($tick / 36.0) * 180.0);
+                                        $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
                                         $tickInnerRadius = $tick % 9 === 0 ? 26.8 : ($tick % 3 === 0 ? 28.7 : 30.3);
@@ -455,7 +455,7 @@ if ($current && !empty($current['observed_at'])) {
                                     <?php endfor; ?>
                                 </g>
                                 <?php
-                                $needleAngle = deg2rad(180 + $pressureRatio * 180);
+                                $needleAngle = deg2rad(135 + $pressureRatio * 270);
                                 $needleTipX = 50 + cos($needleAngle) * 26.5;
                                 $needleTipY = 55 + sin($needleAngle) * 26.5;
                                 $needleBaseX = 50 + cos($needleAngle) * 4.5;
@@ -467,11 +467,11 @@ if ($current && !empty($current['observed_at'])) {
                                 <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                 <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
                                 <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
-                                <text class="pressure-scale-label" x="32.3" y="38">980</text>
-                                <text class="pressure-scale-label" x="50" y="30">1010</text>
-                                <text class="pressure-scale-label" x="67.7" y="38">1040</text>
-                                <text class="pressure-scale-end" x="25" y="69">950</text>
-                                <text class="pressure-scale-end" x="75" y="69">1070</text>
+                                <text class="pressure-scale-label" x="25" y="51">980</text>
+                                <text class="pressure-scale-label" x="50" y="33">1010</text>
+                                <text class="pressure-scale-label" x="75" y="51">1040</text>
+                                <text class="pressure-scale-end" x="30" y="84">950</text>
+                                <text class="pressure-scale-end" x="70" y="84">1070</text>
                             </svg>
                         </div>
                         <div class="pressure-showcase-value"><?= number_format((float)$current['pressure_hpa'], 1) ?><span> hPa</span></div>
