@@ -627,6 +627,28 @@ if ($current && !empty($current['observed_at'])) {
 
         <?php
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
+$windSpeedChange1h = 0.0;
+if ($current && !empty($current['observed_at'])) {
+    try {
+        $windPreviousStmt = $pdo->prepare(
+            "SELECT wind_speed_kmh FROM gaugeiq_pressure_readings
+             WHERE observed_at <= ? AND observed_at >= ?
+               AND (source IS NULL OR source = 'Open-Meteo')
+               AND wind_speed_kmh IS NOT NULL
+             ORDER BY observed_at DESC LIMIT 1"
+        );
+        $windPreviousStmt->execute([
+            (new DateTimeImmutable((string)$current['observed_at']))->modify('-45 minutes')->format('Y-m-d H:i:s'),
+            (new DateTimeImmutable((string)$current['observed_at']))->modify('-90 minutes')->format('Y-m-d H:i:s')
+        ]);
+        $windPreviousSpeed = $windPreviousStmt->fetchColumn();
+        if ($windPreviousSpeed !== false) {
+            $windSpeedChange1h = $windSpeed - (float)$windPreviousSpeed;
+        }
+    } catch (Throwable $e) {
+        $windSpeedChange1h = 0.0;
+    }
+}
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
         $windToDegrees = fmod($windDegrees + 180.0, 360.0);
@@ -661,9 +683,14 @@ if ($current && !empty($current['observed_at'])) {
                                 $segmentAngle = ($segment * 3.0) - 90.0;
                                 $segmentStart = $windGaugePoint($segmentAngle, 44.7);
                                 $segmentEnd = $windGaugePoint($segmentAngle, 47.8);
-                                $segmentActive = $current && $windSpeed >= (($segment + 1) / 2);
+                                $segmentSpeed = ($segment + 1) / 2;
+                                $segmentActive = $current && $windSpeed >= $segmentSpeed;
+                                $segmentChange = $windSpeedChange1h > 0.0
+                                    ? ($segmentSpeed > ($windSpeed - $windSpeedChange1h) && $segmentSpeed <= $windSpeed)
+                                    : ($windSpeedChange1h < 0.0 && $segmentSpeed > $windSpeed && $segmentSpeed <= min(60.0, $windSpeed - $windSpeedChange1h));
+                                $segmentClass = $segmentActive ? ($segmentChange ? 'active change' : 'active') : '';
                             ?>
-                                <line class="<?= $segmentActive ? ('active' . ($windSpeed > 30.0 ? ' high-wind' : '')) : '' ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
+                                <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
                         <g class="wind-speed-scale-labels" aria-label="Wind speed scale labels in kilometres per hour">
