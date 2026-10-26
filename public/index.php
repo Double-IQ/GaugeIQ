@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-dial-270">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-card">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -472,9 +472,11 @@ if ($current && !empty($current['observed_at'])) {
                                 <text class="pressure-scale-label" x="75" y="51">1040</text>
                                 <text class="pressure-scale-end" x="30" y="84">950</text>
                                 <text class="pressure-scale-end" x="70" y="84">1070</text>
+                                <text class="pressure-dial-reading" x="50" y="70"><?= number_format((float)$current['pressure_hpa'], 0) ?></text>
+                                <text class="pressure-dial-unit" x="50" y="79">hPa</text>
                             </svg>
                         </div>
-                        <div class="pressure-showcase-value"><?= number_format((float)$current['pressure_hpa'], 1) ?><span> hPa</span></div>
+                        
                     </div>
                     <div class="pressure-insights">
                         <div class="pressure-change-block">
