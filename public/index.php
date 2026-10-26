@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-card">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-area-calibration">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -467,11 +467,11 @@ if ($current && !empty($current['observed_at'])) {
                                 <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                 <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
                                 <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
-                                <text class="pressure-scale-label" x="25" y="51">980</text>
-                                <text class="pressure-scale-label" x="50" y="33">1010</text>
-                                <text class="pressure-scale-label" x="75" y="51">1040</text>
-                                <text class="pressure-scale-end" x="30" y="84">950</text>
-                                <text class="pressure-scale-end" x="70" y="84">1070</text>
+                                <text class="pressure-scale-label" x="29" y="43"><?= number_format($pressureLow + ($pressureRange * 0.25), 0) ?></text>
+                                <text class="pressure-scale-label" x="50" y="29"><?= number_format($pressureLow + ($pressureRange * 0.50), 0) ?></text>
+                                <text class="pressure-scale-label" x="71" y="43"><?= number_format($pressureLow + ($pressureRange * 0.75), 0) ?></text>
+                                <text class="pressure-scale-end" x="29" y="83"><?= number_format($pressureLow, 0) ?></text>
+                                <text class="pressure-scale-end" x="71" y="83"><?= number_format($pressureHigh, 0) ?></text>
                                 <text class="pressure-dial-reading" x="50" y="70"><?= number_format((float)$current['pressure_hpa'], 0) ?></text>
                                 <text class="pressure-dial-unit" x="50" y="79">hPa</text>
                             </svg>
