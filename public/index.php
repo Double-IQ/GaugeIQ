@@ -459,8 +459,8 @@ if ($current && !empty($current['observed_at'])) {
                                 $needleAngle = deg2rad(135 + $pressureRatio * 270);
                                 $needleTipX = 50 + cos($needleAngle) * 29.0;
                                 $needleTipY = 55 + sin($needleAngle) * 29.0;
-                                $needleBaseX = 50 + cos($needleAngle) * 4.5;
-                                $needleBaseY = 55 + sin($needleAngle) * 4.5;
+                                $needleBaseX = 50;
+                                $needleBaseY = 55;
                                 $needleHalfWidth = 2.8;
                                 $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
                                 $needlePerpY = cos($needleAngle) * $needleHalfWidth;
