@@ -462,8 +462,8 @@ if ($current && !empty($current['observed_at'])) {
                                     <?php endfor; ?>
                                 </g>
                                 <g class="pressure-glass-overlay" clip-path="url(#pressureGlassClip)" pointer-events="none">
-                                    <path d="M 11 55 A 39 39 0 0 1 89 55 L 89 20 L 11 20 Z" fill="url(#pressureGlassSheen)"></path>
-                                    <path d="M 17 38 A 37 37 0 0 1 74 20" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width=".7" stroke-linecap="round"></path>
+                                    <circle cx="50" cy="55" r="39" fill="url(#pressureGlassSheen)" opacity=".48"></circle>
+                                    <path d="M 19 49 A 34 34 0 0 1 69 23" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width=".55"></path>
                                 </g>
                                 <?php
                                 $needleAngle = deg2rad(135 + $pressureRatio * 270);
@@ -719,19 +719,19 @@ if ($current && !empty($current['observed_at'])) {
                                 <line class="<?= $majorTick ? 'major' : ($mediumTick ? 'medium' : '') ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
-                        <g class="wind-degree-labels">
+                        <g class="wind-compass-labels wind-combined-label-ring">
                             <?php for ($degree = 0; $degree < 360; $degree += 30):
-                                [$degreeX, $degreeY] = $windGaugePoint($degree - 90.0, 35.3);
+                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 34.2);
+                                $label = match ($degree) {
+                                    0 => 'N',
+                                    90 => 'E',
+                                    180 => 'S',
+                                    270 => 'W',
+                                    default => (string)$degree
+                                };
                             ?>
-                                <text class="<?= $degree === 0 ? 'north-degree' : '' ?>" x="<?= number_format($degreeX, 3, '.', '') ?>" y="<?= number_format($degreeY, 3, '.', '') ?>"><?= $degree ?></text>
+                                <text class="<?= in_array($degree, [0, 90, 180, 270], true) ? ($degree === 0 ? 'north-label' : 'cardinal-label') : 'degree-label' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
                             <?php endfor; ?>
-                        </g>
-                        <g class="wind-compass-labels">
-                            <?php foreach ($compassLabels as $degree => $label):
-                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 25.5);
-                            ?>
-                                <text class="<?= strlen($label) > 1 ? 'minor' : '' ?> <?= $label === 'N' ? 'north-label' : '' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
-                            <?php endforeach; ?>
                         </g>
                         <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
                             <path class="wind-direction-to-marker" d="M50 87 L54 79 L51 81 L51 17.5 L49 17.5 L49 81 L46 79 Z"></path>
