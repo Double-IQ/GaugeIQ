@@ -1059,14 +1059,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 .pressure-range-outer-ring{fill:none;stroke:#06438c;stroke-width:1.2;opacity:.95}
 
-/* Enlarge the pressure dial within its existing showcase column. */
-.pressure-showcase{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
-.pressure-dial-column{max-width:none}
-.pressure-range-gauge{width:112%;max-width:none}
-@media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}.pressure-range-gauge{width:112%}}
-
-/* Make the dial itself larger; do not increase card or column padding. */
+/* Keep the pressure dial and right-side readings at an even 50/50 split. */
+.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5.5%}
 .pressure-dial-column{overflow:visible;min-width:0}
-.pressure-range-gauge{width:130%!important;flex:0 0 130%;max-width:none!important;transform:scale(1.08);transform-origin:center}
+.pressure-range-gauge{width:100%!important;flex:0 1 100%;max-width:none!important;transform:none}
 .pressure-range-gauge svg{width:100%;height:auto}
-@media(max-width:560px){.pressure-range-gauge{width:130%!important;flex-basis:130%;transform:scale(1.04)}}
+@media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
