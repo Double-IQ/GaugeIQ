@@ -1080,3 +1080,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-segment.active{background:#22d3ee}
 .climate-gauge-card .climate-segment.change{background:#fb923c}
 .climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#fb923c}
+
+/* Compact the Conditions trend card vertically. */
+.conditions-trend-card{padding-top:14px;padding-bottom:14px}
+.conditions-trend-card .section-heading{margin-bottom:0;gap:10px}
+.conditions-trend-card .section-heading p{margin-top:3px;margin-bottom:0}
+.conditions-trend-card .conditions-trend-score{width:48px;height:48px;flex:0 0 48px;font-size:24px}
+.conditions-trend-card .conditions-trend-summary{margin-top:8px;font-size:14px}
+.conditions-trend-card .weather-change-reasons-toggle{margin-top:8px}
+.conditions-trend-card .algorithm-details{margin-top:8px;padding-top:8px}
