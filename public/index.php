@@ -439,11 +439,12 @@ if ($current && !empty($current['observed_at'])) {
                                 <defs>
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
-                                    <linearGradient id="pressureGlassSheen" x1="0" y1="0" x2="0.2" y2="1">
-                                        <stop offset="0%" stop-color="#ffffff" stop-opacity=".24"/>
-                                        <stop offset="48%" stop-color="#dbeafe" stop-opacity=".07"/>
-                                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-                                    </linearGradient>
+                                    <radialGradient id="pressureGlassSheen" cx="38%" cy="28%" r="72%">
+                                        <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
+                                        <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
+                                        <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
+                                        <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
+                                    </radialGradient>
                                     <clipPath id="pressureGlassClip"><circle cx="50" cy="55" r="39"/></clipPath>
                                 </defs>
                                 <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
@@ -462,8 +463,7 @@ if ($current && !empty($current['observed_at'])) {
                                     <?php endfor; ?>
                                 </g>
                                 <g class="pressure-glass-overlay" clip-path="url(#pressureGlassClip)" pointer-events="none">
-                                    <circle cx="50" cy="55" r="39" fill="url(#pressureGlassSheen)" opacity=".48"></circle>
-                                    <path d="M 19 49 A 34 34 0 0 1 69 23" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width=".55"></path>
+                                    <circle cx="50" cy="55" r="39" fill="url(#pressureGlassSheen)" opacity=".72"></circle>
                                 </g>
                                 <?php
                                 $needleAngle = deg2rad(135 + $pressureRatio * 270);
@@ -739,6 +739,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
+                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
                 </svg>
                 <div class="wind-gauge-center">
                     <small class="wind-unit-readout">km/h</small>
