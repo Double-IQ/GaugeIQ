@@ -1061,8 +1061,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Keep the dial and insights evenly split; centre the dial vertically and restore its outer glow. */
 .pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5.5%;align-items:center}
-.pressure-dial-column{overflow:visible;min-width:0;align-self:center;display:flex;align-items:center;justify-content:center}
+.pressure-dial-column{overflow:visible;min-width:0;align-self:start;display:flex;align-items:flex-start;justify-content:center}
 .pressure-range-gauge{width:100%!important;flex:0 1 100%;max-width:none!important;transform:none;filter:none}
 .pressure-range-gauge svg{width:100%;height:auto}
 .pressure-range-outer-ring{fill:none;stroke:#0756b5;stroke-width:.7;filter:drop-shadow(0 0 1.5px rgba(0,112,255,.5))}
-@media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}.pressure-dial-column{align-self:center}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
+@media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}.pressure-dial-column{align-self:start;align-items:flex-start}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
