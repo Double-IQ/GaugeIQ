@@ -959,3 +959,11 @@ body.gaugeiq-menu-open{overflow:hidden}
  .pressure-sparkline{height:34px;margin-top:6px}
 }
 @media(min-width:561px) and (max-width:700px){.pressure-showcase{gap:16px}.pressure-card{padding:20px}.pressure-sparkline{height:58px}}
+
+/* Pressure gauge reference alignment: value belongs inside the dial. */
+.pressure-range-gauge svg{aspect-ratio:1/1}
+.pressure-range-gauge text.pressure-dial-reading{font-size:10.5px;font-weight:850;fill:#f5f8ff;text-anchor:middle;letter-spacing:-.35px}
+.pressure-range-gauge text.pressure-dial-unit{font-size:6px;font-weight:750;fill:#9db9e2;text-anchor:middle}
+.pressure-range-gauge text.pressure-scale-label{font-size:5.4px;font-weight:800;fill:#b8d2f5;text-anchor:middle}
+.pressure-range-gauge text.pressure-scale-end{font-size:5px;font-weight:750;fill:#9db9e2;text-anchor:middle}
+@media(max-width:560px){.pressure-range-gauge svg{width:100%;max-height:none}}
