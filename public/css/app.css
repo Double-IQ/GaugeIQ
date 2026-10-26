@@ -1098,5 +1098,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* White center cap for the pressure gauge needle. */
 .pressure-range-hub{fill:#fff;stroke:#dbeafe;stroke-width:.55}
 
-/* Reduce the outer low/high pressure marker labels. */
-.pressure-range-gauge text.pressure-scale-end{font-size:4.5px}
+/* Smaller, regular-weight outer pressure marker labels. */
+.pressure-range-gauge text.pressure-scale-end{font-size:4px;font-weight:400}
