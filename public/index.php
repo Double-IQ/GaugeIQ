@@ -446,9 +446,9 @@ if ($current && !empty($current['observed_at'])) {
                                 <g class="pressure-range-ticks">
                                     <?php for ($tick = 0; $tick <= 36; $tick++):
                                         $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
-                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 42.0;
-                                        $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 42.0;
-                                        $tickInnerRadius = in_array($tick, [6, 18, 30], true) ? 32.0 : ($tick % 3 === 0 ? 34.5 : 36.5);
+                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 34.5;
+                                        $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 34.5;
+                                        $tickInnerRadius = in_array($tick, [6, 18, 30], true) ? 27.5 : ($tick % 3 === 0 ? 30.0 : 32.0);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
