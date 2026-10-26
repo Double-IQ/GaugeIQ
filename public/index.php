@@ -447,7 +447,7 @@ if ($current && !empty($current['observed_at'])) {
                                         $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 44.0;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = in_array($tick, [8, 18, 28], true) ? 36.0 : ($tick % 3 === 0 ? 39.0 : 41.5);
+                                        $tickInnerRadius = in_array($tick, [6, 18, 30], true) ? 36.0 : ($tick % 3 === 0 ? 39.0 : 41.5);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
