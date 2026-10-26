@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-geometry">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-labels">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -447,11 +447,11 @@ if ($current && !empty($current['observed_at'])) {
                                         $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 44.0;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = $tick % 9 === 0 ? 36.0 : ($tick % 3 === 0 ? 39.0 : 41.5);
+                                        $tickInnerRadius = in_array($tick, [8, 18, 28], true) ? 36.0 : ($tick % 3 === 0 ? 39.0 : 41.5);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
-                                        <line class="<?= $tick % 9 === 0 ? 'major' : ($tick % 3 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <line class="<?= in_array($tick, [8, 18, 28], true) ? 'major' : ($tick % 3 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
                                 </g>
                                 <?php
@@ -467,9 +467,9 @@ if ($current && !empty($current['observed_at'])) {
                                 <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                 <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
                                 <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
-                                <text class="pressure-scale-label" x="29" y="43"><?= number_format($pressureLow + ($pressureRange * 0.25), 0) ?></text>
-                                <text class="pressure-scale-label" x="50" y="29"><?= number_format($pressureLow + ($pressureRange * 0.50), 0) ?></text>
-                                <text class="pressure-scale-label" x="71" y="43"><?= number_format($pressureLow + ($pressureRange * 0.75), 0) ?></text>
+                                <text class="pressure-scale-label" x="27" y="50"><?= number_format($pressureLow + ($pressureRange * 0.25), 0) ?></text>
+                                <text class="pressure-scale-label" x="50" y="31"><?= number_format($pressureLow + ($pressureRange * 0.50), 0) ?></text>
+                                <text class="pressure-scale-label" x="73" y="50"><?= number_format($pressureLow + ($pressureRange * 0.75), 0) ?></text>
                                 <text class="pressure-scale-end" x="29" y="83"><?= number_format($pressureLow, 0) ?></text>
                                 <text class="pressure-scale-end" x="71" y="83"><?= number_format($pressureHigh, 0) ?></text>
                                 <text class="pressure-dial-reading" x="50" y="70"><?= number_format((float)$current['pressure_hpa'], 0) ?></text>
