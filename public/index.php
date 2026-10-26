@@ -461,13 +461,13 @@ if ($current && !empty($current['observed_at'])) {
                                 $needleTipY = 55 + sin($needleAngle) * 29.0;
                                 $needleBaseX = 50 + cos($needleAngle) * 4.5;
                                 $needleBaseY = 55 + sin($needleAngle) * 4.5;
-                                $needleHalfWidth = 2.0;
+                                $needleHalfWidth = 2.8;
                                 $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
                                 $needlePerpY = cos($needleAngle) * $needleHalfWidth;
                                 ?>
                                 <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                 <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
-                                <circle class="pressure-range-hub" cx="50" cy="52" r="2.1"></circle>
+                                <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
                                 <text class="pressure-scale-label" x="27" y="50"><?= number_format($pressureLow + ($pressureRange * 0.25), 0) ?></text>
                                 <text class="pressure-scale-label" x="50" y="29"><?= number_format($pressureLow + ($pressureRange * 0.50), 0) ?></text>
                                 <text class="pressure-scale-label" x="73" y="50"><?= number_format($pressureLow + ($pressureRange * 0.75), 0) ?></text>
