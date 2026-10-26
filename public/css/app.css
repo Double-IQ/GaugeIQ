@@ -1042,3 +1042,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-range-ticks line{stroke-width:1.15}
 .pressure-range-ticks line.major{stroke-width:1.9}
 .pressure-range-needle{stroke-width:.1}
+
+/* Remove the misaligned secondary ring; the SVG arc is the gauge's outer ring. */
+.pressure-dial-column{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0!important}
