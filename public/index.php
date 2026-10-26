@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-markers-reference">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-markers-aligned">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -447,11 +447,11 @@ if ($current && !empty($current['observed_at'])) {
                                         $tickAngle = 180.0 + (($tick / 18.0) * 180.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = in_array($tick, [3, 9, 15], true) ? 26.8 : (in_array($tick, [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17], true) ? 29.0 : 30.3);
+                                        $tickInnerRadius = in_array($tick, [5, 9, 13], true) ? 26.8 : (in_array($tick, [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17], true) ? 29.0 : 30.3);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
-                                        <line class="<?= in_array($tick, [3, 9, 15], true) ? 'major' : '' ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <line class="<?= in_array($tick, [5, 9, 13], true) ? 'major' : '' ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
                                 </g>
                                 <?php
