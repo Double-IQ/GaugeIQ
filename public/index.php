@@ -427,7 +427,6 @@ if ($current && !empty($current['observed_at'])) {
         <article class="card metric-card pressure-card">
             <div class="pressure-card-title-row">
                 <div class="pressure-card-title">
-                    <img src="/branding/icon-192.png" alt="" width="42" height="42">
                     <p class="label">Air pressure</p>
                 </div>
                 <span class="pressure-unit-pill">hPa</span>
