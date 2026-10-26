@@ -1064,5 +1064,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-dial-column{overflow:visible;min-width:0;align-self:center;display:flex;align-items:center;justify-content:center}
 .pressure-range-gauge{width:100%!important;flex:0 1 100%;max-width:none!important;transform:none;filter:none}
 .pressure-range-gauge svg{width:100%;height:auto}
-.pressure-range-outer-ring{stroke:#0756b5;stroke-width:1.5;filter:drop-shadow(0 0 2px rgba(0,212,255,.95)) drop-shadow(0 0 6px rgba(0,112,255,.72))}
+.pressure-range-outer-ring{fill:none;stroke:#0756b5;stroke-width:1.2;filter:drop-shadow(0 0 2px rgba(0,112,255,.55))}
 @media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}.pressure-dial-column{align-self:center}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
