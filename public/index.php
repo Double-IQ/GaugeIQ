@@ -444,15 +444,16 @@ if ($current && !empty($current['observed_at'])) {
                                 <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
                                 <path class="pressure-range-track" d="M 22.42 82.58 A 39 39 0 1 1 77.58 82.58"></path>
                                 <g class="pressure-range-ticks">
-                                    <?php for ($tick = 0; $tick <= 36; $tick++):
-                                        $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
+                                    <?php for ($tick = 0; $tick <= 24; $tick++):
+                                        $tickAngle = 135.0 + (($tick / 24.0) * 270.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 34.5;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 34.5;
-                                        $tickInnerRadius = in_array($tick, [6, 18, 30], true) ? 27.5 : ($tick % 3 === 0 ? 30.0 : 32.0);
+                                        $isMajor = in_array($tick, [4, 12, 20], true);
+                                        $tickInnerRadius = $isMajor ? 27.5 : ($tick % 2 === 0 ? 30.0 : 32.0);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
-                                        <line class="<?= in_array($tick, [6, 18, 30], true) ? 'major' : ($tick % 3 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <line class="<?= $isMajor ? 'major' : ($tick % 2 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
                                 </g>
                                 <?php
