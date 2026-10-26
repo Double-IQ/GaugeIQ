@@ -1037,3 +1037,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-sparkline-fill{fill:rgba(0,205,161,.2)}
 @media(max-width:560px){.pressure-card{padding:16px 14px;border-radius:16px}.pressure-card-title{gap:10px}.pressure-card-title img{width:44px;height:44px}.pressure-card-title .label{font-size:24px}.pressure-unit-pill{min-width:60px;padding:8px 12px;font-size:16px}.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.pressure-dial-column{padding:4px;border-width:1.5px}.pressure-range-gauge{margin:0}.pressure-insight-label{font-size:12px;margin-bottom:8px}.pressure-change-block{padding-bottom:14px}.pressure-change-value{font-size:clamp(26px,7vw,38px)}.pressure-trend-block{padding-top:16px}.pressure-trend-value{font-size:clamp(17px,4.5vw,23px);gap:5px}.pressure-sparkline{height:44px;margin-top:8px}}
 @media(min-width:561px) and (max-width:760px){.pressure-card{padding:20px}.pressure-card-title img{width:76px;height:60px}.pressure-card-title .label{font-size:32px}.pressure-unit-pill{min-width:80px;padding:10px 16px;font-size:20px}.pressure-showcase{gap:18px}.pressure-sparkline{height:70px}}
+
+.pressure-range-track{stroke-width:4.1}
+.pressure-range-ticks line{stroke-width:1.15}
+.pressure-range-ticks line.major{stroke-width:1.9}
+.pressure-range-needle{stroke-width:.1}
