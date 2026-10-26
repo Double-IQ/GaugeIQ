@@ -1108,3 +1108,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-compass-labels.wind-combined-label-ring .degree-label{font-size:3.1px;font-weight:750;fill:var(--muted)}
 .wind-compass-labels.wind-combined-label-ring .cardinal-label{font-size:4.2px;font-weight:900;fill:var(--text)}
 .wind-compass-labels.wind-combined-label-ring .north-label{font-size:4.7px;font-weight:950;fill:#ef4444}
+
+/* Match the temperature top card's accent palette to the Air pressure gauge. */
+.temperature-summary-current strong{color:#2563eb}
+.temperature-summary-card .temperature-summary-range strong{color:#3b82f6}
+.temperature-summary-card .temperature-card-heading .label{color:var(--text)}
