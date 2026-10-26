@@ -1056,3 +1056,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-range-ticks line.major{stroke:#00e4f4;stroke-width:1.9}
 .pressure-range-needle{stroke:#a3e635;stroke-width:.12;stroke-linejoin:round}
 @media(max-width:560px){.pressure-dial-column{max-width:none;width:100%;aspect-ratio:1/1}}
+
+.pressure-range-outer-ring{fill:none;stroke:#06438c;stroke-width:1.2;opacity:.95}
