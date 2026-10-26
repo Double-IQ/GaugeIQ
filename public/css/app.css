@@ -288,7 +288,8 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 .temperature-summary-card{margin-top:16px;margin-bottom:16px}
-.temperature-card-heading{margin-bottom:8px}
+.temperature-card-heading{margin-bottom:18px}
+.temperature-card-heading .label{font-size:clamp(32px,4.4vw,58px);font-weight:800;letter-spacing:-.035em}
 .temperature-summary-main{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;transform:translateY(-16px)}
 .temperature-summary-current{display:flex;flex-direction:column;align-items:flex-start;gap:0;transform:translateY(10px)}.temperature-feels-like-direct{display:block;margin-top:4px;font-size:12px;font-weight:700;line-height:1;color:var(--muted)}
 .temperature-summary-current strong{font-size:42px;line-height:1;font-weight:900;letter-spacing:-.045em;color:var(--text)}
