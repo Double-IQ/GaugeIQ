@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-final">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-reference-geometry">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -441,13 +441,13 @@ if ($current && !empty($current['observed_at'])) {
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
                                 </defs>
-                                <path class="pressure-range-track" d="M 27.37 77.63 A 32 32 0 1 1 72.63 77.63"></path>
+                                <path class="pressure-range-track" d="M 18.18 86.82 A 45 45 0 1 1 81.82 86.82"></path>
                                 <g class="pressure-range-ticks">
                                     <?php for ($tick = 0; $tick <= 36; $tick++):
                                         $tickAngle = 135.0 + (($tick / 36.0) * 270.0);
-                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
+                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 44.0;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = $tick % 9 === 0 ? 26.8 : ($tick % 3 === 0 ? 28.7 : 30.3);
+                                        $tickInnerRadius = $tick % 9 === 0 ? 36.0 : ($tick % 3 === 0 ? 39.0 : 41.5);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
@@ -456,9 +456,9 @@ if ($current && !empty($current['observed_at'])) {
                                 </g>
                                 <?php
                                 $needleAngle = deg2rad(135 + $pressureRatio * 270);
-                                $needleTipX = 50 + cos($needleAngle) * 26.5;
+                                $needleTipX = 50 + cos($needleAngle) * 34.0;
                                 $needleTipY = 55 + sin($needleAngle) * 26.5;
-                                $needleBaseX = 50 + cos($needleAngle) * 4.5;
+                                $needleBaseX = 50 + cos($needleAngle) * 5.0;
                                 $needleBaseY = 55 + sin($needleAngle) * 4.5;
                                 $needleHalfWidth = 2.0;
                                 $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
