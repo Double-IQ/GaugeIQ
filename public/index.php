@@ -702,7 +702,6 @@ if ($current && !empty($current['observed_at'])) {
                             <?php endfor; ?>
                         </g>
                     <g class="wind-compass-orientation">
-                        <circle class="wind-compass-ring" cx="50" cy="50" r="29.5"></circle>
                         <g class="wind-compass-ticks">
                             <?php
                             $compassLabels = [
@@ -740,7 +739,6 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
                 </svg>
                 <div class="wind-gauge-center">
                     <small class="wind-unit-readout">km/h</small>
