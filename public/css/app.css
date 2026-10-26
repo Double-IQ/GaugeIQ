@@ -1094,3 +1094,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-range-ticks line{stroke-width:.45;stroke-linecap:butt}
 .pressure-range-ticks line.medium{stroke-width:.55;stroke-linecap:butt}
 .pressure-range-ticks line.major{stroke-width:.8;stroke-linecap:butt}
+
+/* White center cap for the pressure gauge needle. */
+.pressure-range-hub{fill:#fff;stroke:#dbeafe;stroke-width:.55}
