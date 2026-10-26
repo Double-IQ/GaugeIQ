@@ -1058,3 +1058,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.pressure-dial-column{max-width:none;width:100%;aspect-ratio:1/1}}
 
 .pressure-range-outer-ring{fill:none;stroke:#06438c;stroke-width:1.2;opacity:.95}
+
+/* Enlarge the pressure dial within its existing showcase column. */
+.pressure-showcase{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+.pressure-dial-column{max-width:none}
+.pressure-range-gauge{width:112%;max-width:none}
+@media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}.pressure-range-gauge{width:112%}}
