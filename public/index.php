@@ -438,7 +438,7 @@ if ($current && !empty($current['observed_at'])) {
                         <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
                             <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                                 <defs>
-                                    <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="55%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
+                                    <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
                                 </defs>
                                 <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
