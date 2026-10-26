@@ -1089,3 +1089,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .conditions-trend-card .conditions-trend-summary{margin-top:8px;font-size:14px}
 .conditions-trend-card .weather-change-reasons-toggle{margin-top:8px}
 .conditions-trend-card .algorithm-details{margin-top:8px;padding-top:8px}
+
+/* Slimmer pressure gauge tick marks. */
+.pressure-range-ticks line{stroke-width:.7}
+.pressure-range-ticks line.medium{stroke-width:.85}
+.pressure-range-ticks line.major{stroke-width:1.3}
