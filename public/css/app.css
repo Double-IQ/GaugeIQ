@@ -1045,3 +1045,14 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Remove the misaligned secondary ring; the SVG arc is the gauge's outer ring. */
 .pressure-dial-column{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0!important}
+
+/* Rebuilt gauge: the SVG arc is the only outer arc; no oversized housing ring. */
+.pressure-dial-column{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;max-width:600px;width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+.pressure-range-gauge{width:100%;max-width:none;margin:0 auto}
+.pressure-range-gauge svg{display:block;width:100%;height:auto;aspect-ratio:1/1;overflow:visible}
+.pressure-range-track{stroke-width:4.5;stroke-linecap:round}
+.pressure-range-ticks line{stroke:#4382d5;stroke-width:1.05;stroke-linecap:round}
+.pressure-range-ticks line.medium{stroke:#4382d5;stroke-width:1.2}
+.pressure-range-ticks line.major{stroke:#00e4f4;stroke-width:1.9}
+.pressure-range-needle{stroke:#a3e635;stroke-width:.12;stroke-linejoin:round}
+@media(max-width:560px){.pressure-dial-column{max-width:none;width:100%;aspect-ratio:1/1}}
