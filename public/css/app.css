@@ -1066,3 +1066,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-range-gauge svg{width:100%;height:auto}
 .pressure-range-outer-ring{fill:none;stroke:#0756b5;stroke-width:.7;filter:drop-shadow(0 0 1.5px rgba(0,112,255,.5))}
 @media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}.pressure-dial-column{align-self:start;align-items:flex-start}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
+
+/* Match Atmospheric Monitor's card shell and heading to Air pressure. */
+.climate-gauge-card{padding:26px 30px 24px;background:radial-gradient(ellipse at 30% 48%,rgba(0,74,160,.12),transparent 44%),linear-gradient(115deg,#031126 0%,#061a36 60%,#03132b 100%);border:2px solid #073f80;border-radius:20px;box-shadow:none;color:#f4f7ff}
+.climate-gauge-card .section-heading{margin-bottom:18px}
+.climate-gauge-card .section-heading .label{font-size:clamp(32px,4.4vw,58px);font-weight:800;letter-spacing:-.035em;color:#f4f7ff;line-height:1.1;margin:0}
+.climate-gauge-card .climate-bar-label{color:#b9d5ff}
+.climate-gauge-card .climate-bar-value{color:#f4f7ff}
+@media(max-width:560px){.climate-gauge-card{padding:16px 14px;border-radius:16px}.climate-gauge-card .section-heading{margin-bottom:14px}.climate-gauge-card .section-heading .label{font-size:24px}}
+@media(min-width:561px) and (max-width:760px){.climate-gauge-card{padding:20px}}
