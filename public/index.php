@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261026-pressure-markers-aligned">
+<link rel="stylesheet" href="css/app.css?v=20261026-pressure-dial-geometry">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -443,15 +443,15 @@ if ($current && !empty($current['observed_at'])) {
                                 </defs>
                                 <path class="pressure-range-track" d="M 18 55 A 32 32 0 0 1 82 55"></path>
                                 <g class="pressure-range-ticks">
-                                    <?php for ($tick = 0; $tick <= 18; $tick++):
-                                        $tickAngle = 180.0 + (($tick / 18.0) * 180.0);
+                                    <?php for ($tick = 0; $tick <= 36; $tick++):
+                                        $tickAngle = 180.0 + (($tick / 36.0) * 180.0);
                                         $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 32.5;
                                         $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 32.5;
-                                        $tickInnerRadius = in_array($tick, [5, 9, 13], true) ? 26.8 : (in_array($tick, [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17], true) ? 29.0 : 30.3);
+                                        $tickInnerRadius = $tick % 9 === 0 ? 26.8 : ($tick % 3 === 0 ? 28.7 : 30.3);
                                         $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
                                         $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
                                     ?>
-                                        <line class="<?= in_array($tick, [5, 9, 13], true) ? 'major' : '' ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
+                                        <line class="<?= $tick % 9 === 0 ? 'major' : ($tick % 3 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
                                 </g>
                                 <?php
@@ -467,9 +467,9 @@ if ($current && !empty($current['observed_at'])) {
                                 <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
                                 <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
                                 <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
-                                <text class="pressure-scale-label" x="25" y="48">980</text>
+                                <text class="pressure-scale-label" x="32.3" y="38">980</text>
                                 <text class="pressure-scale-label" x="50" y="30">1010</text>
-                                <text class="pressure-scale-label" x="75" y="48">1040</text>
+                                <text class="pressure-scale-label" x="67.7" y="38">1040</text>
                                 <text class="pressure-scale-end" x="25" y="69">950</text>
                                 <text class="pressure-scale-end" x="75" y="69">1070</text>
                             </svg>
