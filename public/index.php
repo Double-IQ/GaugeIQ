@@ -439,6 +439,12 @@ if ($current && !empty($current['observed_at'])) {
                                 <defs>
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
                                     <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
+                                    <linearGradient id="pressureGlassSheen" x1="0" y1="0" x2="0.2" y2="1">
+                                        <stop offset="0%" stop-color="#ffffff" stop-opacity=".24"/>
+                                        <stop offset="48%" stop-color="#dbeafe" stop-opacity=".07"/>
+                                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                                    </linearGradient>
+                                    <clipPath id="pressureGlassClip"><circle cx="50" cy="55" r="39"/></clipPath>
                                 </defs>
                                 <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
                                 <path class="pressure-range-track" d="M 22.42 82.58 A 39 39 0 1 1 77.58 82.58"></path>
@@ -454,6 +460,10 @@ if ($current && !empty($current['observed_at'])) {
                                     ?>
                                         <line class="<?= $isMajor ? 'major' : ($tick % 2 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
                                     <?php endfor; ?>
+                                </g>
+                                <g class="pressure-glass-overlay" clip-path="url(#pressureGlassClip)" pointer-events="none">
+                                    <path d="M 11 55 A 39 39 0 0 1 89 55 L 89 20 L 11 20 Z" fill="url(#pressureGlassSheen)"></path>
+                                    <path d="M 17 38 A 37 37 0 0 1 74 20" fill="none" stroke="#ffffff" stroke-opacity=".28" stroke-width=".7" stroke-linecap="round"></path>
                                 </g>
                                 <?php
                                 $needleAngle = deg2rad(135 + $pressureRatio * 270);
