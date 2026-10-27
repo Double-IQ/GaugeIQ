@@ -870,110 +870,23 @@ function weatherChangeScore(readings) {
         return { score: null, summary: 'Gathering a longer observation window…', components: [], reasons: [], coverage: 0 };
     }
 
-    const components = [];
-    const addComponent = (key, label, pair, severity, evidence) => {
-        if (!pair || !Number.isFinite(severity)) return;
-        components.push({
-            key, label, weight: WEATHER_CHANGE_WEIGHTS[key],
-            severity: Math.max(0, Math.min(1, severity)), evidence, pair
-        });
-    };
-
-    const pressure = weatherFieldPair(valid, 'pressure');
-    if (pressure) {
-        const rate = pressure.delta / pressure.hours;
-        addComponent('pressure', 'Air pressure', pressure, weatherSeverity(Math.abs(rate), weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)),
-            'changed ' + (pressure.delta < 0 ? 'by −' : 'by +') + Math.abs(pressure.delta).toFixed(1) + ' hPa (' + (rate < 0 ? '−' : '+') + Math.abs(rate).toFixed(2) + ' hPa/hour)');
-    }
-
-    const temperature = weatherFieldPair(valid, 'temperature');
-    if (temperature) {
-        const scaled = Math.abs(temperature.delta) * 6 / temperature.hours;
-        addComponent('temperature', 'Temperature', temperature, weatherSeverity(scaled, weatherFormula('stability_trigger_temperature', 1), weatherFormula('stability_max_temperature', 3)),
-            'changed ' + (temperature.delta < 0 ? 'by −' : 'by +') + Math.abs(temperature.delta).toFixed(1) + '°C over ' + temperature.hours.toFixed(1) + ' hours (six-hour equivalent ' + scaled.toFixed(1) + '°C)');
-    }
-
-    const humidity = weatherFieldPair(valid, 'humidity');
-    if (humidity) {
-        const scaled = Math.abs(humidity.delta) * 6 / humidity.hours;
-        addComponent('humidity', 'Humidity', humidity, weatherSeverity(scaled, weatherFormula('stability_trigger_humidity', 4), weatherFormula('stability_max_humidity', 12)),
-            'changed ' + (humidity.delta < 0 ? 'by −' : 'by +') + Math.abs(humidity.delta).toFixed(0) + ' percentage points (six-hour equivalent ' + scaled.toFixed(1) + ')');
-    }
-
-    const wind = weatherFieldPair(valid, 'wind');
-    if (wind) {
-        const scaled = Math.abs(wind.delta) * 6 / wind.hours;
-        addComponent('windSpeed', 'Wind speed', wind, weatherSeverity(scaled, weatherFormula('stability_trigger_wind_speed', 8), weatherFormula('stability_max_wind_speed', 20)),
-            'changed ' + (wind.delta < 0 ? 'by −' : 'by +') + Math.abs(wind.delta).toFixed(1) + ' km/h (six-hour equivalent ' + scaled.toFixed(1) + ')');
-    }
-
-    const direction = weatherFieldPair(valid, 'direction');
-    if (direction) {
-        const shift = weatherCircularDifference(direction.first, direction.last);
-        addComponent('windDirection', 'Wind direction', direction, weatherSeverity(shift, weatherFormula('stability_trigger_wind_direction', 20), weatherFormula('stability_max_wind_direction', 90)),
-            'shifted by ' + Math.round(shift) + '° using the shortest compass angle');
-    }
-
-    const firstTemp = weatherFieldPair(valid, 'temperature');
-    const firstDew = weatherFieldPair(valid, 'dewPoint');
-    if (firstTemp && firstDew) {
-        const spreadFirst = firstTemp.first - firstDew.first;
-        const spreadLast = firstTemp.last - firstDew.last;
-        const narrowing = spreadFirst - spreadLast;
-        addComponent('dewPointSpread', 'Temperature/dew-point gap', {
-            first: spreadFirst, last: spreadLast, delta: spreadLast - spreadFirst,
-            hours: Math.min(firstTemp.hours, firstDew.hours)
-        }, weatherSeverity(narrowing, weatherFormula('stability_trigger_dew_point_spread', 1), weatherFormula('stability_max_dew_point_spread', 3)),
-        'gap ' + (narrowing >= 0 ? 'narrowed by ' : 'widened by ') + Math.abs(narrowing).toFixed(1) + '°C');
-    }
-
-    const rain = weatherFieldPair(valid, 'rain');
-    if (rain) {
-        const scaled = Math.abs(rain.delta) * 6 / rain.hours;
-        addComponent('rainfall', 'Rainfall', rain, weatherSeverity(scaled, weatherFormula('stability_trigger_rainfall', 0.2), weatherFormula('stability_max_rainfall', 2)),
-            'reading changed by ' + (rain.delta < 0 ? '−' : '+') + Math.abs(rain.delta).toFixed(2) + ' mm (six-hour equivalent ' + scaled.toFixed(2) + ' mm)');
-    }
-
-    const cloud = weatherFieldPair(valid, 'cloud');
-    if (cloud) {
-        const scaled = Math.abs(cloud.delta) * 6 / cloud.hours;
-        addComponent('cloudCover', 'Cloud cover', cloud, weatherSeverity(scaled, weatherFormula('stability_trigger_cloud_cover', 15), weatherFormula('stability_max_cloud_cover', 50)),
-            'changed by ' + Math.abs(cloud.delta).toFixed(0) + ' percentage points (six-hour equivalent ' + scaled.toFixed(0) + ')');
-    }
-
-    const codes = weatherFieldPair(valid, 'weatherCode');
-    if (codes) {
-        const severityChange = Math.abs(weatherCodeSeverity(codes.last) - weatherCodeSeverity(codes.first));
-        const changed = codes.first !== codes.last;
-        const severity = changed ? Math.max(severityChange > 0 ? weatherSeverity(severityChange, weatherFormula('stability_trigger_weather_code', 1), weatherFormula('stability_max_weather_code', 5)) : 0.25, 0.25) : 0;
-        addComponent('weatherCode', 'Reported weather condition', codes, severity,
-            changed ? 'condition code changed from ' + codes.first + ' to ' + codes.last + ' (severity-category difference ' + severityChange + ')' : 'condition code stayed the same');
-    }
-
-    if (components.length < weatherFormula('stability_min_signals', 5)) {
-        return {
-            score: null,
-            summary: 'Insufficient valid signals (' + components.length + '/9). At least ' + weatherFormula('stability_min_signals', 5) + ' are required.',
-            components, reasons: [], coverage: components.length
-        };
-    }
-
-    const availableWeight = components.reduce((sum, component) => sum + component.weight, 0);
-    const weightedSeverity = components.reduce((sum, component) => sum + component.weight * component.severity, 0);
-    const magnitudeScore = Math.round((10 * weightedSeverity / availableWeight) * 10) / 10;
-    components.forEach(component => {
-        component.contribution = 10 * component.weight * component.severity / availableWeight;
-    });
     const gradient = weatherGradientScore(valid);
     if (!Number.isFinite(gradient.score)) {
         return {
             score: null,
             summary: 'Insufficient valid signals to calculate the gradient score (' + gradient.coverage + '/9).',
-            components, gradientComponents: gradient.components, reasons: [], coverage: components.length
+            components: gradient.components,
+            gradientComponents: gradient.components,
+            reasons: [],
+            coverage: gradient.coverage
         };
     }
-    // Equal weighting keeps endpoint change and cumulative movement equally influential.
-    const score = Math.round(((magnitudeScore * 0.5) + (gradient.score * 0.5)) * 10) / 10;
+
+    // WVI is calculated exclusively from cumulative gradient movement.
+    const score = gradient.score;
+    const components = gradient.components;
+    const availableWeight = gradient.availableWeight;
+    const weightedSeverity = gradient.weightedSeverity;
 
     let summary;
     if (score < 2) summary = 'Stable · no material change detected';
@@ -983,7 +896,7 @@ function weatherChangeScore(readings) {
     else summary = 'Very significant change in recent conditions';
 
     return {
-        score, magnitudeScore, gradientScore: gradient.score, summary, components,
+        score, gradientScore: gradient.score, summary, components,
         gradientComponents: gradient.components, coverage: components.length,
         availableWeight, weightedSeverity,
         reasons: components.filter(component => component.severity > 0)
@@ -1267,13 +1180,8 @@ async function loadWeatherChange() {
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
                 }).join('');
             reasonsElement.insertAdjacentHTML('afterbegin',
-                '<div class="weather-change-reason"><span><strong>WVI calculation (50/50)</strong>: change score ' +
-                result.magnitudeScore.toFixed(1) + '/10 × 50% + gradient score ' + result.gradientScore.toFixed(1) +
-                '/10 × 50% = <strong>' + volatilityScore.toFixed(1) + '/10</strong></span></div>' +
-                result.gradientComponents
-                    .filter(component => Number.isFinite(component.severity) && component.severity > 0)
-                    .map(component => '<div class="weather-change-reason"><span><strong>Gradient · ' +
-                        component.label + '</strong>: ' + component.evidence + '</span></div>').join('')
+                '<div class="weather-change-reason"><span><strong>WVI gradient score</strong>: ' +
+                result.gradientScore.toFixed(1) + '/10</span></div>'
             );
             const stabilityRow = document.querySelector('.temperature-stability-row');
             const thresholdValue = stabilityRow?.dataset.weatherStabilityAlertThreshold;
