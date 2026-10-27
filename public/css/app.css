@@ -185,7 +185,7 @@ button:disabled { opacity: .55; cursor: default; }
 .wind-speed-fill[data-active="true"]{filter:drop-shadow(0 0 3px rgba(37,99,235,.22))}
 .wind-speed-segments{stroke:var(--border);stroke-width:2.6;stroke-linecap:butt;opacity:.98}
 .wind-speed-segments line.active{stroke:#22d3ee;filter:drop-shadow(0 0 1px rgba(34,211,238,.25))}
-.wind-speed-segments line.change{stroke:#fb923c;filter:drop-shadow(0 0 1px rgba(251,146,60,.3))}
+.wind-speed-segments line.change{stroke:#f97316;filter:drop-shadow(0 0 1px rgba(249,115,22,.35))}
 .wind-speed-segments line.active.high-wind{stroke:#f97316;filter:drop-shadow(0 0 1px rgba(249,115,22,.3))}
 .wind-speed-scale-labels{fill:var(--text);font-size:3.1px;font-weight:900;text-anchor:middle;dominant-baseline:middle;paint-order:stroke fill;stroke:var(--card);stroke-width:.65px;stroke-linejoin:round}
 .wind-speed-ticks{stroke:var(--muted);stroke-width:.9}
