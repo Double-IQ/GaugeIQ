@@ -712,15 +712,15 @@ if ($current && !empty($current['observed_at'])) {
                                 $svgAngle = $degree - 90.0;
                                 $majorTick = $degree % 30 === 0;
                                 $mediumTick = $degree % 10 === 0;
-                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 41.7 : ($mediumTick ? 40.4 : 39.7));
-                                $tickEnd = $windGaugePoint($svgAngle, 37.5);
+                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 35.5 : ($mediumTick ? 34.2 : 33.5));
+                                $tickEnd = $windGaugePoint($svgAngle, 31.5);
                             ?>
                                 <line class="<?= $majorTick ? 'major' : ($mediumTick ? 'medium' : '') ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
                         </g>
                         <g class="wind-compass-labels wind-combined-label-ring">
                             <?php for ($degree = 0; $degree < 360; $degree += 30):
-                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 34.2);
+                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 27.8);
                                 $label = match ($degree) {
                                     0 => 'N',
                                     90 => 'E',
