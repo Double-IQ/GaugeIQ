@@ -786,13 +786,13 @@ if ($current && !empty($current['observed_at'])) {
     </a>
 
 
-    <section class="card satellite-map-card" aria-labelledby="interactiveWeatherMapsTitle">
+    <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
                     <circle cx="24" cy="24" r="8"></circle>
                     <path d="M18 18 10 10M30 18l8-8M18 30l-8 8M30 30l8 8"></path>
-                    <path d="M7 7l7 1-1 7M41 7l-7 1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
+                    <path d="M7 7l7 1-1 7M41 7l-7-1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
                     <path d="M21 21h6v6h-6z"></path>
                 </svg>
             </div>
@@ -800,20 +800,13 @@ if ($current && !empty($current['observed_at'])) {
                 <h2 id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
                 <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</p>
             </div>
+            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
         </div>
-        <a class="satellite-map-embed satellite-map-link"
-           href="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>"
-           target="_blank"
-           rel="noopener noreferrer"
-           aria-label="Open interactive Open-Meteo weather map in a new tab">
-            <span class="satellite-map-link-title">Open interactive weather map <span aria-hidden="true">↗</span></span>
-            <span class="satellite-map-link-description">Opens temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</span>
-        </a>
         <div class="satellite-map-card-footer">
-            <span>Interactive weather map</span>
-            <a class="satellite-map-external" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer">Open full map ↗</a>
+            <span>Open interactive weather map</span>
+            <span class="satellite-map-external">Open-Meteo ↗</span>
         </div>
-    </section>
+    </a>
     </section>
 
 
