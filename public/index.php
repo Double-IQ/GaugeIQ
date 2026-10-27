@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-wind-arrow-fix">
+<link rel="stylesheet" href="css/app.css?v=20261027-smooth-atmospheric-bars">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -507,23 +507,19 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
-                // Fill the bar to the current reading. Highlight the portion equivalent
-                // to the absolute one-hour change in yellow, keeping the rest of the
-                // current reading green and the unused scale grey.
-                // Reserve the final two of 40 segments (5%) as a fixed red threshold zone.
-                $activeSegments = min(38, (int)round($bar['ratio'] * 38));
-                $changeSegments = min($activeSegments, (int)round($bar['deltaRatio'] * 38));
+                // Use a continuous fill: green shows the current reading and yellow overlays
+                // the rightmost portion corresponding to the absolute one-hour change.
+                // Keep the final 5% as a fixed red end zone.
+                $fillPercent = min(95.0, max(0.0, (float)$bar['ratio'] * 95.0));
+                $changePercent = $bar['ratio'] > 0
+                    ? min(100.0, max(0.0, ((float)$bar['deltaRatio'] / (float)$bar['ratio']) * 100.0))
+                    : 0.0;
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
-                        <?php for ($segment = 0; $segment < 40; $segment++):
-                            $segmentActive = $segment < $activeSegments;
-                            $segmentChange = $segmentActive && $segment >= ($activeSegments - $changeSegments);
-                        ?>
-                            <span class="climate-segment<?= $segment >= 38 ? ' warning-zone' : ($segmentActive ? ($segmentChange ? ' change' : ' active') : '') ?>"></span>
-                        <?php endfor; ?>
+                        <span class="climate-bar-fill" style="width:<?= number_format($fillPercent, 2, '.', '') ?>%"><span class="climate-bar-fill-change" style="width:<?= number_format($changePercent, 2, '.', '') ?>%"></span></span>
                     </div>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
@@ -862,6 +858,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261027-mobile-dismiss-fix"></script>
-<script src="js/app.js?v=20261027-wind-arrow-fix"></script>
+<script src="js/app.js?v=20261027-smooth-atmospheric-bars"></script>
 </body>
 </html>
