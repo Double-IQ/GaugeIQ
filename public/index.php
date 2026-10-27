@@ -806,7 +806,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
     </a>
 
-    <a class="card satellite-map-card" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Open-Meteo interactive weather maps in a new tab">
+    <section class="card satellite-map-card" aria-labelledby="interactiveWeatherMapsTitle">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
@@ -817,16 +817,24 @@ if ($current && !empty($current['observed_at'])) {
                 </svg>
             </div>
             <div class="satellite-map-copy">
-                <h2>Interactive Weather Maps</h2>
-                <p class="muted">Explore weather-model maps for temperature, wind and precipitation.</p>
+                <h2 id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
+                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers without leaving GaugeIQ.</p>
             </div>
-            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
+        </div>
+        <div class="satellite-map-embed">
+            <iframe
+                src="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>"
+                title="Open-Meteo interactive weather map"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allow="fullscreen"
+                allowfullscreen></iframe>
         </div>
         <div class="satellite-map-card-footer">
-            <span>Explore Weather Map</span>
-            <span class="satellite-map-external" aria-hidden="true">Opens Open-Meteo&nbsp; ↗</span>
+            <span>Interactive weather map</span>
+            <a class="satellite-map-external" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer">Open full map ↗</a>
         </div>
-    </a>
+    </section>
     </section>
 
 
