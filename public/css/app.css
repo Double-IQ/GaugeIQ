@@ -1178,3 +1178,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .pressure-gauge-horizontal .pressure-glass-overlay{opacity:.72;stroke:rgba(255,255,255,.15);stroke-width:.7}
 .pressure-horizontal-labels{font-size:9px;font-weight:850;fill:var(--muted)}
 .pressure-horizontal-labels .pressure-horizontal-reading{font-size:15px;font-weight:900;fill:var(--text)}
+
+/* Keep the phone-heading index fixed while the compass bearings move underneath it. */
+.wind-heading-index{stroke:var(--text);stroke-width:1.7;stroke-linecap:round;opacity:.9}
+.wind-compass-strip-labels text{transition:x .08s linear}
+.wind-compass-strip-ticks line{transition:x1 .08s linear,x2 .08s linear}
+.wind-gauge-horizontal .wind-speed-segments{stroke:var(--border);stroke-width:2.2;stroke-linecap:butt}
+.wind-gauge-horizontal .wind-speed-segments line.active{stroke:#22d3ee;filter:drop-shadow(0 0 1px rgba(34,211,238,.25))}
+.wind-gauge-horizontal .wind-speed-segments line.change{stroke:#fb923c;filter:drop-shadow(0 0 1px rgba(251,146,60,.3))}
+.wind-gauge-horizontal .wind-speed-segments line.active.high-wind{stroke:#f97316}
