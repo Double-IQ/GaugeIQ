@@ -620,7 +620,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                 </svg>
             </div>
-            <div class="wind-hud-degree-guide" aria-label="Wind bearing scale">
+            <div class="wind-hud-degree-guide wind-gauge wind-gauge-horizontal" aria-label="Wind bearing scale">
                 <svg class="wind-compass-strip" viewBox="0 0 320 42" aria-hidden="true" focusable="false">
                     <g class="wind-compass-strip-ticks">
                         <?php for ($degree = 0; $degree < 360; $degree += 5):
