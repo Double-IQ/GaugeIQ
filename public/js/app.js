@@ -189,15 +189,29 @@ function applyWindCompassHeading(heading) {
                 windCompassRotation += correction;
             }
 
-            // Keep the compass dial fixed and rotate only the wind needle
-            // relative to the device heading.
+            // Keep the phone-heading index fixed in the centre. Move the
+            // compass bearings beneath it as the phone rotates; the wind-source
+            // marker shows the wind's bearing relative to the phone.
+            const relativeBearingX = (bearing) => {
+                const relative = shortestCompassDelta(windCompassHeading, bearing);
+                return 160 + (relative / 360) * 300;
+            };
+            windGauge.querySelectorAll('.wind-compass-strip-ticks [data-bearing], .wind-compass-strip-labels [data-bearing]').forEach((mark) => {
+                const bearing = Number(mark.dataset.bearing);
+                if (!Number.isFinite(bearing)) return;
+                const x = relativeBearingX(bearing);
+                if (mark.tagName.toLowerCase() === 'line') {
+                    mark.setAttribute('x1', x.toFixed(2));
+                    mark.setAttribute('x2', x.toFixed(2));
+                } else {
+                    mark.setAttribute('x', x.toFixed(2));
+                }
+            });
             const windNeedle = windGauge.querySelector('.wind-direction-arrows');
             if (windNeedle) {
                 const windDegrees = Number(windNeedle.dataset.windDegrees);
                 if (Number.isFinite(windDegrees)) {
-                    const relativeDegrees = normalizeCompassHeading(windDegrees - windCompassRotation);
-                    const x = 10 + (relativeDegrees / 360) * 300;
-                    windNeedle.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
+                    windNeedle.setAttribute('transform', 'translate(' + relativeBearingX(windDegrees).toFixed(2) + ' 0)');
                 }
             }
 
