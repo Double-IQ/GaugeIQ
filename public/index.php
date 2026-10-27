@@ -602,7 +602,8 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                     <g class="wind-compass-strip-labels">
                         <?php foreach ([0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE', 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'] as $degree => $label):
-                            $x = 160 + (shortest_placeholder($degree) / 360.0) * 300;
+                            $labelOffset = $degree <= 180 ? $degree : $degree - 360;
+                            $x = 160 + ($labelOffset / 360.0) * 300;
                         ?>
                             <text data-bearing="<?= $degree ?>" class="<?= $degree === 0 ? 'north-label' : '' ?>" x="<?= number_format($x, 3, '.', '') ?>" y="17"><?= $label ?></text>
                         <?php endforeach; ?>
