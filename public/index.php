@@ -424,43 +424,7 @@ if ($current && !empty($current['observed_at'])) {
     ?>
 
 
-        <article class="card metric-card pressure-card pressure-gauge-only">
-            <?php if ($current): ?>
-                <div class="pressure-range-gauge pressure-gauge-horizontal" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
-                    <svg viewBox="0 0 320 100" aria-hidden="true" focusable="false">
-                        <defs>
-                            <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
-                            <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
-                            <linearGradient id="pressureGlassSheen" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#ffffff" stop-opacity=".24"></stop><stop offset="55%" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset="100%" stop-color="#ffffff" stop-opacity=".10"></stop>
-                            </linearGradient>
-                        </defs>
-                        <rect class="pressure-range-outer-ring" x="2" y="7" width="316" height="72" rx="13"></rect>
-                        <rect class="pressure-range-track" x="16" y="39" width="288" height="7" rx="3.5"></rect>
-                        <rect class="pressure-range-fill" x="16" y="39" width="<?= number_format(288 * max(0.0, min(1.0, $pressureRatio)), 3, '.', '') ?>" height="7" rx="3.5"></rect>
-                        <g class="pressure-range-ticks">
-                            <?php for ($tick = 0; $tick <= 24; $tick++):
-                                $x = 16 + ($tick / 24.0) * 288;
-                                $isMajor = in_array($tick, [0, 6, 12, 18, 24], true);
-                            ?>
-                                <line class="<?= $isMajor ? 'major' : ($tick % 2 === 0 ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $isMajor ? 31 : 34 ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="<?= $isMajor ? 53 : 49 ?>"></line>
-                            <?php endfor; ?>
-                        </g>
-                        <rect class="pressure-glass-overlay" x="2" y="7" width="316" height="72" rx="13" fill="url(#pressureGlassSheen)" pointer-events="none"></rect>
-                        <?php $pressureNeedleX = 16 + (max(0.0, min(1.0, $pressureRatio)) * 288); ?>
-                        <path class="pressure-range-needle" d="M <?= number_format($pressureNeedleX, 3, '.', '') ?> 28 L <?= number_format($pressureNeedleX - 4.2, 3, '.', '') ?> 20 L <?= number_format($pressureNeedleX + 4.2, 3, '.', '') ?> 20 Z"></path>
-                        <circle class="pressure-range-hub-outer" cx="<?= number_format($pressureNeedleX, 3, '.', '') ?>" cy="42.5" r="3.7"></circle>
-                        <circle class="pressure-range-hub" cx="<?= number_format($pressureNeedleX, 3, '.', '') ?>" cy="42.5" r="2.1"></circle>
-                        <g class="pressure-horizontal-labels">
-                            <text x="16" y="65" text-anchor="start"><?= number_format($pressureLow, 0) ?></text>
-                            <text x="160" y="65" text-anchor="middle"><?= number_format($pressureLow + ($pressureRange * 0.5), 0) ?></text>
-                            <text x="304" y="65" text-anchor="end"><?= number_format($pressureHigh, 0) ?></text>
-                            <text class="pressure-horizontal-reading" x="160" y="91" text-anchor="middle"><?= number_format((float)$current['pressure_hpa'], 1) ?> hPa</text>
-                        </g>
-                    </svg>
-                </div>
-            <?php else: ?><div class="metric-unavailable">Pressure data unavailable</div><?php endif; ?>
-        </article>
+        
 
     <?php
     // Compare against the closest stored observation within 30 minutes of the one-hour
@@ -531,7 +495,7 @@ if ($current && !empty($current['observed_at'])) {
     };
     $pressureBarRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - 950.0) / 100.0)) : 0.0;
     $climateBars = [
-        $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) . ' hPa' : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure'],
+        $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure'],
         $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1),
         $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta),
         $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta),
