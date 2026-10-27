@@ -736,8 +736,8 @@ if ($current && !empty($current['observed_at'])) {
                         </g>
                     </g>
                     <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path class="wind-direction-to-marker" d="M50 87 L54 79 L51 81 L51 17.5 L49 17.5 L49 81 L46 79 Z"></path>
-                        <circle class="wind-direction-from-dot" cx="50" cy="14.5" r="2.1"></circle>
+                        <path class="wind-direction-to-marker" d="M50 76 L54 69 L51 72 L51 28 L49 28 L49 72 L46 69 Z"></path>
+                        <circle class="wind-direction-from-dot" cx="50" cy="24.5" r="2.1"></circle>
                     </g>
 
                     <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
