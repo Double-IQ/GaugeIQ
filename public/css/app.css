@@ -1122,20 +1122,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-compass-labels.wind-combined-label-ring .cardinal-label{font-size:4.2px;font-weight:900;fill:var(--text)}
 .wind-compass-labels.wind-combined-label-ring .north-label{font-size:4.7px;font-weight:950;fill:#ef4444}
 
-/* Match the temperature top card's accent palette to the Air pressure gauge. */
-.temperature-summary-current strong{color:#2563eb}
-.temperature-summary-card .temperature-summary-range strong{color:#3b82f6}
-.temperature-summary-card .temperature-card-heading .label{color:var(--text)}
+/* Match the temperature top card's accent palette to the Wind card. */
+.temperature-summary-current strong{color:#edf6ff}
+.temperature-summary-card .temperature-summary-range strong{color:#9ccfff}
+.temperature-summary-card .temperature-card-heading .label{color:#edf6ff}
 
-/* Match the temperature card's full surface, outline and text treatment to Air pressure. */
+/* Match the temperature top card's glass surface and outline to the Wind card. */
 .temperature-summary-card{
-  background:radial-gradient(ellipse at 30% 48%,rgba(0,74,160,.20),transparent 44%),linear-gradient(115deg,#031126 0%,#061a36 60%,#03132b 100%);
-  border:2px solid #073f80;
-  border-radius:20px;
-  box-shadow:inset 0 1px 0 rgba(125,211,252,.10),0 10px 28px rgba(2,8,23,.18);
-  color:#f4f7ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+  color:#edf6ff;
 }
-.temperature-summary-card .temperature-card-heading .label{color:#e7f1ff}
+.temperature-summary-card .temperature-card-heading .label{color:#edf6ff}
 .temperature-summary-card .temperature-summary-current strong{color:#f4f7ff}
 .temperature-summary-card .temperature-feels-like-direct{color:#9db9e2}
 .temperature-summary-card .temperature-summary-range span{color:#9db9e2}
@@ -1284,9 +1284,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-bar-value{grid-column:3;grid-row:1;font-size:14px;color:#f4f7ff}
 .climate-gauge-card .climate-bar-change{grid-column:2;grid-row:1;font-size:12px;color:#829fc1}
 .climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#f5d34f}
-.climate-gauge-card .climate-segment-track{grid-column:1 / -1;grid-row:2;display:block;position:relative;height:8px;padding:0;overflow:hidden;border:1px solid rgba(118,145,174,.24);border-radius:999px;background:linear-gradient(90deg,rgba(118,145,174,.18) 0%,rgba(118,145,174,.18) 94.5%,#d91e36 95%,#ff7777 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
-.climate-gauge-card .climate-bar-fill{position:relative;display:block;height:100%;max-width:95%;border-radius:999px 0 0 999px;background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:0 0 5px rgba(163,255,50,.15);overflow:hidden}
-.climate-gauge-card .climate-bar-fill-change{position:absolute;top:0;right:0;bottom:0;display:block;border-radius:0;background:linear-gradient(180deg,#ffe878,#e8b900);box-shadow:0 0 5px rgba(245,211,79,.18)}
+.climate-gauge-card .climate-segment-track{grid-column:1 / -1;grid-row:2;display:block;position:relative;height:8px;padding:0;overflow:hidden;border:1px solid rgba(118,145,174,.24);border-radius:999px;background:linear-gradient(90deg,#a3ff32 0%,#4fbd31 var(--bar-change-start),#f5d34f var(--bar-change-start),#e8b900 var(--bar-fill),rgba(118,145,174,.18) var(--bar-fill),rgba(118,145,174,.18) 94.5%,#d91e36 95%,#ff7777 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
 @media(max-width:560px){
  .climate-gauge-card{padding:16px 12px;border-radius:16px}
  .climate-gauge-card .section-heading .label{font-size:24px}
