@@ -511,8 +511,8 @@ if ($current && !empty($current['observed_at'])) {
                 // a Content Security Policy that blocks inline style attributes.
                 // The final segment is always red; the reading fills the preceding 39 segments.
                 $segmentCount = 40;
-                $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * ($segmentCount - 1));
-                $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * ($segmentCount - 1)));
+                $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * $segmentCount);
+                $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
@@ -520,11 +520,11 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
-                            $segmentClass = $segment === $segmentCount - 1
-                                ? 'warning-zone'
-                                : ($segment >= $changeStartSegment && $segment < $fillSegments
-                                    ? 'change'
-                                    : ($segment < $changeStartSegment ? 'active' : ''));
+                            $segmentClass = $segment >= $fillSegments
+                                ? ''
+                                : ($segment === $segmentCount - 1
+                                    ? 'warning-zone'
+                                    : ($segment >= $changeStartSegment ? 'change' : 'active'));
                         ?>
                             <span class="climate-segment<?= $segmentClass !== '' ? ' ' . $segmentClass : '' ?>"></span>
                         <?php endfor; ?>
