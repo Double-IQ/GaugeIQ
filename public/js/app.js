@@ -115,7 +115,7 @@ colorScheme.addEventListener?.('change', () => {
 applyTheme(savedTheme);
 
 
-const windGauge = document.querySelector('.wind-gauge');
+const windGauge = document.querySelector('.wind-hud-vector');
 const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
@@ -197,29 +197,14 @@ function applyWindCompassHeading(heading) {
                 windCompassRotation += correction;
             }
 
-            // Keep the phone-heading index fixed in the centre. Move the
-            // compass bearings beneath it as the phone rotates; the wind-source
-            // marker shows the wind's bearing relative to the phone.
-            const relativeBearingX = (bearing) => {
-                const relative = shortestCompassDelta(windCompassHeading, bearing);
-                return 160 + (relative / 360) * 300;
-            };
-            windGauge.querySelectorAll('.wind-compass-strip-ticks [data-bearing], .wind-compass-strip-labels [data-bearing]').forEach((mark) => {
-                const bearing = Number(mark.dataset.bearing);
-                if (!Number.isFinite(bearing)) return;
-                const x = relativeBearingX(bearing);
-                if (mark.tagName.toLowerCase() === 'line') {
-                    mark.setAttribute('x1', x.toFixed(2));
-                    mark.setAttribute('x2', x.toFixed(2));
-                } else {
-                    mark.setAttribute('x', x.toFixed(2));
-                }
-            });
-            const windNeedle = windGauge.querySelector('.wind-direction-arrows');
+            // Rotate the wind vector relative to the phone heading while the
+            // glass instrument panel remains fixed in the centre of the card.
+            const windNeedle = windGauge.querySelector('.wind-hud-vector-arrow');
             if (windNeedle) {
-                const windDegrees = Number(windNeedle.dataset.windDegrees);
-                if (Number.isFinite(windDegrees)) {
-                    windNeedle.setAttribute('transform', 'translate(' + relativeBearingX(windDegrees).toFixed(2) + ' 0)');
+                const windToDegrees = normalizeCompassHeading(windNeedle.dataset.windToDegrees);
+                if (windToDegrees !== null) {
+                    const relativeBearing = shortestCompassDelta(windCompassHeading, windToDegrees);
+                    windNeedle.setAttribute('transform', 'rotate(' + relativeBearing.toFixed(2) + ' 170 90)');
                 }
             }
 
@@ -326,26 +311,12 @@ function disableWindCompass() {
     windCompassTargetHeading = null;
     windCompassRotation = null;
 
-    // Restore the complete strip (ticks, labels, wind-to arrow and wind-from dot)
-    // to the fixed north-up bearing scale when the device compass is switched off.
-    windGauge?.querySelectorAll('.wind-compass-strip-ticks [data-bearing], .wind-compass-strip-labels [data-bearing]').forEach((mark) => {
-        const bearing = normalizeCompassHeading(mark.dataset.bearing);
-        if (bearing === null) return;
-        const x = 160 + (shortestCompassDelta(0, bearing) / 360) * 300;
-        if (mark.tagName.toLowerCase() === 'line') {
-            mark.setAttribute('x1', x.toFixed(2));
-            mark.setAttribute('x2', x.toFixed(2));
-        } else {
-            mark.setAttribute('x', x.toFixed(2));
-        }
-    });
-
-    const windNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    // Return the vector to its north-up, absolute-bearing orientation.
+    const windNeedle = windGauge?.querySelector('.wind-hud-vector-arrow');
     if (windNeedle) {
-        const windDegrees = normalizeCompassHeading(windNeedle.dataset.windDegrees);
-        if (windDegrees !== null) {
-            const relative = shortestCompassDelta(0, windDegrees);
-            windNeedle.setAttribute('transform', 'translate(' + (160 + (relative / 360) * 300).toFixed(2) + ' 0)');
+        const windToDegrees = normalizeCompassHeading(windNeedle.dataset.windToDegrees);
+        if (windToDegrees !== null) {
+            windNeedle.setAttribute('transform', 'rotate(' + windToDegrees.toFixed(2) + ' 170 90)');
         }
     }
 
@@ -354,13 +325,11 @@ function disableWindCompass() {
 }
 
 if (windGauge) {
-    const initialWindNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    const initialWindNeedle = windGauge.querySelector('.wind-hud-vector-arrow');
     if (initialWindNeedle) {
-        const windDegrees = normalizeCompassHeading(initialWindNeedle.dataset.windDegrees);
-        if (windDegrees !== null) {
-            const relative = shortestCompassDelta(0, windDegrees);
-            const x = 160 + (relative / 360) * 300;
-            initialWindNeedle.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
+        const windToDegrees = normalizeCompassHeading(initialWindNeedle.dataset.windToDegrees);
+        if (windToDegrees !== null) {
+            initialWindNeedle.setAttribute('transform', 'rotate(' + windToDegrees.toFixed(2) + ' 170 90)');
         }
     }
 
