@@ -1297,3 +1297,9 @@ body.gaugeiq-menu-open{overflow:hidden}
  .climate-gauge-card .climate-segment-track{gap:1px}
  .climate-gauge-card .climate-segment{height:6px}
 }
+
+
+/* Keep the wind arrow comfortably inside the panel and explain it plainly. */
+.wind-hud-help{margin:8px 2px 0;color:#b8cce4;font-size:12px;line-height:1.5}
+.wind-hud-vector-labels text{paint-order:stroke;stroke:#07172e;stroke-width:1.5px;stroke-linejoin:round}
+@media(max-width:420px){.wind-hud-help{font-size:11px;line-height:1.45}}
