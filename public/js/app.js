@@ -48,6 +48,14 @@
         reloadStarted = true;
         showLoading('Refreshing data…');
         window.setTimeout(() => window.location.reload(), minimumVisibleMs);
+
+        // If the reload stalls or fails on a mobile connection, release the overlay.
+        window.setTimeout(() => {
+            if (document.visibilityState === 'visible' && !screen.hidden && reloadStarted) {
+                reloadStarted = false;
+                dismissLoading();
+            }
+        }, minimumVisibleMs + 6000);
     }
 
     window.addEventListener('pageshow', event => {
