@@ -675,7 +675,6 @@ if ($current && !empty($current['observed_at'])) {
                     <strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) : '—' ?></strong>
                     <small class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : 'Wind data unavailable' ?></small>
                 </div>
-                <span class="wind-compass-status" id="windCompassStatus" hidden></span>
             </div>
         </article>
 
