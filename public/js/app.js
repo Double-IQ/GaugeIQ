@@ -216,10 +216,17 @@ function applyWindCompassHeading(heading) {
                 }
             });
             const windNeedle = windGauge.querySelector('.wind-direction-arrows');
+            const windFromMarker = windGauge.querySelector('.wind-direction-from-marker');
             if (windNeedle) {
                 const windDegrees = Number(windNeedle.dataset.windDegrees);
                 if (Number.isFinite(windDegrees)) {
-                    windNeedle.setAttribute('transform', 'translate(' + relativeBearingX(windDegrees).toFixed(2) + ' 0)');
+                    windNeedle.setAttribute('transform', 'translate(' + relativeBearingX((windDegrees + 180) % 360).toFixed(2) + ' 0)');
+                }
+            }
+            if (windFromMarker) {
+                const windDegrees = Number(windFromMarker.dataset.windDegrees);
+                if (Number.isFinite(windDegrees)) {
+                    windFromMarker.setAttribute('transform', 'translate(' + relativeBearingX(windDegrees).toFixed(2) + ' 0)');
                 }
             }
 
@@ -327,10 +334,19 @@ function disableWindCompass() {
     windCompassRotation = null;
 
     const windNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    const windFromMarker = windGauge?.querySelector('.wind-direction-from-marker');
     if (windNeedle) {
-        const windDegrees = Number(windNeedle.dataset.windDegrees);
-        if (Number.isFinite(windDegrees)) {
-            windNeedle.setAttribute('transform', 'rotate(' + windDegrees.toFixed(2) + ' 50 50)');
+        const windDegrees = normalizeCompassHeading(windNeedle.dataset.windDegrees);
+        if (windDegrees !== null) {
+            const relative = shortestCompassDelta(0, (windDegrees + 180) % 360);
+            windNeedle.setAttribute('transform', 'translate(' + (160 + (relative / 360) * 300).toFixed(2) + ' 0)');
+        }
+    }
+    if (windFromMarker) {
+        const windDegrees = normalizeCompassHeading(windFromMarker.dataset.windDegrees);
+        if (windDegrees !== null) {
+            const relative = shortestCompassDelta(0, windDegrees);
+            windFromMarker.setAttribute('transform', 'translate(' + (160 + (relative / 360) * 300).toFixed(2) + ' 0)');
         }
     }
 
@@ -340,14 +356,21 @@ function disableWindCompass() {
 
 if (windGauge) {
     const initialWindNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    const initialWindFromMarker = windGauge?.querySelector('.wind-direction-from-marker');
     if (initialWindNeedle) {
         const windDegrees = normalizeCompassHeading(initialWindNeedle.dataset.windDegrees);
         if (windDegrees !== null) {
-            // The strip is positioned horizontally, not as a circular compass.
-            // Keep the wind marker aligned with the static bearing scale at startup.
-            const relative = shortestCompassDelta(0, windDegrees);
+            const relative = shortestCompassDelta(0, (windDegrees + 180) % 360);
             const x = 160 + (relative / 360) * 300;
             initialWindNeedle.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
+        }
+    }
+    if (initialWindFromMarker) {
+        const windDegrees = normalizeCompassHeading(initialWindFromMarker.dataset.windDegrees);
+        if (windDegrees !== null) {
+            const relative = shortestCompassDelta(0, windDegrees);
+            const x = 160 + (relative / 360) * 300;
+            initialWindFromMarker.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
         }
     }
 
