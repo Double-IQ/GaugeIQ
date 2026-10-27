@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v47';
+const CACHE = 'gaugeiq-v48';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -21,6 +21,7 @@ self.addEventListener('install', event => {
             './weather-icons/thunderstorm.svg',
             './css/app.css',
             './js/local-weather.js',
+            './js/loading-screen.js',
             './js/app.js'
         ]))
     );
