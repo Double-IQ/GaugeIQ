@@ -818,18 +818,17 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="satellite-map-copy">
                 <h2 id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
-                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers without leaving GaugeIQ.</p>
+                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</p>
             </div>
         </div>
-        <div class="satellite-map-embed">
-            <iframe
-                src="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>"
-                title="Open-Meteo interactive weather map"
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="cross-origin-isolated; fullscreen"
-                allowfullscreen></iframe>
-        </div>
+        <a class="satellite-map-embed satellite-map-link"
+           href="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Open interactive Open-Meteo weather map in a new tab">
+            <span class="satellite-map-link-title">Open interactive weather map <span aria-hidden="true">↗</span></span>
+            <span class="satellite-map-link-description">Opens temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</span>
+        </a>
         <div class="satellite-map-card-footer">
             <span>Interactive weather map</span>
             <a class="satellite-map-external" href="https://maps.open-meteo.com/" target="_blank" rel="noopener noreferrer">Open full map ↗</a>
