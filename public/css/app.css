@@ -1134,3 +1134,47 @@ body.gaugeiq-menu-open{overflow:hidden}
 .temperature-summary-card .temperature-summary-range span{color:#9db9e2}
 .temperature-summary-card .temperature-summary-range strong{color:#f4f7ff}
 .temperature-summary-card .temperature-stability-summary{background:rgba(3,19,43,.72);border-color:rgba(34,211,238,.42);color:#e7f1ff}
+
+
+/* Horizontal wind compass strip and wind-speed scale */
+.wind-gauge-horizontal{width:100%;max-width:520px;aspect-ratio:auto;margin:12px auto 0;filter:none}
+.wind-gauge-horizontal .wind-compass-strip{display:block;width:100%;height:auto;overflow:visible}
+.wind-strip-glass{fill:color-mix(in srgb,var(--card) 88%,white 12%);stroke:color-mix(in srgb,var(--text) 20%,transparent);stroke-width:1}
+:root[data-theme="dark"] .wind-strip-glass{fill:rgba(255,255,255,.045);stroke:rgba(255,255,255,.17)}
+.wind-compass-strip-ticks{stroke:var(--muted);stroke-width:.8}
+.wind-compass-strip-ticks line.medium{stroke-width:1.1}
+.wind-compass-strip-ticks line.major{stroke:var(--text);stroke-width:1.6}
+.wind-compass-strip-labels{fill:var(--muted);font-size:10px;font-weight:800;text-anchor:middle}
+.wind-compass-strip-labels .north-label{fill:#ef4444;font-size:12px;font-weight:950}
+.wind-strip-needle{fill:#facc15;stroke:#a3e635;stroke-width:.8;stroke-linejoin:round}
+.wind-strip-needle-shaft{stroke:#facc15;stroke-width:2;stroke-linecap:round}
+.wind-direction-from-dot{fill:#ef4444;stroke:var(--card);stroke-width:1}
+.wind-strip-speed-track{fill:var(--border);opacity:.85}
+.wind-gauge-horizontal .wind-speed-segments{stroke:var(--border);stroke-width:2.2}
+.wind-gauge-horizontal .wind-speed-segments line.active{stroke:#22d3ee}
+.wind-gauge-horizontal .wind-speed-segments line.change{stroke:#fb923c}
+.wind-gauge-horizontal .wind-speed-segments line.active.high-wind{stroke:#f97316}
+.wind-speed-horizontal-labels{fill:var(--muted);font-size:8px;font-weight:800}
+.wind-speed-horizontal-labels text{text-anchor:middle}
+.wind-speed-horizontal-labels text:first-child{text-anchor:start}
+.wind-speed-horizontal-labels text:last-child{text-anchor:end}
+.wind-gauge-horizontal-readout{position:relative;inset:auto;display:flex;flex-direction:row;justify-content:center;align-items:baseline;gap:9px;margin-top:5px;padding:0}
+.wind-gauge-horizontal .wind-speed-readout{position:static;transform:none;font-size:clamp(28px,7vw,38px);line-height:1;color:var(--text)}
+.wind-gauge-horizontal .wind-heading-readout{position:static;transform:none;font-size:13px;color:var(--muted)}
+.wind-gauge-horizontal .wind-compass-status{position:absolute;right:0;bottom:100%}
+@media(max-width:420px){.wind-gauge-horizontal .wind-heading-readout{font-size:11px}.wind-gauge-horizontal-readout{gap:7px}}
+/* Horizontal pressure range gauge */
+.pressure-gauge-horizontal{width:100%;max-width:520px;margin:0 auto}
+.pressure-gauge-horizontal svg{width:100%;height:auto;aspect-ratio:320/100}
+.pressure-gauge-horizontal .pressure-range-outer-ring{fill:color-mix(in srgb,var(--card) 88%,white 12%);stroke:color-mix(in srgb,var(--text) 20%,transparent);stroke-width:1}
+:root[data-theme="dark"] .pressure-gauge-horizontal .pressure-range-outer-ring{fill:rgba(255,255,255,.035);stroke:rgba(255,255,255,.17)}
+.pressure-gauge-horizontal .pressure-range-track{fill:var(--surface);stroke:var(--border);stroke-width:0}
+.pressure-gauge-horizontal .pressure-range-fill{fill:url(#pressureArcGradient);filter:drop-shadow(0 0 2px rgba(14,165,233,.24))}
+.pressure-gauge-horizontal .pressure-range-ticks{stroke:#8294b3;stroke-width:.8;stroke-linecap:round}
+.pressure-gauge-horizontal .pressure-range-ticks line.major{stroke:#22d3ee;stroke-width:1.35}
+.pressure-gauge-horizontal .pressure-range-needle{fill:url(#pressureNeedleGradient);stroke:#a3e635;stroke-width:.18;stroke-linejoin:round}
+.pressure-gauge-horizontal .pressure-range-hub-outer{fill:#0ea5e9;stroke:#22d3ee;stroke-width:.5}
+.pressure-gauge-horizontal .pressure-range-hub{fill:#22d3ee;stroke:#061648;stroke-width:.7}
+.pressure-gauge-horizontal .pressure-glass-overlay{opacity:.72;stroke:rgba(255,255,255,.15);stroke-width:.7}
+.pressure-horizontal-labels{font-size:9px;font-weight:850;fill:var(--muted)}
+.pressure-horizontal-labels .pressure-horizontal-reading{font-size:15px;font-weight:900;fill:var(--text)}
