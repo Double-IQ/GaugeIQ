@@ -333,6 +333,20 @@ function disableWindCompass() {
     windCompassTargetHeading = null;
     windCompassRotation = null;
 
+    // Restore the complete strip (ticks, labels, wind-to arrow and wind-from dot)
+    // to the fixed north-up bearing scale when the device compass is switched off.
+    windGauge?.querySelectorAll('.wind-compass-strip-ticks [data-bearing], .wind-compass-strip-labels [data-bearing]').forEach((mark) => {
+        const bearing = normalizeCompassHeading(mark.dataset.bearing);
+        if (bearing === null) return;
+        const x = 160 + (shortestCompassDelta(0, bearing) / 360) * 300;
+        if (mark.tagName.toLowerCase() === 'line') {
+            mark.setAttribute('x1', x.toFixed(2));
+            mark.setAttribute('x2', x.toFixed(2));
+        } else {
+            mark.setAttribute('x', x.toFixed(2));
+        }
+    });
+
     const windNeedle = windGauge?.querySelector('.wind-direction-arrows');
     const windFromMarker = windGauge?.querySelector('.wind-direction-from-marker');
     if (windNeedle) {
