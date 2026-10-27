@@ -341,9 +341,13 @@ function disableWindCompass() {
 if (windGauge) {
     const initialWindNeedle = windGauge?.querySelector('.wind-direction-arrows');
     if (initialWindNeedle) {
-        const windDegrees = Number(initialWindNeedle.dataset.windDegrees);
-        if (Number.isFinite(windDegrees)) {
-            initialWindNeedle.setAttribute('transform', 'rotate(' + windDegrees.toFixed(2) + ' 50 50)');
+        const windDegrees = normalizeCompassHeading(initialWindNeedle.dataset.windDegrees);
+        if (windDegrees !== null) {
+            // The strip is positioned horizontally, not as a circular compass.
+            // Keep the wind marker aligned with the static bearing scale at startup.
+            const relative = shortestCompassDelta(0, windDegrees);
+            const x = 160 + (relative / 360) * 300;
+            initialWindNeedle.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
         }
     }
 
