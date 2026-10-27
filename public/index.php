@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-wind-vector">
+<link rel="stylesheet" href="css/app.css?v=20261027-wind-direction-help">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -574,7 +574,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="wind-hud-heading">
                 <div>
                     <p class="label">Wind</p>
-                    <div class="wind-hud-subtitle">ATMOSPHERIC VECTOR</div>
+                    <div class="wind-hud-subtitle">WIND DIRECTION</div>
                 </div>
                 <div class="wind-hud-live"><span aria-hidden="true"></span> LIVE DATA</div>
             </div>
@@ -611,10 +611,10 @@ if ($current && !empty($current['observed_at'])) {
                         <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
                     </g>
                     <g class="wind-hud-vector-arrow" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windToDegrees, 2, '.', '') ?> 170 90)">
-                        <path d="M170 145V35" stroke="url(#windHudVectorLine)" stroke-width="3.5" stroke-linecap="round"></path>
-                        <circle cx="170" cy="145" r="13" fill="#ffad55" opacity=".12"></circle>
-                        <circle cx="170" cy="145" r="5" fill="#ffad55" stroke="#ffe1ba" stroke-width="1"></circle>
-                        <path d="M160 47L170 22L180 47L170 41Z" fill="url(#windHudArrow)" stroke="#8bdcff" stroke-width="1"></path>
+                        <path d="M170 120V61" stroke="url(#windHudVectorLine)" stroke-width="3.5" stroke-linecap="round"></path>
+                        <circle cx="170" cy="120" r="10" fill="#ffad55" opacity=".12"></circle>
+                        <circle cx="170" cy="120" r="4.5" fill="#ffad55" stroke="#ffe1ba" stroke-width="1"></circle>
+                        <path d="M162 67L170 47L178 67L170 62Z" fill="url(#windHudArrow)" stroke="#8bdcff" stroke-width="1"></path>
                         <circle cx="170" cy="90" r="3" fill="#d8f2ff" opacity=".7"></circle>
                     </g>
                     <g class="wind-hud-vector-labels">
@@ -622,7 +622,7 @@ if ($current && !empty($current['observed_at'])) {
                         <text x="18" y="38" class="wind-hud-from"><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></text>
                         <text x="322" y="22" text-anchor="end">TOWARDS</text>
                         <text x="322" y="38" text-anchor="end" class="wind-hud-to"><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></text>
-                        <text x="170" y="169" text-anchor="middle">WIND DIRECTION VECTOR</text>
+                        <text x="170" y="169" text-anchor="middle">ARROW SHOWS WHERE WIND IS TRAVELLING</text>
                     </g>
                 </svg>
             </div>
@@ -650,13 +650,14 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                 </svg>
             </div>
+            <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-hud-direction-summary">
                 <div><span class="wind-hud-origin-dot"></span><span>FROM <strong><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></strong></span></div>
                 <div><span class="wind-hud-destination-arrow">➤</span><span>TOWARDS <strong><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></strong></span></div>
             </div>
             <div class="wind-compass-controls">
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
-                <button type="button" class="secondary wind-compass-button" id="windCompassButton">Turn Compass ON</button>
+                <button type="button" class="secondary wind-compass-button" id="windCompassButton">Use phone compass</button>
             </div>
         </article>
 
@@ -860,6 +861,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261027-mobile-dismiss-fix"></script>
-<script src="js/app.js?v=20261027-wind-vector"></script>
+<script src="js/app.js?v=20261027-wind-direction-help"></script>
 </body>
 </html>
