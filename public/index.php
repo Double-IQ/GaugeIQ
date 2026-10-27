@@ -688,7 +688,9 @@ if ($current && !empty($current['observed_at'])) {
                                 $segmentChange = $windSpeedChange1h > 0.0
                                     ? ($segmentSpeed > ($windSpeed - $windSpeedChange1h) && $segmentSpeed <= $windSpeed)
                                     : ($windSpeedChange1h < 0.0 && $segmentSpeed > $windSpeed && $segmentSpeed <= min(60.0, $windSpeed - $windSpeedChange1h));
-                                $segmentClass = $segmentActive ? ($segmentChange ? 'active change' : 'active') : '';
+                                $segmentClass = $segmentChange
+                                    ? ($windSpeedChange1h > 0.0 ? 'active change' : 'change')
+                                    : ($segmentActive ? 'active' : '');
                             ?>
                                 <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
                             <?php endfor; ?>
