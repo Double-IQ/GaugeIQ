@@ -189,11 +189,6 @@ if ($current && !empty($current['observed_at'])) {
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
-<div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
-    <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
-    <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
-    <span class="gaugeiq-loading-indicator" aria-hidden="true"></span>
-</div>
 <main class="shell">
     <div id="updateNotice" class="update-notice" hidden role="status">
         <strong id="updateNoticeTitle">GaugeIQ update available</strong>
