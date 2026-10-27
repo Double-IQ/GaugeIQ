@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-atmospheric-labels-above-bars">
+<link rel="stylesheet" href="css/app.css?v=20261027-wind-flow-and-longer-bars">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -575,6 +575,10 @@ if ($current && !empty($current['observed_at'])) {
                 <div>
                     <p class="label">Wind</p>
                     <div class="wind-summary-line">Speed &amp; direction</div>
+                    <div class="wind-flow-legend" aria-label="Wind direction">
+                        <span><i class="wind-flow-dot" aria-hidden="true"></i> From <?= htmlspecialchars($windDirection, ENT_QUOTES) ?></span>
+                        <span><i class="wind-flow-arrow" aria-hidden="true">➜</i> Towards <?= ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][((int)round((($windDegrees + 180) % 360) / 45)) % 8] ?></span>
+                    </div>
                 </div>
                 <div class="wind-compass-controls">
                     <span class="wind-compass-status" id="windCompassStatus" hidden></span>
@@ -611,8 +615,10 @@ if ($current && !empty($current['observed_at'])) {
                     <line class="wind-heading-index" x1="160" y1="8" x2="160" y2="55"></line>
                     <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="translate(160 0)">
                         <path class="wind-strip-needle" d="M0 22 L-5 13 L5 13 Z"></path>
-                        <line class="wind-strip-needle-shaft" x1="0" y1="22" x2="0" y2="43"></line>
-                        <circle class="wind-direction-from-dot" cx="0" cy="43" r="2.7"></circle>
+                        <line class="wind-strip-needle-shaft" x1="0" y1="22" x2="0" y2="31"></line>
+                    </g>
+                    <g class="wind-direction-from-marker" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="translate(160 0)">
+                        <circle class="wind-direction-from-dot" cx="0" cy="43" r="3.2"></circle>
                     </g>
                     <rect class="wind-strip-speed-track" x="10" y="67" width="300" height="7" rx="3.5"></rect>
                     <g class="wind-speed-segments">
@@ -841,6 +847,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261027-mobile-dismiss-fix"></script>
-<script src="js/app.js?v=20261027-wind-needle-position"></script>
+<script src="js/app.js?v=20261027-wind-flow-and-longer-bars"></script>
 </body>
 </html>
