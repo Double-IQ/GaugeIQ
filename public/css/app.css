@@ -1259,3 +1259,41 @@ body.gaugeiq-menu-open{overflow:hidden}
   .wind-hud-direction-summary{gap:6px}
   .wind-hud-direction-summary>div{padding:8px;font-size:8px}
 }
+
+/* Centred wind vector: the vector rotates; the instrument panel stays fixed. */
+.wind-hud-vector{margin-top:14px;padding:0;border:0;border-radius:13px;background:transparent;box-shadow:none;overflow:hidden}
+.wind-hud-vector svg{display:block;width:100%;height:auto;max-height:210px}
+.wind-hud-vector-grid{fill:none;stroke:#53769b;stroke-width:.8;opacity:.34}
+.wind-hud-vector-arrow{transform-box:view-box;transform-origin:170px 90px;transition:transform .16s ease-out}
+.wind-hud-vector-labels{fill:#819fc2;font-size:9px;font-weight:800;letter-spacing:1.2px}
+.wind-hud-vector-labels .wind-hud-from{fill:#ffc184;font-size:13px;letter-spacing:.2px}
+.wind-hud-vector-labels .wind-hud-to{fill:#68d2ff;font-size:13px;letter-spacing:.2px}
+.wind-hud-card .wind-hud-speed-scale{margin-top:8px}
+.wind-hud-card .climate-segment{border-radius:2px}
+@media(max-width:420px){.wind-hud-vector svg{max-height:190px}}
+
+/* Atmospheric Monitor: compact glass telemetry rows with restrained luminous bars. */
+.climate-gauge-card{padding:22px 24px 20px;background:radial-gradient(ellipse at 18% 0%,rgba(43,118,183,.18),transparent 52%),linear-gradient(145deg,#10294a 0%,#07172e 56%,#041126 100%);border:1px solid rgba(104,163,218,.34);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 12px 30px rgba(2,8,23,.12)}
+.climate-gauge-card .section-heading{margin-bottom:14px}
+.climate-gauge-card .section-heading .label{font-size:clamp(25px,3.8vw,34px);font-weight:750;letter-spacing:-.025em}
+.climate-gauge-card .climate-bars{gap:8px;margin-top:0}
+.climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 48px 70px;gap:8px 10px;padding:11px 12px;border:1px solid rgba(117,164,211,.12);border-radius:10px;background:linear-gradient(110deg,rgba(19,43,70,.66),rgba(5,18,37,.56));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.climate-gauge-card .climate-bar-label{font-size:12px;font-weight:750;letter-spacing:.015em;color:#b9d5ff;grid-column:1;align-self:center;margin:0}
+.climate-gauge-card .climate-bar-value{grid-column:3;grid-row:1;font-size:14px;color:#f4f7ff}
+.climate-gauge-card .climate-bar-change{grid-column:2;grid-row:1;font-size:12px;color:#829fc1}
+.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#f5d34f}
+.climate-gauge-card .climate-segment-track{grid-column:1 / -1;grid-row:2;gap:2px;padding-top:2px}
+.climate-gauge-card .climate-segment{height:7px;border-radius:2px;background:rgba(118,145,174,.18);box-shadow:none}
+.climate-gauge-card .climate-segment.active{background:#a3ff32;box-shadow:0 0 5px rgba(163,255,50,.15)}
+.climate-gauge-card .climate-segment.change{background:#f5d34f;box-shadow:0 0 5px rgba(245,211,79,.18)}
+.climate-gauge-card .climate-segment-track[aria-label*="Air pressure"]{--unused:1}
+@media(max-width:560px){
+ .climate-gauge-card{padding:16px 12px;border-radius:16px}
+ .climate-gauge-card .section-heading .label{font-size:24px}
+ .climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 34px 54px;gap:7px;padding:10px 9px}
+ .climate-gauge-card .climate-bar-label{font-size:11px}
+ .climate-gauge-card .climate-bar-value{font-size:12px}
+ .climate-gauge-card .climate-bar-change{font-size:11px}
+ .climate-gauge-card .climate-segment-track{gap:1px}
+ .climate-gauge-card .climate-segment{height:6px}
+}
