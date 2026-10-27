@@ -1266,7 +1266,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-vector{margin-top:14px;padding:0;border:0;border-radius:13px;background:transparent;box-shadow:none;overflow:hidden}
 .wind-hud-vector svg{display:block;width:100%;height:auto;max-height:210px}
 .wind-hud-vector-grid{fill:none;stroke:#53769b;stroke-width:.8;opacity:.34}
-.wind-hud-vector-arrow{transform-box:view-box;transform-origin:170px 90px;transition:transform .16s ease-out}
+.wind-hud-vector-arrow{transition:transform .16s ease-out}
 .wind-hud-vector-labels{fill:#819fc2;font-size:9px;font-weight:800;letter-spacing:1.2px}
 .wind-hud-vector-labels .wind-hud-from{fill:#ffc184;font-size:13px;letter-spacing:.2px}
 .wind-hud-vector-labels .wind-hud-to{fill:#68d2ff;font-size:13px;letter-spacing:.2px}
