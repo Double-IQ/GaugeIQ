@@ -424,17 +424,9 @@ if ($current && !empty($current['observed_at'])) {
     ?>
 
 
-        <article class="card metric-card pressure-card">
-            <div class="pressure-card-title-row">
-                <div class="pressure-card-title">
-                    <p class="label">Air pressure</p>
-                </div>
-                <span class="pressure-unit-pill">hPa</span>
-            </div>
+        <article class="card metric-card pressure-card pressure-gauge-only">
             <?php if ($current): ?>
-                <div class="pressure-showcase">
-                    <div class="pressure-dial-column">
-                        <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
+                <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
                             <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
                                 <defs>
                                     <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
@@ -486,26 +478,6 @@ if ($current && !empty($current['observed_at'])) {
                                 <text class="pressure-dial-reading" x="50" y="70"><?= number_format((float)$current['pressure_hpa'], 0) ?></text>
                                 <text class="pressure-dial-unit" x="50" y="79">hPa</text>
                             </svg>
-                        </div>
-                        
-                    </div>
-                    <div class="pressure-insights">
-                        <div class="pressure-change-block">
-                            <p class="pressure-insight-label">Change (Last Hour)</p>
-                            <div class="pressure-change-value <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>"><?= $change > 0 ? '+' : '' ?><?= number_format($change, 1) ?><span> hPa</span></div>
-                        </div>
-                        <div class="pressure-trend-block">
-                            <p class="pressure-insight-label">Trend</p>
-                            <div class="pressure-trend-value <?= $change > 0 ? 'rise' : ($change < 0 ? 'fall' : 'steady') ?>">
-                                <span aria-hidden="true"><?= $change > 0 ? '↑' : ($change < 0 ? '↓' : '→') ?></span>
-                                <?= $change > 0 ? 'Rising' : ($change < 0 ? 'Falling' : 'Stable') ?>
-                            </div>
-                            <svg class="pressure-sparkline <?= $change < 0 ? 'falling' : '' ?>" viewBox="0 0 240 56" preserveAspectRatio="none" aria-hidden="true">
-                                <path class="pressure-sparkline-fill" d="<?= $change < 0 ? 'M0 8 L24 13 L48 12 L72 22 L96 20 L120 31 L144 28 L168 39 L192 40 L216 48 L240 52 L240 56 L0 56 Z' : ($change > 0 ? 'M0 50 L24 44 L48 45 L72 34 L96 36 L120 27 L144 28 L168 18 L192 17 L216 9 L240 3 L240 56 L0 56 Z' : 'M0 29 L24 28 L48 30 L72 27 L96 29 L120 28 L144 30 L168 27 L192 29 L216 28 L240 29 L240 56 L0 56 Z') ?>"></path>
-                                <path class="pressure-sparkline-line" d="<?= $change < 0 ? 'M0 8 L24 13 L48 12 L72 22 L96 20 L120 31 L144 28 L168 39 L192 40 L216 48 L240 52' : ($change > 0 ? 'M0 50 L24 44 L48 45 L72 34 L96 36 L120 27 L144 28 L168 18 L192 17 L216 9 L240 3' : 'M0 29 L24 28 L48 30 L72 27 L96 29 L120 28 L144 30 L168 27 L192 29 L216 28 L240 29') ?>"></path>
-                            </svg>
-                        </div>
-                    </div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Pressure data unavailable</div><?php endif; ?>
         </article>
@@ -577,7 +549,9 @@ if ($current && !empty($current['observed_at'])) {
             'deltaRatio' => $current ? $deltaRatio : 0.0,
         ];
     };
+    $pressureBarRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - 950.0) / 100.0)) : 0.0;
     $climateBars = [
+        $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) . ' hPa' : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure'],
         $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1),
         $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta),
         $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta),
