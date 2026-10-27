@@ -189,17 +189,17 @@ function applyWindCompassHeading(heading) {
                 windCompassRotation += correction;
             }
 
-            // Rotate the compass disc and its wind indicators together.
-            // The disc turns opposite the device heading; the wind indicator
-            // keeps its geographic bearing inside that rotating disc.
-            const compassDisc = windGauge.querySelector('.wind-compass-orientation');
-            if (compassDisc) {
-                // The dial and wind-direction indicators share this SVG group
-                // and rotate around the same exact centre (50, 50).
-                compassDisc.setAttribute(
-                    'transform',
-                    'rotate(' + (-windCompassRotation).toFixed(2) + ' 50 50)'
-                );
+            // Keep the compass dial fixed and rotate only the wind needle
+            // relative to the device heading.
+            const windNeedle = windGauge.querySelector('.wind-direction-arrows');
+            if (windNeedle) {
+                const windDegrees = Number(windNeedle.dataset.windDegrees);
+                if (Number.isFinite(windDegrees)) {
+                    windNeedle.setAttribute(
+                        'transform',
+                        'rotate(' + (windDegrees - windCompassRotation).toFixed(2) + ' 50 50)'
+                    );
+                }
             }
 
             if (windCompassStatus) {
@@ -305,16 +305,26 @@ function disableWindCompass() {
     windCompassTargetHeading = null;
     windCompassRotation = null;
 
-    const compassDisc = windGauge?.querySelector('.wind-compass-orientation');
-    if (compassDisc) compassDisc.setAttribute('transform', 'rotate(0 50 50)');
+    const windNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    if (windNeedle) {
+        const windDegrees = Number(windNeedle.dataset.windDegrees);
+        if (Number.isFinite(windDegrees)) {
+            windNeedle.setAttribute('transform', 'rotate(' + windDegrees.toFixed(2) + ' 50 50)');
+        }
+    }
 
     if (windCompassStatus) windCompassStatus.hidden = true;
     updateWindCompassButton();
 }
 
 if (windGauge) {
-    const initialCompassDisc = windGauge?.querySelector('.wind-compass-orientation');
-    if (initialCompassDisc) initialCompassDisc.setAttribute('transform', 'rotate(0 50 50)');
+    const initialWindNeedle = windGauge?.querySelector('.wind-direction-arrows');
+    if (initialWindNeedle) {
+        const windDegrees = Number(initialWindNeedle.dataset.windDegrees);
+        if (Number.isFinite(windDegrees)) {
+            initialWindNeedle.setAttribute('transform', 'rotate(' + windDegrees.toFixed(2) + ' 50 50)');
+        }
+    }
 
     if (windCompassStatus) windCompassStatus.hidden = true;
 
