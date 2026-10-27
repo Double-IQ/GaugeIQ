@@ -426,58 +426,38 @@ if ($current && !empty($current['observed_at'])) {
 
         <article class="card metric-card pressure-card pressure-gauge-only">
             <?php if ($current): ?>
-                <div class="pressure-range-gauge" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
-                            <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-                                <defs>
-                                    <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
-                                    <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
-                                    <radialGradient id="pressureGlassSheen" cx="38%" cy="28%" r="72%">
-                                        <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
-                                        <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
-                                        <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
-                                        <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
-                                    </radialGradient>
-                                    <clipPath id="pressureGlassClip"><circle cx="50" cy="55" r="39"/></clipPath>
-                                </defs>
-                                <circle class="pressure-range-outer-ring" cx="50" cy="55" r="42"></circle>
-                                <path class="pressure-range-track" d="M 22.42 82.58 A 39 39 0 1 1 77.58 82.58"></path>
-                                <g class="pressure-range-ticks">
-                                    <?php for ($tick = 0; $tick <= 24; $tick++):
-                                        $tickAngle = 135.0 + (($tick / 24.0) * 270.0);
-                                        $tickOuterX = 50 + cos(deg2rad($tickAngle)) * 34.5;
-                                        $tickOuterY = 55 + sin(deg2rad($tickAngle)) * 34.5;
-                                        $isMajor = in_array($tick, [4, 12, 20], true);
-                                        $tickInnerRadius = $isMajor ? 27.5 : ($tick % 2 === 0 ? 30.0 : 32.0);
-                                        $tickInnerX = 50 + cos(deg2rad($tickAngle)) * $tickInnerRadius;
-                                        $tickInnerY = 55 + sin(deg2rad($tickAngle)) * $tickInnerRadius;
-                                    ?>
-                                        <line class="<?= $isMajor ? 'major' : ($tick % 2 === 0 ? 'medium' : '') ?>" x1="<?= number_format($tickOuterX, 3, '.', '') ?>" y1="<?= number_format($tickOuterY, 3, '.', '') ?>" x2="<?= number_format($tickInnerX, 3, '.', '') ?>" y2="<?= number_format($tickInnerY, 3, '.', '') ?>"></line>
-                                    <?php endfor; ?>
-                                </g>
-                                <g class="pressure-glass-overlay" clip-path="url(#pressureGlassClip)" pointer-events="none">
-                                    <circle cx="50" cy="55" r="39" fill="url(#pressureGlassSheen)" opacity=".72"></circle>
-                                </g>
-                                <?php
-                                $needleAngle = deg2rad(135 + $pressureRatio * 270);
-                                $needleTipX = 50 + cos($needleAngle) * 29.0;
-                                $needleTipY = 55 + sin($needleAngle) * 29.0;
-                                $needleBaseX = 50;
-                                $needleBaseY = 55;
-                                $needleHalfWidth = 2.8;
-                                $needlePerpX = -sin($needleAngle) * $needleHalfWidth;
-                                $needlePerpY = cos($needleAngle) * $needleHalfWidth;
-                                ?>
-                                <path class="pressure-range-needle" d="M <?= number_format($needleBaseX + $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY + $needlePerpY, 3, '.', '') ?> L <?= number_format($needleTipX, 3, '.', '') ?> <?= number_format($needleTipY, 3, '.', '') ?> L <?= number_format($needleBaseX - $needlePerpX, 3, '.', '') ?> <?= number_format($needleBaseY - $needlePerpY, 3, '.', '') ?> Z"></path>
-                                <circle class="pressure-range-hub-outer" cx="50" cy="55" r="3.7"></circle>
-                                <circle class="pressure-range-hub" cx="50" cy="55" r="2.1"></circle>
-                                <text class="pressure-scale-label" x="27" y="50"><?= number_format($pressureLow + ($pressureRange * 0.25), 0) ?></text>
-                                <text class="pressure-scale-label" x="50" y="29"><?= number_format($pressureLow + ($pressureRange * 0.50), 0) ?></text>
-                                <text class="pressure-scale-label" x="73" y="50"><?= number_format($pressureLow + ($pressureRange * 0.75), 0) ?></text>
-                                <text class="pressure-scale-end" x="29" y="83"><?= number_format($pressureLow, 0) ?></text>
-                                <text class="pressure-scale-end" x="71" y="83"><?= number_format($pressureHigh, 0) ?></text>
-                                <text class="pressure-dial-reading" x="50" y="70"><?= number_format((float)$current['pressure_hpa'], 0) ?></text>
-                                <text class="pressure-dial-unit" x="50" y="79">hPa</text>
-                            </svg>
+                <div class="pressure-range-gauge pressure-gauge-horizontal" aria-label="<?= htmlspecialchars('Current pressure ' . number_format((float)$current['pressure_hpa'], 1) . ' hPa, historical low ' . number_format($pressureLow, 1) . ', high ' . number_format($pressureHigh, 1), ENT_QUOTES) ?>">
+                    <svg viewBox="0 0 320 100" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="pressureArcGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
+                            <linearGradient id="pressureNeedleGradient" x1="0" y1="1" x2="0.8" y2="0"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a3e635"/></linearGradient>
+                            <linearGradient id="pressureGlassSheen" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity=".24"></stop><stop offset="55%" stop-color="#ffffff" stop-opacity=".04"></stop><stop offset="100%" stop-color="#ffffff" stop-opacity=".10"></stop>
+                            </linearGradient>
+                        </defs>
+                        <rect class="pressure-range-outer-ring" x="2" y="7" width="316" height="72" rx="13"></rect>
+                        <rect class="pressure-range-track" x="16" y="39" width="288" height="7" rx="3.5"></rect>
+                        <rect class="pressure-range-fill" x="16" y="39" width="<?= number_format(288 * max(0.0, min(1.0, $pressureRatio)), 3, '.', '') ?>" height="7" rx="3.5"></rect>
+                        <g class="pressure-range-ticks">
+                            <?php for ($tick = 0; $tick <= 24; $tick++):
+                                $x = 16 + ($tick / 24.0) * 288;
+                                $isMajor = in_array($tick, [0, 6, 12, 18, 24], true);
+                            ?>
+                                <line class="<?= $isMajor ? 'major' : ($tick % 2 === 0 ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $isMajor ? 31 : 34 ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="<?= $isMajor ? 53 : 49 ?>"></line>
+                            <?php endfor; ?>
+                        </g>
+                        <rect class="pressure-glass-overlay" x="2" y="7" width="316" height="72" rx="13" fill="url(#pressureGlassSheen)" pointer-events="none"></rect>
+                        <?php $pressureNeedleX = 16 + (max(0.0, min(1.0, $pressureRatio)) * 288); ?>
+                        <path class="pressure-range-needle" d="M <?= number_format($pressureNeedleX, 3, '.', '') ?> 28 L <?= number_format($pressureNeedleX - 4.2, 3, '.', '') ?> 20 L <?= number_format($pressureNeedleX + 4.2, 3, '.', '') ?> 20 Z"></path>
+                        <circle class="pressure-range-hub-outer" cx="<?= number_format($pressureNeedleX, 3, '.', '') ?>" cy="42.5" r="3.7"></circle>
+                        <circle class="pressure-range-hub" cx="<?= number_format($pressureNeedleX, 3, '.', '') ?>" cy="42.5" r="2.1"></circle>
+                        <g class="pressure-horizontal-labels">
+                            <text x="16" y="65" text-anchor="start"><?= number_format($pressureLow, 0) ?></text>
+                            <text x="160" y="65" text-anchor="middle"><?= number_format($pressureLow + ($pressureRange * 0.5), 0) ?></text>
+                            <text x="304" y="65" text-anchor="end"><?= number_format($pressureHigh, 0) ?></text>
+                            <text class="pressure-horizontal-reading" x="160" y="91" text-anchor="middle"><?= number_format((float)$current['pressure_hpa'], 1) ?> hPa</text>
+                        </g>
+                    </svg>
                 </div>
             <?php else: ?><div class="metric-unavailable">Pressure data unavailable</div><?php endif; ?>
         </article>
@@ -642,86 +622,60 @@ if ($current && !empty($current['observed_at'])) {
                     <button type="button" class="secondary wind-compass-button" id="windCompassButton">Turn Compass ON</button>
                 </div>
             </div>
-            <div class="wind-gauge" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
-                <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <div class="wind-gauge wind-gauge-horizontal" role="img" aria-label="<?= $current ? htmlspecialchars(number_format($windSpeed, 1) . ' kilometers per hour, ' . $windDirection . ', ' . number_format($windDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind data unavailable' ?>">
+                <svg class="wind-compass-strip" viewBox="0 0 320 92" aria-hidden="true" focusable="false">
                     <defs>
-                        <radialGradient id="windCompassGlass" cx="38%" cy="28%" r="72%">
-                            <stop offset="0%" stop-color="#ffffff" stop-opacity=".30"></stop>
-                            <stop offset="34%" stop-color="#ffffff" stop-opacity=".10"></stop>
-                            <stop offset="72%" stop-color="#ffffff" stop-opacity=".035"></stop>
+                        <linearGradient id="windCompassGlass" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity=".28"></stop>
+                            <stop offset="50%" stop-color="#ffffff" stop-opacity=".06"></stop>
                             <stop offset="100%" stop-color="#ffffff" stop-opacity=".12"></stop>
-                        </radialGradient>
+                        </linearGradient>
                     </defs>
-                    <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
-                            <?php for ($segment = 0; $segment < 120; $segment++):
-                                $segmentAngle = ($segment * 3.0) - 90.0;
-                                $segmentStart = $windGaugePoint($segmentAngle, 38.2);
-                                $segmentEnd = $windGaugePoint($segmentAngle, 41.0);
-                                $segmentSpeed = ($segment + 1) / 2;
-                                $segmentActive = $current && $windSpeed >= $segmentSpeed;
-                                $segmentChange = $windSpeedChange1h > 0.0
-                                    ? ($segmentSpeed > ($windSpeed - $windSpeedChange1h) && $segmentSpeed <= $windSpeed)
-                                    : ($windSpeedChange1h < 0.0 && $segmentSpeed > $windSpeed && $segmentSpeed <= min(60.0, $windSpeed - $windSpeedChange1h));
-                                $segmentClass = $segmentChange
-                                    ? ($windSpeedChange1h > 0.0 ? 'active change' : 'change')
-                                    : ($segmentActive ? 'active' : '');
-                            ?>
-                                <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentStart[0], 3, '.', '') ?>" y1="<?= number_format($segmentStart[1], 3, '.', '') ?>" x2="<?= number_format($segmentEnd[0], 3, '.', '') ?>" y2="<?= number_format($segmentEnd[1], 3, '.', '') ?>"></line>
-                            <?php endfor; ?>
-                        </g>
-                        <g class="wind-speed-scale-labels" aria-label="Wind speed scale labels in kilometres per hour">
-                            <?php for ($speedMark = 0; $speedMark <= 60; $speedMark += 10):
-                                $speedAngle = ($speedMark * 6.0) - 90.0;
-                                [$speedX, $speedY] = $windGaugePoint($speedAngle, 43.4);
-                            ?>
-                                <text x="<?= number_format($speedX, 3, '.', '') ?>" y="<?= number_format($speedY, 3, '.', '') ?>"><?= $speedMark ?></text>
-                            <?php endfor; ?>
-                        </g>
-                    <g class="wind-compass-orientation">
-                        <g class="wind-compass-ticks">
-                            <?php
-                            $compassLabels = [
-                                0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE',
-                                180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'
-                            ];
-                            for ($degree = 0; $degree < 360; $degree += 5):
-                                $svgAngle = $degree - 90.0;
-                                $majorTick = $degree % 30 === 0;
-                                $mediumTick = $degree % 10 === 0;
-                                $tickStart = $windGaugePoint($svgAngle, $majorTick ? 35.5 : ($mediumTick ? 34.2 : 33.5));
-                                $tickEnd = $windGaugePoint($svgAngle, 31.5);
-                            ?>
-                                <line class="<?= $majorTick ? 'major' : ($mediumTick ? 'medium' : '') ?> <?= $degree === 0 ? 'north-marker' : '' ?>" x1="<?= number_format($tickStart[0], 3, '.', '') ?>" y1="<?= number_format($tickStart[1], 3, '.', '') ?>" x2="<?= number_format($tickEnd[0], 3, '.', '') ?>" y2="<?= number_format($tickEnd[1], 3, '.', '') ?>"></line>
-                            <?php endfor; ?>
-                        </g>
-                        <g class="wind-compass-labels wind-combined-label-ring">
-                            <?php for ($degree = 0; $degree < 360; $degree += 30):
-                                [$labelX, $labelY] = $windGaugePoint($degree - 90.0, 27.8);
-                                $label = match ($degree) {
-                                    0 => 'N',
-                                    90 => 'E',
-                                    180 => 'S',
-                                    270 => 'W',
-                                    default => (string)$degree
-                                };
-                            ?>
-                                <text class="<?= in_array($degree, [0, 90, 180, 270], true) ? ($degree === 0 ? 'north-label' : 'cardinal-label') : 'degree-label' ?>" x="<?= number_format($labelX, 3, '.', '') ?>" y="<?= number_format($labelY, 3, '.', '') ?>"><?= $label ?></text>
-                            <?php endfor; ?>
-                        </g>
+                    <rect class="wind-strip-glass" x="2" y="5" width="316" height="54" rx="12"></rect>
+                    <g class="wind-compass-strip-ticks">
+                        <?php for ($degree = 0; $degree <= 360; $degree += 5):
+                            $x = 10 + ($degree / 360.0) * 300;
+                            $major = $degree % 45 === 0;
+                            $medium = $degree % 15 === 0;
+                        ?>
+                            <line class="<?= $major ? 'major' : ($medium ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $major ? 24 : ($medium ? 29 : 33) ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="40"></line>
+                        <?php endfor; ?>
                     </g>
-                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windDegrees, 2, '.', '') ?> 50 50)">
-                        <path class="wind-direction-to-marker" d="M50 80 L54 73 L51 76 L51 23 L49 23 L49 76 L46 73 Z"></path>
-                        <circle class="wind-direction-from-dot" cx="50" cy="19.5" r="2.1"></circle>
+                    <g class="wind-compass-strip-labels">
+                        <?php foreach ([0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE', 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW', 360 => 'N'] as $degree => $label):
+                            $x = 10 + ($degree / 360.0) * 300;
+                        ?>
+                            <text class="<?= in_array($degree, [0, 360], true) ? 'north-label' : '' ?>" x="<?= number_format($x, 3, '.', '') ?>" y="17"><?= $label ?></text>
+                        <?php endforeach; ?>
                     </g>
-
-                    <circle class="wind-center" cx="50" cy="50" r="18.5"></circle>
-                    <circle class="wind-gauge-glass-overlay" cx="50" cy="50" r="47"></circle>
+                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="translate(<?= number_format(10 + ($windDegrees / 360.0) * 300, 3, '.', '') ?> 0)">
+                        <path class="wind-strip-needle" d="M0 22 L-5 13 L5 13 Z"></path>
+                        <line class="wind-strip-needle-shaft" x1="0" y1="22" x2="0" y2="43"></line>
+                        <circle class="wind-direction-from-dot" cx="0" cy="43" r="2.7"></circle>
+                    </g>
+                    <rect class="wind-strip-speed-track" x="10" y="67" width="300" height="7" rx="3.5"></rect>
+                    <?php for ($segment = 0; $segment < 120; $segment++):
+                        $segmentSpeed = ($segment + 1) / 2;
+                        $segmentX = 10 + ($segment / 120.0) * 300;
+                        $segmentActive = $current && $windSpeed >= $segmentSpeed;
+                        $segmentChange = $windSpeedChange1h > 0.0
+                            ? ($segmentSpeed > ($windSpeed - $windSpeedChange1h) && $segmentSpeed <= $windSpeed)
+                            : ($windSpeedChange1h < 0.0 && $segmentSpeed > $windSpeed && $segmentSpeed <= min(60.0, $windSpeed - $windSpeedChange1h));
+                        $segmentClass = $segmentChange
+                            ? ($windSpeedChange1h > 0.0 ? 'active change' : 'change')
+                            : ($segmentActive ? 'active' : '');
+                    ?>
+                        <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentX, 3, '.', '') ?>" y1="66" x2="<?= number_format($segmentX, 3, '.', '') ?>" y2="75"></line>
+                    <?php endfor; ?>
+                    <g class="wind-speed-horizontal-labels">
+                        <text x="10" y="88">0</text><text x="85" y="88">15</text><text x="160" y="88">30</text><text x="235" y="88">45</text><text x="310" y="88">60 km/h</text>
+                    </g>
                 </svg>
-                <div class="wind-gauge-center">
-                    <small class="wind-unit-readout">km/h</small>
+                <div class="wind-gauge-center wind-gauge-horizontal-readout">
                     <strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) : '—' ?></strong>
                     <small class="wind-heading-readout"><?= $current ? number_format($windDegrees, 0) . '° ' . htmlspecialchars($windDirection, ENT_QUOTES) : 'Wind data unavailable' ?></small>
                 </div>
+                <span class="wind-compass-status" id="windCompassStatus" hidden></span>
             </div>
         </article>
 
@@ -925,6 +879,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261015-csp-loading-fix"></script>
-<script src="js/app.js?v=20261027-wvi-gradient-only"></script>
+<script src="js/app.js?v=20261027-horizontal-gauges"></script>
 </body>
 </html>
