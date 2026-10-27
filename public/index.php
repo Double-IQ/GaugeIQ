@@ -507,23 +507,28 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
-                // Use a continuous scale: green is the current reading, yellow is the
-                // portion attributable to the absolute one-hour change, and red is the final 5%.
-                $fillRatio = min(1.0, max(0.0, (float)$bar['ratio']));
-                $fillEnd = $fillRatio * 95.0;
-                $changeStart = max(0.0, $fillEnd - min($fillEnd, (float)$bar['deltaRatio'] * 95.0));
+                // Use CSS classes rather than inline styles so the bars also render under
+                // a Content Security Policy that blocks inline style attributes.
+                // The final segment is always red; the reading fills the preceding 39 segments.
+                $segmentCount = 40;
+                $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * ($segmentCount - 1));
+                $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * ($segmentCount - 1)));
+                $changeStartSegment = $fillSegments - $changeSegments;
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
-                $barBackground = sprintf(
-                    'linear-gradient(90deg,#4fbd31 0%%, #a3ff32 %.2f%%, #e8b900 %.2f%%, #ffe878 %.2f%%, rgba(118,145,174,.18) %.2f%%, rgba(118,145,174,.18) 94.5%%, #d91e36 95%%, #ff7777 100%%)',
-                    $changeStart,
-                    $changeStart,
-                    $fillEnd,
-                    $fillEnd
-                );
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
-                    <div class="climate-segment-track" role="img" style="background:<?= htmlspecialchars($barBackground, ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>"></div>
+                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
+                        <?php for ($segment = 0; $segment < $segmentCount; $segment++):
+                            $segmentClass = $segment === $segmentCount - 1
+                                ? 'warning-zone'
+                                : ($segment >= $changeStartSegment && $segment < $fillSegments
+                                    ? 'change'
+                                    : ($segment < $changeStartSegment ? 'active' : ''));
+                        ?>
+                            <span class="climate-segment<?= $segmentClass !== '' ? ' ' . $segmentClass : '' ?>"></span>
+                        <?php endfor; ?>
+                    </div>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                 </div>
