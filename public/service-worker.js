@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v58';
+const CACHE = 'gaugeiq-v59';
 
 self.addEventListener('install', event => {
     event.waitUntil(
