@@ -1122,25 +1122,26 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-compass-labels.wind-combined-label-ring .cardinal-label{font-size:4.2px;font-weight:900;fill:var(--text)}
 .wind-compass-labels.wind-combined-label-ring .north-label{font-size:4.7px;font-weight:950;fill:#ef4444}
 
-/* Match the temperature top card's accent palette to the Wind card. */
-.temperature-summary-current strong{color:#edf6ff}
-.temperature-summary-card .temperature-summary-range strong{color:#9ccfff}
-.temperature-summary-card .temperature-card-heading .label{color:#edf6ff}
-
-/* Match the temperature top card's glass surface and outline to the Wind card. */
-.temperature-summary-card{
-  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
-  border:1px solid rgba(104,163,218,.34);
-  border-radius:18px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
-  color:#edf6ff;
+/* Match the top temperature card to the Wind card's heading and standard card surface. */
+.temperature-card-heading .label{
+  margin:0 0 3px;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:normal;
+  color:var(--text);
 }
-.temperature-summary-card .temperature-card-heading .label{color:#edf6ff}
-.temperature-summary-card .temperature-summary-current strong{color:#f4f7ff}
-.temperature-summary-card .temperature-feels-like-direct{color:#9db9e2}
-.temperature-summary-card .temperature-summary-range span{color:#9db9e2}
-.temperature-summary-card .temperature-summary-range strong{color:#f4f7ff}
-.temperature-summary-card .temperature-stability-summary{background:rgba(3,19,43,.72);border-color:rgba(34,211,238,.42);color:#e7f1ff}
+:root[data-theme="light"] .temperature-card-heading .label{color:#000}
+.temperature-summary-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 8px 30px rgba(17,24,39,.06);
+  color:var(--text);
+}
+.temperature-summary-current strong{color:var(--text)}
+.temperature-summary-card .temperature-summary-range strong{color:var(--text)}
+.temperature-summary-card .temperature-feels-like-direct{color:var(--muted)}
+.temperature-summary-card .temperature-summary-range span{color:var(--muted)}
+.temperature-summary-card .temperature-stability-summary{background:var(--surface);border-color:var(--border);color:var(--text)}
 
 
 /* Horizontal wind compass strip and wind-speed scale */
