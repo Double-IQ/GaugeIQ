@@ -633,27 +633,29 @@ if ($current && !empty($current['observed_at'])) {
                     </defs>
                     <rect class="wind-strip-glass" x="2" y="5" width="316" height="54" rx="12"></rect>
                     <g class="wind-compass-strip-ticks">
-                        <?php for ($degree = 0; $degree <= 360; $degree += 5):
-                            $x = 10 + ($degree / 360.0) * 300;
+                        <?php for ($degree = 0; $degree < 360; $degree += 5):
+                            $x = 160 + (($degree <= 180 ? $degree : $degree - 360) / 360.0) * 300;
                             $major = $degree % 45 === 0;
                             $medium = $degree % 15 === 0;
                         ?>
-                            <line class="<?= $major ? 'major' : ($medium ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $major ? 24 : ($medium ? 29 : 33) ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="40"></line>
+                            <line data-bearing="<?= $degree ?>" class="<?= $major ? 'major' : ($medium ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $major ? 24 : ($medium ? 29 : 33) ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="40"></line>
                         <?php endfor; ?>
                     </g>
                     <g class="wind-compass-strip-labels">
-                        <?php foreach ([0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE', 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW', 360 => 'N'] as $degree => $label):
-                            $x = 10 + ($degree / 360.0) * 300;
+                        <?php foreach ([0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE', 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'] as $degree => $label):
+                            $x = 160 + (shortest_placeholder($degree) / 360.0) * 300;
                         ?>
-                            <text class="<?= in_array($degree, [0, 360], true) ? 'north-label' : '' ?>" x="<?= number_format($x, 3, '.', '') ?>" y="17"><?= $label ?></text>
+                            <text data-bearing="<?= $degree ?>" class="<?= $degree === 0 ? 'north-label' : '' ?>" x="<?= number_format($x, 3, '.', '') ?>" y="17"><?= $label ?></text>
                         <?php endforeach; ?>
                     </g>
-                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="translate(<?= number_format(10 + ($windDegrees / 360.0) * 300, 3, '.', '') ?> 0)">
+                    <line class="wind-heading-index" x1="160" y1="8" x2="160" y2="55"></line>
+                    <g class="wind-direction-arrows" data-wind-degrees="<?= number_format($windDegrees, 2, '.', '') ?>" transform="translate(160 0)">
                         <path class="wind-strip-needle" d="M0 22 L-5 13 L5 13 Z"></path>
                         <line class="wind-strip-needle-shaft" x1="0" y1="22" x2="0" y2="43"></line>
                         <circle class="wind-direction-from-dot" cx="0" cy="43" r="2.7"></circle>
                     </g>
                     <rect class="wind-strip-speed-track" x="10" y="67" width="300" height="7" rx="3.5"></rect>
+                    <g class="wind-speed-segments">
                     <?php for ($segment = 0; $segment < 120; $segment++):
                         $segmentSpeed = ($segment + 1) / 2;
                         $segmentX = 10 + ($segment / 120.0) * 300;
@@ -667,6 +669,7 @@ if ($current && !empty($current['observed_at'])) {
                     ?>
                         <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentX, 3, '.', '') ?>" y1="66" x2="<?= number_format($segmentX, 3, '.', '') ?>" y2="75"></line>
                     <?php endfor; ?>
+                    </g>
                     <g class="wind-speed-horizontal-labels">
                         <text x="10" y="88">0</text><text x="85" y="88">15</text><text x="160" y="88">30</text><text x="235" y="88">45</text><text x="310" y="88">60 km/h</text>
                     </g>
