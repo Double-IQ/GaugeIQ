@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-atmospheric-red-fill">
+<link rel="stylesheet" href="css/app.css?v=20261027-atmospheric-120-segments">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -510,7 +510,7 @@ if ($current && !empty($current['observed_at'])) {
                 // Use CSS classes rather than inline styles so the bars also render under
                 // a Content Security Policy that blocks inline style attributes.
                 // The final segment is always red; the reading fills the preceding 39 segments.
-                $segmentCount = 40;
+                $segmentCount = 120;
                 $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * $segmentCount);
                 $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
