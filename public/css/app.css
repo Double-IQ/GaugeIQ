@@ -740,7 +740,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .gaugeiq-loading-screen p{margin:0;text-align:center;font-size:14px;font-weight:650;letter-spacing:.01em;color:#d1d5db}
 .gaugeiq-loading-indicator{display:block;width:26px;height:26px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;animation:gaugeiq-loading-spin .8s linear infinite}
 @keyframes gaugeiq-loading-spin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.gaugeiq-loading-screen{transition:none}.gaugeiq-loading-indicator{animation:none}}
+@media(prefers-reduced-motion:reduce){.gaugeiq-loading-screen{transition:none}}
 
 
 /* Private formula console */
