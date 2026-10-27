@@ -681,8 +681,8 @@ if ($current && !empty($current['observed_at'])) {
                     <g class="wind-speed-segments" aria-label="Outer wind speed scale, 0 to 60 kilometres per hour">
                             <?php for ($segment = 0; $segment < 120; $segment++):
                                 $segmentAngle = ($segment * 3.0) - 90.0;
-                                $segmentStart = $windGaugePoint($segmentAngle, 44.7);
-                                $segmentEnd = $windGaugePoint($segmentAngle, 47.8);
+                                $segmentStart = $windGaugePoint($segmentAngle, 38.2);
+                                $segmentEnd = $windGaugePoint($segmentAngle, 41.0);
                                 $segmentSpeed = ($segment + 1) / 2;
                                 $segmentActive = $current && $windSpeed >= $segmentSpeed;
                                 $segmentChange = $windSpeedChange1h > 0.0
@@ -698,7 +698,7 @@ if ($current && !empty($current['observed_at'])) {
                         <g class="wind-speed-scale-labels" aria-label="Wind speed scale labels in kilometres per hour">
                             <?php for ($speedMark = 0; $speedMark <= 60; $speedMark += 10):
                                 $speedAngle = ($speedMark * 6.0) - 90.0;
-                                [$speedX, $speedY] = $windGaugePoint($speedAngle, 49.1);
+                                [$speedX, $speedY] = $windGaugePoint($speedAngle, 43.4);
                             ?>
                                 <text x="<?= number_format($speedX, 3, '.', '') ?>" y="<?= number_format($speedY, 3, '.', '') ?>"><?= $speedMark ?></text>
                             <?php endfor; ?>
