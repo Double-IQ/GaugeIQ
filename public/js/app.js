@@ -195,10 +195,9 @@ function applyWindCompassHeading(heading) {
             if (windNeedle) {
                 const windDegrees = Number(windNeedle.dataset.windDegrees);
                 if (Number.isFinite(windDegrees)) {
-                    windNeedle.setAttribute(
-                        'transform',
-                        'rotate(' + (windDegrees - windCompassRotation).toFixed(2) + ' 50 50)'
-                    );
+                    const relativeDegrees = normalizeCompassHeading(windDegrees - windCompassRotation);
+                    const x = 10 + (relativeDegrees / 360) * 300;
+                    windNeedle.setAttribute('transform', 'translate(' + x.toFixed(2) + ' 0)');
                 }
             }
 
