@@ -1192,3 +1192,70 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-gauge-horizontal .wind-speed-segments line.active{stroke:#22d3ee;filter:drop-shadow(0 0 1px rgba(34,211,238,.25))}
 .wind-gauge-horizontal .wind-speed-segments line.change{stroke:#fb923c;filter:drop-shadow(0 0 1px rgba(251,146,60,.3))}
 .wind-gauge-horizontal .wind-speed-segments line.active.high-wind{stroke:#f97316}
+
+
+/* GaugeIQ wind HUD: glass instrument panel, clear origin-to-destination vector. */
+.wind-hud-card{
+  padding:18px;
+  overflow:hidden;
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+}
+.wind-hud-card .wind-hud-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wind-hud-card .wind-hud-heading .label{margin:0;color:#edf6ff;font-size:22px;font-weight:750}
+.wind-hud-subtitle{margin-top:5px;color:#819fc2;font-size:9px;font-weight:800;letter-spacing:.19em}
+.wind-hud-live{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid rgba(67,210,177,.25);border-radius:6px;background:rgba(23,169,133,.08);color:#86e8cc;font-size:9px;font-weight:800;letter-spacing:.1em;white-space:nowrap}
+.wind-hud-live span{width:6px;height:6px;border-radius:50%;background:#43d6a4;box-shadow:0 0 9px rgba(67,214,164,.55)}
+.wind-hud-readouts{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:22px;padding:0 2px}
+.wind-hud-label{display:block;color:#819fc2;font-size:9px;font-weight:800;letter-spacing:.15em}
+.wind-hud-speed>div{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.wind-hud-card .wind-speed-readout{color:#f2f8ff;font-size:clamp(36px,10vw,44px);font-weight:650;line-height:1;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.wind-hud-speed small{color:#9cb6d5;font-size:12px}
+.wind-hud-bearing{text-align:right}
+.wind-hud-bearing>strong{display:block;margin-top:7px;color:#e6f4ff;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.wind-hud-bearing>strong span{color:#62ceff;font-size:13px}
+.wind-hud-vector{margin-top:15px;padding:8px 4px 0;border:1px solid rgba(117,164,211,.15);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.wind-hud-vector svg{display:block;width:100%;height:auto}
+.wind-hud-grid{fill:none;stroke:#426184;stroke-width:.7;opacity:.5}
+.wind-hud-vector-labels{fill:#b8cce4;font-size:9px;font-weight:800;letter-spacing:1.2px}
+.wind-hud-vector-labels .wind-hud-from{fill:#ffc184;font-size:12px;letter-spacing:.2px}
+.wind-hud-vector-labels .wind-hud-to{fill:#68d2ff;font-size:12px;letter-spacing:.2px}
+.wind-hud-degree-guide{margin:11px 0 2px;overflow:hidden}
+.wind-hud-degree-guide .wind-compass-strip{display:block;width:100%;height:auto;overflow:visible}
+.wind-hud-degree-guide .wind-compass-strip-ticks{stroke:#5e7b9f;stroke-width:.8}
+.wind-hud-degree-guide .wind-compass-strip-ticks line.medium{stroke-width:1.1}
+.wind-hud-degree-guide .wind-compass-strip-ticks line.major{stroke:#b6cee9;stroke-width:1.5}
+.wind-hud-degree-guide .wind-compass-strip-labels{fill:#91a9c7;font-size:9px;font-weight:750;text-anchor:middle}
+.wind-hud-degree-guide .wind-compass-strip-labels .north-label{fill:#ff8e8e;font-size:10px}
+.wind-hud-degree-guide .wind-heading-index{stroke:#4fc9ff;stroke-width:1.4;opacity:.9}
+.wind-hud-speed-scale{margin-top:8px;padding-top:12px;border-top:1px solid rgba(117,164,211,.14)}
+.wind-hud-scale-heading{display:flex;align-items:center;justify-content:space-between;color:#829fc1;font-size:9px;font-weight:800;letter-spacing:.13em}
+.wind-hud-scale{display:block;width:100%;height:auto;margin-top:4px;overflow:visible}
+.wind-hud-card .wind-strip-speed-track{fill:#344963;opacity:.8}
+.wind-hud-card .wind-speed-segments{stroke:#3d536e;stroke-width:2.2}
+.wind-hud-card .wind-speed-segments line.active{stroke:#35c4eb}
+.wind-hud-card .wind-speed-segments line.change{stroke:#f5c84c}
+.wind-hud-card .wind-speed-segments line.high-wind{stroke:#fb923c}
+.wind-hud-card .wind-speed-horizontal-labels{fill:#829fc1;font-size:9px;font-weight:750}
+.wind-hud-card .wind-speed-horizontal-labels text{text-anchor:middle}
+.wind-hud-card .wind-speed-horizontal-labels text:first-child{text-anchor:start}
+.wind-hud-card .wind-speed-horizontal-labels text:last-child{text-anchor:end}
+.wind-hud-direction-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.wind-hud-direction-summary>div{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border:1px solid rgba(117,164,211,.15);border-radius:9px;background:rgba(1,10,24,.24);color:#829fc1;font-size:9px;font-weight:800;letter-spacing:.08em}
+.wind-hud-direction-summary strong{display:block;margin-top:4px;color:#edf6ff;font-size:16px;letter-spacing:0}
+.wind-hud-origin-dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#ffad55;box-shadow:0 0 0 3px rgba(255,173,85,.12)}
+.wind-hud-destination-arrow{flex:0 0 auto;color:#54caff;font-size:19px;line-height:1}
+.wind-hud-card .wind-compass-controls{margin-top:10px;align-items:flex-end}
+.wind-hud-card .wind-compass-button{padding:5px 8px;border-color:rgba(117,164,211,.22);background:rgba(28,55,87,.35);color:#92abc8;font-size:10px}
+.wind-hud-card .wind-compass-status{color:#8ba8c8;font-size:10px}
+@media(max-width:420px){
+  .wind-hud-card{padding:15px}
+  .wind-hud-readouts{margin-top:18px}
+  .wind-hud-card .wind-hud-heading .label{font-size:21px}
+  .wind-hud-bearing>strong{font-size:20px}
+  .wind-hud-direction-summary{gap:6px}
+  .wind-hud-direction-summary>div{padding:8px;font-size:8px}
+}
