@@ -518,7 +518,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
-                        <span class="climate-bar-fill" style="width:95%;transform:scaleX(<?= number_format($fillRatio, 4, '.', '') ?>)"><span class="climate-bar-fill-change" style="width:<?= number_format($changeWidth, 2, '.', '') ?>%"></span></span>
+                        <span class="climate-bar-fill" style="width:<?= number_format($fillRatio * 95.0, 2, '.', '') ?>%"><span class="climate-bar-fill-change" style="width:<?= number_format($changeWidth, 2, '.', '') ?>%"></span></span>
                     </div>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
