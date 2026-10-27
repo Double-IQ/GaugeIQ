@@ -119,7 +119,7 @@ const windGauge = document.querySelector('.wind-hud-vector');
 const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
-const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled';
+const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
@@ -130,9 +130,7 @@ const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undef
 // by iOS/Safari. Start off there so the permission button is always available.
 let windCompassEnabled = windCompassCanRequestPermission
     ? false
-    : storedWindCompassState !== null
-        ? storedWindCompassState === 'true'
-        : true;
+    : storedWindCompassState === 'true';
 let windCompassListening = false;
 // Once the browser supplies iOS's native compass heading, ignore fallback alpha
 // readings from the parallel absolute-orientation event stream.
@@ -247,7 +245,7 @@ function handleWindDeviceOrientation(event) {
 function updateWindCompassButton() {
     if (!windCompassButton) return;
 
-    windCompassButton.textContent = windCompassEnabled ? 'Phone heading ON' : 'Align to phone';
+    windCompassButton.textContent = windCompassEnabled ? 'Phone compass ON · tap to turn off' : 'Use phone compass';
     windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
     windCompassButton.disabled = !('DeviceOrientationEvent' in window);
     if (windCompassStatus && !windCompassEnabled) windCompassStatus.hidden = true;
