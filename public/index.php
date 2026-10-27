@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-atmospheric-fill-fix2">
+<link rel="stylesheet" href="css/app.css?v=20261027-atmospheric-gradient">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -510,16 +510,20 @@ if ($current && !empty($current['observed_at'])) {
                 // Use a continuous scale: green is the current reading, yellow is the
                 // portion attributable to the absolute one-hour change, and red is the final 5%.
                 $fillRatio = min(1.0, max(0.0, (float)$bar['ratio']));
-                $changeWidth = $fillRatio > 0.0
-                    ? min(100.0, max(0.0, (float)$bar['deltaRatio'] / $fillRatio * 100.0))
-                    : 0.0;
+                $fillEnd = $fillRatio * 95.0;
+                $changeStart = max(0.0, $fillEnd - min($fillEnd, (float)$bar['deltaRatio'] * 95.0));
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
+                $barBackground = sprintf(
+                    'linear-gradient(90deg,#4fbd31 0%%, #a3ff32 %.2f%%, #e8b900 %.2f%%, #ffe878 %.2f%%, rgba(118,145,174,.18) %.2f%%, rgba(118,145,174,.18) 94.5%%, #d91e36 95%%, #ff7777 100%%)',
+                    $changeStart,
+                    $changeStart,
+                    $fillEnd,
+                    $fillEnd
+                );
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
-                    <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
-                        <span class="climate-bar-fill" style="width:<?= number_format($fillRatio * 95.0, 2, '.', '') ?>%"><span class="climate-bar-fill-change" style="width:<?= number_format($changeWidth, 2, '.', '') ?>%"></span></span>
-                    </div>
+                    <div class="climate-segment-track" role="img" style="background:<?= htmlspecialchars($barBackground, ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>"></div>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                 </div>
