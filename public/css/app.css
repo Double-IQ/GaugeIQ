@@ -1151,9 +1151,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-compass-strip-ticks line.major{stroke:var(--text);stroke-width:1.6}
 .wind-compass-strip-labels{fill:var(--muted);font-size:10px;font-weight:800;text-anchor:middle}
 .wind-compass-strip-labels .north-label{fill:#ef4444;font-size:12px;font-weight:950}
-.wind-strip-needle{fill:#facc15;stroke:#a3e635;stroke-width:.8;stroke-linejoin:round}
-.wind-strip-needle-shaft{stroke:#facc15;stroke-width:2;stroke-linecap:round}
-.wind-direction-from-dot{fill:#ef4444;stroke:var(--card);stroke-width:1}
+.wind-strip-needle{fill:#38bdf8;stroke:#38bdf8;stroke-width:.8;stroke-linejoin:round}
+.wind-strip-needle-shaft{stroke:#38bdf8;stroke-width:2;stroke-linecap:round}
+.wind-direction-from-dot{fill:#f59e0b;stroke:var(--card);stroke-width:1}
 .wind-strip-speed-track{fill:var(--border);opacity:.85}
 .wind-gauge-horizontal .wind-speed-segments{stroke:var(--border);stroke-width:2.2}
 .wind-gauge-horizontal .wind-speed-segments line.active{stroke:#22d3ee}
