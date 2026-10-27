@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-temperature-card-match">
+<link rel="stylesheet" href="css/app.css?v=20261027-wind-change-fix">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -539,6 +539,7 @@ if ($current && !empty($current['observed_at'])) {
 $windSpeedChange1h = 0.0;
 if ($current && !empty($current['observed_at'])) {
     try {
+        $windObservedAt = new DateTimeImmutable((string)$current['observed_at']);
         $windPreviousStmt = $pdo->prepare(
             "SELECT wind_speed_kmh FROM gaugeiq_pressure_readings
              WHERE observed_at <= ? AND observed_at >= ?
@@ -546,9 +547,11 @@ if ($current && !empty($current['observed_at'])) {
                AND wind_speed_kmh IS NOT NULL
              ORDER BY observed_at DESC LIMIT 1"
         );
+        // Stored Open-Meteo timestamps use an ISO 'T' separator. Match that
+        // format in the bounds so string comparisons find the prior reading.
         $windPreviousStmt->execute([
-            (new DateTimeImmutable((string)$current['observed_at']))->modify('-45 minutes')->format('Y-m-d H:i:s'),
-            (new DateTimeImmutable((string)$current['observed_at']))->modify('-90 minutes')->format('Y-m-d H:i:s')
+            $windObservedAt->modify('-45 minutes')->format('Y-m-d\\TH:i:s'),
+            $windObservedAt->modify('-90 minutes')->format('Y-m-d\\TH:i:s')
         ]);
         $windPreviousSpeed = $windPreviousStmt->fetchColumn();
         if ($windPreviousSpeed !== false) {
