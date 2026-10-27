@@ -1092,7 +1092,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(min-width:561px) and (max-width:760px){.climate-gauge-card{padding:20px}}
 
 /* Atmospheric Monitor colours matched to the pressure gauge. */
-.climate-gauge-card .climate-segment.active{background:#22d3ee}
+.climate-gauge-card .climate-segment.active{background:#43d6a4}
 .climate-gauge-card .climate-segment.change{background:#fb923c}
 .climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#fb923c}
 
