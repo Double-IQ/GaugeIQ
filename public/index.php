@@ -827,7 +827,7 @@ if ($current && !empty($current['observed_at'])) {
                 title="Open-Meteo interactive weather map"
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
-                allow="fullscreen"
+                allow="cross-origin-isolated; fullscreen"
                 allowfullscreen></iframe>
         </div>
         <div class="satellite-map-card-footer">
