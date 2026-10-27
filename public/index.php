@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261027-wind-hud">
+<link rel="stylesheet" href="css/app.css?v=20261027-wind-vector">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -589,57 +589,41 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
             </div>
             <div class="wind-hud-vector" role="img" aria-label="<?= $current ? htmlspecialchars('Wind from ' . $windDirection . ' at ' . number_format($windDegrees, 0) . ' degrees, travelling towards ' . PressureService::directionLabel($windToDegrees) . ' at ' . number_format($windToDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind direction unavailable' ?>">
-                <svg viewBox="0 0 340 112" aria-hidden="true" focusable="false">
+                <svg viewBox="0 0 340 180" aria-hidden="true" focusable="false">
                     <defs>
-                        <linearGradient id="windHudVectorLine" x1="0" x2="1">
+                        <linearGradient id="windHudVectorLine" x1="0" y1="1" x2="0" y2="0">
                             <stop offset="0%" stop-color="#ffad55"></stop>
-                            <stop offset="48%" stop-color="#62c9ff"></stop>
+                            <stop offset="52%" stop-color="#62c9ff"></stop>
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
-                        <linearGradient id="windHudArrow" x1="0" x2="1">
+                        <linearGradient id="windHudArrow" x1="0" y1="1" x2="0" y2="0">
                             <stop offset="0%" stop-color="#75d8ff"></stop>
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
+                        <radialGradient id="windHudGlass" cx="50%" cy="30%" r="80%">
+                            <stop offset="0%" stop-color="#3975a8" stop-opacity=".16"></stop>
+                            <stop offset="100%" stop-color="#06152a" stop-opacity=".02"></stop>
+                        </radialGradient>
                     </defs>
-                    <g class="wind-hud-grid" aria-hidden="true">
-                        <path d="M10 24H330 M10 48H330 M10 72H330" stroke-dasharray="2 6"></path>
-                        <?php for ($tick = 0; $tick < 9; $tick++): $tickX = 20 + ($tick * 37.5); ?>
-                            <line x1="<?= number_format($tickX, 1, '.', '') ?>" y1="18" x2="<?= number_format($tickX, 1, '.', '') ?>" y2="78"></line>
-                        <?php endfor; ?>
+                    <rect x="1" y="1" width="338" height="178" rx="12" fill="url(#windHudGlass)" stroke="#75a4d3" stroke-opacity=".12"></rect>
+                    <g class="wind-hud-vector-grid" aria-hidden="true">
+                        <path d="M18 90H322 M170 12V168" stroke-dasharray="2 7"></path>
+                        <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
                     </g>
-                    <path d="M38 48H302" stroke="url(#windHudVectorLine)" stroke-width="2.5" stroke-linecap="round"></path>
-                    <circle cx="38" cy="48" r="10" fill="#ffad55" opacity=".13"></circle>
-                    <circle cx="38" cy="48" r="4.5" fill="#ffad55" stroke="#ffe1ba" stroke-width="1"></circle>
-                    <path d="M287 40L304 48L287 56L291 48Z" fill="url(#windHudArrow)" stroke="#8bdcff" stroke-width=".8"></path>
+                    <g class="wind-hud-vector-arrow" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windToDegrees, 2, '.', '') ?> 170 90)">
+                        <path d="M170 145V35" stroke="url(#windHudVectorLine)" stroke-width="3.5" stroke-linecap="round"></path>
+                        <circle cx="170" cy="145" r="13" fill="#ffad55" opacity=".12"></circle>
+                        <circle cx="170" cy="145" r="5" fill="#ffad55" stroke="#ffe1ba" stroke-width="1"></circle>
+                        <path d="M160 47L170 22L180 47L170 41Z" fill="url(#windHudArrow)" stroke="#8bdcff" stroke-width="1"></path>
+                        <circle cx="170" cy="90" r="3" fill="#d8f2ff" opacity=".7"></circle>
+                    </g>
                     <g class="wind-hud-vector-labels">
-                        <text x="38" y="18" text-anchor="middle">FROM</text>
-                        <text x="304" y="18" text-anchor="end">TOWARDS</text>
-                        <text x="38" y="72" text-anchor="middle" class="wind-hud-from"><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></text>
-                        <text x="304" y="72" text-anchor="end" class="wind-hud-to"><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></text>
-                        <text x="170" y="101" text-anchor="middle">WIND DIRECTION VECTOR</text>
+                        <text x="18" y="22">FROM</text>
+                        <text x="18" y="38" class="wind-hud-from"><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></text>
+                        <text x="322" y="22" text-anchor="end">TOWARDS</text>
+                        <text x="322" y="38" text-anchor="end" class="wind-hud-to"><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></text>
+                        <text x="170" y="169" text-anchor="middle">WIND DIRECTION VECTOR</text>
                     </g>
-                </svg>
-            </div>
-            <div class="wind-hud-degree-guide wind-gauge wind-gauge-horizontal" aria-label="Wind bearing scale">
-                <svg class="wind-compass-strip" viewBox="0 0 320 42" aria-hidden="true" focusable="false">
-                    <g class="wind-compass-strip-ticks">
-                        <?php for ($degree = 0; $degree < 360; $degree += 5):
-                            $x = 160 + (($degree <= 180 ? $degree : $degree - 360) / 360.0) * 300;
-                            $major = $degree % 45 === 0;
-                            $medium = $degree % 15 === 0;
-                        ?>
-                            <line data-bearing="<?= $degree ?>" class="<?= $major ? 'major' : ($medium ? 'medium' : '') ?>" x1="<?= number_format($x, 3, '.', '') ?>" y1="<?= $major ? 4 : ($medium ? 8 : 11) ?>" x2="<?= number_format($x, 3, '.', '') ?>" y2="16"></line>
-                        <?php endfor; ?>
-                    </g>
-                    <g class="wind-compass-strip-labels">
-                        <?php foreach ([0 => 'N', 45 => 'NE', 90 => 'E', 135 => 'SE', 180 => 'S', 225 => 'SW', 270 => 'W', 315 => 'NW'] as $degree => $label):
-                            $labelOffset = $degree <= 180 ? $degree : $degree - 360;
-                            $x = 160 + ($labelOffset / 360.0) * 300;
-                        ?>
-                            <text data-bearing="<?= $degree ?>" class="<?= $degree === 0 ? 'north-label' : '' ?>" x="<?= number_format($x, 3, '.', '') ?>" y="32"><?= $label ?></text>
-                        <?php endforeach; ?>
-                    </g>
-                    <line class="wind-heading-index" x1="160" y1="0" x2="160" y2="37"></line>
                 </svg>
             </div>
             <div class="wind-hud-speed-scale">
@@ -876,6 +860,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261027-mobile-dismiss-fix"></script>
-<script src="js/app.js?v=20261027-wind-hud"></script>
+<script src="js/app.js?v=20261027-wind-vector"></script>
 </body>
 </html>
