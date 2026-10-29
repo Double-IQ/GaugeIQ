@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261029-square-atmospheric-segments">
+<link rel="stylesheet" href="css/app.css?v=20261029-forecast-glass-style">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -417,6 +417,44 @@ if ($current && !empty($current['observed_at'])) {
         }
     }
     ?>
+
+
+    <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
+        <div class="section-heading forecast-preview-heading" style="text-align: left; justify-content: flex-start;">
+            <div>
+                <p class="label">A quick look at the days ahead</p>
+            </div>
+        </div>
+        <div class="forecast-days forecast-preview-days">
+            <?php foreach ($forecastPreviewDays as $forecastDay):
+                $previewDate = new DateTimeImmutable((string)$forecastDay['date'], new DateTimeZone($dashboardTimezone));
+                $previewCondition = $forecastCondition(
+                    isset($forecastDay['weather_code']) && is_numeric($forecastDay['weather_code']) ? (int)$forecastDay['weather_code'] : null
+                );
+                $previewHigh = is_numeric($forecastDay['temperature_max_c'] ?? null) ? number_format((float)$forecastDay['temperature_max_c'], 0) . '°' : '—';
+                $previewLow = is_numeric($forecastDay['temperature_min_c'] ?? null) ? number_format((float)$forecastDay['temperature_min_c'], 0) . '°' : '—';
+                $previewRainChance = is_numeric($forecastDay['rain_probability_percent'] ?? null) ? (int)$forecastDay['rain_probability_percent'] . '%' : '—';
+            ?>
+                <div class="forecast-day">
+                    <span class="forecast-day-name"><?= htmlspecialchars($previewDate->format('D'), ENT_QUOTES) ?></span>
+                    <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($previewCondition['label'], ENT_QUOTES) ?>">
+                        <?php if (is_string($previewCondition['slug'] ?? null)): ?>
+                            <img src="weather-icons/<?= htmlspecialchars($previewCondition['slug'], ENT_QUOTES) ?>.svg?v=20261027-looping-icons" alt="" aria-hidden="true" width="44" height="44">
+                        <?php else: ?>
+                            <?= htmlspecialchars($previewCondition['icon'], ENT_QUOTES) ?>
+                        <?php endif; ?>
+                    </span>
+                    <span class="forecast-temperature"><?= $previewHigh ?> <span class="forecast-low"><?= $previewLow ?></span></span>
+                    <span class="forecast-rain"><?= htmlspecialchars($previewRainChance, ENT_QUOTES) ?> rain</span>
+                </div>
+            <?php endforeach; ?>
+            <?php if ($forecastPreviewDays === []): ?>
+                <p class="muted forecast-preview-unavailable">Forecast data will appear after the next scheduled weather update.</p>
+            <?php endif; ?>
+        </div>
+        <div class="forecast-preview-footer"><span aria-hidden="true">View details&nbsp; →</span></div>
+    </a>
+
 
 
         
@@ -669,41 +707,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
         </article>
 
-    <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
-        <div class="section-heading forecast-preview-heading" style="text-align: left; justify-content: flex-start;">
-            <div>
-                <p class="label">A quick look at the days ahead</p>
-            </div>
-        </div>
-        <div class="forecast-days forecast-preview-days">
-            <?php foreach ($forecastPreviewDays as $forecastDay):
-                $previewDate = new DateTimeImmutable((string)$forecastDay['date'], new DateTimeZone($dashboardTimezone));
-                $previewCondition = $forecastCondition(
-                    isset($forecastDay['weather_code']) && is_numeric($forecastDay['weather_code']) ? (int)$forecastDay['weather_code'] : null
-                );
-                $previewHigh = is_numeric($forecastDay['temperature_max_c'] ?? null) ? number_format((float)$forecastDay['temperature_max_c'], 0) . '°' : '—';
-                $previewLow = is_numeric($forecastDay['temperature_min_c'] ?? null) ? number_format((float)$forecastDay['temperature_min_c'], 0) . '°' : '—';
-                $previewRainChance = is_numeric($forecastDay['rain_probability_percent'] ?? null) ? (int)$forecastDay['rain_probability_percent'] . '%' : '—';
-            ?>
-                <div class="forecast-day">
-                    <span class="forecast-day-name"><?= htmlspecialchars($previewDate->format('D'), ENT_QUOTES) ?></span>
-                    <span class="forecast-icon" role="img" aria-label="<?= htmlspecialchars($previewCondition['label'], ENT_QUOTES) ?>">
-                        <?php if (is_string($previewCondition['slug'] ?? null)): ?>
-                            <img src="weather-icons/<?= htmlspecialchars($previewCondition['slug'], ENT_QUOTES) ?>.svg?v=20261027-looping-icons" alt="" aria-hidden="true" width="44" height="44">
-                        <?php else: ?>
-                            <?= htmlspecialchars($previewCondition['icon'], ENT_QUOTES) ?>
-                        <?php endif; ?>
-                    </span>
-                    <span class="forecast-temperature"><?= $previewHigh ?> <span class="forecast-low"><?= $previewLow ?></span></span>
-                    <span class="forecast-rain"><?= htmlspecialchars($previewRainChance, ENT_QUOTES) ?> rain</span>
-                </div>
-            <?php endforeach; ?>
-            <?php if ($forecastPreviewDays === []): ?>
-                <p class="muted forecast-preview-unavailable">Forecast data will appear after the next scheduled weather update.</p>
-            <?php endif; ?>
-        </div>
-        <div class="forecast-preview-footer"><span aria-hidden="true">View details&nbsp; →</span></div>
-    </a>
+
 
 
     <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=temperature_2m&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
