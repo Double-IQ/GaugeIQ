@@ -653,6 +653,8 @@ button:disabled { opacity: .55; cursor: default; }
 .notification-enabled-note[hidden]{display:none}
 .network-uplink-status{display:block;width:100%;box-sizing:border-box;margin:4px 0 10px;text-align:center;color:var(--muted);font-size:12px;line-height:1.4;font-weight:500}
 .network-uplink-status[data-state="error"]{opacity:.8}
+.network-diagnostics{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.network-diagnostics .network-uplink-status{margin:3px 0}
 
 /* Daily expected rainfall has its own scale, separate from rain probability */
 .rainfall-forecast-block{margin-top:12px}
