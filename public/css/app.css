@@ -1706,3 +1706,17 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-row{grid-template-rows:17px 18px 38px 29px}
   .climate-gauge-card .climate-mobile-gauge{height:38px}
 }
+
+
+/* Atmospheric Monitor mobile gauges: blue arcs with the readout directly underneath. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 40px 19px 30px}
+  .climate-gauge-card .climate-mobile-gauge{grid-column:1;grid-row:2;height:40px;align-self:center;justify-self:start}
+  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:3;align-self:start;padding-top:0}
+  .climate-gauge-card .climate-mobile-gauge-value{stroke:#3b82f6;filter:drop-shadow(0 0 2px rgba(59,130,246,.28))}
+  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#3b82f6}
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 38px 18px 29px}
+  .climate-gauge-card .climate-mobile-gauge{height:38px}
+}
