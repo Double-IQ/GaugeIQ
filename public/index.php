@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261029-wvi-card-border">
+<link rel="stylesheet" href="css/app.css?v=20261029-network-diagnostics">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -836,11 +836,16 @@ if ($current && !empty($current['observed_at'])) {
         <?php endif; ?>
     </section>
 
-    <section class="card appearance-card" aria-labelledby="appearanceTitle"><div class="section-heading"><div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div><select id="themeSelect" class="theme-select" aria-label="Appearance"><option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option></select></div></section>
+    
 
     <p id="status" class="status"></p>
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
-    <p id="networkUplinkStatus" class="network-uplink-status" aria-live="polite">Network uplink speed: Measuring…</p>
+    <section class="network-diagnostics" aria-label="Device and server network diagnostics">
+        <p id="networkUplinkStatus" class="network-uplink-status" aria-live="polite">Upload speed: Measuring…</p>
+        <p id="networkDownlinkStatus" class="network-uplink-status" aria-live="polite">Download speed: Measuring…</p>
+        <p id="networkPingStatus" class="network-uplink-status" aria-live="polite">Ping to weather server: Measuring…</p>
+        <p class="network-uplink-status">Weather server IP: <strong><?= htmlspecialchars((string)($_SERVER['SERVER_ADDR'] ?? 'Unavailable'), ENT_QUOTES, 'UTF-8') ?></strong></p>
+    </section>
 </main>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
