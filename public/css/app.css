@@ -1454,3 +1454,92 @@ body.gaugeiq-menu-open{overflow:hidden}
  .network-diagnostics .network-uplink-status{padding:8px;font-size:11px}
  .network-diagnostics .network-uplink-status strong{font-size:14px}
 }
+
+
+/* Atmospheric Monitor: aligned readings, compact segmented gauges and restrained trend plots. */
+.climate-gauge-card .climate-bars{gap:7px}
+.climate-gauge-card .climate-bar-row{
+  grid-template-columns:minmax(100px,124px) minmax(76px,.82fr) 48px minmax(128px,1fr);
+  grid-template-rows:22px 22px;
+  column-gap:9px;
+  row-gap:0;
+  padding:8px 10px;
+  border:1px solid rgba(65,126,185,.22);
+  border-radius:10px;
+  background:linear-gradient(105deg,rgba(7,30,57,.68),rgba(3,19,41,.54));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.climate-gauge-card .climate-bar-label{
+  grid-column:1;grid-row:1;align-self:end;margin:0;
+  color:#b9d5ff;font-size:12px;font-weight:750;line-height:1.2;letter-spacing:.01em
+}
+.climate-gauge-card .climate-bar-value{
+  grid-column:1;grid-row:2;align-self:start;padding-top:2px;
+  color:#f4f7ff;font-size:14px;font-weight:700;line-height:1.2;
+  font-variant-numeric:tabular-nums
+}
+.climate-gauge-card .climate-segment-track{
+  grid-column:2;grid-row:1 / span 2;display:grid;
+  grid-template-columns:repeat(60,minmax(0,1fr));gap:1px;
+  align-items:center;width:100%;height:12px!important;min-height:0;
+  padding:0!important;overflow:hidden;border:0;border-radius:0;
+  background:transparent;box-shadow:none
+}
+.climate-gauge-card .climate-segment{height:12px;min-width:0;border-radius:0}
+.climate-gauge-card .climate-segment.active{background:#a3e635}
+.climate-gauge-card .climate-segment.change{background:#ffc184}
+.climate-gauge-card .climate-segment.warning-zone{background:#a3e635}
+.climate-gauge-card .climate-bar-change{
+  grid-column:3;grid-row:1 / span 2;align-self:center;text-align:right;
+  padding:0;font-size:12px;font-weight:750;line-height:1.15;
+  font-variant-numeric:tabular-nums;white-space:nowrap;color:#ffc184
+}
+.climate-gauge-card .climate-bar-change.steady{color:#9cb6d5}
+.climate-gauge-card .climate-bar-sparkline,
+.climate-gauge-card .climate-bar-sparkline-unavailable{
+  grid-column:4;grid-row:1 / span 2;align-self:center;
+  width:100%;height:34px;min-width:0;margin:0;display:block
+}
+.climate-gauge-card .climate-bar-sparkline{
+  overflow:visible;border:0;background:none;opacity:1
+}
+.climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{
+  stroke:rgba(139,170,207,.22);stroke-width:.55;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-sparkline polyline{
+  fill:none;stroke:#ffc184;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;filter:none
+}
+.climate-gauge-card .climate-bar-sparkline .climate-sparkline-endpoint{
+  fill:#ffc184;stroke:#06172d;stroke-width:.7;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-sparkline-unavailable{
+  display:flex;align-items:center;justify-content:center;
+  color:#829fc1;font-size:10px;line-height:1.3;text-align:center
+}
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-columns:minmax(90px,112px) minmax(60px,1fr) 42px;
+    grid-template-rows:20px 20px 28px;
+    column-gap:8px;padding:8px 9px
+  }
+  .climate-gauge-card .climate-bar-label{grid-column:1;grid-row:1;font-size:12px}
+  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:2;font-size:13px}
+  .climate-gauge-card .climate-segment-track{grid-column:2;grid-row:1 / span 2;height:11px!important}
+  .climate-gauge-card .climate-segment{height:11px}
+  .climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:12px}
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{
+    grid-column:2 / 4;grid-row:3;height:26px;margin:2px 0 0
+  }
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
+    column-gap:7px;padding:7px 8px
+  }
+  .climate-gauge-card .climate-bar-label{font-size:11px}
+  .climate-gauge-card .climate-bar-value{font-size:12px}
+  .climate-gauge-card .climate-bar-change{font-size:11px}
+  .climate-gauge-card .climate-segment-track{gap:1px}
+}
