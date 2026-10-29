@@ -1695,3 +1695,14 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-sparkline-startpoint{r:1.2;fill:#9cb6d5;opacity:.85}
   .climate-gauge-card .climate-sparkline-endpoint{r:2;fill:#ffc184;stroke:#07182b;stroke-width:.8}
 }
+
+
+/* Keep mobile Atmospheric Monitor arcs circular and vertically aligned beneath readings. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 19px 40px 30px}
+  .climate-gauge-card .climate-mobile-gauge{height:40px;align-self:center;justify-self:start;overflow:visible}
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 18px 38px 29px}
+  .climate-gauge-card .climate-mobile-gauge{height:38px}
+}
