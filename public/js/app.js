@@ -1597,57 +1597,87 @@ if (deviceViewButton && deviceList) {
 })();
 
 
-// Estimate network upload throughput with a small, non-persistent same-origin upload.
-async function updateNetworkUplinkStatus() {
-    const output = document.getElementById('networkUplinkStatus');
-    if (!output) return;
+// Measure device-to-server upload, server-to-device download, and round-trip latency.
+// Tests are transient and use same-origin endpoints; no results are stored.
+function formatNetworkSpeed(bitsPerSecond) {
+    const units = [[1_000_000_000, 'Gb/s'], [1_000_000, 'Mb/s'], [1_000, 'kb/s'], [1, 'b/s']];
+    const [divisor, unit] = units.find(([threshold]) => bitsPerSecond >= threshold) || units[3];
+    const speed = bitsPerSecond / divisor;
+    return speed.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: speed >= 100 ? 0 : speed >= 10 ? 1 : 2
+    }) + ' ' + unit;
+}
 
-    const payload = new Uint8Array(32 * 1024);
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
-    const startedAt = performance.now();
+async function updateNetworkDiagnostics() {
+    const uploadOutput = document.getElementById('networkUplinkStatus');
+    const downloadOutput = document.getElementById('networkDownlinkStatus');
+    const pingOutput = document.getElementById('networkPingStatus');
+    if (!uploadOutput && !downloadOutput && !pingOutput) return;
 
-    try {
-        const response = await fetch('network-speed-test.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/octet-stream' },
-            body: payload,
-            cache: 'no-store',
-            credentials: 'same-origin',
-            signal: controller.signal
-        });
-        if (!response.ok) throw new Error('Upload test failed.');
-
-        const elapsedSeconds = (performance.now() - startedAt) / 1000;
-        if (elapsedSeconds <= 0) throw new Error('Invalid upload timing.');
-        const bitsPerSecond = (payload.byteLength * 8) / elapsedSeconds;
-        let speed;
-        let unit;
-        if (bitsPerSecond >= 1_000_000_000) {
-            speed = bitsPerSecond / 1_000_000_000;
-            unit = 'Gb/s';
-        } else if (bitsPerSecond >= 1_000_000) {
-            speed = bitsPerSecond / 1_000_000;
-            unit = 'Mb/s';
-        } else if (bitsPerSecond >= 1_000) {
-            speed = bitsPerSecond / 1_000;
-            unit = 'kb/s';
-        } else {
-            speed = bitsPerSecond;
-            unit = 'b/s';
+    const testRequest = async (url, options = {}) => {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+        try {
+            return await fetch(url, { cache: 'no-store', credentials: 'same-origin', ...options, signal: controller.signal });
+        } finally {
+            window.clearTimeout(timeoutId);
         }
-        const decimals = speed >= 100 ? 0 : speed >= 10 ? 1 : 2;
-        output.textContent = 'Network uplink speed: ~' + speed.toLocaleString(undefined, {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: decimals
-        }) + ' ' + unit;
-        output.dataset.state = 'measured';
-    } catch {
-        output.textContent = 'Network uplink speed: unavailable';
-        output.dataset.state = 'error';
-    } finally {
-        window.clearTimeout(timeoutId);
+    };
+
+    if (uploadOutput) {
+        try {
+            const payload = new Uint8Array(32 * 1024);
+            const startedAt = performance.now();
+            const response = await testRequest('network-speed-test.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: payload
+            });
+            if (!response.ok) throw new Error('Upload test failed');
+            const elapsed = (performance.now() - startedAt) / 1000;
+            if (elapsed <= 0) throw new Error('Invalid timing');
+            uploadOutput.textContent = 'Upload speed: ~' + formatNetworkSpeed(payload.byteLength * 8 / elapsed);
+            uploadOutput.dataset.state = 'measured';
+        } catch {
+            uploadOutput.textContent = 'Upload speed: unavailable';
+            uploadOutput.dataset.state = 'error';
+        }
+    }
+
+    if (downloadOutput) {
+        try {
+            const startedAt = performance.now();
+            const response = await testRequest('network-download-test.php');
+            if (!response.ok) throw new Error('Download test failed');
+            const data = await response.arrayBuffer();
+            const elapsed = (performance.now() - startedAt) / 1000;
+            if (elapsed <= 0 || data.byteLength === 0) throw new Error('Invalid download timing');
+            downloadOutput.textContent = 'Download speed: ~' + formatNetworkSpeed(data.byteLength * 8 / elapsed);
+            downloadOutput.dataset.state = 'measured';
+        } catch {
+            downloadOutput.textContent = 'Download speed: unavailable';
+            downloadOutput.dataset.state = 'error';
+        }
+    }
+
+    if (pingOutput) {
+        try {
+            const startedAt = performance.now();
+            const response = await testRequest('network-speed-test.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: new Uint8Array([1])
+            });
+            if (!response.ok) throw new Error('Ping test failed');
+            const milliseconds = performance.now() - startedAt;
+            pingOutput.textContent = 'Ping to weather server: ' + milliseconds.toFixed(0) + ' ms';
+            pingOutput.dataset.state = 'measured';
+        } catch {
+            pingOutput.textContent = 'Ping to weather server: unavailable';
+            pingOutput.dataset.state = 'error';
+        }
     }
 }
 
-updateNetworkUplinkStatus();
+updateNetworkDiagnostics();
