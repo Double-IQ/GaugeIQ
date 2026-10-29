@@ -307,7 +307,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-stability-row{display:flex;align-items:center;min-width:0;margin-top:0;padding-top:12px;border-top:1px solid var(--border);gap:10px;transform:translateY(-10px)}
 .temperature-stability-label{flex:1 1 auto;min-width:0;font-size:11px;font-weight:900;color:var(--muted);white-space:normal;line-height:1.35}
 .temperature-stability-summary{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border:1px solid currentColor;border-radius:999px;background:var(--surface);line-height:1.2}
-#temperatureStabilitySummary.temperature-stability-summary[data-level="high"]{color:#15803d}
+#temperatureStabilitySummary.temperature-stability-summary[data-level="high"]{color:#35c4eb}
 #temperatureStabilitySummary.temperature-stability-summary[data-level="moderate"]{color:#ffc184}
 #temperatureStabilitySummary.temperature-stability-summary[data-level="low"]{color:#dc2626}
 .temperature-stability-summary.warning{animation:temperature-stability-warning .8s ease-in-out infinite}
@@ -422,10 +422,10 @@ button:disabled { opacity: .55; cursor: default; }
 
 .weather-change-score[data-level="low"]{border-color:#ef4444;color:#dc2626}
 .weather-change-score[data-level="moderate"]{border-color:#ffc184;color:#ffc184}
-.weather-change-score[data-level="high"]{border-color:#22c55e;color:#15803d}
+.weather-change-score[data-level="high"]{border-color:#35c4eb;color:#35c4eb}
 .weather-change-card:has(.weather-change-score[data-level="low"]){border-color:#ef4444}
 .weather-change-card:has(.weather-change-score[data-level="moderate"]){border-color:#ffc184}
-.weather-change-card:has(.weather-change-score[data-level="high"]){border-color:#22c55e}
+.weather-change-card:has(.weather-change-score[data-level="high"]){border-color:#35c4eb}
 #temperatureStabilityLabel:has(#temperatureStabilitySummary[data-outline-level="low"]){border-color:#ef4444}
 #temperatureStabilityLabel:has(#temperatureStabilitySummary[data-outline-level="moderate"]){border-color:#ffc184}
 
@@ -481,7 +481,7 @@ button:disabled { opacity: .55; cursor: default; }
 .rain-meter-fill{background:#3987d7}
 .change-meter-fill{background:#22a06b}
 .change-meter-fill[data-level="moderate"]{background:#ffc184}
-.change-meter-fill[data-level="high"]{background:#d94b4b}
+.change-meter-fill[data-level="high"]{background:#35c4eb}
 .rain-probability-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;color:var(--muted)}
 .rain-probability-meta strong{color:var(--text);font-variant-numeric:tabular-nums}
 .conditions-trend-reasons{display:grid;gap:8px;margin-top:12px}
