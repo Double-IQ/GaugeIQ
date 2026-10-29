@@ -303,7 +303,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/alerts.css?v=20261011-daily-forecast-alert-1">
+<link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
 <title>GaugeIQ Admin</title>
 </head>
 <body>
