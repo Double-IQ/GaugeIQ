@@ -116,8 +116,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $rain = isset($_POST['daily_forecast_alert_rain']);
                 $wind = isset($_POST['daily_forecast_alert_wind']);
                 $severe = isset($_POST['daily_forecast_alert_severe']);
-                if ($enabled && !$rain && !$wind && !$severe) {
-                    throw new InvalidArgumentException('Select at least one forecast condition, or leave the daily alert disabled.');
+                $alwaysNotify = isset($_POST['daily_forecast_alert_always']);
+                if ($enabled && !$rain && !$wind && !$severe && !$alwaysNotify) {
+                    throw new InvalidArgumentException('Select at least one forecast condition or enable the all-clear notification option.');
                 }
 
                 $pdo->beginTransaction();
@@ -127,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     saveGaugeSetting($pdo, 'daily_forecast_alert_rain', $rain ? '1' : '0');
                     saveGaugeSetting($pdo, 'daily_forecast_alert_wind', $wind ? '1' : '0');
                     saveGaugeSetting($pdo, 'daily_forecast_alert_severe', $severe ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_always', $alwaysNotify ? '1' : '0');
                     $pdo->commit();
                 } catch (Throwable $saveError) {
                     if ($pdo->inTransaction()) {
@@ -232,6 +234,7 @@ if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $dailyForecastAlertTime)) {
 $dailyForecastAlertRain = gaugeSetting($pdo, 'daily_forecast_alert_rain', '1') === '1';
 $dailyForecastAlertWind = gaugeSetting($pdo, 'daily_forecast_alert_wind', '1') === '1';
 $dailyForecastAlertSevere = gaugeSetting($pdo, 'daily_forecast_alert_severe', '1') === '1';
+$dailyForecastAlertAlways = gaugeSetting($pdo, 'daily_forecast_alert_always', '0') === '1';
 $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_evaluated_date', '') ?? '';
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
@@ -444,6 +447,11 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <span><strong>Severe weather</strong><small>Heavy precipitation, violent showers, heavy snow, thunderstorms or gusts reaching 70 km/h.</small></span>
             </label>
         </fieldset>
+
+        <label class="daily-forecast-option">
+            <input type="checkbox" name="daily_forecast_alert_always" value="1" <?= $dailyForecastAlertAlways ? 'checked' : '' ?>>
+            <span><strong>Notify me even when no selected conditions are forecast</strong><small>Send the daily forecast notification anyway, confirming that none of the selected conditions met GaugeIQ's alert thresholds.</small></span>
+        </label>
 
         <button type="submit">Save daily forecast alert</button>
         <p class="alert-help muted">The daily check runs with your existing scheduled monitor. With a 30-minute cron, delivery is at the first check at or after your chosen time (normally within 30 minutes). Only selected conditions trigger a notification; if several match, GaugeIQ combines them into one message.</p>
