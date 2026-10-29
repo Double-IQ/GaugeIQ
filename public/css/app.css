@@ -1327,3 +1327,19 @@ body.gaugeiq-menu-open{overflow:hidden}
 .forecast-preview-card .forecast-rain{color:#7db9ff}
 .forecast-preview-card .forecast-preview-footer{border-color:rgba(117,164,211,.2)}
 .forecast-preview-card .forecast-preview-footer span:first-child{color:#9cb6d5}
+
+
+/* Match Temperature and Atmospheric Monitor headings to the Wind card heading. */
+.temperature-card-heading .label,
+.climate-gauge-card .section-heading .label{
+  font-size:22px;
+  font-weight:750;
+  letter-spacing:normal;
+  line-height:normal;
+}
+@media(max-width:560px){
+  .temperature-card-heading .label,
+  .climate-gauge-card .section-heading .label{
+    font-size:21px;
+  }
+}
