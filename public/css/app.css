@@ -1744,3 +1744,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){
   .forecast-icon img{width:68px;height:68px}
 }
+
+
+/* The Wind card's Live Data badge is now the phone-compass switch. */
+.wind-hud-card .wind-hud-compass-switch{
+  flex:0 0 auto;min-height:30px;padding:6px 11px;border:1px solid rgba(53,196,235,.7);
+  border-radius:7px;background:rgba(53,196,235,.16);color:#35c4eb;
+  font:800 10px/1.2 inherit;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.wind-hud-card .wind-hud-compass-switch:hover{background:rgba(53,196,235,.24)}
+.wind-hud-card .wind-hud-compass-switch.is-enabled{
+  border-color:rgba(255,193,132,.78);background:rgba(255,193,132,.16);color:#ffc184;
+}
+.wind-hud-card .wind-hud-compass-switch.is-enabled:hover{background:rgba(255,193,132,.24)}
+.wind-hud-card .wind-hud-compass-switch:disabled{opacity:.55;cursor:not-allowed}
+.wind-hud-card .wind-compass-controls{margin-top:8px;min-height:0}
+@media(max-width:420px){.wind-hud-card .wind-hud-compass-switch{min-height:29px;padding:5px 8px;font-size:9px}}
