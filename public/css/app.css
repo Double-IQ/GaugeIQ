@@ -1730,3 +1730,17 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-mobile-gauge-needle{stroke:#a3e635;stroke-width:2.6;stroke-linecap:round;filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))}
   .climate-gauge-card .climate-mobile-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
 }
+
+/* Normalize forecast icon boxes so different SVG artwork aligns consistently. */
+.forecast-icon img{
+  display:block;
+  width:76px;
+  height:76px;
+  max-width:100%;
+  object-fit:contain;
+  margin:0 auto;
+  flex:none;
+}
+@media(max-width:560px){
+  .forecast-icon img{width:68px;height:68px}
+}
