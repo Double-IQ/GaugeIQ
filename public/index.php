@@ -532,14 +532,61 @@ if ($current && !empty($current['observed_at'])) {
     };
     $pressureBarRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - 950.0) / 100.0)) : 0.0;
     $climateBars = [
-        $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure'],
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1),
-        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta),
-        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta),
+        $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure', 'historyKey' => 'pressure_hpa'],
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1) + ['historyKey' => 'dew_point_c'],
+        $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta) + ['historyKey' => 'humidity_percent'],
+        $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta) + ['historyKey' => 'cloud_cover_percent'],
     ];
     if ($current && ($rainfall24hMm > 0.0 || ($rainDelta !== null && abs($rainDelta) > 0.0))) {
-        $climateBars[] = $makeClimateBar('Rainfall (24h)', $rainfall24hMm, number_format($rainfall24hMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, 2) + ['kind' => 'current-rain'];
+        $climateBars[] = $makeClimateBar('Rainfall (24h)', $rainfall24hMm, number_format($rainfall24hMm, 2) . ' mm', $rainBarRatio, 10.0, $rainDelta, 2) + ['kind' => 'current-rain', 'historyKey' => 'rainfall_mm'];
     }
+
+    // Draw compact 24-hour sparklines from readings already stored in the database.
+    $climateHistory = [];
+    try {
+        if ($current && !empty($current['observed_at'])) {
+            $climateHistoryEnd = strtotime((string)$current['observed_at']);
+            if ($climateHistoryEnd !== false) {
+                $climateHistoryStart = date('Y-m-d\\TH:i:s', $climateHistoryEnd - 86400);
+                $climateHistoryEndText = date('Y-m-d\\TH:i:s', $climateHistoryEnd);
+                $climateHistoryStmt = $pdo->prepare(
+                    "SELECT pressure_hpa, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                     FROM gaugeiq_pressure_readings
+                     WHERE observed_at >= ? AND observed_at <= ?
+                       AND (source IS NULL OR source = 'Open-Meteo')
+                     ORDER BY observed_at ASC, id ASC"
+                );
+                $climateHistoryStmt->execute([$climateHistoryStart, $climateHistoryEndText]);
+                $climateHistory = $climateHistoryStmt->fetchAll();
+            }
+        }
+    } catch (Throwable $e) {
+        $climateHistory = [];
+    }
+    foreach ($climateBars as &$climateBar) {
+        $values = [];
+        foreach ($climateHistory as $historyRow) {
+            $historyValue = $historyRow[$climateBar['historyKey']] ?? null;
+            if (is_numeric($historyValue)) {
+                $values[] = (float)$historyValue;
+            }
+        }
+        $points = [];
+        $valueCount = count($values);
+        if ($valueCount >= 2) {
+            $minValue = min($values);
+            $maxValue = max($values);
+            $range = max(0.0001, $maxValue - $minValue);
+            foreach ($values as $pointIndex => $pointValue) {
+                $x = $pointIndex / ($valueCount - 1) * 100;
+                $y = 22 - (($pointValue - $minValue) / $range * 18);
+                $points[] = number_format($x, 2, '.', '') . ',' . number_format($y, 2, '.', '');
+            }
+        }
+        $climateBar['sparkline'] = implode(' ', $points);
+        $climateBar['historyCount'] = $valueCount;
+    }
+    unset($climateBar);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
         <div class="section-heading">
@@ -573,6 +620,13 @@ if ($current && !empty($current['observed_at'])) {
                     </div>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
+                    <?php if ($bar['sparkline'] !== ''): ?>
+                        <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ' trend over the last 24 hours, based on ' . $bar['historyCount'] . ' stored readings', ENT_QUOTES) ?>">
+                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
+                        </svg>
+                    <?php else: ?>
+                        <div class="climate-bar-sparkline-unavailable">24-hour trend unavailable</div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
