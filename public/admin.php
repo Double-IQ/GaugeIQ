@@ -5,6 +5,7 @@ require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/AdminAuth.php';
 require __DIR__ . '/../app/AlertRuleService.php';
+require __DIR__ . '/../app/PushService.php';
 
 $config = require __DIR__ . '/../config/local.php';
 $db = new Database($config);
@@ -21,6 +22,24 @@ $errors = [];
 
 function h(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+function notificationDeviceLabel(?string $userAgent): string {
+    $ua = (string)$userAgent;
+    $platform = 'Unknown device';
+    if (stripos($ua, 'iPhone') !== false) $platform = 'iPhone';
+    elseif (stripos($ua, 'iPad') !== false) $platform = 'iPad';
+    elseif (stripos($ua, 'Android') !== false) $platform = 'Android device';
+    elseif (stripos($ua, 'Macintosh') !== false || stripos($ua, 'Mac OS') !== false) $platform = 'Mac';
+    elseif (stripos($ua, 'Windows') !== false) $platform = 'Windows PC';
+    elseif (stripos($ua, 'Linux') !== false) $platform = 'Linux device';
+
+    $browser = 'Browser';
+    if (stripos($ua, 'Edg/') !== false) $browser = 'Microsoft Edge';
+    elseif (stripos($ua, 'CriOS/') !== false || stripos($ua, 'Chrome/') !== false) $browser = 'Chrome';
+    elseif (stripos($ua, 'FxiOS/') !== false || stripos($ua, 'Firefox/') !== false) $browser = 'Firefox';
+    elseif (stripos($ua, 'Safari/') !== false) $browser = 'Safari';
+    return $platform . ' · ' . $browser;
 }
 
 function alertLookback(PDO $pdo): int {
@@ -150,6 +169,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10 - $threshold));
                     $notice = 'Stability bar alert threshold saved.';
                 }
+            } elseif ($action === 'test_device_notification') {
+                $deviceId = filter_var($_POST['device_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                if ($deviceId === false || $deviceId === null) {
+                    throw new InvalidArgumentException('Choose a valid notification device.');
+                }
+                $pushService = new PushService($config, $pdo);
+                $testResult = $pushService->sendDetailed(
+                    'GaugeIQ test notification',
+                    'Notifications are working for this device.',
+                    null,
+                    (int)$deviceId
+                );
+                $deviceResult = $testResult['results'][0] ?? null;
+                if (is_array($deviceResult) && !empty($deviceResult['ok'])) {
+                    $notice = 'Test notification sent to the selected device.';
+                } else {
+                    $reason = is_array($deviceResult) ? (string)($deviceResult['reason'] ?? 'Push delivery failed.') : 'Push delivery failed.';
+                    throw new RuntimeException('Test notification failed: ' . $reason);
+                }
             } elseif ($action === 'delete') {
                 $rules->delete((int)$_POST['id']);
                 $notice = 'Alert deleted.';
@@ -240,6 +278,7 @@ $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_st
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10 - (int)$stabilityAlertThresholdValue : null;
+$notificationDevices = $pdo->query('SELECT id, created_at, updated_at, user_agent, last_seen_at, last_push_at, last_push_status, last_push_error FROM gaugeiq_push_subscriptions ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
 $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
 
@@ -405,6 +444,43 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <p class="alert-help muted">The bar keeps its green, yellow or red colour. Reaching this score adds the flashing warning and yellow track border. Leave it disabled if you do not want the bar to flash.</p>
     </form>
+</section>
+
+<section class="card notification-devices-card" aria-labelledby="notificationDevicesTitle">
+    <div class="section-heading">
+        <div>
+            <h2 id="notificationDevicesTitle">Devices with notifications enabled</h2>
+            <p class="muted">Each listed device has a saved push subscription. Send a test to one device without notifying the others.</p>
+        </div>
+        <span class="status-pill <?= $notificationDevices ? 'status-good' : 'status-warn' ?>"><?= count($notificationDevices) ?> device<?= count($notificationDevices) === 1 ? '' : 's' ?></span>
+    </div>
+    <?php if (!$notificationDevices): ?>
+        <p class="muted">No devices are currently registered for push notifications.</p>
+    <?php else: ?>
+        <div class="notification-device-list">
+            <?php foreach ($notificationDevices as $device): ?>
+                <div class="notification-device-row">
+                    <div class="notification-device-details">
+                        <strong><?= h(notificationDeviceLabel($device['user_agent'] ?? null)) ?></strong>
+                        <small>Registered: <?= h((string)($device['created_at'] ?? 'Unknown')) ?></small>
+                        <small>Last seen: <?= h((string)($device['last_seen_at'] ?? 'Not recorded')) ?></small>
+                        <?php if (!empty($device['last_push_at'])): ?>
+                            <small>Last push test/alert: <?= h((string)$device['last_push_at']) ?> · <?= h((string)($device['last_push_status'] ?? 'unknown')) ?></small>
+                        <?php endif; ?>
+                        <?php if (($device['last_push_status'] ?? '') === 'failed' && !empty($device['last_push_error'])): ?>
+                            <small class="monitor-warning">Last push error: <?= h((string)$device['last_push_error']) ?></small>
+                        <?php endif; ?>
+                    </div>
+                    <form method="post" class="notification-device-test-form">
+                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                        <input type="hidden" name="action" value="test_device_notification">
+                        <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
+                        <button type="submit">Test notification</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </section>
 
 <section class="card daily-forecast-alert-card" aria-labelledby="dailyForecastAlertTitle">
