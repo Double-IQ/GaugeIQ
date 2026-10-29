@@ -82,3 +82,12 @@
 .daily-forecast-options legend{font-weight:850;margin-bottom:10px;padding:0}
 .daily-forecast-last-status{padding:10px 12px;margin:0;border-radius:10px;background:var(--surface);color:var(--muted);font-size:13px;line-height:1.45}
 @media(max-width:600px){.daily-forecast-time-row{grid-template-columns:1fr}.daily-forecast-time-row .alert-help{margin-top:0}}
+
+.notification-device-list{display:grid;gap:0}
+.notification-device-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--border)}
+.notification-device-details{display:grid;gap:4px;min-width:0}
+.notification-device-details strong{font-weight:850;color:var(--text)}
+.notification-device-details small{font-size:12px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.notification-device-test-form{flex:0 0 auto}
+.notification-device-test-form button{white-space:nowrap}
+@media(max-width:560px){.notification-device-row{align-items:stretch;flex-direction:column;gap:10px}.notification-device-test-form button{width:100%}}
