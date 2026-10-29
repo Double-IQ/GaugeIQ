@@ -610,6 +610,8 @@ if ($current && !empty($current['observed_at'])) {
                 $gaugeAngle = M_PI - (M_PI * $gaugeRatio);
                 $gaugeEndX = 50 + (46 * cos($gaugeAngle));
                 $gaugeEndY = 48 - (46 * sin($gaugeAngle));
+                $needleEndX = 50 + (36 * cos($gaugeAngle));
+                $needleEndY = 48 - (36 * sin($gaugeAngle));
                 $mobileGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
@@ -629,7 +631,9 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
                         <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
+                        <line class="climate-mobile-gauge-needle" x1="50" y1="48" x2="<?= number_format($needleEndX, 2, '.', '') ?>" y2="<?= number_format($needleEndY, 2, '.', '') ?>"></line>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
+                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="3"></circle>
                     </svg>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
