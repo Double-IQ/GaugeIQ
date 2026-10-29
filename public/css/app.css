@@ -1252,7 +1252,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-direction-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
 .wind-hud-direction-summary>div{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border:1px solid rgba(117,164,211,.15);border-radius:9px;background:rgba(1,10,24,.24);color:#829fc1;font-size:9px;font-weight:800;letter-spacing:.08em}
 .wind-hud-direction-summary strong{display:block;margin-top:4px;color:#edf6ff;font-size:16px;letter-spacing:0}
-.wind-hud-origin-dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#ffad55;box-shadow:0 0 0 3px rgba(255,173,85,.12)}
+.wind-hud-origin-dot{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,.12)}
 .wind-hud-destination-arrow{flex:0 0 auto;color:#54caff;font-size:19px;line-height:1}
 .wind-hud-card .wind-compass-controls{margin-top:10px;align-items:flex-end}
 .wind-hud-card .wind-compass-button{padding:5px 8px;border-color:rgba(117,164,211,.22);background:rgba(28,55,87,.35);color:#92abc8;font-size:10px}
