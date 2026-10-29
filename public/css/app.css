@@ -1724,3 +1724,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-sparkline,
   .climate-gauge-card .climate-bar-sparkline-unavailable{height:60px}
 }
+
+/* Visible green needles on mobile Atmospheric Monitor gauges. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-mobile-gauge-needle{stroke:#a3e635;stroke-width:2.6;stroke-linecap:round;filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))}
+  .climate-gauge-card .climate-mobile-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
+}
