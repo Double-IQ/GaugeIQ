@@ -1615,11 +1615,13 @@ async function updateNetworkDiagnostics() {
     const pingOutput = document.getElementById('networkPingStatus');
     if (!uploadOutput && !downloadOutput && !pingOutput) return;
 
-    const testRequest = async (url, options = {}) => {
+    const testRequest = async (url, options = {}, consumeResponse = response => response) => {
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 10000);
         try {
-            return await fetch(url, { cache: 'no-store', credentials: 'same-origin', ...options, signal: controller.signal });
+            const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin', ...options, signal: controller.signal });
+            // Keep the timeout active while the response body is being read too.
+            return await consumeResponse(response);
         } finally {
             window.clearTimeout(timeoutId);
         }
@@ -1648,9 +1650,10 @@ async function updateNetworkDiagnostics() {
     if (downloadOutput) {
         try {
             const startedAt = performance.now();
-            const response = await testRequest('network-download-test.php');
-            if (!response.ok) throw new Error('Download test failed');
-            const data = await response.arrayBuffer();
+            const data = await testRequest('network-download-test.php', {}, async response => {
+                if (!response.ok) throw new Error('Download test failed');
+                return await response.arrayBuffer();
+            });
             const elapsed = (performance.now() - startedAt) / 1000;
             if (elapsed <= 0 || data.byteLength === 0) throw new Error('Invalid download timing');
             downloadOutput.textContent = 'Download speed: ~' + formatNetworkSpeed(data.byteLength * 8 / elapsed);
@@ -1664,11 +1667,7 @@ async function updateNetworkDiagnostics() {
     if (pingOutput) {
         try {
             const startedAt = performance.now();
-            const response = await testRequest('network-speed-test.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/octet-stream' },
-                body: new Uint8Array([1])
-            });
+            const response = await testRequest('network-ping-test.php');
             if (!response.ok) throw new Error('Ping test failed');
             const milliseconds = performance.now() - startedAt;
             pingOutput.textContent = 'Ping to weather server: ' + milliseconds.toFixed(0) + ' ms';
