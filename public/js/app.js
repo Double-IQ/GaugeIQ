@@ -16,6 +16,7 @@
         loadingStartedAt = Date.now();
         dismissed = false;
         screen.hidden = false;
+        screen.style.display = '';
         screen.classList.remove('is-leaving');
         screen.setAttribute('aria-hidden', 'false');
     }
