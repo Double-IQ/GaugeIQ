@@ -17,7 +17,7 @@ final class PushService
         return $this->sendDetailed($title, $body)['sent'];
     }
 
-    public function sendDetailed(string $title, string $body, ?string $url = null): array
+    public function sendDetailed(string $title, string $body, ?string $url = null, ?int $subscriptionId = null): array
     {
         $publicKey = trim((string)$this->config['push']['public_key']);
         $privateKey = trim((string)$this->config['push']['private_key']);
@@ -41,9 +41,20 @@ final class PushService
             'url' => $url ?? (rtrim((string)$this->config['app']['base_url'], '/') . '/'),
         ], JSON_THROW_ON_ERROR);
 
-        $subscriptions = $this->db->query(
-            'SELECT id, subscription_json FROM gaugeiq_push_subscriptions ORDER BY id ASC'
-        )->fetchAll();
+        if ($subscriptionId !== null) {
+            $subscriptionQuery = $this->db->prepare(
+                'SELECT id, subscription_json FROM gaugeiq_push_subscriptions WHERE id = ? ORDER BY id ASC'
+            );
+            $subscriptionQuery->execute([$subscriptionId]);
+            $subscriptions = $subscriptionQuery->fetchAll();
+            if (!$subscriptions) {
+                throw new RuntimeException('That device subscription no longer exists. Refresh the settings page and try again.');
+            }
+        } else {
+            $subscriptions = $this->db->query(
+                'SELECT id, subscription_json FROM gaugeiq_push_subscriptions ORDER BY id ASC'
+            )->fetchAll();
+        }
 
         $sent = 0;
         $results = [];
