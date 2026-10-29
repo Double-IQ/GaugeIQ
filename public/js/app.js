@@ -246,8 +246,9 @@ function handleWindDeviceOrientation(event) {
 function updateWindCompassButton() {
     if (!windCompassButton) return;
 
-    windCompassButton.textContent = windCompassEnabled ? 'Phone compass ON · tap to turn off' : 'Use phone compass';
+    windCompassButton.textContent = windCompassEnabled ? 'Disable Compass' : 'Enable Compass';
     windCompassButton.setAttribute('aria-pressed', windCompassEnabled ? 'true' : 'false');
+    windCompassButton.classList.toggle('is-enabled', windCompassEnabled);
     windCompassButton.disabled = !('DeviceOrientationEvent' in window);
     if (windCompassStatus && !windCompassEnabled) windCompassStatus.hidden = true;
 }
