@@ -585,6 +585,7 @@ if ($current && !empty($current['observed_at'])) {
         }
         $climateBar['sparkline'] = implode(' ', $points);
         $climateBar['sparklineArea'] = $valueCount >= 2 ? '0,23.5 ' . implode(' ', $points) . ' 100,23.5' : '';
+        $climateBar['sparklineStartpoint'] = $valueCount >= 2 ? explode(',', $points[0]) : null;
         $climateBar['sparklineEndpoint'] = $valueCount >= 2 ? explode(',', end($points)) : null;
         $climateBar['historyCount'] = $valueCount;
     }
@@ -636,9 +637,15 @@ if ($current && !empty($current['observed_at'])) {
                         <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ' trend over the last 24 hours, based on ' . $bar['historyCount'] . ' stored readings', ENT_QUOTES) ?>">
                             <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"></polygon>
                             <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
-                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
                             <?php if (is_array($bar['sparklineEndpoint'])): ?>
-                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" r="1.45"></circle>
+                                <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y2="23.5"></line>
+                            <?php endif; ?>
+                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
+                            <?php if (is_array($bar['sparklineStartpoint'])): ?>
+                                <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($bar['sparklineStartpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineStartpoint'][1], ENT_QUOTES) ?>" r="1"></circle>
+                            <?php endif; ?>
+                            <?php if (is_array($bar['sparklineEndpoint'])): ?>
+                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" r="1.6"></circle>
                             <?php endif; ?>
                         </svg>
                     <?php else: ?>
