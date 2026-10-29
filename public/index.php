@@ -510,7 +510,7 @@ if ($current && !empty($current['observed_at'])) {
                 // Use CSS classes rather than inline styles so the bars also render under
                 // a Content Security Policy that blocks inline style attributes.
                 // The final segment is always red; the reading fills the preceding 39 segments.
-                $segmentCount = 120;
+                $segmentCount = 100;
                 $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * $segmentCount);
                 $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
