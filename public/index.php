@@ -584,6 +584,7 @@ if ($current && !empty($current['observed_at'])) {
             }
         }
         $climateBar['sparkline'] = implode(' ', $points);
+        $climateBar['sparklineEndpoint'] = $valueCount >= 2 ? explode(',', end($points)) : null;
         $climateBar['historyCount'] = $valueCount;
     }
     unset($climateBar);
@@ -598,8 +599,8 @@ if ($current && !empty($current['observed_at'])) {
             <?php foreach ($climateBars as $bar):
                 // Use CSS classes rather than inline styles so the bars also render under
                 // a Content Security Policy that blocks inline style attributes.
-                // The final segment is always red; the reading fills the preceding 39 segments.
-                $segmentCount = 100;
+                // A compact segmented gauge keeps the current reading and its trend visually connected.
+                $segmentCount = 60;
                 $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * $segmentCount);
                 $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
@@ -622,7 +623,11 @@ if ($current && !empty($current['observed_at'])) {
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                     <?php if ($bar['sparkline'] !== ''): ?>
                         <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ' trend over the last 24 hours, based on ' . $bar['historyCount'] . ' stored readings', ENT_QUOTES) ?>">
+                            <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                             <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
+                            <?php if (is_array($bar['sparklineEndpoint'])): ?>
+                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" r="1.45"></circle>
+                            <?php endif; ?>
                         </svg>
                     <?php else: ?>
                         <div class="climate-bar-sparkline-unavailable">24-hour trend unavailable</div>
