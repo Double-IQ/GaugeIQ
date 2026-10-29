@@ -584,6 +584,7 @@ if ($current && !empty($current['observed_at'])) {
             }
         }
         $climateBar['sparkline'] = implode(' ', $points);
+        $climateBar['sparklineArea'] = $valueCount >= 2 ? '0,23.5 ' . implode(' ', $points) . ' 100,23.5' : '';
         $climateBar['sparklineEndpoint'] = $valueCount >= 2 ? explode(',', end($points)) : null;
         $climateBar['historyCount'] = $valueCount;
     }
@@ -604,6 +605,11 @@ if ($current && !empty($current['observed_at'])) {
                 $fillSegments = (int)round(min(1.0, max(0.0, (float)$bar['ratio'])) * $segmentCount);
                 $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
+                $gaugeRatio = min(1.0, max(0.0, (float)$bar['ratio']));
+                $gaugeAngle = M_PI - (M_PI * $gaugeRatio);
+                $gaugeEndX = 50 + (46 * cos($gaugeAngle));
+                $gaugeEndY = 25 - (46 * sin($gaugeAngle));
+                $mobileGaugePath = 'M 4 25 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
@@ -619,10 +625,16 @@ if ($current && !empty($current['observed_at'])) {
                             <span class="climate-segment<?= $segmentClass !== '' ? ' ' . $segmentClass : '' ?>"></span>
                         <?php endfor; ?>
                     </div>
+                    <svg class="climate-mobile-gauge" viewBox="0 0 100 30" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
+                        <path class="climate-mobile-gauge-track" d="M 4 25 A 46 46 0 0 1 96 25"></path>
+                        <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
+                        <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
+                    </svg>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                     <?php if ($bar['sparkline'] !== ''): ?>
                         <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ' trend over the last 24 hours, based on ' . $bar['historyCount'] . ' stored readings', ENT_QUOTES) ?>">
+                            <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"></polygon>
                             <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                             <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
                             <?php if (is_array($bar['sparklineEndpoint'])): ?>
