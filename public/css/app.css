@@ -1343,3 +1343,24 @@ body.gaugeiq-menu-open{overflow:hidden}
     font-size:21px;
   }
 }
+
+
+/* Show the active location and stored-reading timestamp in the temperature card heading. */
+.temperature-card-heading h1#dashboardLocationName{
+  margin:0;
+  color:#edf6ff;
+  font-size:22px;
+  line-height:1.15;
+  font-weight:750;
+  letter-spacing:normal;
+  overflow-wrap:anywhere;
+}
+.temperature-card-heading .last-refreshed-at{
+  margin:4px 0 0;
+  color:#9cb6d5;
+  font-size:11px;
+  line-height:1.3;
+}
+@media(max-width:420px){
+  .temperature-card-heading h1#dashboardLocationName{font-size:21px}
+}
