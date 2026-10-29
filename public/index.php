@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261029-forecast-icon-normalization-v1">
+<link rel="stylesheet" href="css/app.css?v=20261029-compass-switch-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -708,7 +708,7 @@ if ($current && !empty($current['observed_at'])) {
                     <p class="label">Wind</p>
                     <div class="wind-hud-subtitle">WIND DIRECTION</div>
                 </div>
-                <div class="wind-hud-live"><span aria-hidden="true"></span> LIVE DATA</div>
+                <button type="button" class="wind-hud-compass-switch" id="windCompassButton" aria-pressed="false">Enable Compass</button>
             </div>
             <div class="wind-hud-readouts">
                 <div class="wind-hud-speed">
@@ -785,7 +785,6 @@ if ($current && !empty($current['observed_at'])) {
             <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-compass-controls">
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
-                <button type="button" class="secondary wind-compass-button" id="windCompassButton">Use phone compass</button>
             </div>
         </article>
 
@@ -965,6 +964,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261029-loading-screen-restored"></script>
+<script src="js/app.js?v=20261029-compass-switch-v1"></script>
 </body>
 </html>
