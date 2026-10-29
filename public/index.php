@@ -595,6 +595,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="section-heading">
             <div>
                 <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
+                <div class="wind-hud-subtitle">Environmental Telemetry</div>
             </div>
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
