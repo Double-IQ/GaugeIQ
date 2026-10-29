@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261029-compass-switch-v1">
+<link rel="stylesheet" href="css/app.css?v=20261029-atmospheric-needle-width-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -612,6 +612,14 @@ if ($current && !empty($current['observed_at'])) {
                 $gaugeEndY = 48 - (46 * sin($gaugeAngle));
                 $needleEndX = 50 + (36 * cos($gaugeAngle));
                 $needleEndY = 48 - (36 * sin($gaugeAngle));
+                $needleBaseX = 50 + (5 * cos($gaugeAngle));
+                $needleBaseY = 48 - (5 * sin($gaugeAngle));
+                $needleHalfWidth = 3.9;
+                $needlePerpX = $needleHalfWidth * sin($gaugeAngle);
+                $needlePerpY = $needleHalfWidth * cos($gaugeAngle);
+                $needlePath = 'M ' . number_format($needleBaseX + $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY + $needlePerpY, 2, '.', '') .
+                    ' L ' . number_format($needleEndX, 2, '.', '') . ' ' . number_format($needleEndY, 2, '.', '') .
+                    ' L ' . number_format($needleBaseX - $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY - $needlePerpY, 2, '.', '') . ' Z';
                 $mobileGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
@@ -631,7 +639,7 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
                         <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
-                        <line class="climate-mobile-gauge-needle" x1="50" y1="48" x2="<?= number_format($needleEndX, 2, '.', '') ?>" y2="<?= number_format($needleEndY, 2, '.', '') ?>"></line>
+                        <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($needlePath, ENT_QUOTES) ?>"></path>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
                         <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="3"></circle>
                     </svg>
