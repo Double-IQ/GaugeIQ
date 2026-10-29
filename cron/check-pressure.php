@@ -80,7 +80,8 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         'wind' => getGaugeIqSetting($pdo, 'daily_forecast_alert_wind', '1') === '1',
         'severe' => getGaugeIqSetting($pdo, 'daily_forecast_alert_severe', '1') === '1',
     ];
-    if (!in_array(true, $selected, true)) {
+    $alwaysNotify = getGaugeIqSetting($pdo, 'daily_forecast_alert_always', '0') === '1';
+    if (!in_array(true, $selected, true) && !$alwaysNotify) {
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No forecast conditions selected.');
         return;
@@ -171,12 +172,16 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         'location_name',
         (string)($config['pressure']['location_name'] ?? 'your location')
     );
-    if ($matches === []) {
+    if ($matches === [] && !$alwaysNotify) {
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No selected conditions met for ' . $today . '.');
         setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
         printf("Daily forecast alert: no selected conditions met for %s.\n", $today);
         return;
+    }
+
+    if ($matches === []) {
+        $matches[] = 'No selected adverse conditions are forecast today';
     }
 
     $message = "Today's forecast for " . ($locationName !== '' ? $locationName : 'your location') .
