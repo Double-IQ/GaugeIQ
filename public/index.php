@@ -697,10 +697,6 @@ if ($current && !empty($current['observed_at'])) {
                 </svg>
             </div>
             <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
-            <div class="wind-hud-direction-summary">
-                <div><span class="wind-hud-origin-dot"></span><span>FROM <strong><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></strong></span></div>
-                <div><span class="wind-hud-destination-arrow">➤</span><span>TOWARDS <strong><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></strong></span></div>
-            </div>
             <div class="wind-compass-controls">
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
                 <button type="button" class="secondary wind-compass-button" id="windCompassButton">Use phone compass</button>
