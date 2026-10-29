@@ -1708,15 +1708,19 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 
-/* Atmospheric Monitor mobile gauges: blue arcs with the readout directly underneath. */
+/* Atmospheric Monitor mobile gauges: centred readouts, bar-matched blue, and reduced row height. */
 @media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 40px 19px 30px}
-  .climate-gauge-card .climate-mobile-gauge{grid-column:1;grid-row:2;height:40px;align-self:center;justify-self:start}
-  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:3;align-self:start;padding-top:0}
-  .climate-gauge-card .climate-mobile-gauge-value{stroke:#3b82f6;filter:drop-shadow(0 0 2px rgba(59,130,246,.28))}
-  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#3b82f6}
+  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 34px 19px}
+  .climate-gauge-card .climate-mobile-gauge{grid-column:1;grid-row:2;height:34px;align-self:center;justify-self:stretch}
+  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:3;align-self:start;justify-self:stretch;padding-top:0;text-align:center}
+  .climate-gauge-card .climate-mobile-gauge-value{stroke:#35c4eb;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))}
+  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#35c4eb}
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:2 / 4;grid-row:1 / span 3;min-height:0;height:64px;align-self:center}
 }
 @media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 38px 18px 29px}
-  .climate-gauge-card .climate-mobile-gauge{height:38px}
+  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 32px 18px}
+  .climate-gauge-card .climate-mobile-gauge{height:32px}
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{height:60px}
 }
