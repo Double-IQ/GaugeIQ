@@ -609,8 +609,8 @@ if ($current && !empty($current['observed_at'])) {
                 $gaugeRatio = min(1.0, max(0.0, (float)$bar['ratio']));
                 $gaugeAngle = M_PI - (M_PI * $gaugeRatio);
                 $gaugeEndX = 50 + (46 * cos($gaugeAngle));
-                $gaugeEndY = 25 - (46 * sin($gaugeAngle));
-                $mobileGaugePath = 'M 4 25 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
+                $gaugeEndY = 48 - (46 * sin($gaugeAngle));
+                $mobileGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
             ?>
                 <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
@@ -626,8 +626,8 @@ if ($current && !empty($current['observed_at'])) {
                             <span class="climate-segment<?= $segmentClass !== '' ? ' ' . $segmentClass : '' ?>"></span>
                         <?php endfor; ?>
                     </div>
-                    <svg class="climate-mobile-gauge" viewBox="0 0 100 30" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
-                        <path class="climate-mobile-gauge-track" d="M 4 25 A 46 46 0 0 1 96 25"></path>
+                    <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
+                        <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
                     </svg>
