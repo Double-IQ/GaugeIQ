@@ -653,8 +653,12 @@ button:disabled { opacity: .55; cursor: default; }
 .notification-enabled-note[hidden]{display:none}
 .network-uplink-status{display:block;width:100%;box-sizing:border-box;margin:4px 0 10px;text-align:center;color:var(--muted);font-size:12px;line-height:1.4;font-weight:500}
 .network-uplink-status[data-state="error"]{opacity:.8}
-.network-diagnostics{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.network-diagnostics .network-uplink-status{margin:3px 0}
+.network-diagnostics{margin-top:10px;padding:16px 18px;border-radius:16px}
+.network-diagnostics .section-heading{margin-bottom:8px}
+.network-diagnostics-readings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}
+.network-diagnostics .network-uplink-status{min-width:0;margin:3px 0;text-align:left;overflow-wrap:anywhere}
+.network-diagnostics .network-uplink-status strong{color:var(--text);font-weight:650}
+@media(max-width:420px){.network-diagnostics{padding:14px}.network-diagnostics-readings{grid-template-columns:1fr;gap:2px}}
 
 /* Daily expected rainfall has its own scale, separate from rain probability */
 .rainfall-forecast-block{margin-top:12px}
