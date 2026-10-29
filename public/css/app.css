@@ -308,7 +308,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-stability-label{flex:1 1 auto;min-width:0;font-size:11px;font-weight:900;color:var(--muted);white-space:normal;line-height:1.35}
 .temperature-stability-summary{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border:1px solid currentColor;border-radius:999px;background:var(--surface);line-height:1.2}
 #temperatureStabilitySummary.temperature-stability-summary[data-level="high"]{color:#15803d}
-#temperatureStabilitySummary.temperature-stability-summary[data-level="moderate"]{color:#b45309}
+#temperatureStabilitySummary.temperature-stability-summary[data-level="moderate"]{color:#ffc184}
 #temperatureStabilitySummary.temperature-stability-summary[data-level="low"]{color:#dc2626}
 .temperature-stability-summary.warning{animation:temperature-stability-warning .8s ease-in-out infinite}
 @keyframes temperature-stability-warning{0%,100%{opacity:1}50%{opacity:.35}}
@@ -334,7 +334,7 @@ button:disabled { opacity: .55; cursor: default; }
 .temperature-conditions-inline .conditions-status{display:inline-flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:0;font-size:10px;line-height:1.1;font-weight:900;background:transparent}
 .temperature-conditions-inline .conditions-status.steady{color:#fff;border-color:#fff}
 .temperature-conditions-inline .conditions-status.improving{color:#22c55e;border-color:#22c55e}
-.temperature-conditions-inline .conditions-status.worsening{color:#f97316;border-color:#f97316}
+.temperature-conditions-inline .conditions-status.worsening{color:#ffc184;border-color:#ffc184}
 .temperature-conditions-inline .conditions-status.unavailable,.temperature-conditions-inline .conditions-status.gathering{color:var(--text);border-color:var(--border)}
 .temperature-comfort-inline .humidity-zone{font-size:10px}
 @media(max-width:560px){
@@ -421,13 +421,13 @@ button:disabled { opacity: .55; cursor: default; }
 }
 
 .weather-change-score[data-level="low"]{border-color:#ef4444;color:#dc2626}
-.weather-change-score[data-level="moderate"]{border-color:#f59e0b;color:#b45309}
+.weather-change-score[data-level="moderate"]{border-color:#ffc184;color:#ffc184}
 .weather-change-score[data-level="high"]{border-color:#22c55e;color:#15803d}
 .weather-change-card:has(.weather-change-score[data-level="low"]){border-color:#ef4444}
-.weather-change-card:has(.weather-change-score[data-level="moderate"]){border-color:#f59e0b}
+.weather-change-card:has(.weather-change-score[data-level="moderate"]){border-color:#ffc184}
 .weather-change-card:has(.weather-change-score[data-level="high"]){border-color:#22c55e}
 #temperatureStabilityLabel:has(#temperatureStabilitySummary[data-outline-level="low"]){border-color:#ef4444}
-#temperatureStabilityLabel:has(#temperatureStabilitySummary[data-outline-level="moderate"]){border-color:#f59e0b}
+#temperatureStabilityLabel:has(#temperatureStabilitySummary[data-outline-level="moderate"]){border-color:#ffc184}
 
 
 
@@ -473,14 +473,14 @@ button:disabled { opacity: .55; cursor: default; }
 .rain-probability-card .section-heading,.conditions-trend-card .section-heading{align-items:center}
 .rain-probability-score{display:flex;align-items:center;justify-content:center;min-width:82px;min-height:62px;padding:8px;border:2px solid #3987d7;border-radius:16px;color:#3987d7;background:var(--surface);font-size:27px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
 .conditions-trend-score{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:2px solid var(--border);border-radius:50%;background:var(--surface);font-size:30px;font-weight:900;color:var(--text)}
-.conditions-trend-score[data-trend="worsening"]{border-color:#c87838;color:#c87838}
+.conditions-trend-score[data-trend="worsening"]{border-color:#ffc184;color:#ffc184}
 .conditions-trend-score[data-trend="improving"]{border-color:#25865a;color:#25865a}
 .conditions-trend-summary{margin-top:14px;font-size:15px;font-weight:800;color:var(--text)}
 .insight-meter-track{width:100%;height:12px;margin-top:14px;overflow:hidden;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent)}
 .insight-meter-fill{height:100%;width:0;border-radius:999px;transition:width .25s ease}
 .rain-meter-fill{background:#3987d7}
 .change-meter-fill{background:#22a06b}
-.change-meter-fill[data-level="moderate"]{background:#d49a36}
+.change-meter-fill[data-level="moderate"]{background:#ffc184}
 .change-meter-fill[data-level="high"]{background:#d94b4b}
 .rain-probability-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;color:var(--muted)}
 .rain-probability-meta strong{color:var(--text);font-variant-numeric:tabular-nums}
@@ -1094,7 +1094,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Atmospheric Monitor colours matched to the pressure gauge. */
 .climate-gauge-card .climate-segment.active{background:#35c4eb}
 .climate-gauge-card .climate-segment.change{background:#ffc184}
-.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#fb923c}
+.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
 
 /* Compact the Conditions trend card vertically. */
 .conditions-trend-card{padding-top:14px;padding-bottom:14px}
