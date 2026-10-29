@@ -185,7 +185,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261029-matching-card-headings">
+<link rel="stylesheet" href="css/app.css?v=20261029-location-in-temperature-card">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -197,10 +197,6 @@ if ($current && !empty($current['observed_at'])) {
     </div>
 
     <header>
-        <div class="dashboard-heading">
-            <h1 id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></h1>
-            <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
-        </div>
         <div class="header-actions">
             <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" class="menu-logo"></button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
@@ -364,7 +360,10 @@ if ($current && !empty($current['observed_at'])) {
 
 
         <article class="card metric-card temperature-summary-card">
-            <div class="temperature-card-heading"><p class="label">Temperature</p></div>
+            <div class="temperature-card-heading">
+                <h1 id="dashboardLocationName"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></h1>
+                <p id="lastRefreshedAt" class="muted last-refreshed-at" role="status"><?= htmlspecialchars($lastRefreshedLabel, ENT_QUOTES) ?></p>
+            </div>
             <?php if ($current): ?>
                 <div class="temperature-summary-main">
                     <div class="temperature-summary-current">
