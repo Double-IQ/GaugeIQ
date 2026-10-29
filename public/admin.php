@@ -302,7 +302,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=20261029-network-diagnostics">
 <link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
 <title>GaugeIQ Admin</title>
 </head>
@@ -684,6 +684,17 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <?php endforeach; ?>
 </section>
 
+<section class="card appearance-card" aria-labelledby="appearanceTitle">
+    <div class="section-heading">
+        <div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div>
+        <select id="themeSelect" class="theme-select" aria-label="Appearance">
+            <option value="system">Follow device</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+    </div>
+</section>
+
 <section class="card admin-updates">
     <div class="section-heading">
         <div><h2>Updates</h2><p id="adminUpdateStatus" class="muted">Checking for the latest release…</p></div>
@@ -699,6 +710,28 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <a class="secondary button-link" href="./">Back to GaugeIQ</a>
 </section>
 
+<script>
+(() => {
+    const select = document.getElementById('themeSelect');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const applyTheme = (theme) => {
+        if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.dataset.theme = theme;
+        const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (meta) meta.setAttribute('content', dark ? '#0b1120' : '#f3f4f6');
+    };
+    const saved = localStorage.getItem('gaugeiq-theme') || 'system';
+    select.value = saved;
+    applyTheme(saved);
+    select.addEventListener('change', () => {
+        localStorage.setItem('gaugeiq-theme', select.value);
+        applyTheme(select.value);
+    });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+        if ((localStorage.getItem('gaugeiq-theme') || 'system') === 'system') applyTheme('system');
+    });
+})();
+</script>
 <script src="js/admin.js" defer></script>
 <script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
