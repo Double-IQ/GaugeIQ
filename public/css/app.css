@@ -1804,6 +1804,11 @@ body.gaugeiq-menu-open{overflow:hidden}
   font-weight:800;
   letter-spacing:.13em;
 }
+.wind-hud-speed-history-heading .wind-hud-speed-readouts{
+  gap:8px;
+  margin:0;
+  letter-spacing:normal;
+}
 .wind-hud-speed-history-content{
   display:grid;
   grid-template-columns:minmax(108px,.8fr) minmax(0,1.2fr);
