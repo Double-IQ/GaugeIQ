@@ -1267,7 +1267,6 @@ body.gaugeiq-menu-open{overflow:hidden}
   .wind-hud-card{padding:15px}
 
   .wind-hud-card .wind-hud-heading .label{font-size:21px}
-  .wind-hud-bearing>strong{font-size:20px}
   .wind-hud-direction-summary{gap:6px}
   .wind-hud-direction-summary>div{padding:8px;font-size:8px}
 }
