@@ -741,7 +741,11 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
                         <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
                         <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                        <line class="climate-sparkline-current-guide" id="climateWviGuide" x1="100" y1="4" x2="100" y2="23.5"></line>
                         <polyline id="climateWviLine" points=""></polyline>
+                        <g id="climateWviDots" class="climate-sparkline-dots" aria-hidden="true"></g>
+                        <circle class="climate-sparkline-startpoint" id="climateWviStart" cx="0" cy="22" r="1"></circle>
+                        <circle class="climate-sparkline-endpoint" id="climateWviEnd" cx="100" cy="22" r="1.6"></circle>
                     </svg>
                 </div>
                 <div class="climate-wvi-gauge">
@@ -749,7 +753,24 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="climate-mobile-gauge" viewBox="0 0 100 50" role="img" aria-label="Weather Volatility Index gauge">
                         <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
+                        <g class="climate-mobile-gauge-ticks" aria-hidden="true">
+                            <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
+                                $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                                $tickIsMajor = $tickIndex % 3 === 0;
+                                $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
+                                $tickOuterRadius = 43.2;
+                                $tickX1 = 50 + ($tickInnerRadius * cos($tickAngle));
+                                $tickY1 = 48 - ($tickInnerRadius * sin($tickAngle));
+                                $tickX2 = 50 + ($tickOuterRadius * cos($tickAngle));
+                                $tickY2 = 48 - ($tickOuterRadius * sin($tickAngle));
+                            ?>
+                                <line class="<?= $tickIsMajor ? 'major' : 'minor' ?>"
+                                      x1="<?= number_format($tickX1, 2, '.', '') ?>" y1="<?= number_format($tickY1, 2, '.', '') ?>"
+                                      x2="<?= number_format($tickX2, 2, '.', '') ?>" y2="<?= number_format($tickY2, 2, '.', '') ?>"></line>
+                            <?php endfor; ?>
+                        </g>
                         <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
+                        <circle class="climate-mobile-gauge-endpoint" id="climateWviEndpoint" cx="4" cy="48" r="2"></circle>
                         <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                     </svg>
                 </div>
