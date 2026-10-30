@@ -841,6 +841,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                 </svg>
             </div>
+            <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-hud-speed-history" aria-label="Wind speed gauge and 24-hour trend">
                 <div class="wind-hud-speed-history-heading">
                     <span>WIND SPEED</span>
@@ -891,8 +892,6 @@ if ($current && !empty($current['observed_at'])) {
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
-            <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-compass-controls">
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
             </div>
