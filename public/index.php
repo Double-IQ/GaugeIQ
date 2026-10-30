@@ -714,8 +714,10 @@ if ($current && !empty($current['observed_at'])) {
         // stored 24-hour readings for the wind-speed trend graph.
         $windSpeedRatio = $current ? max(0.0, min(1.0, $windSpeed / 60.0)) : 0.0;
         $windSpeedGaugeAngle = M_PI - (M_PI * $windSpeedRatio);
-        [$windSpeedGaugeEndX, $windSpeedGaugeEndY] = $windGaugePoint(rad2deg($windSpeedGaugeAngle), 46.0);
-        [$windSpeedNeedleEndX, $windSpeedNeedleEndY] = $windGaugePoint(rad2deg($windSpeedGaugeAngle), 36.0);
+        $windSpeedGaugeEndX = 50.0 + (46.0 * cos($windSpeedGaugeAngle));
+        $windSpeedGaugeEndY = 48.0 - (46.0 * sin($windSpeedGaugeAngle));
+        $windSpeedNeedleEndX = 50.0 + (36.0 * cos($windSpeedGaugeAngle));
+        $windSpeedNeedleEndY = 48.0 - (36.0 * sin($windSpeedGaugeAngle));
         $windNeedleHalfWidth = 3.9;
         $windNeedlePerpX = $windNeedleHalfWidth * sin($windSpeedGaugeAngle);
         $windNeedlePerpY = $windNeedleHalfWidth * cos($windSpeedGaugeAngle);
