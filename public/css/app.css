@@ -2494,6 +2494,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Wind Speed uses the same complete instrument layout as Dew Point. */
+.wind-hud-speed-history-content{display:block;width:100%;min-width:0}
 .wind-gauge-card .wind-speed-instrument-row{
   display:grid;
   grid-template-columns:minmax(100px,124px) minmax(76px,.82fr) 48px minmax(128px,1fr);
