@@ -1770,3 +1770,74 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){
   .climate-gauge-card .climate-bar-row{grid-template-rows:17px 4px 30px 26px}
 }
+
+/* Wind card: Atmospheric Monitor-style semicircular speed gauge and 24-hour trend. */
+.wind-hud-speed-history{
+  margin-top:10px;
+  padding:10px 11px 8px;
+  border:1px solid rgba(117,164,211,.16);
+  border-radius:11px;
+  background:linear-gradient(112deg,rgba(16,39,65,.72),rgba(5,18,37,.62));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.wind-hud-speed-history-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:4px;
+  color:#829fc1;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.13em;
+}
+.wind-hud-speed-history-content{
+  display:grid;
+  grid-template-columns:minmax(108px,.8fr) minmax(0,1.2fr);
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.wind-hud-speed-history-gauge{min-width:0}
+.wind-hud-speed-history-gauge svg{
+  display:block;
+  width:100%;
+  height:66px;
+  overflow:visible;
+}
+.wind-hud-speed-gauge-track{
+  fill:none;
+  stroke:rgba(156,182,213,.2);
+  stroke-width:6;
+  stroke-linecap:round;
+}
+.wind-hud-speed-gauge-value{
+  fill:none;
+  stroke:#a3e635;
+  stroke-width:6;
+  stroke-linecap:round;
+  filter:drop-shadow(0 0 2px rgba(163,230,53,.2));
+}
+.wind-hud-speed-gauge-needle{
+  fill:#a3e635;
+  stroke:none;
+  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45));
+}
+.wind-hud-speed-gauge-endpoint{fill:#a3e635;stroke:#07182b;stroke-width:1.25}
+.wind-hud-speed-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
+.wind-hud-speed-history-graph{display:flex;align-items:center;min-width:0;min-height:66px}
+.wind-hud-speed-history-graph svg{display:block;width:100%;height:62px;overflow:visible}
+.wind-hud-speed-graph-area{fill:rgba(255,193,132,.095);stroke:none}
+.wind-hud-speed-graph-baseline{stroke:rgba(156,182,213,.23);stroke-width:.55;stroke-dasharray:1.2 1.8;vector-effect:non-scaling-stroke}
+.wind-hud-speed-graph-current-guide{stroke:rgba(255,193,132,.42);stroke-width:.65;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke}
+.wind-hud-speed-history-graph polyline{fill:none;stroke:#ffc184;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 1.5px rgba(255,193,132,.2))}
+.wind-hud-speed-graph-startpoint{fill:#9cb6d5;opacity:.8}
+.wind-hud-speed-graph-endpoint{fill:#ffc184;stroke:#07182b;stroke-width:.8}
+.wind-hud-speed-graph-unavailable{width:100%;color:#829fc1;font-size:10px;line-height:1.4;text-align:center}
+@media(max-width:420px){
+  .wind-hud-speed-history{padding:9px 9px 7px}
+  .wind-hud-speed-history-content{grid-template-columns:minmax(96px,.8fr) minmax(0,1.2fr);gap:8px}
+  .wind-hud-speed-history-gauge svg{height:60px}
+  .wind-hud-speed-history-graph{min-height:60px}
+  .wind-hud-speed-history-graph svg{height:56px}
+}
