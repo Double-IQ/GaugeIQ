@@ -1101,6 +1101,9 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     if (!valueElement || !gaugeValue || !needle || !gaugeEndpoint || !graphLine || !graphArea || !graphGuide || !graphStart || !graphEnd) return;
 
     const score = Number.isFinite(result?.score) ? Math.max(0, Math.min(10, result.score)) : null;
+    const wviBand = score !== null && score >= 6 ? 'orange' : 'blue';
+    const wviRow = valueElement.closest('.climate-bar-wvi');
+    if (wviRow) wviRow.dataset.wviBand = score === null ? 'unavailable' : wviBand;
     valueElement.textContent = score === null ? '—' : score.toFixed(1);
     if (changeElement) {
         const previousTime = Number.isFinite(referenceTime) ? referenceTime - 3600000 : NaN;
@@ -1277,7 +1280,7 @@ async function loadWeatherChange() {
             // 0 = little recent change; 10 = high recent volatility. Push alerts use this same score.
             const volatilityScore = Math.round(result.score * 10) / 10;
             scoreElement.textContent = volatilityScore.toFixed(1);
-            updateWeatherChangeLevel(volatilityScore, volatilityScore >= 7 ? 'low' : volatilityScore >= 6 ? 'moderate' : 'high');
+            updateWeatherChangeLevel(volatilityScore, volatilityScore >= 6 ? 'moderate' : 'high');
             scoreElement.setAttribute('aria-label', 'Weather Volatility Index score ' + volatilityScore.toFixed(1) + ' out of 10');
 
             let volatilitySummary;
