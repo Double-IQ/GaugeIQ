@@ -2166,3 +2166,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   .wind-hud-speed-readouts .wind-hud-speed-value{font-size:11px}
   .wind-hud-speed-readouts .wind-hud-speed-change{font-size:10px}
 }
+
+/* Atmospheric Monitor: increase mobile gauge arc thickness by 1px. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-mobile-gauge-track,
+  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:7px}
+}
