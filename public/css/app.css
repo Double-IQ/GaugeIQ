@@ -2392,6 +2392,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 
+/* Shared Dew Point instrument rules are reused by the Wind Speed row.
+   Keep the scope wrapper visually transparent inside the existing Wind card. */
+.wind-speed-instrument-scope{
+  margin:0!important;padding:0!important;background:none!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;overflow:visible!important;color:inherit
+}
+
 /* WVI gauge segments follow its blue-below-6 / orange-at-6-and-above rule. */
 .climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-segment.active{background:#35c4eb;box-shadow:none}
 .climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-segment.active{background:#ffc184;box-shadow:none}
