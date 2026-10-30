@@ -2783,3 +2783,32 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* The cloned Wind Speed row occupies the full instrument container. */
 .wind-hud-speed-history-content{display:block}
+
+
+/* WVI uses one clear two-band colour rule: blue below 6, orange at 6 and above. */
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-value{
+  stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))
+}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-endpoint,
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-value{
+  stroke:#ffc184!important;filter:drop-shadow(0 0 2px rgba(255,193,132,.25))
+}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{fill:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-endpoint,
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-area{fill:rgba(53,196,235,.08)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-endpoint{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-area{fill:rgba(255,193,132,.08)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-endpoint{fill:#ffc184!important}
+.weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
+.weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
+.weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
+
+/* The mobile layout must not override the native hidden state of More information. */
+.weather-change-card .weather-change-reasons[hidden]{display:none!important}
