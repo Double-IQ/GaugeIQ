@@ -2129,7 +2129,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   font-variant-numeric:tabular-nums;
 }
 .wind-hud-speed-readouts--gauge{
-  justify-content:flex-start;
+  width:100%;
+  justify-content:flex-end;
   margin-bottom:1px;
 }
 .wind-hud-speed-readouts--graph{
