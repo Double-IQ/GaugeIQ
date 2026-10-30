@@ -2183,6 +2183,14 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Match the Interactive Weather Maps card to the Wind card's glass treatment. */
+.satellite-map-heading{
+  margin:0 0 14px;
+  color:#edf6ff;
+  font-size:20px;
+  line-height:1.25;
+  text-align:left;
+}
+
 .satellite-map-card{
   padding:18px;
   overflow:hidden;
