@@ -653,8 +653,13 @@ if ($current && !empty($current['observed_at'])) {
                     ' L ' . number_format($needleBaseX - $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY - $needlePerpY, 2, '.', '') . ' Z';
                 $mobileGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
+                // A pressure drop of 0.8 hPa or more over the last hour is the
+                // threshold for switching the pressure graph and change indicator to orange.
+                $pressureDropWarning = ($bar['kind'] ?? '') === 'air-pressure'
+                    && $bar['delta'] !== null
+                    && (float)$bar['delta'] <= -0.8;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
