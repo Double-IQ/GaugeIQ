@@ -1433,9 +1433,9 @@ async function loadWeatherChange() {
                 stabilitySummaryElement.classList.remove('warning');
             }
         }
-        reasonsElement.innerHTML = '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>';
         updateWeatherChangeLevel(null, 'unavailable');
-        reasonsElement.prepend(summaryElement);
+        reasonsElement.replaceChildren(summaryElement);
+        reasonsElement.insertAdjacentHTML('beforeend', '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>');
         const trendSummary = document.getElementById('conditionsTrendSummary');
         const trendReasons = document.getElementById('conditionsTrendReasons');
         if (trendSummary) trendSummary.textContent = 'Conditions trend unavailable.';
