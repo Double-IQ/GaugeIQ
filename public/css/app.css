@@ -1944,3 +1944,33 @@ body.gaugeiq-menu-open{overflow:hidden}
     grid-template-columns:minmax(0,1fr) minmax(82px,100px);
   }
 }
+
+
+/* Atmospheric Monitor: align label, current value and one-hour change on the top line. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-rows:18px 13px 40px;
+  }
+  .climate-gauge-card .climate-bar-change{
+    transform:none;
+    align-self:start;
+  }
+  .climate-gauge-card .climate-bar-value{
+    grid-column:2;
+    grid-row:1;
+    justify-self:end;
+    align-self:start;
+    padding-top:0;
+    text-align:right;
+    transform:translateX(4px);
+  }
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{
+    grid-row:2 / span 2;
+  }
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-rows:17px 12px 38px;
+  }
+}
