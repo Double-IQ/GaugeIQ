@@ -2271,7 +2271,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-bar-row[hidden]{display:none!important}
 .climate-gauge-card .climate-bar-wvi{
   grid-template-columns:minmax(100px,124px) minmax(90px,112px) minmax(0,1fr)!important;
-  grid-template-rows:22px 22px!important;align-items:center
+  grid-template-rows:30px 30px!important;align-items:center
 }
 .climate-gauge-card .climate-bar-wvi .climate-bar-label{grid-column:1;grid-row:1}
 .climate-gauge-card .climate-bar-wvi .climate-bar-value{grid-column:1;grid-row:2;align-self:start;padding-top:2px}
