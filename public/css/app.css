@@ -2604,3 +2604,18 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:760px){
   .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge{height:66px}
 }
+
+
+/* Mobile WVI More information: summary first, with each detail card full width. */
+@media(max-width:560px){
+  .weather-change-card .weather-change-reasons{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    width:100%;min-width:0;box-sizing:border-box
+  }
+  .weather-change-card .weather-change-reasons>.weather-change-summary{
+    grid-column:1/-1;order:-1;width:100%;min-width:0;box-sizing:border-box
+  }
+  .weather-change-card .weather-change-reasons>.weather-change-reason{
+    grid-column:1/-1;width:100%;min-width:0;box-sizing:border-box
+  }
+}
