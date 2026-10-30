@@ -639,6 +639,22 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
                         <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
+                        <g class="climate-mobile-gauge-ticks" aria-hidden="true">
+                            <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
+                                $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                                $tickIsMajor = $tickIndex % 3 === 0;
+                                $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
+                                $tickOuterRadius = 43.2;
+                                $tickX1 = 50 + ($tickInnerRadius * cos($tickAngle));
+                                $tickY1 = 48 - ($tickInnerRadius * sin($tickAngle));
+                                $tickX2 = 50 + ($tickOuterRadius * cos($tickAngle));
+                                $tickY2 = 48 - ($tickOuterRadius * sin($tickAngle));
+                            ?>
+                                <line class="<?= $tickIsMajor ? 'major' : 'minor' ?>"
+                                      x1="<?= number_format($tickX1, 2, '.', '') ?>" y1="<?= number_format($tickY1, 2, '.', '') ?>"
+                                      x2="<?= number_format($tickX2, 2, '.', '') ?>" y2="<?= number_format($tickY2, 2, '.', '') ?>"></line>
+                            <?php endfor; ?>
+                        </g>
                         <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($needlePath, ENT_QUOTES) ?>"></path>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
                         <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
