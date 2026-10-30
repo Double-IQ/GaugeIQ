@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261030-wvi-mobile-details-full-width-v1">
+<link rel="stylesheet" href="css/app.css?v=20261030-dewpoint-instrument-clone-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -732,48 +732,42 @@ if ($current && !empty($current['observed_at'])) {
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi" hidden>
-                <div class="climate-wvi-graph">
-                    <div class="climate-wvi-graph-heading">
-                        <span class="climate-bar-label">Weather Volatility Index</span>
-                        <strong class="climate-bar-change" id="climateWviChange">—</strong>
-                    </div>
-                    <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
-                        <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
-                        <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
-                        <line class="climate-sparkline-current-guide" id="climateWviGuide" x1="100" y1="4" x2="100" y2="23.5"></line>
-                        <polyline id="climateWviLine" points=""></polyline>
-                        <g id="climateWviDots" class="climate-sparkline-dots" aria-hidden="true"></g>
-                        <circle class="climate-sparkline-startpoint" id="climateWviStart" cx="0" cy="22" r="1"></circle>
-                        <circle class="climate-sparkline-endpoint" id="climateWviEnd" cx="100" cy="22" r="1.6"></circle>
-                    </svg>
-                </div>
-                <div class="climate-wvi-gauge">
-                    <strong class="climate-bar-value" id="climateWviValue">—</strong>
-                    <svg class="climate-mobile-gauge" viewBox="0 0 100 50" role="img" aria-label="Weather Volatility Index gauge">
-                        <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
-                        <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
-                        <g class="climate-mobile-gauge-ticks" aria-hidden="true">
-                            <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
-                                $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
-                                $tickIsMajor = $tickIndex % 3 === 0;
-                                $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
-                                $tickOuterRadius = 43.2;
-                                $tickX1 = 50 + ($tickInnerRadius * cos($tickAngle));
-                                $tickY1 = 48 - ($tickInnerRadius * sin($tickAngle));
-                                $tickX2 = 50 + ($tickOuterRadius * cos($tickAngle));
-                                $tickY2 = 48 - ($tickOuterRadius * sin($tickAngle));
-                            ?>
-                                <line class="<?= $tickIsMajor ? 'major' : 'minor' ?>"
-                                      x1="<?= number_format($tickX1, 2, '.', '') ?>" y1="<?= number_format($tickY1, 2, '.', '') ?>"
-                                      x2="<?= number_format($tickX2, 2, '.', '') ?>" y2="<?= number_format($tickY2, 2, '.', '') ?>"></line>
-                            <?php endfor; ?>
-                        </g>
-                        <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
-                        <circle class="climate-mobile-gauge-endpoint" id="climateWviEndpoint" cx="4" cy="48" r="2"></circle>
-                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
-                    </svg>
-                </div>
+            <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi">
+                <div class="climate-bar-label">Weather Volatility Index</div>
+                <div class="climate-segment-track" aria-hidden="true"></div>
+                <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather Volatility Index gauge">
+                    <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                    <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
+                    <g class="climate-mobile-gauge-ticks" aria-hidden="true">
+                        <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
+                            $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                            $tickIsMajor = $tickIndex % 3 === 0;
+                            $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
+                            $tickOuterRadius = 43.2;
+                            $tickX1 = 50 + ($tickInnerRadius * cos($tickAngle));
+                            $tickY1 = 48 - ($tickInnerRadius * sin($tickAngle));
+                            $tickX2 = 50 + ($tickOuterRadius * cos($tickAngle));
+                            $tickY2 = 48 - ($tickOuterRadius * sin($tickAngle));
+                        ?>
+                            <line class="<?= $tickIsMajor ? 'major' : 'minor' ?>"
+                                  x1="<?= number_format($tickX1, 2, '.', '') ?>" y1="<?= number_format($tickY1, 2, '.', '') ?>"
+                                  x2="<?= number_format($tickX2, 2, '.', '') ?>" y2="<?= number_format($tickY2, 2, '.', '') ?>"></line>
+                        <?php endfor; ?>
+                    </g>
+                    <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
+                    <circle class="climate-mobile-gauge-endpoint" id="climateWviEndpoint" cx="4" cy="48" r="2"></circle>
+                    <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                </svg>
+                <strong class="climate-bar-change" id="climateWviChange">—</strong>
+                <strong class="climate-bar-value" id="climateWviValue">—</strong>
+                <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
+                    <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
+                    <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                    <line class="climate-sparkline-current-guide" id="climateWviGuide" x1="100" y1="4" x2="100" y2="23.5"></line>
+                    <polyline id="climateWviLine" points=""></polyline>
+                    <circle class="climate-sparkline-startpoint" id="climateWviStart" cx="0" cy="22" r="0"></circle>
+                    <circle class="climate-sparkline-endpoint" id="climateWviEnd" cx="100" cy="22" r="0"></circle>
+                </svg>
             </div>
         </div>
     </section>
@@ -914,12 +908,9 @@ if ($current && !empty($current['observed_at'])) {
             <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-hud-speed-history" aria-label="Wind speed gauge and 24-hour trend">
                 <div class="wind-hud-speed-history-content">
-                    <div class="wind-hud-speed-readouts wind-hud-speed-readouts--combined">
-                        <span class="wind-hud-graph-heading">WIND SPEED</span>
-                        <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
-                        <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
-                    </div>
-                    <div class="wind-hud-speed-history-gauge">
+                    <div class="climate-bar-row wind-speed-instrument-row">
+                        <div class="climate-bar-label">WIND SPEED</div>
+                        <div class="climate-segment-track" aria-hidden="true"></div>
                         <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
                             <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                             <?php if ($current): ?>
@@ -947,8 +938,8 @@ if ($current && !empty($current['observed_at'])) {
                                 <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                             <?php endif; ?>
                         </svg>
-                    </div>
-                    <div class="wind-hud-speed-history-graph">
+                        <strong class="climate-bar-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
+                        <strong class="climate-bar-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
                         <?php if ($windSpeedTrendCount >= 2): ?>
                             <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
                                 <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
