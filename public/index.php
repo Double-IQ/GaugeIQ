@@ -57,26 +57,36 @@ try {
         );
         $latestStmt->execute([$activeLocationChangedAt]);
         $latest = $latestStmt->fetch() ?: null;
-        $rangeStmt = $pdo->prepare(
-            "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
-             FROM gaugeiq_pressure_readings
-             WHERE created_at >= ?
-               AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))"
-        );
-        $rangeStmt->execute([$activeLocationChangedAt]);
-        $pressureHistory = $rangeStmt->fetch() ?: [];
     } else {
         $latest = $pdo->query(
             "SELECT * FROM gaugeiq_pressure_readings
              WHERE source IS NULL OR source = 'Open-Meteo'
              ORDER BY id DESC LIMIT 1"
         )->fetch() ?: null;
-        $pressureHistory = $pdo->query(
-            "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
-             FROM gaugeiq_pressure_readings
-             WHERE source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather')"
-        )->fetch() ?: [];
     }
+
+    // Use recorded pressure extrema from the latest 30 days, anchored to the
+    // newest observation and scoped to the active location.
+    $pressureRangeEnd = $latest && !empty($latest['observed_at'])
+        ? strtotime((string)$latest['observed_at'])
+        : time();
+    if ($pressureRangeEnd === false) {
+        $pressureRangeEnd = time();
+    }
+    $pressureRangeStartText = date('Y-m-d\\TH:i:s', $pressureRangeEnd - (30 * 86400));
+    $pressureRangeEndText = date('Y-m-d\\TH:i:s', $pressureRangeEnd);
+    $pressureRangeSql = "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
+                         FROM gaugeiq_pressure_readings
+                         WHERE observed_at >= ? AND observed_at <= ?
+                           AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))";
+    $pressureRangeParams = [$pressureRangeStartText, $pressureRangeEndText];
+    if (isset($activeLocationChangedAt) && is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+        $pressureRangeSql .= ' AND created_at >= ?';
+        $pressureRangeParams[] = $activeLocationChangedAt;
+    }
+    $pressureRangeStmt = $pdo->prepare($pressureRangeSql);
+    $pressureRangeStmt->execute($pressureRangeParams);
+    $pressureHistory = $pressureRangeStmt->fetch() ?: [];
 
     // Dashboard rendering is read-only: display the latest stored reading.
     // New observations are collected by the scheduled server-side monitor, not on app open.
@@ -329,7 +339,7 @@ if ($current && !empty($current['observed_at'])) {
         return [$cx + cos($radians) * $radius, $cy + sin($radians) * $radius];
     };
     $tempRatio = $current ? max(0.0, min(1.0, $temperatureC / 40.0)) : 0.0;
-    $dewRatio = $current ? max(0.0, min(1.0, $dewPointC / 40.0)) : 0.0;
+    $dewRatio = $current ? max(0.0, min(1.0, $dewPointC / 25.0)) : 0.0;
     $humidityRatio = $current ? $humidityPercent / 100.0 : 0.0;
 
     $tempStart = 210.0; $tempSweep = 120.0;
@@ -476,7 +486,7 @@ if ($current && !empty($current['observed_at'])) {
                 $windowStart = date('Y-m-d\\TH:i:s', $targetTimestamp - 1800);
                 $windowEnd = date('Y-m-d\\TH:i:s', $targetTimestamp + 1800);
                 $climatePriorStmt = $pdo->prepare(
-                    "SELECT dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                    "SELECT temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
@@ -510,11 +520,20 @@ if ($current && !empty($current['observed_at'])) {
         return (float)$current[$field] - (float)$climatePrior[$field];
     };
     $dewDelta = $climateDelta('dew_point_c');
+    $dewPointGapC = $current ? max(0.0, $temperatureC - $dewPointC) : 0.0;
+    $dewPointGapDelta = $current && $climatePrior
+        && is_numeric($current['temperature_c'] ?? null)
+        && is_numeric($current['dew_point_c'] ?? null)
+        && is_numeric($climatePrior['temperature_c'] ?? null)
+        && is_numeric($climatePrior['dew_point_c'] ?? null)
+        ? $dewPointGapC - max(0.0, (float)$climatePrior['temperature_c'] - (float)$climatePrior['dew_point_c'])
+        : null;
     $humidityDelta = $climateDelta('humidity_percent');
     $cloudDelta = $climateDelta('cloud_cover_percent');
     $rainDelta = $climateDelta('rainfall_mm');
 
-    $dewBarRatio = max(0.0, min(1.0, $dewPointC / 40.0));
+    $dewBarRatio = max(0.0, min(1.0, $dewPointC / 25.0));
+    $dewPointGapRatio = max(0.0, min(1.0, $dewPointGapC / 5.0));
     $humidityBarRatio = $humidityPercent / 100.0;
     $rainBarRatio = max(0.0, min(1.0, $rainfall24hMm / 10.0));
     $cloudBarRatio = $cloudCoverPercent / 100.0;
@@ -530,10 +549,14 @@ if ($current && !empty($current['observed_at'])) {
             'deltaRatio' => $current ? $deltaRatio : 0.0,
         ];
     };
-    $pressureBarRatio = $current ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - 950.0) / 100.0)) : 0.0;
+    $pressureRange = max(0.1, $pressureHigh - $pressureLow);
+    $pressureBarRatio = $current
+        ? max(0.0, min(1.0, ((float)$current['pressure_hpa'] - $pressureLow) / $pressureRange))
+        : 0.0;
     $climateBars = [
         $makeClimateBar('Air pressure', $current ? (float)$current['pressure_hpa'] : 0.0, $current ? number_format((float)$current['pressure_hpa'], 1) : '—', $pressureBarRatio, 5.0, $current ? $change : null, 1) + ['kind' => 'air-pressure', 'historyKey' => 'pressure_hpa'],
-        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 40.0, $dewDelta, 1) + ['historyKey' => 'dew_point_c'],
+        $makeClimateBar('Dew point', $dewPointC, $current ? number_format($dewPointC, 1) . '°C' : '—', $dewBarRatio, 25.0, $dewDelta, 1) + ['historyKey' => 'dew_point_c'],
+        $makeClimateBar('Dew point gap', $dewPointGapC, $current ? number_format($dewPointGapC, 1) . '°C' : '—', $dewPointGapRatio, 5.0, $dewPointGapDelta, 1) + ['historyKey' => 'dew_point_gap_c'],
         $makeClimateBar('Humidity', $humidityPercent, $current ? number_format($humidityPercent, 0) . '%' : '—', $humidityBarRatio, 100.0, $humidityDelta) + ['historyKey' => 'humidity_percent'],
         $makeClimateBar('Cloud cover', $cloudCoverPercent, $current ? number_format($cloudCoverPercent, 0) . '%' : '—', $cloudBarRatio, 100.0, $cloudDelta) + ['historyKey' => 'cloud_cover_percent'],
     ];
@@ -550,7 +573,7 @@ if ($current && !empty($current['observed_at'])) {
                 $climateHistoryStart = date('Y-m-d\\TH:i:s', $climateHistoryEnd - 86400);
                 $climateHistoryEndText = date('Y-m-d\\TH:i:s', $climateHistoryEnd);
                 $climateHistoryStmt = $pdo->prepare(
-                    "SELECT pressure_hpa, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
+                    "SELECT pressure_hpa, temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
@@ -566,7 +589,14 @@ if ($current && !empty($current['observed_at'])) {
     foreach ($climateBars as &$climateBar) {
         $values = [];
         foreach ($climateHistory as $historyRow) {
-            $historyValue = $historyRow[$climateBar['historyKey']] ?? null;
+            if ($climateBar['historyKey'] === 'dew_point_gap_c') {
+                $historyValue = is_numeric($historyRow['temperature_c'] ?? null)
+                    && is_numeric($historyRow['dew_point_c'] ?? null)
+                    ? max(0.0, (float)$historyRow['temperature_c'] - (float)$historyRow['dew_point_c'])
+                    : null;
+            } else {
+                $historyValue = $historyRow[$climateBar['historyKey']] ?? null;
+            }
             if (is_numeric($historyValue)) {
                 $values[] = (float)$historyValue;
             }
