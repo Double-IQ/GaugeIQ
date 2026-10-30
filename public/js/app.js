@@ -1104,6 +1104,12 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const wviBand = score !== null && score >= 6 ? 'orange' : 'blue';
     const wviRow = valueElement.closest('.climate-bar-wvi');
     if (wviRow) wviRow.dataset.wviBand = score === null ? 'unavailable' : wviBand;
+    const gaugeSegments = wviRow ? wviRow.querySelectorAll('.climate-segment') : [];
+    const filledSegments = score === null ? 0 : Math.round((score / 10) * gaugeSegments.length);
+    gaugeSegments.forEach((segment, index) => {
+        segment.classList.toggle('active', index < filledSegments);
+        segment.classList.remove('change', 'warning-zone');
+    });
     valueElement.textContent = score === null ? '—' : score.toFixed(1);
     if (changeElement) {
         const previousTime = Number.isFinite(referenceTime) ? referenceTime - 3600000 : NaN;
