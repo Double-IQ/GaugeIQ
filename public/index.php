@@ -733,21 +733,24 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
             <?php endforeach; ?>
             <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi" hidden>
-                <div class="climate-bar-label">Weather Volatility Index</div>
-                <strong class="climate-bar-value" id="climateWviValue">—</strong>
+                <div class="climate-wvi-graph">
+                    <div class="climate-wvi-graph-heading">
+                        <span class="climate-bar-label">Weather Volatility Index</span>
+                        <strong class="climate-bar-change" id="climateWviChange">—</strong>
+                    </div>
+                    <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
+                        <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
+                        <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                        <polyline id="climateWviLine" points=""></polyline>
+                    </svg>
+                </div>
                 <div class="climate-wvi-gauge">
+                    <strong class="climate-bar-value" id="climateWviValue">—</strong>
                     <svg class="climate-mobile-gauge" viewBox="0 0 100 50" role="img" aria-label="Weather Volatility Index gauge">
                         <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                         <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
                         <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
                         <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
-                    </svg>
-                </div>
-                <div class="climate-wvi-graph">
-                    <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
-                        <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
-                        <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
-                        <polyline id="climateWviLine" points=""></polyline>
                     </svg>
                 </div>
             </div>
