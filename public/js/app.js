@@ -1076,8 +1076,19 @@ function updateWeatherChangeLevel(score, level) {
     segments.forEach((segment, index) => segment.classList.toggle('is-active', index < filled));
 }
 
+function validReadingsForWvi(readings, windowEnd) {
+    if (!Number.isFinite(windowEnd) || !Array.isArray(readings)) return [];
+    return readings.filter(item => {
+        const timestamp = weatherReadingTimestamp(item);
+        return Number.isFinite(timestamp) &&
+            timestamp >= windowEnd - 6 * 3600000 &&
+            timestamp <= windowEnd + 300000;
+    });
+}
+
 function updateAtmosphericWvi(result, readings, referenceTime) {
     const valueElement = document.getElementById('climateWviValue');
+    const changeElement = document.getElementById('climateWviChange');
     const gaugeValue = document.getElementById('climateWviGaugeValue');
     const needle = document.getElementById('climateWviNeedle');
     const graphLine = document.getElementById('climateWviLine');
@@ -1087,6 +1098,18 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
 
     const score = Number.isFinite(result?.score) ? Math.max(0, Math.min(10, result.score)) : null;
     valueElement.textContent = score === null ? '—' : score.toFixed(1);
+    if (changeElement) {
+        const previousTime = Number.isFinite(referenceTime) ? referenceTime - 3600000 : NaN;
+        const previousReadings = validReadingsForWvi(readings, previousTime);
+        const previousScore = previousReadings.length ? weatherChangeScore(previousReadings).score : null;
+        const delta = Number.isFinite(score) && Number.isFinite(previousScore) ? score - previousScore : null;
+        changeElement.textContent = delta === null ? '—' : (Math.abs(delta) < 0.05 ? '-' : (delta > 0 ? '+' : '') + delta.toFixed(1));
+        changeElement.classList.toggle('rise', delta !== null && delta > 0.05);
+        changeElement.classList.toggle('fall', delta !== null && delta < -0.05);
+        changeElement.classList.toggle('steady', delta !== null && Math.abs(delta) <= 0.05);
+        changeElement.classList.toggle('unavailable', delta === null);
+        changeElement.setAttribute('aria-label', delta === null ? 'WVI change over the last hour unavailable' : 'WVI change over the last hour ' + delta.toFixed(1));
+    }
     if (score === null) {
         gaugeValue.setAttribute('d', 'M 4 48');
         needle.setAttribute('d', 'M 50 48 L 50 12');
@@ -1112,12 +1135,7 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     if (Number.isFinite(referenceTime)) {
         for (let hoursAgo = 24; hoursAgo >= 0; hoursAgo--) {
             const sampleTime = referenceTime - hoursAgo * 3600000;
-            const windowReadings = validReadings.filter(item => {
-                const timestamp = weatherReadingTimestamp(item);
-                return Number.isFinite(timestamp) &&
-                    timestamp >= sampleTime - 6 * 3600000 &&
-                    timestamp <= sampleTime + 300000;
-            });
+            const windowReadings = validReadingsForWvi(validReadings, sampleTime);
             const historicalScore = weatherChangeScore(windowReadings).score;
             if (!Number.isFinite(historicalScore)) continue;
             const x = ((24 - hoursAgo) / 24) * 100;
