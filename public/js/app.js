@@ -1326,7 +1326,7 @@ async function loadWeatherChange() {
                 stabilityScoreFill.style.width = (volatilityScore * 10) + '%';
                 stabilityScoreFill.dataset.level = level;
             }
-            reasonsElement.innerHTML = result.components
+            const reasonsHtml = result.components
                 .filter(component => Number.isFinite(component.severity) && component.severity > 0)
                 .map(component => {
                     const pair = component.pair;
@@ -1367,11 +1367,10 @@ async function loadWeatherChange() {
                             const equivalent = movementMatch && movementMatch[3]
                                 ? movementMatch[3] + (movementMatch[4] || '')
                                 : '—';
-                            const levelClass = Number(component.severity) >= 0.5 ? 'orange' : 'blue';
                             return '<div class="weather-change-reason weather-change-detail">' +
                                 '<strong class="weather-change-detail-title">' + component.label + '</strong>' +
                                 '<div class="weather-change-detail-values">' +
-                                '<span class="weather-change-detail-cumulative ' + levelClass + '"><small>Cumulative</small><b>' + cumulative + '</b></span>' +
+                                '<span class="weather-change-detail-cumulative"><small>Cumulative</small><b>' + cumulative + '</b></span>' +
                                 '<span class="weather-change-detail-equivalent"><small>6-hour equivalent</small><b>' + equivalent + '</b></span>' +
                                 '</div></div>';
                         }
@@ -1380,7 +1379,8 @@ async function loadWeatherChange() {
 
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
                 }).join('');
-            reasonsElement.prepend(summaryElement);
+            reasonsElement.replaceChildren(summaryElement);
+            reasonsElement.insertAdjacentHTML('beforeend', reasonsHtml);
             const stabilityRow = document.querySelector('.temperature-stability-row');
             const thresholdValue = stabilityRow?.dataset.weatherStabilityAlertThreshold;
             const alertThreshold = thresholdValue === undefined || thresholdValue === ''
