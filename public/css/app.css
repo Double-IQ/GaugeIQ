@@ -2130,8 +2130,16 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 .wind-hud-speed-readouts--gauge{
   width:100%;
-  justify-content:flex-end;
+  justify-content:space-between;
   margin-bottom:1px;
+}
+.wind-hud-gauge-heading{
+  color:#b8cce4;
+  font-size:9px;
+  font-weight:750;
+  letter-spacing:.08em;
+  line-height:1.2;
+  white-space:nowrap;
 }
 .wind-hud-speed-readouts--graph{
   justify-content:space-between;
