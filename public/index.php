@@ -892,7 +892,7 @@ if ($current && !empty($current['observed_at'])) {
                     </div>
                     <div class="wind-hud-speed-history-graph">
                         <div class="wind-hud-speed-readouts wind-hud-speed-readouts--graph">
-                            <span class="wind-hud-graph-heading">24-HOUR TREND</span>
+                            <span class="wind-hud-graph-heading">WIND SPEED</span>
                             <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
                         </div>
                         <?php if ($windSpeedTrendCount >= 2): ?>
