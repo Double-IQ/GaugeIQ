@@ -1764,11 +1764,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Atmospheric Monitor mobile gauges: move the dial and readout down one spacing step. */
 @media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 13px 32px 27px}
+  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 13px 40px 27px}
+  .climate-gauge-card .climate-mobile-gauge{height:40px}
   .climate-gauge-card .climate-bar-value{padding-top:8px}
 }
 @media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 12px 30px 26px}
+  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 12px 38px 26px}
+  .climate-gauge-card .climate-mobile-gauge{height:38px}
 }
 
 /* Wind card: Atmospheric Monitor-style semicircular speed gauge and 24-hour trend. */
