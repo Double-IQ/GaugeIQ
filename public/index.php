@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261030-wind-readouts-removed-v1">
+<link rel="stylesheet" href="css/app.css?v=20261030-wind-gauge-match-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -848,13 +848,31 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
                 <div class="wind-hud-speed-history-content">
                     <div class="wind-hud-speed-history-gauge">
-                        <svg viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
-                            <path class="wind-hud-speed-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                        <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
+                            <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                             <?php if ($current): ?>
-                                <path class="wind-hud-speed-gauge-value" d="<?= htmlspecialchars($windSpeedGaugePath, ENT_QUOTES) ?>"></path>
-                                <path class="wind-hud-speed-gauge-needle" d="<?= htmlspecialchars($windSpeedNeedlePath, ENT_QUOTES) ?>"></path>
-                                <circle class="wind-hud-speed-gauge-endpoint" cx="<?= number_format($windSpeedGaugeEndX, 2, '.', '') ?>" cy="<?= number_format($windSpeedGaugeEndY, 2, '.', '') ?>" r="2"></circle>
-                                <circle class="wind-hud-speed-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                                <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($windSpeedGaugePath, ENT_QUOTES) ?>"></path>
+                            <?php endif; ?>
+                            <g class="climate-mobile-gauge-ticks" aria-hidden="true">
+                                <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
+                                    $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                                    $tickIsMajor = $tickIndex % 3 === 0;
+                                    $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
+                                    $tickOuterRadius = 43.2;
+                                    $tickX1 = 50 + ($tickInnerRadius * cos($tickAngle));
+                                    $tickY1 = 48 - ($tickInnerRadius * sin($tickAngle));
+                                    $tickX2 = 50 + ($tickOuterRadius * cos($tickAngle));
+                                    $tickY2 = 48 - ($tickOuterRadius * sin($tickAngle));
+                                ?>
+                                    <line class="<?= $tickIsMajor ? 'major' : 'minor' ?>"
+                                          x1="<?= number_format($tickX1, 2, '.', '') ?>" y1="<?= number_format($tickY1, 2, '.', '') ?>"
+                                          x2="<?= number_format($tickX2, 2, '.', '') ?>" y2="<?= number_format($tickY2, 2, '.', '') ?>"></line>
+                                <?php endfor; ?>
+                            </g>
+                            <?php if ($current): ?>
+                                <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($windSpeedNeedlePath, ENT_QUOTES) ?>"></path>
+                                <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($windSpeedGaugeEndX, 2, '.', '') ?>" cy="<?= number_format($windSpeedGaugeEndY, 2, '.', '') ?>" r="2"></circle>
+                                <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                             <?php endif; ?>
                         </svg>
                     </div>
@@ -865,8 +883,8 @@ if ($current && !empty($current['observed_at'])) {
                                 <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                                 <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y2="23.5"></line>
                                 <polyline points="<?= htmlspecialchars($windSpeedTrendLine, ENT_QUOTES) ?>"></polyline>
-                                <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($windSpeedTrendStart[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendStart[1], ENT_QUOTES) ?>" r="1.2"></circle>
-                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" r="2"></circle>
+                                <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($windSpeedTrendStart[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendStart[1], ENT_QUOTES) ?>" r="1"></circle>
+                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" r="1.6"></circle>
                             </svg>
                         <?php else: ?>
                             <div class="climate-bar-sparkline-unavailable">24-hour wind history unavailable</div>
