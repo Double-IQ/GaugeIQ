@@ -2133,7 +2133,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   margin-bottom:1px;
 }
 .wind-hud-speed-readouts--graph{
-  justify-content:center;
+  justify-content:flex-end;
   margin-bottom:1px;
 }
 .wind-hud-speed-readouts .wind-hud-speed-value{
