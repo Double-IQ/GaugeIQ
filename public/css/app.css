@@ -2506,3 +2506,34 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-bar-value{font-size:11px}
   .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge{height:36px}
 }
+
+
+/* Keep WVI details readable on narrow screens and centre the More information control. */
+.weather-change-card .weather-change-reasons-toggle.info-icon-button{
+  display:flex;width:max-content;max-width:100%;margin:14px auto 0;justify-content:center
+}
+.weather-change-card .weather-change-reasons{
+  width:100%;min-width:0;box-sizing:border-box
+}
+.weather-change-card .weather-change-reason.weather-change-detail{
+  width:100%;min-width:0;box-sizing:border-box;overflow:hidden
+}
+.weather-change-card .weather-change-detail-values{
+  grid-template-columns:repeat(2,minmax(0,1fr));min-width:0
+}
+.weather-change-card .weather-change-detail-values>span{min-width:0}
+.weather-change-card .weather-change-detail-values small{
+  line-height:1.3;overflow-wrap:anywhere
+}
+.weather-change-card .weather-change-detail-values b{
+  min-width:0;overflow-wrap:anywhere;word-break:normal
+}
+@media(max-width:560px){
+  .weather-change-card .weather-change-reasons-toggle.info-icon-button{
+    display:flex;width:max-content;margin:14px auto 0;justify-content:center
+  }
+  .weather-change-card .weather-change-reason.weather-change-detail{padding:10px}
+  .weather-change-card .weather-change-detail-values{gap:8px}
+  .weather-change-card .weather-change-detail-values small{font-size:9px}
+  .weather-change-card .weather-change-detail-values b{font-size:12px}
+}
