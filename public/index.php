@@ -820,30 +820,6 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                 </svg>
             </div>
-            <div class="wind-hud-speed-scale">
-                <div class="wind-hud-scale-heading"><span>WIND SPEED</span><span>0–60 km/h</span></div>
-                <svg class="wind-hud-scale" viewBox="0 0 320 30" aria-hidden="true" focusable="false">
-                    <rect class="wind-strip-speed-track" x="10" y="3" width="300" height="7" rx="3.5"></rect>
-                    <g class="wind-speed-segments">
-                    <?php for ($segment = 0; $segment < 120; $segment++):
-                        $segmentSpeed = ($segment + 1) / 2;
-                        $segmentX = 10 + ($segment / 120.0) * 300;
-                        $segmentActive = $current && $windSpeed >= $segmentSpeed;
-                        $segmentChange = $windSpeedChange1h > 0.0
-                            ? ($segmentSpeed > ($windSpeed - $windSpeedChange1h) && $segmentSpeed <= $windSpeed)
-                            : ($windSpeedChange1h < 0.0 && $segmentSpeed > $windSpeed && $segmentSpeed <= min(60.0, $windSpeed - $windSpeedChange1h));
-                        $segmentClass = $segmentChange
-                            ? ($windSpeedChange1h > 0.0 ? 'active change' : 'change')
-                            : ($segmentActive ? 'active' : '');
-                    ?>
-                        <line class="<?= $segmentClass . ($segmentActive && $windSpeed > 30.0 && !$segmentChange ? ' high-wind' : '') ?>" x1="<?= number_format($segmentX, 3, '.', '') ?>" y1="2" x2="<?= number_format($segmentX, 3, '.', '') ?>" y2="11"></line>
-                    <?php endfor; ?>
-                    </g>
-                    <g class="wind-speed-horizontal-labels">
-                        <text x="10" y="27">0</text><text x="85" y="27">15</text><text x="160" y="27">30</text><text x="235" y="27">45</text><text x="310" y="27">60</text>
-                    </g>
-                </svg>
-            </div>
             <div class="wind-hud-speed-history" aria-label="Wind speed gauge and 24-hour trend">
                 <div class="wind-hud-speed-history-heading">
                     <span>WIND SPEED</span>
