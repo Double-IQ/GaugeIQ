@@ -1091,10 +1091,15 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const changeElement = document.getElementById('climateWviChange');
     const gaugeValue = document.getElementById('climateWviGaugeValue');
     const needle = document.getElementById('climateWviNeedle');
+    const gaugeEndpoint = document.getElementById('climateWviEndpoint');
     const graphLine = document.getElementById('climateWviLine');
     const graphArea = document.getElementById('climateWviArea');
+    const graphDots = document.getElementById('climateWviDots');
+    const graphGuide = document.getElementById('climateWviGuide');
+    const graphStart = document.getElementById('climateWviStart');
+    const graphEnd = document.getElementById('climateWviEnd');
     const gauge = document.querySelector('.climate-bar-wvi .climate-wvi-gauge');
-    if (!valueElement || !gaugeValue || !needle || !graphLine || !graphArea) return;
+    if (!valueElement || !gaugeValue || !needle || !gaugeEndpoint || !graphLine || !graphArea || !graphDots || !graphGuide || !graphStart || !graphEnd) return;
 
     const score = Number.isFinite(result?.score) ? Math.max(0, Math.min(10, result.score)) : null;
     valueElement.textContent = score === null ? '—' : score.toFixed(1);
@@ -1113,6 +1118,8 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     if (score === null) {
         gaugeValue.setAttribute('d', 'M 4 48');
         needle.setAttribute('d', 'M 50 48 L 50 12');
+        gaugeEndpoint.setAttribute('cx', '4');
+        gaugeEndpoint.setAttribute('cy', '48');
     } else {
         const angle = Math.PI - (Math.PI * score / 10);
         const endX = 50 + (46 * Math.cos(angle));
@@ -1123,6 +1130,8 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         const perpX = halfWidth * Math.sin(angle);
         const perpY = halfWidth * Math.cos(angle);
         gaugeValue.setAttribute('d', 'M 4 48 A 46 46 0 0 1 ' + endX.toFixed(2) + ' ' + endY.toFixed(2));
+        gaugeEndpoint.setAttribute('cx', endX.toFixed(2));
+        gaugeEndpoint.setAttribute('cy', endY.toFixed(2));
         needle.setAttribute('d',
             'M ' + (50 + perpX).toFixed(2) + ' ' + (48 + perpY).toFixed(2) +
             ' L ' + needleX.toFixed(2) + ' ' + needleY.toFixed(2) +
@@ -1147,6 +1156,25 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const line = points.join(' ');
     graphLine.setAttribute('points', line);
     graphArea.setAttribute('points', points.length >= 2 ? '0,23.5 ' + line + ' 100,23.5' : '');
+    graphDots.innerHTML = points.map(point => {
+        const [x, y] = point.split(',');
+        return '<circle cx="' + x + '" cy="' + y + '" r="0.75"></circle>';
+    }).join('');
+    if (points.length) {
+        const [startX, startY] = points[0].split(',');
+        const [endX, endY] = points[points.length - 1].split(',');
+        graphStart.setAttribute('cx', startX);
+        graphStart.setAttribute('cy', startY);
+        graphEnd.setAttribute('cx', endX);
+        graphEnd.setAttribute('cy', endY);
+        graphGuide.setAttribute('x1', endX);
+        graphGuide.setAttribute('x2', endX);
+        graphGuide.setAttribute('y1', endY);
+        graphGuide.setAttribute('y2', '23.5');
+    }
+    graphStart.setAttribute('r', points.length > 1 ? '1' : '0');
+    graphEnd.setAttribute('r', points.length > 1 ? '1.6' : '0');
+    graphGuide.setAttribute('y1', points.length ? graphEnd.getAttribute('cy') : '23.5');
     const graphSvg = graphLine.closest('svg');
     if (graphSvg) {
         graphSvg.setAttribute('aria-label', points.length >= 2
