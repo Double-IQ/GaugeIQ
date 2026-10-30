@@ -1580,7 +1580,21 @@ if (conditionsTrendReasonsToggle && conditionsTrendReasonsPanel) {
     });
 }
 
-loadHistory();
+const historyToggle = document.getElementById('historyToggle');
+const historyContent = document.getElementById('historyContent');
+let historyHasLoaded = false;
+if (historyToggle && historyContent) {
+    historyToggle.addEventListener('click', () => {
+        const willExpand = historyContent.hidden;
+        historyContent.hidden = !willExpand;
+        historyToggle.setAttribute('aria-expanded', String(willExpand));
+        if (willExpand && !historyHasLoaded) {
+            historyHasLoaded = true;
+            loadHistory(24);
+        }
+    });
+}
+
 loadWeatherChange();
 
 async function checkForGaugeIQUpdate() {
