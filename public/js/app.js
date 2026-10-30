@@ -1064,6 +1064,18 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     };
 }
 
+function updateWeatherChangeLevel(score, level) {
+    const track = document.getElementById('weatherChangeLevel');
+    if (!track) return;
+    const segments = [...track.children];
+    const filled = Number.isFinite(score) ? Math.max(0, Math.min(10, Math.round(score))) : 0;
+    track.dataset.level = level || 'unavailable';
+    track.setAttribute('aria-label', Number.isFinite(score)
+        ? 'WVI level ' + score.toFixed(1) + ' out of 10'
+        : 'WVI level unavailable');
+    segments.forEach((segment, index) => segment.classList.toggle('is-active', index < filled));
+}
+
 function updateAtmosphericWvi(result, readings, referenceTime) {
     const valueElement = document.getElementById('climateWviValue');
     const gaugeValue = document.getElementById('climateWviGaugeValue');
@@ -1211,10 +1223,12 @@ async function loadWeatherChange() {
 
         if (result.score === null) {
             scoreElement.textContent = '—';
+            updateWeatherChangeLevel(null, 'unavailable');
             summaryElement.textContent = result.summary + (usedRecentBackfillForScore
                 ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
                 : '');
             reasonsElement.innerHTML = '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>';
+            reasonsElement.prepend(summaryElement);
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
@@ -1222,6 +1236,7 @@ async function loadWeatherChange() {
             // 0 = little recent change; 10 = high recent volatility. Push alerts use this same score.
             const volatilityScore = Math.round(result.score * 10) / 10;
             scoreElement.textContent = volatilityScore.toFixed(1);
+            updateWeatherChangeLevel(volatilityScore, volatilityScore >= 7 ? 'low' : volatilityScore >= 6 ? 'moderate' : 'high');
             scoreElement.setAttribute('aria-label', 'Weather Volatility Index score ' + volatilityScore.toFixed(1) + ' out of 10');
 
             let volatilitySummary;
@@ -1298,10 +1313,7 @@ async function loadWeatherChange() {
 
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
                 }).join('');
-            reasonsElement.insertAdjacentHTML('afterbegin',
-                '<div class="weather-change-reason"><span><strong>WVI gradient score</strong>: ' +
-                result.gradientScore.toFixed(1) + '/10</span></div>'
-            );
+            reasonsElement.prepend(summaryElement);
             const stabilityRow = document.querySelector('.temperature-stability-row');
             const thresholdValue = stabilityRow?.dataset.weatherStabilityAlertThreshold;
             const alertThreshold = thresholdValue === undefined || thresholdValue === ''
@@ -1355,6 +1367,8 @@ async function loadWeatherChange() {
             }
         }
         reasonsElement.innerHTML = '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>';
+        updateWeatherChangeLevel(null, 'unavailable');
+        reasonsElement.prepend(summaryElement);
         const trendSummary = document.getElementById('conditionsTrendSummary');
         const trendReasons = document.getElementById('conditionsTrendReasons');
         if (trendSummary) trendSummary.textContent = 'Conditions trend unavailable.';
