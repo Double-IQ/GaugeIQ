@@ -2812,3 +2812,86 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* The mobile layout must not override the native hidden state of More information. */
 .weather-change-card .weather-change-reasons[hidden]{display:none!important}
+
+
+/* Restore the cloned Dew Point instrument's gauge and keep its graph below the readouts. */
+.climate-gauge-card .climate-bar-row.climate-bar-wvi,
+.wind-gauge-card .wind-speed-instrument-row{
+  display:grid!important;
+  grid-template-columns:minmax(120px,1fr) minmax(96px,112px) minmax(150px,1.4fr)!important;
+  grid-template-rows:22px 22px 20px!important;
+  gap:3px 12px!important;
+  align-items:center;
+  min-width:0;
+}
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-label,
+.wind-gauge-card .wind-speed-instrument-row .climate-bar-label{
+  grid-column:1!important;grid-row:1!important;align-self:end
+}
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-value,
+.wind-gauge-card .wind-speed-instrument-row .climate-bar-value{
+  grid-column:1!important;grid-row:2!important;justify-self:start;align-self:start;padding:0!important
+}
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-change,
+.wind-gauge-card .wind-speed-instrument-row .climate-bar-change{
+  grid-column:1!important;grid-row:3!important;justify-self:start;align-self:start
+}
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge,
+.wind-gauge-card .wind-speed-instrument-row .climate-mobile-gauge{
+  display:block!important;visibility:visible!important;
+  grid-column:2!important;grid-row:1/span 3!important;
+  width:100%;height:58px;min-width:0;align-self:center;justify-self:stretch;overflow:visible
+}
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-sparkline,
+.wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline,
+.wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline-unavailable{
+  grid-column:3!important;grid-row:1/span 3!important;
+  display:block;width:100%;height:64px;min-height:0;align-self:center;
+  margin:0;padding:0 2px;min-width:0
+}
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi,
+  .wind-gauge-card .wind-speed-instrument-row{
+    grid-template-columns:minmax(90px,112px) minmax(0,1fr) 42px!important;
+    grid-template-rows:18px 13px 40px 64px!important;
+    gap:0 8px!important;padding:8px 9px 7px
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-label,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-label{
+    grid-column:1!important;grid-row:1!important;align-self:end
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-value,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-value{
+    grid-column:1!important;grid-row:2!important;align-self:start;padding:0!important
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-change,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-change{
+    grid-column:3!important;grid-row:1/span 2!important;justify-self:end;align-self:center
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge,
+  .wind-gauge-card .wind-speed-instrument-row .climate-mobile-gauge{
+    grid-column:1!important;grid-row:3!important;width:100%;height:40px!important
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-sparkline,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline-unavailable{
+    grid-column:1/-1!important;grid-row:4!important;
+    width:100%;height:64px!important;min-height:64px!important;
+    align-self:stretch;margin:2px 0 0;padding:0 2px
+  }
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi,
+  .wind-gauge-card .wind-speed-instrument-row{
+    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px!important;
+    grid-template-rows:17px 12px 38px 60px!important;
+    column-gap:7px!important;padding:7px 8px 6px
+  }
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge,
+  .wind-gauge-card .wind-speed-instrument-row .climate-mobile-gauge{height:38px!important}
+  .climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-bar-sparkline,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline,
+  .wind-gauge-card .wind-speed-instrument-row .climate-bar-sparkline-unavailable{
+    height:60px!important;min-height:60px!important
+  }
+}
