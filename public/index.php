@@ -604,12 +604,13 @@ if ($current && !empty($current['observed_at'])) {
         $points = [];
         $valueCount = count($values);
         if ($valueCount >= 2) {
-            $minValue = min($values);
-            $maxValue = max($values);
-            $range = max(0.0001, $maxValue - $minValue);
+            $fixedDewGapScale = $climateBar['historyKey'] === 'dew_point_gap_c';
+            $minValue = $fixedDewGapScale ? 0.0 : min($values);
+            $range = $fixedDewGapScale ? 5.0 : max(0.0001, max($values) - $minValue);
             foreach ($values as $pointIndex => $pointValue) {
                 $x = $pointIndex / ($valueCount - 1) * 100;
-                $y = 22 - (($pointValue - $minValue) / $range * 18);
+                $normalisedValue = ($pointValue - $minValue) / $range;
+                $y = 22 - (max(0.0, min(1.0, $normalisedValue)) * 18);
                 $points[] = number_format($x, 2, '.', '') . ',' . number_format($y, 2, '.', '');
             }
         }
