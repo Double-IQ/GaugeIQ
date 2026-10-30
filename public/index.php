@@ -858,10 +858,12 @@ if ($current && !empty($current['observed_at'])) {
             <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-hud-speed-history" aria-label="Wind speed gauge and 24-hour trend">
                 <div class="wind-hud-speed-history-content">
+                    <div class="wind-hud-speed-readouts wind-hud-speed-readouts--combined">
+                        <span class="wind-hud-graph-heading">WIND SPEED</span>
+                        <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
+                        <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
+                    </div>
                     <div class="wind-hud-speed-history-gauge">
-                        <div class="wind-hud-speed-readouts wind-hud-speed-readouts--gauge">
-                            <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
-                        </div>
                         <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
                             <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                             <?php if ($current): ?>
@@ -891,10 +893,6 @@ if ($current && !empty($current['observed_at'])) {
                         </svg>
                     </div>
                     <div class="wind-hud-speed-history-graph">
-                        <div class="wind-hud-speed-readouts wind-hud-speed-readouts--graph">
-                            <span class="wind-hud-graph-heading">WIND SPEED</span>
-                            <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
-                        </div>
                         <?php if ($windSpeedTrendCount >= 2): ?>
                             <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
                                 <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
