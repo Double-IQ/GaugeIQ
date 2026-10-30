@@ -297,7 +297,8 @@ if ($current && !empty($current['observed_at'])) {
         ? max(0, min(100, (int)$todayForecast['rain_probability_percent']))
         : null;
     // Open-Meteo's current rain field is the latest current-period observation,
-    // not the same thing as the forecast daily accumulation.    $observedRainfallMm = $current && is_numeric($current['rainfall_mm'] ?? null)
+    // not the same thing as the forecast daily accumulation.
+    $observedRainfallMm = $current && is_numeric($current['rainfall_mm'] ?? null)
         ? max(0.0, (float)$current['rainfall_mm'])
         : null;
 
