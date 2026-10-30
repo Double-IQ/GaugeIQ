@@ -1980,3 +1980,8 @@ body.gaugeiq-menu-open{overflow:hidden}
     height:39px;
   }
 }
+
+
+/* Top card: reduce only the High/Low labels and temperature readings one step. */
+.temperature-summary-card .temperature-summary-range span{font-size:9px}
+.temperature-summary-card .temperature-summary-range strong{font-size:18px}
