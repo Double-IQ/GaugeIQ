@@ -860,6 +860,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="wind-hud-speed-history-content">
                     <div class="wind-hud-speed-history-gauge">
                         <div class="wind-hud-speed-readouts wind-hud-speed-readouts--gauge">
+                            <span class="wind-hud-gauge-heading">WIND SPEED</span>
                             <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
                         </div>
                         <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
