@@ -1277,8 +1277,8 @@ async function loadWeatherChange() {
             summaryElement.textContent = result.summary + (usedRecentBackfillForScore
                 ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
                 : '');
-            reasonsElement.innerHTML = '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>';
-            reasonsElement.prepend(summaryElement);
+            reasonsElement.replaceChildren(summaryElement);
+            reasonsElement.insertAdjacentHTML('beforeend', '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>');
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
