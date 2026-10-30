@@ -1967,10 +1967,16 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-sparkline,
   .climate-gauge-card .climate-bar-sparkline-unavailable{
     grid-row:2 / span 2;
+    height:42px;
+    min-height:0;
   }
 }
 @media(max-width:420px){
   .climate-gauge-card .climate-bar-row{
     grid-template-rows:17px 12px 38px;
+  }
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{
+    height:39px;
   }
 }
