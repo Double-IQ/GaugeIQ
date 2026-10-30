@@ -623,12 +623,25 @@ if ($current && !empty($current['observed_at'])) {
     unset($climateBar);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
-        <div class="section-heading">
+        <div class="section-heading climate-monitor-heading">
             <div>
                 <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
                 <div class="wind-hud-subtitle">Environmental Telemetry</div>
             </div>
-        </div>        <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
+            <details class="climate-graph-selector">
+                <summary aria-label="Choose Atmospheric Monitor graphs">Graphs <span aria-hidden="true">⌄</span></summary>
+                <div class="climate-graph-selector-menu" aria-label="Choose graphs to display">
+                    <label><input type="checkbox" data-climate-graph-option="pressure_hpa" checked> Air pressure</label>
+                    <label><input type="checkbox" data-climate-graph-option="dew_point_c" checked> Dew point</label>
+                    <label><input type="checkbox" data-climate-graph-option="dew_point_gap_c" checked> Dew point gap</label>
+                    <label><input type="checkbox" data-climate-graph-option="humidity_percent" checked> Humidity</label>
+                    <label><input type="checkbox" data-climate-graph-option="cloud_cover_percent" checked> Cloud cover</label>
+                    <label><input type="checkbox" data-climate-graph-option="rainfall_mm" checked> Rainfall (24h)</label>
+                    <label><input type="checkbox" data-climate-graph-option="wvi"> WVI</label>
+                </div>
+            </details>
+        </div>
+        <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
                 // Use CSS classes rather than inline styles so the bars also render under
                 // a Content Security Policy that blocks inline style attributes.
@@ -661,7 +674,7 @@ if ($current && !empty($current['observed_at'])) {
                 $dewPointGapWarning = ($bar['historyKey'] ?? '') === 'dew_point_gap_c'
                     && (float)$bar['value'] <= 3.0;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
@@ -719,6 +732,25 @@ if ($current && !empty($current['observed_at'])) {
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
+            <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi" hidden>
+                <div class="climate-bar-label">Weather Volatility Index</div>
+                <strong class="climate-bar-value" id="climateWviValue">—</strong>
+                <div class="climate-wvi-gauge">
+                    <svg class="climate-mobile-gauge" viewBox="0 0 100 50" role="img" aria-label="Weather Volatility Index gauge">
+                        <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                        <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
+                        <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
+                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                    </svg>
+                </div>
+                <div class="climate-wvi-graph">
+                    <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="WVI trend over the last 24 hours">
+                        <polygon class="climate-sparkline-area" id="climateWviArea" points=""></polygon>
+                        <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                        <polyline id="climateWviLine" points=""></polyline>
+                    </svg>
+                </div>
+            </div>
         </div>
     </section>
 
