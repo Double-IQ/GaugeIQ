@@ -2417,3 +2417,32 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-wvi .climate-wvi-graph-heading{gap:5px}
   .climate-gauge-card .climate-bar-wvi .climate-wvi-graph-heading .climate-bar-label{font-size:10px}
 }
+
+
+/* WVI detail rows separate total movement from its six-hour equivalent. */
+.weather-change-reasons .weather-change-summary{order:0;margin:0 0 3px}
+.weather-change-reason.weather-change-detail{
+  display:block;padding:11px 12px
+}
+.weather-change-detail-title{
+  display:block;margin-bottom:9px;color:var(--text);font-size:12px;font-weight:750
+}
+.weather-change-detail-values{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+}
+.weather-change-detail-values>span{
+  display:flex;flex-direction:column;gap:4px;min-width:0
+}
+.weather-change-detail-values small{
+  color:var(--muted);font-size:10px;font-weight:650;letter-spacing:.035em
+}
+.weather-change-detail-values b{
+  color:var(--text);font-size:13px;font-weight:750;font-variant-numeric:tabular-nums
+}
+.weather-change-detail-cumulative.blue b{color:#55b9f2}
+.weather-change-detail-cumulative.orange b{color:#ffad68}
+.weather-change-detail-equivalent b{color:var(--text)}
+@media(max-width:420px){
+  .weather-change-detail-values{gap:7px}
+  .weather-change-detail-values b{font-size:12px}
+}
