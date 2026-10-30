@@ -641,7 +641,7 @@ if ($current && !empty($current['observed_at'])) {
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
                         <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($needlePath, ENT_QUOTES) ?>"></path>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
-                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="3"></circle>
+                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                     </svg>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
