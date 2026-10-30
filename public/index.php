@@ -297,8 +297,7 @@ if ($current && !empty($current['observed_at'])) {
         ? max(0, min(100, (int)$todayForecast['rain_probability_percent']))
         : null;
     // Open-Meteo's current rain field is the latest current-period observation,
-    // not the same thing as the forecast daily accumulation.
-    $observedRainfallMm = $current && is_numeric($current['rainfall_mm'] ?? null)
+    // not the same thing as the forecast daily accumulation.    $observedRainfallMm = $current && is_numeric($current['rainfall_mm'] ?? null)
         ? max(0.0, (float)$current['rainfall_mm'])
         : null;
 
@@ -597,8 +596,7 @@ if ($current && !empty($current['observed_at'])) {
                 <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
                 <div class="wind-hud-subtitle">Environmental Telemetry</div>
             </div>
-        </div>
-        <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
+        </div>        <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
                 // Use CSS classes rather than inline styles so the bars also render under
                 // a Content Security Policy that blocks inline style attributes.
@@ -613,8 +611,8 @@ if ($current && !empty($current['observed_at'])) {
                 $gaugeEndY = 48 - (46 * sin($gaugeAngle));
                 $needleEndX = 50 + (36 * cos($gaugeAngle));
                 $needleEndY = 48 - (36 * sin($gaugeAngle));
-                $needleBaseX = 50 + (5 * cos($gaugeAngle));
-                $needleBaseY = 48 - (5 * sin($gaugeAngle));
+                $needleBaseX = 50;
+                $needleBaseY = 48;
                 $needleHalfWidth = 3.9;
                 $needlePerpX = $needleHalfWidth * sin($gaugeAngle);
                 $needlePerpY = $needleHalfWidth * cos($gaugeAngle);
@@ -894,7 +892,6 @@ if ($current && !empty($current['observed_at'])) {
         <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
         <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
-
 
 
 
