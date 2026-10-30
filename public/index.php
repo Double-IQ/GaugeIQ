@@ -975,14 +975,19 @@ if ($current && !empty($current['observed_at'])) {
 
 
     <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
-        <div class="section-heading">
+        <div class="section-heading weather-change-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
                 <p class="muted">Interprets the degree and speed of changing conditions.</p>
             </div>
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
         </div>
-        <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        <div class="weather-change-metrics">
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
+            <div class="weather-change-level" id="weatherChangeLevel" role="img" aria-label="WVI level">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
         <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="9"></circle>
@@ -991,7 +996,9 @@ if ($current && !empty($current['observed_at'])) {
             </svg>
             <span id="weatherChangeReasonsButtonLabel">More information</span>
         </button>
-        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden></div>
+        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden>
+            <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        </div>
         <details class="algorithm-details">
             <summary>How Weather Volatility Index (WVI) is calculated</summary>
             <p>GaugeIQ compares the current six-hour change with up to <?= (int)$weatherFormulaValues['baseline_days'] ?> previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
