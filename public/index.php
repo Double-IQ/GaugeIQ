@@ -918,6 +918,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
     <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=precipitation" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
+        <h2 class="satellite-map-heading" id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
@@ -928,7 +929,6 @@ if ($current && !empty($current['observed_at'])) {
                 </svg>
             </div>
             <div class="satellite-map-copy">
-                <h2 id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
                 <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</p>
             </div>
             <span class="satellite-map-arrow" aria-hidden="true">↗</span>
