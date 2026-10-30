@@ -1856,3 +1856,11 @@ body.gaugeiq-menu-open{overflow:hidden}
     stroke-width:1.15;
   }
 }
+
+/* Keep the Atmospheric Monitor change figure clear of the trend graph. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-change{
+    align-self:center;
+    transform:translateY(-5px);
+  }
+}
