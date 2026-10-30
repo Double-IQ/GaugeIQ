@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261030-wvi-wind-gauge-layout-v2">
+<link rel="stylesheet" href="css/app.css?v=20261030-instrument-clone-clean-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -734,7 +734,7 @@ if ($current && !empty($current['observed_at'])) {
             <?php endforeach; ?>
             <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi">
                 <div class="climate-bar-label">Weather Volatility Index</div>
-                <div class="climate-segment-track" aria-hidden="true"></div>
+                <div class="climate-segment-track" role="img" aria-label="Weather Volatility Index segmented gauge"><?php for ($segment = 0; $segment < 60; $segment++): ?><span class="climate-segment"></span><?php endfor; ?></div>
                 <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather Volatility Index gauge">
                     <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                     <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
@@ -910,7 +910,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="wind-hud-speed-history-content">
                     <div class="climate-bar-row wind-speed-instrument-row">
                         <div class="climate-bar-label">WIND SPEED</div>
-                        <div class="climate-segment-track" aria-hidden="true"></div>
+                        <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars('Wind speed segmented gauge, ' . number_format($windSpeed, 1) . ' km/h', ENT_QUOTES) ?>"><?php for ($segment = 0; $segment < 60; $segment++): ?><span class="climate-segment<?= $current && $segment < (int)round($windSpeedRatio * 60) ? ' active' : '' ?>"></span><?php endfor; ?></div>
                         <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
                             <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
                             <?php if ($current): ?>
