@@ -1761,3 +1761,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-card .wind-hud-compass-switch:disabled{opacity:.55;cursor:not-allowed}
 .wind-hud-card .wind-compass-controls{margin-top:8px;min-height:0}
 @media(max-width:420px){.wind-hud-card .wind-hud-compass-switch{min-height:29px;padding:5px 8px;font-size:9px}}
+
+
+/* Atmospheric Monitor mobile gauges: add breathing room below each dial before its readout. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 10px 32px 19px}
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 8px 30px 18px}
+}
