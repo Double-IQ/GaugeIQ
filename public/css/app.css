@@ -2099,3 +2099,54 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Top card: reduce only the High/Low labels and temperature readings one step. */
 .temperature-summary-card .temperature-summary-range span{font-size:9px}
 .temperature-summary-card .temperature-summary-range strong{font-size:18px}
+
+
+/* Wind speed readouts follow the Atmospheric Monitor gauge treatment. */
+.wind-hud-speed-history-gauge{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+.wind-hud-speed-history-gauge .climate-mobile-gauge-value{
+  stroke:#a3e635;
+  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.22));
+}
+.wind-hud-speed-readouts{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:9px;
+  margin-top:-1px;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.wind-hud-speed-readouts .wind-hud-speed-value{
+  color:#edf6ff;
+  font-size:12px;
+  font-weight:850;
+}
+.wind-hud-speed-readouts .wind-hud-speed-change{
+  font-size:11px;
+  font-weight:850;
+}
+.wind-hud-speed-readouts .wind-hud-speed-change.rise,
+.wind-hud-speed-readouts .wind-hud-speed-change.fall{color:#eab308}
+.wind-hud-speed-readouts .wind-hud-speed-change.steady{color:#829fc1}
+.wind-hud-speed-readouts .wind-hud-speed-change.unavailable{color:#829fc1}
+.wind-hud-speed-history-graph .climate-sparkline-area{fill:rgba(255,193,132,.095)}
+.wind-hud-speed-history-graph .climate-bar-sparkline polyline{
+  stroke:#ffc184;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 2px rgba(255,193,132,.22));
+}
+.wind-hud-speed-history-graph .climate-sparkline-endpoint{
+  fill:#ffc184;
+  filter:drop-shadow(0 0 1.6px rgba(255,193,132,.45));
+}
+@media(max-width:760px){
+  .wind-hud-speed-readouts{gap:6px;margin-top:-2px}
+  .wind-hud-speed-readouts .wind-hud-speed-value{font-size:11px}
+  .wind-hud-speed-readouts .wind-hud-speed-change{font-size:10px}
+}
