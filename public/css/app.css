@@ -2172,3 +2172,40 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-mobile-gauge-track,
   .climate-gauge-card .climate-mobile-gauge-value{stroke-width:7px}
 }
+
+/* Match the Interactive Weather Maps card to the Wind card's glass treatment. */
+.satellite-map-card{
+  padding:18px;
+  overflow:hidden;
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+}
+.satellite-map-icon{
+  border-color:rgba(117,164,211,.2);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  color:#68d2ff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+.satellite-map-copy h2{color:#edf6ff}
+.satellite-map-copy p{color:#b8cce4}
+.satellite-map-arrow{
+  border-color:rgba(117,164,211,.2);
+  background:rgba(1,10,24,.22);
+  color:#68d2ff;
+}
+.satellite-map-card-footer{
+  border-top-color:rgba(117,164,211,.16);
+  color:#b8cce4;
+}
+.satellite-map-card-footer>span:first-child{color:#edf6ff}
+.satellite-map-external{color:#819fc2}
+.satellite-map-card:hover{
+  border-color:rgba(117,164,211,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 14px 32px rgba(2,8,23,.22);
+}
+@media(max-width:560px){
+  .satellite-map-card{padding:17px}
+}
