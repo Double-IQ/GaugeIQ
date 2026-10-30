@@ -2426,3 +2426,14 @@ body.gaugeiq-menu-open{overflow:hidden}
 .weather-change-card .weather-change-reasons>.weather-change-summary{order:-1;grid-row:1;grid-column:1/-1}
 .weather-change-card .weather-change-reasons>.weather-change-reason{order:0;grid-row:auto}
 .weather-change-card .weather-change-detail-cumulative b{color:var(--text)!important}
+
+/* Collapsible history card */
+.history-toggle{display:block;width:100%;padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.history-toggle .section-heading{margin:0;align-items:center;flex-direction:row}
+.history-toggle .section-heading>span:first-child{display:block}
+.history-title{display:block;font-size:22px;font-weight:800;line-height:1.25}
+.history-toggle-indicator{flex:0 0 28px;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--border);border-radius:50%;font-size:20px;line-height:1;color:var(--muted)}
+.history-toggle[aria-expanded="true"] .history-toggle-indicator{transform:rotate(45deg)}
+.history-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.history-card #historyContent[hidden]{display:none!important}
+@media(max-width:560px){.history-toggle .section-heading{align-items:center;flex-direction:row}}
