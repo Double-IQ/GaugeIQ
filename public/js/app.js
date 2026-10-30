@@ -115,6 +115,52 @@ colorScheme.addEventListener?.('change', () => {
 
 applyTheme(savedTheme);
 
+function initClimateGraphSelector() {
+    const selector = document.querySelector('.climate-graph-selector');
+    const options = [...document.querySelectorAll('[data-climate-graph-option]')];
+    const rows = [...document.querySelectorAll('[data-climate-graph]')];
+    if (!selector || options.length === 0 || rows.length === 0) return;
+
+    const storageKey = 'gaugeiq-atmospheric-graphs-v1';
+    const availableKeys = options.map(option => option.dataset.climateGraphOption);
+    let selectedKeys;
+    try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        selectedKeys = Array.isArray(saved)
+            ? new Set(saved.filter(key => availableKeys.includes(key)))
+            : new Set(availableKeys.filter(key => key !== 'wvi'));
+    } catch {
+        selectedKeys = new Set(availableKeys.filter(key => key !== 'wvi'));
+    }
+
+    const applySelection = () => {
+        options.forEach(option => {
+            option.checked = selectedKeys.has(option.dataset.climateGraphOption);
+        });
+        rows.forEach(row => {
+            row.hidden = !selectedKeys.has(row.dataset.climateGraph);
+        });
+    };
+
+    options.forEach(option => {
+        option.addEventListener('change', () => {
+            const key = option.dataset.climateGraphOption;
+            if (option.checked) selectedKeys.add(key);
+            else selectedKeys.delete(key);
+            try {
+                localStorage.setItem(storageKey, JSON.stringify([...selectedKeys]));
+            } catch {
+                // The current selection still applies for this page view.
+            }
+            applySelection();
+        });
+    });
+
+    applySelection();
+}
+
+initClimateGraphSelector();
+
 
 const windGauge = document.querySelector('.wind-hud-vector');
 const windCompassStatus = document.getElementById('windCompassStatus');
@@ -1018,6 +1064,70 @@ function weatherLocalBaseline(readings, currentScore, latestTime) {
     };
 }
 
+function updateAtmosphericWvi(result, readings, referenceTime) {
+    const valueElement = document.getElementById('climateWviValue');
+    const gaugeValue = document.getElementById('climateWviGaugeValue');
+    const needle = document.getElementById('climateWviNeedle');
+    const graphLine = document.getElementById('climateWviLine');
+    const graphArea = document.getElementById('climateWviArea');
+    const gauge = document.querySelector('.climate-bar-wvi .climate-wvi-gauge');
+    if (!valueElement || !gaugeValue || !needle || !graphLine || !graphArea) return;
+
+    const score = Number.isFinite(result?.score) ? Math.max(0, Math.min(10, result.score)) : null;
+    valueElement.textContent = score === null ? '—' : score.toFixed(1);
+    if (score === null) {
+        gaugeValue.setAttribute('d', 'M 4 48');
+        needle.setAttribute('d', 'M 50 48 L 50 12');
+    } else {
+        const angle = Math.PI - (Math.PI * score / 10);
+        const endX = 50 + (46 * Math.cos(angle));
+        const endY = 48 - (46 * Math.sin(angle));
+        const needleX = 50 + (35 * Math.cos(angle));
+        const needleY = 48 - (35 * Math.sin(angle));
+        const halfWidth = 2.8;
+        const perpX = halfWidth * Math.sin(angle);
+        const perpY = halfWidth * Math.cos(angle);
+        gaugeValue.setAttribute('d', 'M 4 48 A 46 46 0 0 1 ' + endX.toFixed(2) + ' ' + endY.toFixed(2));
+        needle.setAttribute('d',
+            'M ' + (50 + perpX).toFixed(2) + ' ' + (48 + perpY).toFixed(2) +
+            ' L ' + needleX.toFixed(2) + ' ' + needleY.toFixed(2) +
+            ' L ' + (50 - perpX).toFixed(2) + ' ' + (48 - perpY).toFixed(2) + ' Z'
+        );
+    }
+
+    const validReadings = Array.isArray(readings) ? readings : [];
+    const points = [];
+    if (Number.isFinite(referenceTime)) {
+        for (let hoursAgo = 24; hoursAgo >= 0; hoursAgo--) {
+            const sampleTime = referenceTime - hoursAgo * 3600000;
+            const windowReadings = validReadings.filter(item => {
+                const timestamp = weatherReadingTimestamp(item);
+                return Number.isFinite(timestamp) &&
+                    timestamp >= sampleTime - 6 * 3600000 &&
+                    timestamp <= sampleTime + 300000;
+            });
+            const historicalScore = weatherChangeScore(windowReadings).score;
+            if (!Number.isFinite(historicalScore)) continue;
+            const x = ((24 - hoursAgo) / 24) * 100;
+            const y = 22 - (Math.max(0, Math.min(10, historicalScore)) / 10) * 18;
+            points.push(x.toFixed(2) + ',' + y.toFixed(2));
+        }
+    }
+
+    const line = points.join(' ');
+    graphLine.setAttribute('points', line);
+    graphArea.setAttribute('points', points.length >= 2 ? '0,23.5 ' + line + ' 100,23.5' : '');
+    const graphSvg = graphLine.closest('svg');
+    if (graphSvg) {
+        graphSvg.setAttribute('aria-label', points.length >= 2
+            ? 'WVI trend over the last 24 hours, based on ' + points.length + ' six-hour rolling scores'
+            : 'WVI trend unavailable: insufficient historical readings');
+    }
+    if (gauge) gauge.setAttribute('aria-label', score === null
+        ? 'Weather Volatility Index gauge unavailable'
+        : 'Weather Volatility Index ' + score.toFixed(1));
+}
+
 async function loadWeatherChange() {
     const scoreElement = document.getElementById('weatherChangeScore');
     const summaryElement = document.getElementById('weatherChangeSummary');
@@ -1070,6 +1180,8 @@ async function loadWeatherChange() {
                 usedRecentBackfillForTrend = true;
             }
         }
+
+        updateAtmosphericWvi(result, liveReadings, referenceTime);
 
         const latestTime = liveReadings.reduce((latest, item) => {
             const timestamp = weatherReadingTimestamp(item);
@@ -1229,6 +1341,7 @@ async function loadWeatherChange() {
             if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
         }
     } catch {
+        updateAtmosphericWvi(null, [], Date.now());
         scoreElement.textContent = '—';
         summaryElement.textContent = 'Weather Volatility Index (WVI) indicator unavailable.';
         const topStabilityLabel = document.getElementById('temperatureStabilityLabel');
