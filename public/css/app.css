@@ -457,6 +457,13 @@ button:disabled { opacity: .55; cursor: default; }
 .climate-bar-change.rise{color:#eab308}
 .climate-bar-change.fall{color:#eab308}
 .climate-bar-change.unavailable{color:var(--muted)}
+/* Air pressure stays green unless it falls by at least 0.8 hPa in an hour. */
+.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.active,
+.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.change{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-bar-change:not(.unavailable){color:#4fbd31}
+.climate-bar-air-pressure.pressure-drop-warning .climate-segment.active,
+.climate-bar-air-pressure.pressure-drop-warning .climate-segment.change{background:linear-gradient(180deg,#ffad55,#ed7b24);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.climate-bar-air-pressure.pressure-drop-warning .climate-bar-change{color:#ed7b24}
 @media(max-width:560px){
   .climate-bars{gap:15px;margin-top:14px}
   .climate-bar-row{grid-template-columns:minmax(0,1fr) 38px 48px;gap:6px}
