@@ -1909,6 +1909,12 @@ body.gaugeiq-menu-open{overflow:hidden}
   text-align:center;
 }
 @media(max-width:760px){
+  .wind-hud-speed-history-content{
+    grid-template-columns:minmax(0,1fr) minmax(90px,112px);
+    gap:8px;
+  }
+  .wind-hud-speed-history-gauge{grid-column:2;grid-row:1}
+  .wind-hud-speed-history-graph{grid-column:1;grid-row:1}
   .wind-hud-speed-history-gauge svg{height:40px}
   .wind-hud-speed-history-graph .climate-bar-sparkline,
   .wind-hud-speed-history-graph .climate-bar-sparkline-unavailable{
@@ -1933,7 +1939,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 @media(max-width:420px){
   .wind-hud-speed-history{padding:9px 9px 7px}
-  .wind-hud-speed-history-content{grid-template-columns:minmax(96px,.8fr) minmax(0,1.2fr);gap:8px}
+  .wind-hud-speed-history-content{grid-template-columns:minmax(0,1fr) minmax(82px,100px);gap:7px}
   .wind-hud-speed-history-gauge svg{height:38px}
   .wind-hud-speed-history-graph{min-height:60px}
   .wind-hud-speed-history-graph .climate-bar-sparkline,
