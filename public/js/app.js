@@ -1326,7 +1326,24 @@ async function loadWeatherChange() {
                         description = '<strong>Wind direction</strong>: <span class="weather-change-direction-arrow" aria-label="direction shifted">↔</span> shifted by ' +
                             Math.round(shift) + '°';
                     } else {
-                        description = '<strong>' + component.label + '</strong>: ' + component.evidence;
+                        const evidence = String(component.evidence || '');
+                        const movementMatch = evidence.match(/^cumulative(?: shortest-angle| severity-category)? movement ([\d.]+)(.*?)(?: \(six-hour equivalent ([\d.]+)(.*?)\))?$/i);
+                        const gapMatch = evidence.match(/^cumulative gap movement ([\d.]+)(.*)$/i);
+                        const match = movementMatch || gapMatch;
+                        if (match) {
+                            const cumulative = match[1] + (match[2] || '');
+                            const equivalent = movementMatch && movementMatch[3]
+                                ? movementMatch[3] + (movementMatch[4] || '')
+                                : '—';
+                            const levelClass = Number(component.severity) >= 0.5 ? 'orange' : 'blue';
+                            return '<div class="weather-change-reason weather-change-detail">' +
+                                '<strong class="weather-change-detail-title">' + component.label + '</strong>' +
+                                '<div class="weather-change-detail-values">' +
+                                '<span class="weather-change-detail-cumulative ' + levelClass + '"><small>Cumulative</small><b>' + cumulative + '</b></span>' +
+                                '<span class="weather-change-detail-equivalent"><small>6-hour equivalent</small><b>' + equivalent + '</b></span>' +
+                                '</div></div>';
+                        }
+                        description = '<strong>' + component.label + '</strong>: ' + evidence;
                     }
 
                     return description ? '<div class="weather-change-reason"><span>' + description + '</span></div>' : '';
