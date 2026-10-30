@@ -1094,12 +1094,11 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const gaugeEndpoint = document.getElementById('climateWviEndpoint');
     const graphLine = document.getElementById('climateWviLine');
     const graphArea = document.getElementById('climateWviArea');
-    const graphDots = document.getElementById('climateWviDots');
     const graphGuide = document.getElementById('climateWviGuide');
     const graphStart = document.getElementById('climateWviStart');
     const graphEnd = document.getElementById('climateWviEnd');
-    const gauge = document.querySelector('.climate-bar-wvi .climate-wvi-gauge');
-    if (!valueElement || !gaugeValue || !needle || !gaugeEndpoint || !graphLine || !graphArea || !graphDots || !graphGuide || !graphStart || !graphEnd) return;
+    const gauge = document.querySelector('.climate-bar-wvi .climate-mobile-gauge');
+    if (!valueElement || !gaugeValue || !needle || !gaugeEndpoint || !graphLine || !graphArea || !graphGuide || !graphStart || !graphEnd) return;
 
     const score = Number.isFinite(result?.score) ? Math.max(0, Math.min(10, result.score)) : null;
     valueElement.textContent = score === null ? '—' : score.toFixed(1);
@@ -1156,10 +1155,6 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const line = points.join(' ');
     graphLine.setAttribute('points', line);
     graphArea.setAttribute('points', points.length >= 2 ? '0,23.5 ' + line + ' 100,23.5' : '');
-    graphDots.innerHTML = points.map(point => {
-        const [x, y] = point.split(',');
-        return '<circle cx="' + x + '" cy="' + y + '" r="0.75"></circle>';
-    }).join('');
     if (points.length) {
         const [startX, startY] = points[0].split(',');
         const [endX, endY] = points[points.length - 1].split(',');
