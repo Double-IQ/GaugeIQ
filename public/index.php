@@ -550,7 +550,7 @@ if ($current && !empty($current['observed_at'])) {
                 $climateHistoryStart = date('Y-m-d\\TH:i:s', $climateHistoryEnd - 86400);
                 $climateHistoryEndText = date('Y-m-d\\TH:i:s', $climateHistoryEnd);
                 $climateHistoryStmt = $pdo->prepare(
-                    "SELECT pressure_hpa, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                    "SELECT pressure_hpa, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
@@ -709,6 +709,42 @@ if ($current && !empty($current['observed_at'])) {
             $radians = deg2rad($angle);
             return [50.0 + cos($radians) * $radius, 50.0 + sin($radians) * $radius];
         };
+
+        // Match the Atmospheric Monitor's semicircular gauge and use the same
+        // stored 24-hour readings for the wind-speed trend graph.
+        $windSpeedRatio = $current ? max(0.0, min(1.0, $windSpeed / 60.0)) : 0.0;
+        $windSpeedGaugeAngle = M_PI - (M_PI * $windSpeedRatio);
+        [$windSpeedGaugeEndX, $windSpeedGaugeEndY] = $windGaugePoint(rad2deg($windSpeedGaugeAngle), 46.0);
+        [$windSpeedNeedleEndX, $windSpeedNeedleEndY] = $windGaugePoint(rad2deg($windSpeedGaugeAngle), 36.0);
+        $windNeedleHalfWidth = 3.9;
+        $windNeedlePerpX = $windNeedleHalfWidth * sin($windSpeedGaugeAngle);
+        $windNeedlePerpY = $windNeedleHalfWidth * cos($windSpeedGaugeAngle);
+        $windSpeedNeedlePath = 'M ' . number_format(50 + $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 + $windNeedlePerpY, 2, '.', '') .
+            ' L ' . number_format($windSpeedNeedleEndX, 2, '.', '') . ' ' . number_format($windSpeedNeedleEndY, 2, '.', '') .
+            ' L ' . number_format(50 - $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 - $windNeedlePerpY, 2, '.', '') . ' Z';
+        $windSpeedGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($windSpeedGaugeEndX, 2, '.', '') . ' ' . number_format($windSpeedGaugeEndY, 2, '.', '');
+
+        $windSpeedTrendValues = [];
+        foreach ($climateHistory as $windHistoryRow) {
+            if (is_numeric($windHistoryRow['wind_speed_kmh'] ?? null)) {
+                $windSpeedTrendValues[] = (float)$windHistoryRow['wind_speed_kmh'];
+            }
+        }
+        $windSpeedTrendCount = count($windSpeedTrendValues);
+        $windSpeedTrendPoints = [];
+        if ($windSpeedTrendCount >= 2) {
+            $windSpeedTrendMin = min($windSpeedTrendValues);
+            $windSpeedTrendRange = max(0.0001, max($windSpeedTrendValues) - $windSpeedTrendMin);
+            foreach ($windSpeedTrendValues as $windPointIndex => $windPointValue) {
+                $windX = $windPointIndex / ($windSpeedTrendCount - 1) * 100;
+                $windY = 22 - (($windPointValue - $windSpeedTrendMin) / $windSpeedTrendRange * 18);
+                $windSpeedTrendPoints[] = number_format($windX, 2, '.', '') . ',' . number_format($windY, 2, '.', '');
+            }
+        }
+        $windSpeedTrendLine = implode(' ', $windSpeedTrendPoints);
+        $windSpeedTrendArea = $windSpeedTrendCount >= 2 ? '0,23.5 ' . $windSpeedTrendLine . ' 100,23.5' : '';
+        $windSpeedTrendStart = $windSpeedTrendCount >= 2 ? explode(',', $windSpeedTrendPoints[0]) : null;
+        $windSpeedTrendEnd = $windSpeedTrendCount >= 2 ? explode(',', end($windSpeedTrendPoints)) : null;
         ?>
         <article class="card metric-card wind-gauge-card wind-hud-card">
             <div class="wind-hud-heading">
@@ -789,6 +825,39 @@ if ($current && !empty($current['observed_at'])) {
                         <text x="10" y="27">0</text><text x="85" y="27">15</text><text x="160" y="27">30</text><text x="235" y="27">45</text><text x="310" y="27">60</text>
                     </g>
                 </svg>
+            </div>
+            <div class="wind-hud-speed-history" aria-label="Wind speed gauge and 24-hour trend">
+                <div class="wind-hud-speed-history-heading">
+                    <span>WIND SPEED</span>
+                    <span>24-HOUR TREND</span>
+                </div>
+                <div class="wind-hud-speed-history-content">
+                    <div class="wind-hud-speed-history-gauge">
+                        <svg viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
+                            <path class="wind-hud-speed-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                            <?php if ($current): ?>
+                                <path class="wind-hud-speed-gauge-value" d="<?= htmlspecialchars($windSpeedGaugePath, ENT_QUOTES) ?>"></path>
+                                <path class="wind-hud-speed-gauge-needle" d="<?= htmlspecialchars($windSpeedNeedlePath, ENT_QUOTES) ?>"></path>
+                                <circle class="wind-hud-speed-gauge-endpoint" cx="<?= number_format($windSpeedGaugeEndX, 2, '.', '') ?>" cy="<?= number_format($windSpeedGaugeEndY, 2, '.', '') ?>" r="2"></circle>
+                                <circle class="wind-hud-speed-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                            <?php endif; ?>
+                        </svg>
+                    </div>
+                    <div class="wind-hud-speed-history-graph">
+                        <?php if ($windSpeedTrendCount >= 2): ?>
+                            <svg viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
+                                <polygon class="wind-hud-speed-graph-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
+                                <line class="wind-hud-speed-graph-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                                <line class="wind-hud-speed-graph-current-guide" x1="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y2="23.5"></line>
+                                <polyline points="<?= htmlspecialchars($windSpeedTrendLine, ENT_QUOTES) ?>"></polyline>
+                                <circle class="wind-hud-speed-graph-startpoint" cx="<?= htmlspecialchars($windSpeedTrendStart[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendStart[1], ENT_QUOTES) ?>" r="1.2"></circle>
+                                <circle class="wind-hud-speed-graph-endpoint" cx="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" r="2"></circle>
+                            </svg>
+                        <?php else: ?>
+                            <div class="wind-hud-speed-graph-unavailable">24-hour wind history unavailable</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
             <p class="wind-hud-help">The orange dot marks where wind comes from; the arrow points where it is going. Use the phone compass to keep the direction aligned as you turn your phone.</p>
             <div class="wind-compass-controls">
