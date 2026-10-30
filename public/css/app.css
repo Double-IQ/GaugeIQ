@@ -2297,3 +2297,42 @@ body.gaugeiq-menu-open{overflow:hidden}
   .climate-gauge-card .climate-bar-wvi{grid-template-columns:minmax(0,1fr) minmax(82px,100px)!important}
   .climate-graph-selector>summary{padding:6px 8px}
 }
+
+
+/* WVI card: score and ten-step level sit beneath the description. */
+.weather-change-card .weather-change-heading{display:block;align-items:initial}
+.weather-change-card .weather-change-heading>div:first-child{width:100%;text-align:left}
+.weather-change-card .weather-change-metrics{
+  display:flex;align-items:center;gap:20px;width:100%;margin-top:16px
+}
+.weather-change-card .weather-change-score{
+  flex:0 0 78px;width:78px;height:78px;font-size:30px
+}
+.weather-change-level{
+  flex:1 1 auto;min-width:0;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;
+  align-items:center
+}
+.weather-change-level span{
+  display:block;height:13px;border-radius:2px;background:rgba(130,159,193,.2);
+  border:1px solid rgba(130,159,193,.14);transition:background .25s ease,border-color .25s ease
+}
+.weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
+.weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
+.weather-change-level[data-level="low"] span.is-active{background:#ef4444;border-color:#ef4444}
+.weather-change-level[data-level="unavailable"] span{background:rgba(130,159,193,.12)}
+.weather-change-card .weather-change-summary{
+  margin:0 0 4px;padding:0 0 10px;border-bottom:1px solid var(--border);
+  font-size:14px;line-height:1.45;text-align:left
+}
+.weather-change-card .weather-change-summary-change{font-weight:600}
+.weather-change-card .weather-change-reasons{margin-top:12px}
+.weather-change-card .weather-change-reasons .weather-change-reason:first-of-type{margin-top:2px}
+@media(max-width:560px){
+  .weather-change-card .section-heading{display:block;grid-template-columns:none;grid-template-areas:none;justify-items:stretch;row-gap:0}
+  .weather-change-card .section-heading>div:first-child{grid-area:auto;width:100%;text-align:left}
+  .weather-change-card .weather-change-metrics{display:flex;flex-direction:row;align-items:center;gap:14px;margin-top:14px}
+  .weather-change-card .weather-change-score{grid-area:auto;justify-self:auto;flex-basis:64px;width:64px;height:64px;font-size:26px}
+  .weather-change-card .weather-change-level{grid-area:auto;flex:1 1 auto;gap:3px}
+  .weather-change-level span{height:11px}
+  .weather-change-card .weather-change-reasons-toggle.info-icon-button{display:flex;width:max-content;margin:14px 0 0 auto;justify-content:center}
+}
