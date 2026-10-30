@@ -1841,3 +1841,18 @@ body.gaugeiq-menu-open{overflow:hidden}
   .wind-hud-speed-history-graph{min-height:60px}
   .wind-hud-speed-history-graph svg{height:56px}
 }
+
+/* Atmospheric Monitor gauge graduations: fine minor marks and stronger quarter marks. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-mobile-gauge-ticks line{
+    fill:none;
+    stroke:rgba(156,182,213,.72);
+    stroke-width:.8;
+    stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+  }
+  .climate-gauge-card .climate-mobile-gauge-ticks line.major{
+    stroke:rgba(190,211,235,.88);
+    stroke-width:1.15;
+  }
+}
