@@ -1869,3 +1869,34 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Atmospheric Monitor: lower only the history sparklines. */
 .climate-gauge-card .climate-bar-sparkline{transform:translateY(5px)}
+
+/* Atmospheric Monitor: swap the mobile gauge and history graph columns. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-columns:minmax(0,1fr) minmax(90px,112px) 42px;
+  }
+  .climate-gauge-card .climate-bar-label{
+    grid-column:2;
+    grid-row:1;
+    align-self:end;
+  }
+  .climate-gauge-card .climate-mobile-gauge{
+    grid-column:2;
+    grid-row:3;
+  }
+  .climate-gauge-card .climate-bar-value{
+    grid-column:2;
+    grid-row:4;
+    text-align:center;
+  }
+  .climate-gauge-card .climate-bar-sparkline,
+  .climate-gauge-card .climate-bar-sparkline-unavailable{
+    grid-column:1;
+    grid-row:1 / span 4;
+  }
+}
+@media(max-width:420px){
+  .climate-gauge-card .climate-bar-row{
+    grid-template-columns:minmax(0,1fr) minmax(82px,100px) 38px;
+  }
+}
