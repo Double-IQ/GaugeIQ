@@ -1042,22 +1042,27 @@ if ($current && !empty($current['observed_at'])) {
     </section>
 
     <section class="card history-card" data-history-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>">
-        <div class="section-heading">
-            <div>
-                <h2 id="historyTitle">Last 24 hours</h2>
-                <p id="historyStatus" class="muted">Loading history…</p>
+        <button type="button" class="history-toggle" id="historyToggle" aria-expanded="false" aria-controls="historyContent">
+            <span class="section-heading">
+                <span>
+                    <span class="history-title" id="historyTitle">Last 24 hours</span>
+                    <span id="historyStatus" class="muted">Press to view historical graphs</span>
+                </span>
+                <span class="history-toggle-indicator" aria-hidden="true">+</span>
+            </span>
+        </button>
+        <div id="historyContent" hidden>
+            <div class="history-range" role="group" aria-label="History range">
+                <button type="button" class="history-range-button" data-hours="6">6h</button>
+                <button type="button" class="history-range-button active" data-hours="24">24h</button>
+                <button type="button" class="history-range-button" data-hours="48">48h</button>
+                <button type="button" class="history-range-button" data-hours="168">7d</button>
+                <button type="button" class="history-range-button" data-hours="720">30d</button>
             </div>
+            <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
+            <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
+            <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
         </div>
-        <div class="history-range" role="group" aria-label="History range">
-            <button type="button" class="history-range-button" data-hours="6">6h</button>
-            <button type="button" class="history-range-button active" data-hours="24">24h</button>
-            <button type="button" class="history-range-button" data-hours="48">48h</button>
-            <button type="button" class="history-range-button" data-hours="168">7d</button>
-            <button type="button" class="history-range-button" data-hours="720">30d</button>
-        </div>
-        <div class="chart-block"><h3>Pressure</h3><canvas id="pressureChart" height="220"></canvas></div>
-        <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
-        <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
     </section>
 
 
