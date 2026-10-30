@@ -2133,8 +2133,16 @@ body.gaugeiq-menu-open{overflow:hidden}
   margin-bottom:1px;
 }
 .wind-hud-speed-readouts--graph{
-  justify-content:flex-end;
+  justify-content:space-between;
   margin-bottom:1px;
+}
+.wind-hud-graph-heading{
+  color:#b8cce4;
+  font-size:9px;
+  font-weight:750;
+  letter-spacing:.08em;
+  line-height:1.2;
+  white-space:nowrap;
 }
 .wind-hud-speed-readouts .wind-hud-speed-value{
   color:#edf6ff;
