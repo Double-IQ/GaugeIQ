@@ -859,7 +859,7 @@ function weatherGradientScore(valid) {
     };
 
     const pressure = movement('pressure');
-    if (pressure) add('pressure', 'Air pressure', weatherSeverity(pressure.distance / pressure.hours, weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)), 'cumulative movement ' + pressure.distance.toFixed(1) + ' hPa');
+    if (pressure) add('pressure', 'Air pressure', weatherSeverity(pressure.distance / pressure.hours, weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)), 'cumulative movement ' + pressure.distance.toFixed(1) + ' hPa (six-hour equivalent ' + pressure.scaled.toFixed(1) + ' hPa)');
     const definitions = [
         ['temperature', 'Temperature', 'temperature', 1, 3, '°C'],
         ['humidity', 'Humidity', 'humidity', 4, 12, ' percentage points'],
@@ -881,7 +881,7 @@ function weatherGradientScore(valid) {
         let distance = 0;
         for (let i = 1; i < directions.length; i++) distance += weatherCircularDifference(directions[i - 1].direction, directions[i].direction);
         const hours = (directions[directions.length - 1].time - directions[0].time) / 3600000;
-        if (hours > 0) add('windDirection', 'Wind direction', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_wind_direction', 20), weatherFormula('stability_max_wind_direction', 90)), 'cumulative shortest-angle movement ' + Math.round(distance) + '°');
+        if (hours > 0) add('windDirection', 'Wind direction', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_wind_direction', 20), weatherFormula('stability_max_wind_direction', 90)), 'cumulative shortest-angle movement ' + Math.round(distance) + '° (six-hour equivalent ' + (distance * 6 / hours).toFixed(1) + '°)');
     }
 
     const spreads = valid.filter(row => Number.isFinite(row.temperature) && Number.isFinite(row.dewPoint))
@@ -890,7 +890,7 @@ function weatherGradientScore(valid) {
         let distance = 0;
         for (let i = 1; i < spreads.length; i++) distance += Math.abs(spreads[i].value - spreads[i - 1].value);
         const hours = (spreads[spreads.length - 1].time - spreads[0].time) / 3600000;
-        if (hours > 0) add('dewPointSpread', 'Temperature/dew-point gap', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_dew_point_spread', 1), weatherFormula('stability_max_dew_point_spread', 3)), 'cumulative gap movement ' + distance.toFixed(1) + '°C');
+        if (hours > 0) add('dewPointSpread', 'Temperature/dew-point gap', weatherSeverity(distance * 6 / hours, weatherFormula('stability_trigger_dew_point_spread', 1), weatherFormula('stability_max_dew_point_spread', 3)), 'cumulative gap movement ' + distance.toFixed(1) + '°C (six-hour equivalent ' + (distance * 6 / hours).toFixed(1) + '°C)');
     }
 
     const codes = valid.filter(row => Number.isFinite(row.weatherCode));
@@ -900,7 +900,7 @@ function weatherGradientScore(valid) {
         const hours = (codes[codes.length - 1].time - codes[0].time) / 3600000;
         if (hours > 0) {
             const scaled = distance * 6 / hours;
-            add('weatherCode', 'Reported weather condition', distance > 0 ? Math.max(0.25, weatherSeverity(scaled, weatherFormula('stability_trigger_weather_code', 1), weatherFormula('stability_max_weather_code', 5))) : 0, 'cumulative severity-category movement ' + distance.toFixed(1));
+            add('weatherCode', 'Reported weather condition', distance > 0 ? Math.max(0.25, weatherSeverity(scaled, weatherFormula('stability_trigger_weather_code', 1), weatherFormula('stability_max_weather_code', 5))) : 0, 'cumulative severity-category movement ' + distance.toFixed(1) + ' (six-hour equivalent ' + scaled.toFixed(1) + ')');
         }
     }
 
