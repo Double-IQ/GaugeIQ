@@ -918,7 +918,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=precipitation&amp;lat=<?= rawurlencode((string)($config['pressure']['latitude'] ?? -33.0153)) ?>&amp;lon=<?= rawurlencode((string)($config['pressure']['longitude'] ?? 27.9116)) ?>" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
+    <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=precipitation" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
