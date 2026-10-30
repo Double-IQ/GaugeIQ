@@ -890,8 +890,10 @@ if ($current && !empty($current['observed_at'])) {
                                 <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                             <?php endif; ?>
                         </svg>
-                        <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
-                        <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
+                        <div class="wind-hud-speed-readouts">
+                            <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
+                            <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
+                        </div>
                     </div>
                     <div class="wind-hud-speed-history-graph">
                         <?php if ($windSpeedTrendCount >= 2): ?>
