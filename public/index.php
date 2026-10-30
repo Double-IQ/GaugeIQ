@@ -803,16 +803,6 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
                 <button type="button" class="wind-hud-compass-switch" id="windCompassButton" aria-pressed="false">Enable Compass</button>
             </div>
-            <div class="wind-hud-readouts">
-                <div class="wind-hud-speed">
-                    <span class="wind-hud-label">WIND SPEED</span>
-                    <div><strong class="wind-speed-readout"><?= $current ? number_format($windSpeed, 1) : '—' ?></strong><small>km/h</small></div>
-                </div>
-                <div class="wind-hud-bearing">
-                    <span class="wind-hud-label">BEARING</span>
-                    <strong><?= $current ? number_format($windDegrees, 0) . '°' : '—' ?> <span><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></span></strong>
-                </div>
-            </div>
             <div class="wind-hud-vector" role="img" aria-label="<?= $current ? htmlspecialchars('Wind from ' . $windDirection . ' at ' . number_format($windDegrees, 0) . ' degrees, travelling towards ' . PressureService::directionLabel($windToDegrees) . ' at ' . number_format($windToDegrees, 0) . ' degrees', ENT_QUOTES) : 'Wind direction unavailable' ?>">
                 <svg viewBox="0 0 340 180" aria-hidden="true" focusable="false">
                     <defs>
