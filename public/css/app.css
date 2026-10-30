@@ -2446,3 +2446,63 @@ body.gaugeiq-menu-open{overflow:hidden}
   .weather-change-detail-values{gap:7px}
   .weather-change-detail-values b{font-size:12px}
 }
+
+
+/* WVI uses the shared compact instrument geometry and tick treatment. */
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge{
+  grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:stretch;
+  justify-content:flex-start;gap:2px;min-width:0;width:100%;max-width:104px;justify-self:end
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-bar-value{
+  display:block;grid-column:auto;grid-row:auto;align-self:flex-end;margin:0;padding:0;
+  color:#f4f7ff;font-size:12px;line-height:1.1;text-align:right
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge{
+  display:block;width:100%;max-width:104px;height:40px;align-self:center;overflow:visible
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-track{
+  fill:none;stroke:rgba(156,182,213,.2);stroke-width:6;stroke-linecap:round
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-value{
+  fill:none;stroke:#35c4eb;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-ticks line{
+  fill:none;stroke:rgba(156,182,213,.72);stroke-width:.8;stroke-linecap:round;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-ticks line.major{
+  stroke:rgba(190,211,235,.88);stroke-width:1.15
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-needle{
+  fill:#35c4eb;stroke:none;filter:drop-shadow(0 0 1.5px rgba(53,196,235,.35))
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-endpoint{
+  fill:#ffc184;stroke:#07182b;stroke-width:1.25
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge-pivot{
+  fill:#35c4eb;stroke:#07182b;stroke-width:1.2
+}
+
+/* WVI trend uses the same dotted guide and endpoint treatment as the wind graph. */
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-area{
+  fill:rgba(255,193,132,.07);stroke:none
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-baseline{
+  stroke:rgba(156,182,213,.23);stroke-width:.55;stroke-dasharray:1.2 1.8;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-current-guide{
+  stroke:rgba(255,193,132,.42);stroke-width:.65;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-dots circle{
+  fill:#ffc184;stroke:#07182b;stroke-width:.55;vector-effect:non-scaling-stroke
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-startpoint{
+  fill:#9cb6d5;opacity:.9
+}
+.climate-gauge-card .climate-bar-wvi .climate-wvi-graph .climate-sparkline-endpoint{
+  fill:#ffc184;stroke:#07182b;stroke-width:.8;vector-effect:non-scaling-stroke
+}
+@media(max-width:760px){
+  .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge{max-width:96px;gap:2px}
+  .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-bar-value{font-size:11px}
+  .climate-gauge-card .climate-bar-wvi .climate-wvi-gauge .climate-mobile-gauge{height:36px}
+}
