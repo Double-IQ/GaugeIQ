@@ -870,16 +870,16 @@ if ($current && !empty($current['observed_at'])) {
                     </div>
                     <div class="wind-hud-speed-history-graph">
                         <?php if ($windSpeedTrendCount >= 2): ?>
-                            <svg viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
-                                <polygon class="wind-hud-speed-graph-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
-                                <line class="wind-hud-speed-graph-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
-                                <line class="wind-hud-speed-graph-current-guide" x1="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y2="23.5"></line>
+                            <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
+                                <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
+                                <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
+                                <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y2="23.5"></line>
                                 <polyline points="<?= htmlspecialchars($windSpeedTrendLine, ENT_QUOTES) ?>"></polyline>
-                                <circle class="wind-hud-speed-graph-startpoint" cx="<?= htmlspecialchars($windSpeedTrendStart[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendStart[1], ENT_QUOTES) ?>" r="1.2"></circle>
-                                <circle class="wind-hud-speed-graph-endpoint" cx="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" r="2"></circle>
+                                <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($windSpeedTrendStart[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendStart[1], ENT_QUOTES) ?>" r="1.2"></circle>
+                                <circle class="climate-sparkline-endpoint" cx="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" r="2"></circle>
                             </svg>
                         <?php else: ?>
-                            <div class="wind-hud-speed-graph-unavailable">24-hour wind history unavailable</div>
+                            <div class="climate-bar-sparkline-unavailable">24-hour wind history unavailable</div>
                         <?php endif; ?>
                     </div>
                 </div>
