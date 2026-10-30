@@ -1011,7 +1011,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
         </div>
         <details class="algorithm-details">
-            <summary>How Weather Volatility Index (WVI) is calculated</summary>
+            <summary>How the WVI is calculated</summary>
             <p>GaugeIQ compares the current six-hour change with up to <?= (int)$weatherFormulaValues['baseline_days'] ?> previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
         </details>
     </section>
