@@ -2566,3 +2566,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
 .weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
 .weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
+
+/* WVI More information: summary always precedes the detail cards. */
+.weather-change-card .weather-change-reasons>.weather-change-summary{order:-1;grid-row:1;grid-column:1/-1}
+.weather-change-card .weather-change-reasons>.weather-change-reason{order:0;grid-row:auto}
+.weather-change-card .weather-change-detail-cumulative b{color:var(--text)!important}
