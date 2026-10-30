@@ -661,7 +661,7 @@ if ($current && !empty($current['observed_at'])) {
                 $dewPointGapWarning = ($bar['historyKey'] ?? '') === 'dew_point_gap_c'
                     && (float)$bar['value'] <= 3.0;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= !empty($bar['historyKey']) ? ' climate-bar-' . htmlspecialchars(str_replace('_', '-', (string)$bar['historyKey']), ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>>
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
