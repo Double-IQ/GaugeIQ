@@ -1866,3 +1866,6 @@ body.gaugeiq-menu-open{overflow:hidden}
     transform:translateY(-5px);
   }
 }
+
+/* Atmospheric Monitor: lower only the history sparklines. */
+.climate-gauge-card .climate-bar-sparkline{transform:translateY(5px)}
