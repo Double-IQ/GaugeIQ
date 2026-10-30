@@ -731,7 +731,7 @@ if ($current && !empty($current['observed_at'])) {
 
         <?php
         $windSpeed = $current ? max(0.0, (float)$current['wind_speed_kmh']) : 0.0;
-$windSpeedChange1h = 0.0;
+$windSpeedChange1h = null;
 if ($current && !empty($current['observed_at'])) {
     try {
         $windObservedAt = new DateTimeImmutable((string)$current['observed_at']);
@@ -753,9 +753,16 @@ if ($current && !empty($current['observed_at'])) {
             $windSpeedChange1h = $windSpeed - (float)$windPreviousSpeed;
         }
     } catch (Throwable $e) {
-        $windSpeedChange1h = 0.0;
+        $windSpeedChange1h = null;
     }
 }
+        $windSpeedChangeDisplay = $windSpeedChange1h === null
+            ? '—'
+            : (round($windSpeedChange1h, 1) == 0.0 ? '-' : (($windSpeedChange1h > 0 ? '+' : '') . number_format($windSpeedChange1h, 1)));
+        $windSpeedChangeClass = $windSpeedChange1h === null
+            ? 'unavailable'
+            : ($windSpeedChange1h > 0 ? 'rise' : ($windSpeedChange1h < 0 ? 'fall' : 'steady'));
+        $windSpeedDisplay = $current ? number_format($windSpeed, 1) . ' km/h' : '—';
         $windDegrees = $current ? fmod((float)$current['wind_direction_degrees'] + 360.0, 360.0) : 0.0;
         $windDirection = $current ? PressureService::directionLabel($windDegrees) : '—';
         $windToDegrees = fmod($windDegrees + 180.0, 360.0);
@@ -883,6 +890,8 @@ if ($current && !empty($current['observed_at'])) {
                                 <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
                             <?php endif; ?>
                         </svg>
+                        <strong class="climate-bar-value wind-hud-speed-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
+                        <strong class="climate-bar-change wind-hud-speed-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
                     </div>
                     <div class="wind-hud-speed-history-graph">
                         <?php if ($windSpeedTrendCount >= 2): ?>
