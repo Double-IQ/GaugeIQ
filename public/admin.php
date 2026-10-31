@@ -12,6 +12,8 @@ migrateDatabase($pdo);
 AdminAuth::requireLogin();
 $csrf = AdminAuth::csrfToken();
 
+$updated = trim((string)($_GET['updated'] ?? ''));
+$updateError = isset($_GET['update_error']);
 $notice = '';
 $errors = [];
 
@@ -53,10 +55,7 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
     $stmt->execute([$key, $value]);
 }
 
-$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
-
-$allRules = $rules->all();
-$enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
+$enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
 $monitorCronMinutes = 30;
