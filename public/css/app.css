@@ -2693,3 +2693,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     font-size:26px;
   }
 }
+
+/* Wind speed change: falling is blue, rising is orange. */
+.wind-speed-instrument-row .climate-bar-change.fall{color:#35a7ff!important}
+.wind-speed-instrument-row .climate-bar-change.rise{color:#ff9b52!important}
