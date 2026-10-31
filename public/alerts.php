@@ -525,13 +525,15 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
 </details>
 
-<section class="alerts-list-section">
-    <div class="section-heading">
-        <div>
-            <h2>Saved alerts</h2>
-            <p class="muted"><?= count($allRules) ?> configured rule<?= count($allRules) === 1 ? '' : 's' ?>.</p>
-        </div>
-    </div>
+<details class="alerts-list-section card daily-forecast-alert-card">
+    <summary class="daily-forecast-summary" aria-controls="savedAlertsContent">
+        <span class="daily-forecast-summary-title">
+            <strong>Saved alerts</strong>
+            <small><?= count($allRules) ?> configured rule<?= count($allRules) === 1 ? '' : 's' ?></small>
+        </span>
+        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div id="savedAlertsContent" class="daily-forecast-content">
     <?php if (!$allRules): ?>
         <div class="card alert-empty"><div class="alert-empty-icon">✓</div><h3>No alerts configured</h3><p class="muted">Create your first weather alert above. GaugeIQ will evaluate it during the next scheduled check.</p></div>
     <?php endif; ?>
@@ -584,7 +586,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </form>
         </article>
     <?php endforeach; ?>
-</section>
+
+    </div>
+</details>
 
 
 </main>
