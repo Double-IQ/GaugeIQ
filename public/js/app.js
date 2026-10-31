@@ -1272,6 +1272,42 @@ async function loadWeatherChange() {
         const trendLabel = document.getElementById('conditionsTrendLabel');
         const trendReasons = document.getElementById('conditionsTrendReasonItems');
 
+        if (trend.score === null) {
+            if (trendSummary) trendSummary.textContent = 'Not enough recent data to establish a directional trend yet.';
+            if (trendLabel) {
+                trendLabel.textContent = 'Gathering readings…';
+                trendLabel.dataset.trend = 'unavailable';
+            }
+            if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
+            if (trendIcon) trendIcon.textContent = '→';
+            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
+        } else {
+            if (trendIcon) {
+                trendIcon.textContent = trend.arrow;
+                trendIcon.dataset.trend = trend.label.toLowerCase();
+                trendIcon.setAttribute('aria-label', trend.label);
+            }
+            if (trendLabel) {
+                trendLabel.textContent = trend.label;
+                trendLabel.dataset.trend = trend.label.toLowerCase();
+            }
+            if (trendSummary) trendSummary.textContent = trend.explanation + (usedRecentBackfillForTrend
+                ? ' Temporary recent hourly model estimates were used because live readings were insufficient.'
+                : '');
+            if (trendReasons) {
+                trendReasons.innerHTML = trend.reasons.length
+                    ? trend.reasons.map(reason => {
+                        const explanation = String(reason.explanation || '');
+                        const repeatsLabel = explanation.toLowerCase().startsWith(reason.label.toLowerCase() + ' ');
+                        const detail = repeatsLabel ? explanation.slice(reason.label.length).trimStart() : explanation;
+                        const separator = repeatsLabel ? ' ' : ': ';
+                        return '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong>' + separator + detail + '</span></div>';
+                    }).join('')
+                    : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
+            }
+            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
+        }
+
         if (result.score === null) {
             scoreElement.textContent = '—';
             updateWeatherChangeLevel(null, 'unavailable');
@@ -1392,41 +1428,7 @@ async function loadWeatherChange() {
             document.getElementById('temperatureStabilitySummary')?.classList.toggle('warning', warningActive);
         }
 
-        if (trend.score === null) {
-            if (trendSummary) trendSummary.textContent = 'Not enough recent data to establish a directional trend yet.';
-            if (trendLabel) {
-                trendLabel.textContent = 'Gathering readings…';
-                trendLabel.dataset.trend = 'unavailable';
-            }
-            if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
-            if (trendIcon) trendIcon.textContent = '→';
-            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
-        } else {
-            if (trendIcon) {
-                trendIcon.textContent = trend.arrow;
-                trendIcon.dataset.trend = trend.label.toLowerCase();
-                trendIcon.setAttribute('aria-label', trend.label);
-            }
-            if (trendLabel) {
-                trendLabel.textContent = trend.label;
-                trendLabel.dataset.trend = trend.label.toLowerCase();
-            }
-            if (trendSummary) trendSummary.textContent = trend.explanation + (usedRecentBackfillForTrend
-                ? ' Temporary recent hourly model estimates were used because live readings were insufficient.'
-                : '');
-            if (trendReasons) {
-                trendReasons.innerHTML = trend.reasons.length
-                    ? trend.reasons.map(reason => {
-                        const explanation = String(reason.explanation || '');
-                        const repeatsLabel = explanation.toLowerCase().startsWith(reason.label.toLowerCase() + ' ');
-                        const detail = repeatsLabel ? explanation.slice(reason.label.length).trimStart() : explanation;
-                        const separator = repeatsLabel ? ' ' : ': ';
-                        return '<div class="weather-change-reason"><span><strong>' + reason.label + '</strong>' + separator + detail + '</span></div>';
-                    }).join('')
-                    : '<div class="weather-change-reason">No pressure, rain, wind, cloud or weather-code signal crossed the current trend thresholds.</div>';
-            }
-            if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status ' + trend.label.toLowerCase() + '">' + trend.arrow + ' ' + trend.label + '</b>';
-        }
+
     } catch {
         updateAtmosphericWvi(null, [], Date.now());
         scoreElement.textContent = '—';
