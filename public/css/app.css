@@ -3029,3 +3029,36 @@ body.gaugeiq-menu-open{overflow:hidden}
 .top-status-indicator.is-error{color:#ef4444;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.07)}
 .top-status-indicator.is-error .top-status-icon{color:#ef4444;opacity:1}
 .top-status-indicator.is-error .top-status-dash{background:#ef4444;opacity:1;box-shadow:0 0 7px rgba(239,68,68,.65)}
+
+
+/* Light mode status indicators: stronger contrast on the silver instrument theme. */
+:root[data-theme="light"] .top-status-indicator{
+  color:#526071;
+  background:linear-gradient(180deg,#f8fafc,#e1e5ea);
+  border-color:#b9c2cd;
+}
+:root[data-theme="light"] .top-status-indicator .top-status-icon{opacity:.9}
+:root[data-theme="light"] .top-status-indicator .top-status-dash{
+  background:#64748b;
+  opacity:.85;
+}
+:root[data-theme="light"] .top-status-indicator.is-on{
+  color:#3f6212;
+  background:linear-gradient(180deg,#f4f8eb,#e5edda);
+  border-color:#a3b985;
+}
+:root[data-theme="light"] .top-status-indicator.is-on .top-status-icon{color:#4d7c0f}
+:root[data-theme="light"] .top-status-indicator.is-on .top-status-dash{
+  background:#4d7c0f;
+  box-shadow:0 0 4px rgba(77,124,15,.35);
+}
+:root[data-theme="light"] .top-status-indicator.is-error{
+  color:#991b1b;
+  background:linear-gradient(180deg,#fff5f5,#f5e3e3);
+  border-color:#d6a3a3;
+}
+:root[data-theme="light"] .top-status-indicator.is-error .top-status-icon{color:#b91c1c}
+:root[data-theme="light"] .top-status-indicator.is-error .top-status-dash{
+  background:#b91c1c;
+  box-shadow:0 0 4px rgba(185,28,28,.3);
+}
