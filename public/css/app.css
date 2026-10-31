@@ -2580,3 +2580,10 @@ body.gaugeiq-menu-open{overflow:hidden}
   stroke:#07182b!important;
   stroke-width:1.2!important;
 }
+
+
+/* Centre the Conditions trend More information control. */
+.conditions-trend-card .weather-change-reasons-toggle{
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
