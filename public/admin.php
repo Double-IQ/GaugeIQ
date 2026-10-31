@@ -710,48 +710,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <a class="secondary button-link" href="./">Back to GaugeIQ</a>
 </section>
 
-<script>
-(() => {
-    const root = document.documentElement;
-    const select = document.getElementById('themeSelect');
-    const meta = document.querySelector('meta[name="theme-color"]');
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const readPreference = () => {
-        try { return localStorage.getItem('gaugeiq-theme') || 'system'; }
-        catch (_) { return 'system'; }
-    };
-    const savePreference = (theme) => {
-        try { localStorage.setItem('gaugeiq-theme', theme); } catch (_) {}
-    };
-    const applyTheme = (theme) => {
-        const dark = theme === 'dark' || (theme === 'system' && media.matches);
-        root.dataset.theme = theme === 'system' ? (media.matches ? 'dark' : 'light') : theme;
-        root.style.colorScheme = dark ? 'dark' : 'light';
-        root.style.setProperty('--text', dark ? '#f3f4f6' : '#26313f');
-        root.style.setProperty('--muted', dark ? '#9ca3af' : '#687586');
-        root.style.setProperty('--background', dark ? '#0b1120' : '#e7e9ed');
-        root.style.setProperty('--card', dark ? '#111827' : '#f5f6f8');
-        root.style.setProperty('--surface', dark ? '#1f2937' : '#e4e7eb');
-        root.style.setProperty('--border', dark ? '#374151' : '#cbd1d9');
-        root.style.setProperty('--accent', dark ? '#2563eb' : '#26313f');
-        if (meta) meta.setAttribute('content', dark ? '#0b1120' : '#e7e9ed');
-    };
-    const saved = readPreference();
-    if (select) {
-        select.value = saved;
-        select.addEventListener('change', () => {
-            const theme = ['system', 'light', 'dark'].includes(select.value) ? select.value : 'system';
-            savePreference(theme);
-            applyTheme(theme);
-        });
-    }
-    applyTheme(saved);
-    media.addEventListener?.('change', () => {
-        if (readPreference() === 'system') applyTheme('system');
-    });
-})();
-</script>
-<script src="js/admin.js" defer></script>
+
+<script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
 <script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
 <script>
