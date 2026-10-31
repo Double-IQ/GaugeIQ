@@ -3062,3 +3062,77 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:#b91c1c;
   box-shadow:0 0 4px rgba(185,28,28,.3);
 }
+
+
+/* GaugeIQ Light Mode — stronger silver contrast across the full interface.
+   Preserve all weather-signal colours; deepen only the neutral foundation. */
+:root[data-theme="light"]{
+  --text:#202b38;
+  --muted:#536171;
+  --background:#c9ced5;
+  --card:#e0e4e9;
+  --surface:#cfd5dc;
+  --border:#aeb7c2;
+  --accent:#43566b;
+  --theme-color:#c9ced5;
+}
+:root[data-theme="light"] body,
+:root[data-theme="light"] #gaugeiq-loading-screen{
+  background:#c9ced5!important;
+  color:#202b38!important;
+}
+:root[data-theme="light"] .card{
+  color:#202b38;
+  background:linear-gradient(145deg,#e9ecf0 0%,#d5dae1 100%)!important;
+  border-color:#aeb7c2!important;
+  box-shadow:0 6px 18px rgba(32,43,56,.14),inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+:root[data-theme="light"] .pressure-card,
+:root[data-theme="light"] .climate-gauge-card,
+:root[data-theme="light"] .temperature-summary-card,
+:root[data-theme="light"] .wind-hud-card,
+:root[data-theme="light"] .satellite-map-card,
+:root[data-theme="light"] .weather-change-card.wind-hud-card,
+:root[data-theme="light"] .conditions-trend-card{
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.62),transparent 52%),linear-gradient(145deg,#e7ebef 0%,#d1d7df 58%,#c5ccd5 100%)!important;
+  border-color:#aab4c0!important;
+  box-shadow:0 8px 22px rgba(32,43,56,.16),inset 0 1px 0 rgba(255,255,255,.78)!important;
+}
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .card p,
+:root[data-theme="light"] .card label,
+:root[data-theme="light"] .card .muted,
+:root[data-theme="light"] .section-heading h2,
+:root[data-theme="light"] .section-heading p{
+  color:#202b38;
+}
+:root[data-theme="light"] .card .muted,
+:root[data-theme="light"] .card small,
+:root[data-theme="light"] .card .label{
+  color:#536171!important;
+}
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] .theme-select{
+  color:#202b38;
+  background:linear-gradient(180deg,#e5e9ee,#cfd5dc);
+  border-color:#aab4c0;
+}
+:root[data-theme="light"] .secondary,
+:root[data-theme="light"] .button-link,
+:root[data-theme="light"] button.secondary{
+  color:#26384b;
+  background:linear-gradient(180deg,#e7ebf0,#cbd2da);
+  border-color:#aab4c0;
+  box-shadow:0 2px 5px rgba(32,43,56,.12),inset 0 1px 0 rgba(255,255,255,.72);
+}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
+:root[data-theme="light"] .wind-hud-speed-history,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
+:root[data-theme="light"] .climate-graph-selector-menu,
+:root[data-theme="light"] .weather-change-reason,
+:root[data-theme="light"] .conditions-trend-score{
+  background:linear-gradient(145deg,#e1e5ea,#cbd2da)!important;
+  border-color:#b0bac5!important;
+}
