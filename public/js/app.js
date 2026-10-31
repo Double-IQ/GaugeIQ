@@ -1394,7 +1394,10 @@ async function loadWeatherChange() {
 
         if (trend.score === null) {
             if (trendSummary) trendSummary.textContent = 'Not enough recent data to establish a directional trend yet.';
-            if (trendLabel) trendLabel.textContent = 'Gathering readings…';
+            if (trendLabel) {
+                trendLabel.textContent = 'Gathering readings…';
+                trendLabel.dataset.trend = 'unavailable';
+            }
             if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
             if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
@@ -1404,7 +1407,10 @@ async function loadWeatherChange() {
                 trendIcon.dataset.trend = trend.label.toLowerCase();
                 trendIcon.setAttribute('aria-label', trend.label);
             }
-            if (trendLabel) trendLabel.textContent = trend.label;
+            if (trendLabel) {
+                trendLabel.textContent = trend.label;
+                trendLabel.dataset.trend = trend.label.toLowerCase();
+            }
             if (trendSummary) trendSummary.textContent = trend.explanation + (usedRecentBackfillForTrend
                 ? ' Temporary recent hourly model estimates were used because live readings were insufficient.'
                 : '');
@@ -1442,7 +1448,10 @@ async function loadWeatherChange() {
         const trendLabel = document.getElementById('conditionsTrendLabel');
         const trendReasons = document.getElementById('conditionsTrendReasonItems');
         if (trendSummary) trendSummary.textContent = 'Recent readings could not be loaded, so the trend cannot be assessed.';
-        if (trendLabel) trendLabel.textContent = 'Unavailable';
+        if (trendLabel) {
+            trendLabel.textContent = 'Unavailable';
+            trendLabel.dataset.trend = 'unavailable';
+        }
         if (trendReasons) trendReasons.innerHTML = '';
         const conditionsElement = document.getElementById('weatherConditions');
         if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status unavailable">→ Unavailable</b>';
