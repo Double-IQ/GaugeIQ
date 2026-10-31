@@ -3012,15 +3012,15 @@ body.gaugeiq-menu-open{overflow:hidden}
   box-sizing:border-box;
 }
 .top-status-icon{width:13px;height:13px;opacity:.7}
-.top-status-dash{width:9px;height:3px;border-radius:2px}
+.top-status-dash{width:6px;height:6px;border-radius:50%;background:#64748b;opacity:.55}
 .top-status-indicator.is-on{border-color:rgba(163,230,53,.28);background:rgba(163,230,53,.07)}
 .top-status-indicator.is-on .top-status-icon{color:#a3e635;opacity:1}
-.top-status-indicator.is-on .top-status-dash{width:10px}
+.top-status-indicator.is-on .top-status-dash{width:6px;height:6px;background:#a3e635;opacity:1;box-shadow:0 0 7px rgba(163,230,53,.7)}
 .top-status-indicator.is-off{background:var(--surface);border-color:var(--border)}
 @media(max-width:560px){
   .top-status-indicators{gap:4px}
   .top-status-indicator{gap:4px;padding:4px 5px;border-radius:6px}
   .top-status-icon{width:12px;height:12px}
-  .top-status-dash{width:8px;height:3px}
-  .top-status-indicator.is-on .top-status-dash{width:9px}
+  .top-status-dash{width:5px;height:5px}
+  .top-status-indicator.is-on .top-status-dash{width:5px;height:5px}
 }
