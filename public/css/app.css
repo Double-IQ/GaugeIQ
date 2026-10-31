@@ -2985,3 +2985,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .gaugeiq-loading-indicator{
   border-color:rgba(71,85,105,.22);border-top-color:#526174;
 }
+
+
+/* Compact notification and alert status dashes in the top weather card. */
+.top-status-indicators{display:flex;align-items:center;justify-content:center;gap:9px;flex:1 1 auto;min-width:0}
+.top-status-indicator{display:inline-flex;align-items:center;gap:4px;min-width:0;color:var(--muted);font-size:9px;font-weight:750;line-height:1;white-space:nowrap}
+.top-status-dash{display:inline-block;width:14px;height:3px;border-radius:2px;background:#64748b;opacity:.65;flex:0 0 auto}
+.top-status-indicator.is-on{color:var(--text)}
+.top-status-indicator.is-on .top-status-dash{background:#a3e635;opacity:1;box-shadow:0 0 6px rgba(163,230,53,.55)}
+.top-status-indicator.is-off .top-status-dash{background:#64748b;opacity:.55}
+@media(max-width:560px){
+  .top-status-indicators{gap:6px}
+  .top-status-indicator{gap:3px;font-size:8px}
+  .top-status-dash{width:11px;height:3px}
+}
