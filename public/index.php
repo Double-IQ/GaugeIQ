@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261031-status-lights">
+<link rel="stylesheet" href="css/app.css?v=20261031-cron-status-indicator">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -409,12 +409,15 @@ if ($current && !empty($current['observed_at'])) {
 
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
-                    <div class="top-status-indicators" aria-label="Notification and alert status">
+                    <div class="top-status-indicators" aria-label="Notification, weather alert and scheduled data update status">
                         <span class="top-status-indicator <?= $subscriptionCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>" title="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>">
                             <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="top-status-dash"></span>
                         </span>
                         <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>">
-                            <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 18.5h10.8a4.2 4.2 0 0 0 .4-8.4A6.4 6.4 0 0 0 5.4 8.8a4.9 4.9 0 0 0 1.1 9.7Z"/><path d="m13 12-2 3h3l-2 4"/></svg><span class="top-status-dash"></span>
+                            <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg><span class="top-status-dash"></span>
+                        </span>
+                        <span class="top-status-indicator <?= $lastMonitorAt === null ? 'is-off' : ($monitorHealthy ? 'is-on' : 'is-error') ?>" role="img" aria-label="Scheduled data update <?= $lastMonitorAt === null ? 'status unavailable' : ($monitorHealthy ? 'running normally' : 'overdue or failing') ?>" title="Scheduled data update: <?= $lastMonitorAt === null ? 'no successful run recorded' : ($monitorHealthy ? 'last successful run ' . date('d M, H:i', (int)strtotime($lastMonitorAt)) : 'last successful run ' . date('d M, H:i', (int)strtotime($lastMonitorAt)) . ($monitorError !== '' ? ' · latest run reported an error' : ' · overdue')) ?>">
+                            <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4.9 19a9 9 0 0 0 14.2-2M4 17v-5h5"/><path d="M19.1 5A9 9 0 0 0 4.9 7"/></svg><span class="top-status-dash"></span>
                         </span>
                     </div>
                     <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
