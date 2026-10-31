@@ -2727,3 +2727,36 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-endpoint,
 .climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
 .climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-segment.active{background:#ffc184!important}
+
+
+/* Air-pressure history graph and one-hour change follow the pressure direction. */
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-change:not(.unavailable){
+  color:#35c4eb!important;
+}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-change{
+  color:#ffc184!important;
+}
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-sparkline polyline{
+  stroke:#35c4eb!important;
+}
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-area{
+  fill:rgba(53,196,235,.09)!important;
+}
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-current-guide{
+  stroke:rgba(53,196,235,.48)!important;
+}
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-endpoint{
+  fill:#35c4eb!important;
+}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-sparkline polyline{
+  stroke:#ffc184!important;
+}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-area{
+  fill:rgba(255,193,132,.09)!important;
+}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-current-guide{
+  stroke:rgba(255,193,132,.48)!important;
+}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-endpoint{
+  fill:#ffc184!important;
+}
