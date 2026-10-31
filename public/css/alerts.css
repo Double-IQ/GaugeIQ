@@ -111,3 +111,11 @@
 .daily-forecast-time-row,
 .daily-forecast-time-row>div{min-width:0;max-width:100%}
 .daily-forecast-time-row input[type="time"]{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;-webkit-appearance:auto}
+
+/* Saved alert rules expand independently. */
+.alert-card{display:block}
+.alert-card>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;list-style:none}
+.alert-card>summary::-webkit-details-marker{display:none}
+.alert-card>summary::marker{content:""}
+.alert-card[open]>.alert-actions{margin-top:16px}
+.alert-card>.alert-edit-form{margin-top:16px}
