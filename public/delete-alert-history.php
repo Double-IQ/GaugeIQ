@@ -11,4 +11,4 @@ $db = new Database($config); migrateDatabase($db->pdo());
 $id=(int)($_POST['id']??0);
 if($id<1){http_response_code(400);exit('Invalid alert history record.');}
 $stmt=$db->pdo()->prepare('DELETE FROM gaugeiq_alert_events WHERE id = ?'); $stmt->execute([$id]);
-header('Location: ./?history_deleted=1'); exit;
+header('Location: ' . (($_GET['return_to'] ?? '') === 'admin' ? 'admin.php?history_deleted=1' : './?history_deleted=1')); exit;
