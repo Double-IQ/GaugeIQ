@@ -1023,7 +1023,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="conditions-trend-result">
             <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
-            <strong class="conditions-trend-label" id="conditionsTrendLabel">Analysing…</strong>
+            <strong class="conditions-trend-label" id="conditionsTrendLabel"></strong>
         </div>
         <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -1034,7 +1034,7 @@ if ($current && !empty($current['observed_at'])) {
             <span id="conditionsTrendReasonsButtonLabel">More information</span>
         </button>
         <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
-            <p class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</p>
+            <p class="conditions-trend-summary" id="conditionsTrendSummary"></p>
             <div id="conditionsTrendReasonItems"></div>
         </div>
         <details class="algorithm-details">
