@@ -2768,3 +2768,37 @@ body.gaugeiq-menu-open{overflow:hidden}
   stroke:none!important;
   filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
 }
+
+
+/* Dew point graph colour follows its current temperature band; its change
+   indicator follows direction independently. */
+.climate-gauge-card [data-climate-graph="dew_point_c"]:not(.dew-point-warm) .climate-bar-sparkline polyline{
+  stroke:#35c4eb!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"]:not(.dew-point-warm) .climate-sparkline-area{
+  fill:rgba(53,196,235,.09)!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"]:not(.dew-point-warm) .climate-sparkline-current-guide{
+  stroke:rgba(53,196,235,.48)!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"]:not(.dew-point-warm) .climate-sparkline-endpoint{
+  fill:#35c4eb!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"].dew-point-warm .climate-bar-sparkline polyline{
+  stroke:#ffc184!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"].dew-point-warm .climate-sparkline-area{
+  fill:rgba(255,193,132,.09)!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"].dew-point-warm .climate-sparkline-current-guide{
+  stroke:rgba(255,193,132,.48)!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"].dew-point-warm .climate-sparkline-endpoint{
+  fill:#ffc184!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.fall{
+  color:#35c4eb!important;
+}
+.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.rise{
+  color:#ffc184!important;
+}
