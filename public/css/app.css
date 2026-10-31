@@ -2572,3 +2572,11 @@ body.gaugeiq-menu-open{overflow:hidden}
 .conditions-trend-card .weather-change-reasons-toggle{display:flex;width:max-content;margin:10px 0 0}
 .conditions-trend-card .conditions-trend-reasons{margin-top:10px}
 .conditions-trend-card .conditions-trend-summary{margin:0 0 10px;font-size:13px;font-weight:600;line-height:1.5}
+
+
+/* WVI centre pivot is always lime green, independent of the score band. */
+.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge .climate-mobile-gauge-pivot{
+  fill:#a3e635!important;
+  stroke:#07182b!important;
+  stroke-width:1.2!important;
+}
