@@ -3001,3 +3001,26 @@ body.gaugeiq-menu-open{overflow:hidden}
   .top-status-icon{width:13px;height:13px}
   .top-status-dash{width:12px;height:3px}
 }
+
+
+/* Refined top-card status instruments: compact icon-and-signal capsules. */
+.top-status-indicators{flex:0 0 auto;justify-content:center;gap:6px}
+.top-status-indicator{
+  flex-direction:row;gap:5px;padding:5px 7px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--surface);color:var(--muted);
+  box-sizing:border-box;
+}
+.top-status-icon{width:13px;height:13px;opacity:.7}
+.top-status-dash{width:9px;height:3px;border-radius:2px}
+.top-status-indicator.is-on{border-color:rgba(163,230,53,.28);background:rgba(163,230,53,.07)}
+.top-status-indicator.is-on .top-status-icon{color:#a3e635;opacity:1}
+.top-status-indicator.is-on .top-status-dash{width:10px}
+.top-status-indicator.is-off{background:var(--surface);border-color:var(--border)}
+@media(max-width:560px){
+  .top-status-indicators{gap:4px}
+  .top-status-indicator{gap:4px;padding:4px 5px;border-radius:6px}
+  .top-status-icon{width:12px;height:12px}
+  .top-status-dash{width:8px;height:3px}
+  .top-status-indicator.is-on .top-status-dash{width:9px}
+}
