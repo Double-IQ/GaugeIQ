@@ -102,13 +102,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <?php if ($notice): ?><div class="notice"><?= h($notice) ?></div><?php endif; ?>
 <?php if ($errors): ?><div class="error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
 
-<section class="card location-history-link-card">
-    <div class="section-heading">
-        <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
-        <a class="secondary button-link" href="location-history.php">Open location &amp; history</a>
-    </div>
-</section>
-
 <section class="card monitoring-card" aria-labelledby="monitoringTitle">
     <div class="section-heading">
         <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
@@ -120,6 +113,13 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
     </div>
     <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
+</section>
+
+<section class="card location-history-link-card">
+    <div class="section-heading">
+        <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
+        <a class="secondary button-link" href="location-history.php">Open location &amp; history</a>
+    </div>
 </section>
 
     <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
