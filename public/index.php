@@ -1101,32 +1101,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
-        <div class="section-heading">
-            <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
-            <a class="history-link" href="login.php">Manage alerts in Admin</a>
-        </div>
-        <?php if (!$recentAlerts): ?>
-            <p class="muted empty-history">No alerts have been triggered yet.</p>
-        <?php else: ?>
-            <div class="alert-history-list">
-                <?php foreach ($recentAlerts as $alert): ?>
-                    <article class="alert-history-item">
-                        <div class="alert-history-icon">!</div>
-                        <div class="alert-history-content">
-                            <strong><?= htmlspecialchars((string)($alert['name'] ?: 'GaugeIQ alert'), ENT_QUOTES) ?></strong>
-                            <p><?= htmlspecialchars((string)$alert['message'], ENT_QUOTES) ?></p>
-                            <time datetime="<?= htmlspecialchars((string)$alert['observed_at'], ENT_QUOTES) ?>"><?= htmlspecialchars(date('d M, H:i', (int)strtotime((string)$alert['observed_at'])), ENT_QUOTES) ?></time>
-                            <form method="post" action="delete-alert-history.php" onsubmit="return confirm('Delete this alert history record?')">
-                                <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
-                                <button type="submit" class="alert-history-delete" aria-label="Delete record" title="Delete record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2 1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/></svg></button>
-                            </form>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </section>
+
 
     
 
