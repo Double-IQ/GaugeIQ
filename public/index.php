@@ -623,7 +623,11 @@ if ($current && !empty($current['observed_at'])) {
     unset($climateBar);
     ?>
     <section class="card climate-gauge-card" aria-labelledby="climateGaugeTitle">
-        <div class="climate-graph-selector-top">
+        <div class="section-heading climate-monitor-heading">
+            <div>
+                <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
+                <div class="wind-hud-subtitle">Environmental Telemetry</div>
+            </div>
             <details class="climate-graph-selector">
                 <summary aria-label="Choose Atmospheric Monitor graphs">Graphs <span aria-hidden="true">⌄</span></summary>
                 <div class="climate-graph-selector-menu" aria-label="Choose graphs to display">
@@ -636,12 +640,6 @@ if ($current && !empty($current['observed_at'])) {
                     <label><input type="checkbox" data-climate-graph-option="wvi"> WVI</label>
                 </div>
             </details>
-        </div>
-        <div class="section-heading climate-monitor-heading">
-            <div>
-                <p class="label" id="climateGaugeTitle">Atmospheric Monitor</p>
-                <div class="wind-hud-subtitle">Environmental Telemetry</div>
-            </div>
         </div>
         <div class="climate-bars" aria-label="Current environmental conditions and one-hour changes">
             <?php foreach ($climateBars as $bar):
