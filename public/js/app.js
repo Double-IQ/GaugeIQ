@@ -862,10 +862,10 @@ function weatherGradientScore(valid) {
     if (pressure) add('pressure', 'Air pressure', weatherSeverity(pressure.distance / pressure.hours, weatherFormula('stability_trigger_pressure', 0.3), weatherFormula('stability_max_pressure', 1.5)), 'cumulative movement ' + pressure.distance.toFixed(1) + ' hPa (six-hour equivalent ' + pressure.scaled.toFixed(1) + ' hPa)');
     const definitions = [
         ['temperature', 'Temperature', 'temperature', 1, 3, '°C'],
-        ['humidity', 'Humidity', 'humidity', 4, 12, ' percentage points'],
+        ['humidity', 'Humidity', 'humidity', 4, 12, '%'],
         ['windSpeed', 'Wind speed', 'wind', 8, 20, ' km/h'],
         ['rainfall', 'Rainfall', 'rain', 0.2, 2, ' mm'],
-        ['cloudCover', 'Cloud cover', 'cloud', 15, 50, ' percentage points']
+        ['cloudCover', 'Cloud cover', 'cloud', 15, 50, '%']
     ];
     definitions.forEach(([key, label, field, trigger, max, unit]) => {
         const item = movement(field);
@@ -1340,12 +1340,12 @@ async function loadWeatherChange() {
                         if (!Number.isFinite(delta) || delta === 0) return '';
                         const unit = {
                             pressure: ' hPa',
-                            humidity: ' percentage points',
+                            humidity: '%',
                             windSpeed: ' km/h',
                             temperature: '°C',
                             dewPointSpread: '°C',
                             rainfall: ' mm',
-                            cloudCover: ' percentage points'
+                            cloudCover: '%'
                         }[component.key];
                         const precision = component.key === 'humidity' || component.key === 'cloudCover' ? 0
                             : component.key === 'rainfall' ? 2 : 1;
