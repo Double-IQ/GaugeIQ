@@ -279,6 +279,9 @@ $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_err
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10 - (int)$stabilityAlertThresholdValue : null;
 $notificationDevices = $pdo->query('SELECT id, created_at, updated_at, user_agent, last_seen_at, last_push_at, last_push_status, last_push_error FROM gaugeiq_push_subscriptions ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
+$recentAlerts = $pdo->query(
+    'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
+)->fetchAll(PDO::FETCH_ASSOC);
 $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
 
@@ -388,6 +391,32 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
     <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
 </section>
+
+    <section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
+        <div class="section-heading">
+            <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
+        </div>
+        <?php if (!$recentAlerts): ?>
+            <p class="muted empty-history">No alerts have been triggered yet.</p>
+        <?php else: ?>
+            <div class="alert-history-list">
+                <?php foreach ($recentAlerts as $alert): ?>
+                    <article class="alert-history-item">
+                        <div class="alert-history-icon">!</div>
+                        <div class="alert-history-content">
+                            <strong><?= h((string)($alert['name'] ?: 'GaugeIQ alert')) ?></strong>
+                            <p><?= h((string)$alert['message']) ?></p>
+                            <time datetime="<?= h((string)$alert['observed_at']) ?>"><?= h(date('d M, H:i', (int)strtotime((string)$alert['observed_at']))) ?></time>
+                            <form method="post" action="delete-alert-history.php?return_to=admin" onsubmit="return confirm('Delete this alert history record?')">
+                                <input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
+                                <button type="submit" class="alert-history-delete" aria-label="Delete record" title="Delete record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2 1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/></svg></button>
+                            </form>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </section>
 
 <section class="admin-hero card">
     <div>
