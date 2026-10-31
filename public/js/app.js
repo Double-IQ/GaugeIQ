@@ -1106,6 +1106,7 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         changeElement.classList.toggle('fall', delta !== null && delta < -0.05);
         changeElement.classList.toggle('steady', delta !== null && Math.abs(delta) <= 0.05);
         changeElement.classList.toggle('unavailable', delta === null);
+        if (wviRow) wviRow.dataset.wviChange = delta === null || Math.abs(delta) <= 0.05 ? 'steady' : (delta > 0 ? 'rise' : 'fall');
         changeElement.setAttribute('aria-label', delta === null ? 'WVI change over the last hour unavailable' : 'WVI change over the last hour ' + delta.toFixed(1));
     }
     if (score === null) {
