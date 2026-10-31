@@ -2705,3 +2705,25 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-endpoint{fill:#ffc184!important}
+
+/* WVI graph, gauge and change indicator follow the one-hour direction. */
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-change{color:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-change{color:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-endpoint{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-value{stroke:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-endpoint,
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-segment.active{background:#35c4eb!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-endpoint{fill:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-value{stroke:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-needle{fill:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-endpoint,
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-segment.active{background:#ffc184!important}
