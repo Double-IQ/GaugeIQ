@@ -191,7 +191,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261031-top-status-dashes">
+<link rel="stylesheet" href="css/app.css?v=20261031-top-status-symbols">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -410,8 +410,12 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
                     <div class="top-status-indicators" aria-label="Notification and alert status">
-                        <span class="top-status-indicator <?= $subscriptionCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>" title="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>"><span class="top-status-dash"></span><span>Notifications</span></span>
-                        <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>"><span class="top-status-dash"></span><span>Alerts</span></span>
+                        <span class="top-status-indicator <?= $subscriptionCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>" title="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>">
+                            <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="top-status-dash"></span>
+                        </span>
+                        <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>">
+                            <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.1l-8-14a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/></svg><span class="top-status-dash"></span>
+                        </span>
                     </div>
                     <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
                 </div>
