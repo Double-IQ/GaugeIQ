@@ -153,9 +153,6 @@ try {
         && (float)$stabilityThresholdValue >= 0 && (float)$stabilityThresholdValue <= 10)
         ? 10 - (int)$stabilityThresholdValue
         : null;
-    $recentAlerts = $pdo->query(
-        'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
-    )->fetchAll();
 } catch (Throwable $e) {
     $current = null;
     $latest = null;
@@ -165,7 +162,6 @@ try {
     $monitorError = '';
     $subscriptionCount = 0;
     $enabledRuleCount = 0;
-    $recentAlerts = [];
 }
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
