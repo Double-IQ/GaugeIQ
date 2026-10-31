@@ -2518,3 +2518,36 @@ body.gaugeiq-menu-open{overflow:hidden}
   margin-left:auto;
   margin-right:auto;
 }
+
+
+/* WVI needle remains the same lime green as the other instrument needles.
+   The score arc, segments and readout retain the blue/orange threshold colours. */
+.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle{
+  fill:#a3e635!important;
+  stroke:none!important;
+  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
+}
+
+/* Keep the graph selector in the Atmospheric Monitor title row. */
+.climate-gauge-card .section-heading.climate-monitor-heading{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px;
+}
+.climate-gauge-card .climate-monitor-heading>div:first-child{
+  flex:1 1 auto;
+  min-width:0;
+}
+.climate-gauge-card .climate-monitor-heading .climate-graph-selector{
+  flex:0 0 auto;
+  align-self:center;
+  margin:0 0 0 auto;
+}
+@media(max-width:560px){
+  .climate-gauge-card .climate-monitor-heading .label{
+    font-size:clamp(18px,6.2vw,24px);
+    white-space:nowrap;
+  }
+}
