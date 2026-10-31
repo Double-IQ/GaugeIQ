@@ -105,3 +105,9 @@
 .daily-forecast-content{padding:0 20px 20px;border-top:1px solid var(--border)}
 .daily-forecast-content>p.muted{margin:14px 0}
 @media(max-width:560px){.daily-forecast-summary{padding:15px;gap:8px}.daily-forecast-summary-title strong{font-size:15px}.daily-forecast-summary .status-pill{font-size:11px;white-space:nowrap}.daily-forecast-content{padding:0 15px 15px}}
+
+
+/* Keep the native time control within its column on narrow screens. */
+.daily-forecast-time-row,
+.daily-forecast-time-row>div{min-width:0;max-width:100%}
+.daily-forecast-time-row input[type="time"]{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;-webkit-appearance:auto}
