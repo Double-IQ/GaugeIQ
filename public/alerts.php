@@ -525,23 +525,21 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
 </details>
 
-<details class="alerts-list-section card daily-forecast-alert-card">
-    <summary class="daily-forecast-summary" aria-controls="savedAlertsContent">
-        <span class="daily-forecast-summary-title">
-            <strong>Saved alerts</strong>
-            <small><?= count($allRules) ?> configured rule<?= count($allRules) === 1 ? '' : 's' ?></small>
-        </span>
-        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
-    </summary>
-    <div id="savedAlertsContent" class="daily-forecast-content">
+<section class="alerts-list-section">
+    <div class="section-heading">
+        <div>
+            <h2>Saved alerts</h2>
+            <p class="muted"><?= count($allRules) ?> configured rule<?= count($allRules) === 1 ? '' : 's' ?>.</p>
+        </div>
+    </div>
     <?php if (!$allRules): ?>
         <div class="card alert-empty"><div class="alert-empty-icon">✓</div><h3>No alerts configured</h3><p class="muted">Create your first weather alert above. GaugeIQ will evaluate it during the next scheduled check.</p></div>
     <?php endif; ?>
 
     <?php foreach ($allRules as $rule): ?>
         <?php $ruleConfig = json_decode((string)$rule['configuration_json'], true) ?: []; ?>
-        <article class="card alert-card" data-alert-card>
-            <div class="alert-card-main">
+        <details class="card alert-card" data-alert-card>
+            <summary class="alert-card-main">
                 <div class="alert-card-title">
                     <span class="alert-rule-dot <?= (int)$rule['enabled'] ? 'enabled' : '' ?>"></span>
                     <h3><?= h((string)$rule['name']) ?></h3>
@@ -557,7 +555,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
                     <?php endif; ?>
                 </div>
-            </div>
+                <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+            </summary>
             <div class="alert-actions">
                 <button type="button" class="secondary edit-alert-button" data-edit-alert>Edit</button>
                 <form method="post"><input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int)$rule['id'] ?>"><button type="submit" class="secondary"><?= (int)$rule['enabled'] ? 'Disable' : 'Enable' ?></button></form>
@@ -584,11 +583,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
                 <button type="submit">Save changes</button>
             </form>
-        </article>
+        </details>
     <?php endforeach; ?>
 
-    </div>
-</details>
+</section>
 
 
 </main>
