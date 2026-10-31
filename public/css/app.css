@@ -2522,7 +2522,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* WVI needle remains the same lime green as the other instrument needles.
    The score arc, segments and readout retain the blue/orange threshold colours. */
-.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle{
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle,
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{
   fill:#a3e635!important;
   stroke:none!important;
   filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
