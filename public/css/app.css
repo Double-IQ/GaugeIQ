@@ -2802,3 +2802,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.rise{
   color:#ffc184!important;
 }
+
+
+/* The WVI direction selector has higher class specificity; pin the needle
+   itself green using its unique ID so direction colours cannot override it. */
+#climateWviNeedle{
+  fill:#a3e635!important;
+  stroke:none!important;
+  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
+}
