@@ -373,15 +373,18 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <?php endif; ?>
 </section>
 
-<section class="card daily-forecast-alert-card" aria-labelledby="dailyForecastAlertTitle">
-    <div class="section-heading">
-        <div>
-            <h2 id="dailyForecastAlertTitle">Daily forecast notification</h2>
-            <p class="muted">Get one daily notification if any of your selected conditions are forecast for today. This uses the existing push notification setup.</p>
-        </div>
+<details class="card daily-forecast-alert-card">
+    <summary class="daily-forecast-summary" aria-controls="dailyForecastAlertContent">
+        <span class="daily-forecast-summary-title">
+            <strong id="dailyForecastAlertTitle">Daily forecast notification</strong>
+            <small><?= $dailyForecastAlertEnabled ? 'Enabled' : 'Disabled' ?> · <?= h($dailyForecastAlertTime) ?></small>
+        </span>
         <span class="status-pill <?= $dailyForecastAlertEnabled ? 'status-good' : 'status-warn' ?>"><?= $dailyForecastAlertEnabled ? '● Enabled' : '● Disabled' ?></span>
-    </div>
-    <form method="post" class="daily-forecast-form">
+        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div id="dailyForecastAlertContent" class="daily-forecast-content">
+        <p class="muted">Get one daily notification if any of your selected conditions are forecast for today. This uses the existing push notification setup.</p>
+        <form method="post" class="daily-forecast-form">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
         <input type="hidden" name="action" value="save_daily_forecast_alert">
 
@@ -427,8 +430,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <?php if ($dailyForecastAlertLastError !== ''): ?>
             <p class="monitor-warning">Daily forecast alert issue: <?= h($dailyForecastAlertLastError) ?></p>
         <?php endif; ?>
-    </form>
-</section>
+        </form>
+    </div>
+</details>
 
 <section class="card">
     <div class="section-heading">
