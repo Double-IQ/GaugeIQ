@@ -409,6 +409,10 @@ if ($current && !empty($current['observed_at'])) {
 
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
+                    <div class="top-status-indicators" aria-label="Notification and alert status">
+                        <span class="top-status-indicator <?= $subscriptionCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>" title="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>"><span class="top-status-dash"></span><span>Notifications</span></span>
+                        <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>"><span class="top-status-dash"></span><span>Alerts</span></span>
+                    </div>
                     <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
