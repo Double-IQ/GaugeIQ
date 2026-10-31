@@ -545,18 +545,18 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <h3><?= h((string)$rule['name']) ?></h3>
                     <span class="alert-state <?= (int)$rule['enabled'] ? 'on' : 'off' ?>"><?= (int)$rule['enabled'] ? 'Enabled' : 'Disabled' ?></span>
                 </div>
-                <div class="alert-meta"><?= $rule['metric'] === 'weather_stability' ? 'Weather Volatility Index (WVI)' : h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?> · cooldown <?= (int)$rule['cooldown_minutes'] ?> min</div>
-                <div class="alert-config readable">
-                    <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
-                    <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
-                    <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
-                    <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
-                    <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
-                    <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
-                    <?php endif; ?>
-                </div>
+                <div class="alert-meta"><?= $rule['metric'] === 'weather_stability' ? 'WVI' : h(ucwords(str_replace('_', ' ', (string)$rule['metric']))) ?> · <?= h(ucwords(str_replace('_', ' ', (string)$rule['condition_type']))) ?></div>
                 <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
             </summary>
+            <div class="alert-config readable">
+                <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
+                <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
+                <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
+                <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
+                <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
+                <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
+                <?php endif; ?>
+            </div>
             <div class="alert-actions">
                 <button type="button" class="secondary edit-alert-button" data-edit-alert>Edit</button>
                 <form method="post"><input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int)$rule['id'] ?>"><button type="submit" class="secondary"><?= (int)$rule['enabled'] ? 'Disable' : 'Enable' ?></button></form>
