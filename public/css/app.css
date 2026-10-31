@@ -2511,3 +2511,10 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#ffc184;border-color:rgba(255,193,132,.68);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 16px rgba(255,161,91,.12);
 }
+
+.weather-change-card.wind-hud-card .weather-change-reasons-toggle.info-icon-button{
+  display:flex;
+  width:max-content;
+  margin-left:auto;
+  margin-right:auto;
+}
