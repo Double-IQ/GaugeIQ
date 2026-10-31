@@ -2760,3 +2760,11 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-endpoint{
   fill:#ffc184!important;
 }
+
+
+/* Keep the WVI gauge needle green; graph direction colours do not affect it. */
+.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle{
+  fill:#a3e635!important;
+  stroke:none!important;
+  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
+}
