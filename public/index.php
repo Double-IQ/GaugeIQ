@@ -1035,6 +1035,7 @@ if ($current && !empty($current['observed_at'])) {
         </button>
         <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
             <p class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</p>
+            <div id="conditionsTrendReasonItems"></div>
         </div>
         <details class="algorithm-details">
             <summary>How the conditions trend is classified</summary>
