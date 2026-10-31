@@ -2437,3 +2437,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .history-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 .history-card #historyContent[hidden]{display:none!important}
 @media(max-width:560px){.history-toggle .section-heading{align-items:center;flex-direction:row}}
+
+/* Keep the Atmospheric Monitor graph selector on its own top row. */
+.climate-graph-selector-top{display:flex;justify-content:flex-end;align-items:flex-start;margin:0 0 10px;position:relative;z-index:7}
+.climate-graph-selector-top .climate-graph-selector{margin-left:0}
