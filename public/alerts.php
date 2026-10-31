@@ -438,13 +438,15 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
 </details>
 
-<section class="card">
-    <div class="section-heading">
-        <div>
-            <h2>Create an alert</h2>
-            <p class="muted">Set a condition and GaugeIQ will evaluate it whenever the scheduled monitor records a new reading.</p>
-        </div>
-    </div>
+<details class="card daily-forecast-alert-card">
+    <summary class="daily-forecast-summary" aria-controls="createAlertContent">
+        <span class="daily-forecast-summary-title">
+            <strong>Create an alert</strong>
+            <small>Set up a new weather alert rule</small>
+        </span>
+        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div id="createAlertContent" class="daily-forecast-content">
     <form method="post" class="alert-form">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
         <input type="hidden" name="action" value="create">
@@ -519,7 +521,9 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </div>
         <button type="submit">Add alert</button>
     </form>
-</section>
+
+    </div>
+</details>
 
 <section class="alerts-list-section">
     <div class="section-heading">
