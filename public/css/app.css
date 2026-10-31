@@ -2449,3 +2449,65 @@ body.gaugeiq-menu-open{overflow:hidden}
   min-width:0;
   box-sizing:border-box
 }
+
+
+/* WVI instrument card shares the Wind HUD glass treatment. */
+.weather-change-card.wind-hud-card{
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+}
+.weather-change-card.wind-hud-card .muted,
+.weather-change-card.wind-hud-card .algorithm-details,
+.weather-change-card.wind-hud-card .algorithm-details p,
+.weather-change-card.wind-hud-card .algorithm-details summary{color:#b8cce4}
+.weather-change-card.wind-hud-card .weather-change-score{
+  background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.025));
+  border-color:rgba(117,164,211,.38);
+  color:#edf6ff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 5px 16px rgba(0,0,0,.16);
+}
+.weather-change-card.wind-hud-card .weather-change-level span{
+  background:rgba(117,164,211,.18);
+  border-color:rgba(117,164,211,.25);
+}
+.weather-change-card.wind-hud-card .weather-change-level[data-level="high"] span.is-active{
+  background:linear-gradient(180deg,#68d2ff,#159bd4);
+  border-color:#35c4eb;
+  box-shadow:0 0 8px rgba(53,196,235,.24);
+}
+.weather-change-card.wind-hud-card .weather-change-level[data-level="moderate"] span.is-active,
+.weather-change-card.wind-hud-card .weather-change-level[data-level="low"] span.is-active{
+  background:linear-gradient(180deg,#ffd0a0,#f28b3c);
+  border-color:#f6a45e;
+  box-shadow:0 0 8px rgba(255,161,91,.24);
+}
+.weather-change-card.wind-hud-card .weather-change-summary{color:#edf6ff}
+.weather-change-card.wind-hud-card .weather-change-summary-change{color:#b8cce4}
+.weather-change-card.wind-hud-card .weather-change-reason{
+  color:#edf6ff;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  border-color:rgba(117,164,211,.2);
+}
+.weather-change-card.wind-hud-card .weather-change-reasons-toggle.info-icon-button{
+  color:#d6e7fa;
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+  border-color:rgba(117,164,211,.32);
+}
+.weather-change-card.wind-hud-card .weather-change-reasons-toggle.info-icon-button:hover{
+  color:#fff;border-color:rgba(104,210,255,.65)
+}
+.weather-change-card.wind-hud-card .algorithm-details{
+  border-top-color:rgba(117,164,211,.2)
+}
+
+.weather-change-card.wind-hud-card .weather-change-score[data-wvi-band="blue"]{
+  color:#68d2ff;border-color:rgba(53,196,235,.62);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 16px rgba(53,196,235,.12);
+}
+.weather-change-card.wind-hud-card .weather-change-score[data-wvi-band="orange"]{
+  color:#ffc184;border-color:rgba(255,193,132,.68);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 16px rgba(255,161,91,.12);
+}
