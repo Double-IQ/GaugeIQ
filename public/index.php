@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261031-wvi-needle-green-v1">
+<link rel="stylesheet" href="css/app.css?v=20261031-dew-point-colours-v1">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -676,8 +676,10 @@ if ($current && !empty($current['observed_at'])) {
                     && (float)$bar['delta'] <= -0.8;
                 $dewPointGapWarning = ($bar['historyKey'] ?? '') === 'dew_point_gap_c'
                     && (float)$bar['value'] <= 3.0;
+                $dewPointWarm = ($bar['historyKey'] ?? '') === 'dew_point_c'
+                    && (float)$bar['value'] >= 16.0;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $pressureFalling ? ' pressure-falling' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $pressureFalling ? ' pressure-falling' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?><?= $dewPointWarm ? ' dew-point-warm' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
