@@ -592,7 +592,7 @@ function formatChartTime(value, hours, timeZone) {
     catch { return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }); }
 }
 
-function drawChart(canvas, values, unit, decimals = 1, hours = 24, timeZone = null) {
+function drawChart(canvas, values, unit, decimals = 1, hours = 24, timeZone = null, windThreshold = null) {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.clientWidth || 600;
@@ -642,7 +642,6 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24, timeZone = nu
     ctx.lineTo(width - pad.right, pad.top + plotH);
     ctx.stroke();
 
-    ctx.strokeStyle = line;
     ctx.lineWidth = 2.5;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -663,53 +662,39 @@ function drawChart(canvas, values, unit, decimals = 1, hours = 24, timeZone = nu
     });
 
     if (points.length > 1) {
-        ctx.moveTo(points[0].x, points[0].y);
-
-        // Connect real readings with a smooth curve without horizontal
-        // plateaus at either endpoint. The control points follow the slope
-        // through neighboring readings so the line begins and ends moving
-        // naturally instead of pausing horizontally before changing value.
+        // Keep the existing smooth curve, colouring each interval by wind speed
+        // when a threshold is supplied for the wind history chart.
         for (let index = 0; index < points.length - 1; index += 1) {
             const current = points[index];
             const next = points[index + 1];
-
-            if (Math.abs(next.y - current.y) < 0.001) {
-                ctx.lineTo(next.x, next.y);
-                continue;
-            }
-
             const previous = points[index - 1] || current;
             const following = points[index + 2] || next;
-
             const incomingSlope = (next.y - previous.y) / Math.max(1, next.x - previous.x);
             const outgoingSlope = (following.y - current.y) / Math.max(1, following.x - current.x);
             const handle = (next.x - current.x) / 3;
+            const cp1 = { x: current.x + handle, y: current.y + incomingSlope * handle };
+            const cp2 = { x: next.x - handle, y: next.y - outgoingSlope * handle };
 
-            const cp1 = {
-                x: current.x + handle,
-                y: current.y + incomingSlope * handle
-            };
-            const cp2 = {
-                x: next.x - handle,
-                y: next.y - outgoingSlope * handle
-            };
-
-            ctx.bezierCurveTo(
-                cp1.x,
-                cp1.y,
-                cp2.x,
-                cp2.y,
-                next.x,
-                next.y
-            );
+            ctx.beginPath();
+            ctx.moveTo(current.x, current.y);
+            if (Math.abs(next.y - current.y) < 0.001) {
+                ctx.lineTo(next.x, next.y);
+            } else {
+                ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, next.x, next.y);
+            }
+            ctx.strokeStyle = windThreshold !== null
+                ? ((valid[index].value + valid[index + 1].value) / 2 < windThreshold ? '#35a7ff' : '#ff9b52')
+                : line;
+            ctx.stroke();
         }
-        ctx.stroke();
     }
     if (valid.length === 1) {
         const item = valid[0];
         const x = pad.left + (plotW / 2);
         const y = pad.top + (1 - ((item.value - min) / range)) * plotH;
-        ctx.fillStyle = line;
+        ctx.fillStyle = windThreshold !== null
+            ? (item.value < windThreshold ? '#35a7ff' : '#ff9b52')
+            : line;
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
@@ -1534,12 +1519,12 @@ async function loadHistory(hours = 24) {
         const charts = [
             ['pressureChart', readings.map(r => ({ value: r.pressure_hpa == null ? NaN : Number(r.pressure_hpa), time: r.timestamp || r.observed_at })), ' hPa', 1],
             ['humidityChart', readings.map(r => ({ value: r.humidity_percent == null ? NaN : Number(r.humidity_percent), time: r.timestamp || r.observed_at })), '%', 0],
-            ['windChart', readings.map(r => ({ value: r.wind_speed_kmh == null ? NaN : Number(r.wind_speed_kmh), time: r.timestamp || r.observed_at })), ' km/h', 1]
+            ['windChart', readings.map(r => ({ value: r.wind_speed_kmh == null ? NaN : Number(r.wind_speed_kmh), time: r.timestamp || r.observed_at })), ' km/h', 1, 15]
         ];
 
-        charts.forEach(([id, values, unit, decimals]) => {
+        charts.forEach(([id, values, unit, decimals, windThreshold = null]) => {
             const canvas = document.getElementById(id);
-            if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone);
+            if (canvas) drawChart(canvas, values, unit, decimals, hours, chartTimezone, windThreshold);
         });
 
         const rangeLabel = hours >= 720 ? '30 days' : hours === 168 ? '7 days' : hours + ' hours';
