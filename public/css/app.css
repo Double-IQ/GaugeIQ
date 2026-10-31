@@ -2786,3 +2786,202 @@ body.gaugeiq-menu-open{overflow:hidden}
   stroke:none!important;
   filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
 }
+
+
+/* GaugeIQ Light Mode — complete silver instrument theme.
+   Dark Mode retains the original navy glass treatment. */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --text:#26313f;
+  --muted:#687586;
+  --background:#e7e9ed;
+  --card:#f5f6f8;
+  --surface:#e4e7eb;
+  --border:#cbd1d9;
+  --accent:#536273;
+  --theme-color:#e7e9ed;
+}
+:root[data-theme="light"] body{background:#e7e9ed;color:#26313f}
+:root[data-theme="light"] .card{
+  background:linear-gradient(145deg,#fafbfc 0%,#e9ecf0 100%);
+  border-color:#cbd1d9;
+  box-shadow:0 7px 22px rgba(38,49,63,.09),inset 0 1px 0 rgba(255,255,255,.9);
+}
+:root[data-theme="light"] .header-actions .menu-button{
+  background:linear-gradient(180deg,#f7f8fa,#dfe3e8);
+  color:#26313f;border:1px solid #c3cad3;
+  box-shadow:0 2px 5px rgba(38,49,63,.12),inset 0 1px 0 #fff;
+}
+:root[data-theme="light"] .pressure-card,
+:root[data-theme="light"] .climate-gauge-card,
+:root[data-theme="light"] .temperature-summary-card,
+:root[data-theme="light"] .wind-hud-card,
+:root[data-theme="light"] .satellite-map-card,
+:root[data-theme="light"] .weather-change-card.wind-hud-card,
+:root[data-theme="light"] .conditions-trend-card{
+  color:#26313f!important;
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
+  border:1px solid #c3cbd5!important;
+  border-radius:18px;
+  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+:root[data-theme="light"] .pressure-card .label,
+:root[data-theme="light"] .pressure-card-title .label,
+:root[data-theme="light"] .temperature-card-heading .label,
+:root[data-theme="light"] .satellite-map-heading,
+:root[data-theme="light"] .satellite-map-copy h2,
+:root[data-theme="light"] .climate-gauge-card .section-heading .label,
+:root[data-theme="light"] .wind-hud-card .section-heading .label,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-summary,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-reason,
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-heading h2,
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-label,
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-summary,
+:root[data-theme="light"] .conditions-trend-card .algorithm-details,
+:root[data-theme="light"] .conditions-trend-card .algorithm-details p,
+:root[data-theme="light"] .conditions-trend-card .algorithm-details summary{
+  color:#26313f!important;
+}
+:root[data-theme="light"] .pressure-showcase-value,
+:root[data-theme="light"] .pressure-showcase-value span,
+:root[data-theme="light"] .pressure-insight-label,
+:root[data-theme="light"] .pressure-range-gauge text.pressure-dial-reading,
+:root[data-theme="light"] .pressure-range-gauge text.pressure-dial-unit,
+:root[data-theme="light"] .pressure-range-gauge text.pressure-scale-label,
+:root[data-theme="light"] .pressure-range-gauge text.pressure-scale-end{
+  fill:#344256;color:#344256;
+}
+:root[data-theme="light"] .pressure-card .label,
+:root[data-theme="light"] .pressure-insight-label,
+:root[data-theme="light"] .pressure-showcase-value span{color:#596779!important}
+:root[data-theme="light"] .pressure-unit-pill{
+  background:linear-gradient(180deg,#e3e8ee,#cfd6df);
+  color:#344256;border:1px solid #c1cad4;
+}
+:root[data-theme="light"] .pressure-dial-column{
+  background:radial-gradient(circle at 38% 25%,#fff 0%,#edf0f3 48%,#d9dfe6 100%);
+  border-color:#b8c3cf;
+  box-shadow:0 0 0 2px rgba(255,255,255,.75),inset 0 2px 12px rgba(71,85,105,.12);
+}
+:root[data-theme="light"] .pressure-range-ticks line,
+:root[data-theme="light"] .pressure-range-ticks line.medium{stroke:#718198}
+:root[data-theme="light"] .pressure-range-gauge text.pressure-scale-label,
+:root[data-theme="light"] .pressure-range-gauge text.pressure-scale-end{fill:#526174}
+:root[data-theme="light"] .pressure-range-gauge text.pressure-dial-reading{fill:#26313f}
+:root[data-theme="light"] .pressure-range-gauge text.pressure-dial-unit{fill:#687586}
+:root[data-theme="light"] .pressure-change-block{border-bottom-color:#c5cdd6}
+:root[data-theme="light"] .pressure-insight-label{color:#647386!important}
+:root[data-theme="light"] .pressure-card .steady{color:#687586}
+:root[data-theme="light"] .pressure-range-outer-ring{stroke:#9aa8b8;filter:drop-shadow(0 0 2px rgba(71,85,105,.22))}
+:root[data-theme="light"] .pressure-range-hub{fill:#fff;stroke:#718198}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
+:root[data-theme="light"] .wind-hud-speed-history{
+  background:linear-gradient(110deg,rgba(255,255,255,.88),rgba(225,230,236,.92))!important;
+  border-color:#cbd2db!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 2px 5px rgba(38,49,63,.05)!important;
+}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-label,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-value,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-change.steady,
+:root[data-theme="light"] .wind-hud-speed-history-heading,
+:root[data-theme="light"] .wind-hud-speed-readouts,
+:root[data-theme="light"] .satellite-map-copy p,
+:root[data-theme="light"] .satellite-map-card-footer,
+:root[data-theme="light"] .satellite-map-card-footer>span:first-child,
+:root[data-theme="light"] .satellite-map-external,
+:root[data-theme="light"] .temperature-summary-card .temperature-feels-like-direct,
+:root[data-theme="light"] .temperature-summary-card .temperature-summary-range span{
+  color:#586779!important;
+}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline-unavailable{
+  background:linear-gradient(90deg,rgba(148,163,184,.13),rgba(148,163,184,.035))!important;
+  border-left-color:rgba(100,116,139,.22)!important;
+}
+:root[data-theme="light"] .climate-gauge-card .climate-sparkline-baseline{stroke:rgba(100,116,139,.35)!important}
+:root[data-theme="light"] .climate-gauge-card .climate-sparkline-startpoint{fill:#718096!important}
+:root[data-theme="light"] .climate-gauge-card .climate-sparkline-endpoint{stroke:#f5f6f8!important}
+:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(100,116,139,.25)}
+:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-endpoint{stroke:#e7eaee}
+:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary{
+  color:#344256;background:linear-gradient(180deg,#f8f9fa,#e1e6eb);
+  border-color:#c3ccd6;
+}
+:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary span{color:#52718d}
+:root[data-theme="light"] .climate-gauge-card .climate-graph-selector[open]>summary{background:#dce3ea}
+:root[data-theme="light"] .climate-graph-selector-menu{
+  background:linear-gradient(145deg,#f8f9fa,#e2e7ec);
+  border-color:#c3ccd6;box-shadow:0 12px 28px rgba(38,49,63,.2);
+}
+:root[data-theme="light"] .climate-graph-selector-menu label{color:#344256}
+:root[data-theme="light"] .climate-graph-selector-menu label:hover{background:rgba(100,116,139,.12)}
+:root[data-theme="light"] .temperature-summary-current strong,
+:root[data-theme="light"] .temperature-summary-card .temperature-summary-range strong{color:#26313f!important}
+:root[data-theme="light"] .temperature-summary-card .temperature-stability-summary{
+  background:rgba(255,255,255,.58);border-color:#cbd2db;color:#344256;
+}
+:root[data-theme="light"] .wind-hud-speed-history-heading{color:#526174!important}
+:root[data-theme="light"] .wind-hud-card .wind-hud-vector{
+  background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(220,226,233,.62));
+  border-color:#cbd2db;box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+}
+:root[data-theme="light"] .wind-hud-card .wind-strip-glass{fill:rgba(255,255,255,.34);stroke:rgba(71,85,105,.2)}
+:root[data-theme="light"] .wind-hud-card .wind-compass-ring{fill:rgba(100,116,139,.06);stroke:rgba(71,85,105,.24)}
+:root[data-theme="light"] .wind-hud-card .wind-speed-ticks text{fill:#344256;stroke:#e9edf1}
+:root[data-theme="light"] .satellite-map-icon,
+:root[data-theme="light"] .satellite-map-arrow{
+  background:linear-gradient(180deg,#f7f9fb,#e0e5eb);
+  border-color:#c4ccd6;color:#267da9;
+}
+:root[data-theme="light"] .satellite-map-card-footer{border-top-color:#cbd2db}
+:root[data-theme="light"] .weather-change-card.wind-hud-card .muted,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .algorithm-details,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .algorithm-details p,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .algorithm-details summary,
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-summary-change{
+  color:#5d6b7c!important;
+}
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-score,
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-score{
+  background:linear-gradient(145deg,#f9fafb,#e1e6eb)!important;
+  border-color:#c0cad5;
+  color:#344256!important;
+  box-shadow:inset 0 1px 0 #fff,0 3px 9px rgba(38,49,63,.1);
+}
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-level span{
+  background:#dce2e8;border-color:#c5ced8;
+}
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-reason,
+:root[data-theme="light"] .conditions-trend-card .weather-change-reason{
+  color:#344256!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(226,231,236,.7))!important;
+  border-color:#cbd2db!important;
+}
+:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-reasons-toggle.info-icon-button,
+:root[data-theme="light"] .conditions-trend-card .weather-change-reasons-toggle.info-icon-button{
+  color:#435469;background:linear-gradient(180deg,#f8f9fa,#e1e6eb);
+  border-color:#c3ccd6;
+}
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-heading p{color:#687586}
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-label[data-trend="improving"]{color:#16834f}
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-label[data-trend="steady"]{color:#687586}
+:root[data-theme="light"] .conditions-trend-card .conditions-trend-label[data-trend="worsening"]{color:#c56b25}
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{color:#16834f!important}
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="steady"]) .conditions-trend-score{color:#687586!important}
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="worsening"]) .conditions-trend-score{color:#c56b25!important}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline polyline{filter:none}
+:root[data-theme="light"] .pressure-card .pressure-sparkline-line{filter:none}
+:root[data-theme="light"] .wind-hud-card .wind-hud-compass-switch{
+  color:#344256;background:linear-gradient(180deg,#f8f9fa,#e0e5eb);
+  border-color:#c3ccd6;
+}
+:root[data-theme="light"] .wind-hud-card .wind-hud-compass-switch.is-enabled{
+  color:#344256;background:linear-gradient(180deg,#eaf0f5,#d6dee7);
+}
+:root[data-theme="light"] .forecast-back-link{color:#344256}
+:root[data-theme="light"] #gaugeiq-loading-screen{
+  background:#e7e9ed;color:#26313f;
+}
+:root[data-theme="light"] .gaugeiq-loading-indicator{
+  border-color:rgba(71,85,105,.22);border-top-color:#526174;
+}
