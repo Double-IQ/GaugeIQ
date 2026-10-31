@@ -2695,5 +2695,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Wind speed change: falling is blue, rising is orange. */
-.wind-speed-instrument-row .climate-bar-change.fall{color:#35a7ff!important}
-.wind-speed-instrument-row .climate-bar-change.rise{color:#ff9b52!important}
+.wind-speed-instrument-row .climate-bar-change.fall{color:#35c4eb!important}
+.wind-speed-instrument-row .climate-bar-change.rise{color:#ffc184!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue polyline{stroke:#35c4eb!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-endpoint{fill:#35c4eb!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange polyline{stroke:#ffc184!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
+.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-endpoint{fill:#ffc184!important}
