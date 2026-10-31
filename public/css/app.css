@@ -2587,3 +2587,35 @@ body.gaugeiq-menu-open{overflow:hidden}
   margin-left:auto!important;
   margin-right:auto!important;
 }
+
+/* Match the WVI card's colour-coded outline and subtle status shading. */
+.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]){
+  border-color:#22a06b;
+  background:color-mix(in srgb,#22a06b 5%,var(--card));
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="steady"]){
+  border-color:#8293a8;
+  background:color-mix(in srgb,#8293a8 5%,var(--card));
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="worsening"]){
+  border-color:#ffc184;
+  background:color-mix(in srgb,#ffc184 6%,var(--card));
+}
+.conditions-trend-card .conditions-trend-score{
+  background:var(--surface);
+  border-width:2px;
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{
+  border-color:#22a06b;color:#22a06b;
+  background:color-mix(in srgb,#22a06b 12%,var(--surface));
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="steady"]) .conditions-trend-score{
+  border-color:#8293a8;color:#8293a8;
+  background:color-mix(in srgb,#8293a8 12%,var(--surface));
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="worsening"]) .conditions-trend-score{
+  border-color:#ffc184;color:#ffc184;
+  background:color-mix(in srgb,#ffc184 12%,var(--surface));
+}
+.conditions-trend-card .conditions-trend-label[data-trend="steady"]{color:#8293a8}
+
