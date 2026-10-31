@@ -1102,17 +1102,6 @@ if ($current && !empty($current['observed_at'])) {
 
     <p id="status" class="status"></p>
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
-    <section class="card network-diagnostics" aria-labelledby="networkDiagnosticsTitle">
-        <div class="section-heading">
-            <div><p class="label" id="networkDiagnosticsTitle">Network diagnostics</p></div>
-        </div>
-        <div class="network-diagnostics-readings">
-            <p id="networkUplinkStatus" class="network-uplink-status" aria-live="polite">Upload speed: Measuring…</p>
-            <p id="networkDownlinkStatus" class="network-uplink-status" aria-live="polite">Download speed: Measuring…</p>
-            <p id="networkPingStatus" class="network-uplink-status" aria-live="polite">Ping to weather server: Measuring…</p>
-            <p class="network-uplink-status">Weather server IP: <strong><?= htmlspecialchars((string)($_SERVER['SERVER_ADDR'] ?? 'Unavailable'), ENT_QUOTES, 'UTF-8') ?></strong></p>
-        </div>
-    </section>
 </main>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
