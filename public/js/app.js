@@ -1071,6 +1071,16 @@ function validReadingsForWvi(readings, windowEnd) {
     });
 }
 
+function graphSvgOrCreateDefs(graphLine, svgNamespace) {
+    const svg = graphLine.closest('svg');
+    let defs = svg ? svg.querySelector('defs') : null;
+    if (svg && !defs) {
+        defs = document.createElementNS(svgNamespace, 'defs');
+        svg.insertBefore(defs, svg.firstChild);
+    }
+    return defs;
+}
+
 function updateAtmosphericWvi(result, readings, referenceTime) {
     const valueElement = document.getElementById('climateWviValue');
     const changeElement = document.getElementById('climateWviChange');
@@ -1150,6 +1160,33 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
     const line = points.join(' ');
     graphLine.setAttribute('points', line);
     graphArea.setAttribute('points', points.length >= 2 ? '0,23.5 ' + line + ' 100,23.5' : '');
+
+    // Colour each part of the WVI history graph by its own score:
+    // below 6 is blue; 6 and above is orange.
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    let graphDefs = graphSvgOrCreateDefs(graphLine, svgNamespace);
+    let graphGradient = graphDefs.querySelector('#wviScoreThresholdGradient');
+    if (!graphGradient) {
+        graphGradient = document.createElementNS(svgNamespace, 'linearGradient');
+        graphGradient.setAttribute('id', 'wviScoreThresholdGradient');
+        graphGradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+        graphGradient.setAttribute('x1', '0');
+        graphGradient.setAttribute('x2', '0');
+        graphGradient.setAttribute('y1', '22');
+        graphGradient.setAttribute('y2', '4');
+        [
+            ['0', '#35c4eb'], ['0.5999', '#35c4eb'],
+            ['0.6001', '#ffc184'], ['1', '#ffc184']
+        ].forEach(([offset, colour]) => {
+            const stop = document.createElementNS(svgNamespace, 'stop');
+            stop.setAttribute('offset', offset);
+            stop.setAttribute('stop-color', colour);
+            graphGradient.appendChild(stop);
+        });
+        graphDefs.appendChild(graphGradient);
+    }
+    graphLine.style.setProperty('stroke', 'url(#wviScoreThresholdGradient)', 'important');
+    graphArea.style.setProperty('fill', 'url(#wviScoreThresholdGradient)', 'important');
     if (points.length) {
         const [startX, startY] = points[0].split(',');
         const [endX, endY] = points[points.length - 1].split(',');
