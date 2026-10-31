@@ -1286,6 +1286,7 @@ async function loadWeatherChange() {
             // 0 = little recent change; 10 = high recent volatility. Push alerts use this same score.
             const volatilityScore = Math.round(result.score * 10) / 10;
             scoreElement.textContent = volatilityScore.toFixed(1);
+            scoreElement.dataset.wviBand = volatilityScore >= 6 ? 'orange' : 'blue';
             updateWeatherChangeLevel(volatilityScore, volatilityScore >= 6 ? 'moderate' : 'high');
             scoreElement.setAttribute('aria-label', 'Weather Volatility Index score ' + volatilityScore.toFixed(1) + ' out of 10');
 
