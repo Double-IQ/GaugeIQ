@@ -987,7 +987,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <section class="card weather-change-card" aria-labelledby="weatherChangeTitle">
+    <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading weather-change-heading">
             <div>
                 <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
