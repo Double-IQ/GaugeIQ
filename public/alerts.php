@@ -264,7 +264,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="css/app.css?v=20261031-silver-light-mode-v1">
-<link rel="stylesheet" href="css/alerts.css?v=20261031-daily-forecast-time-mobile">
+<link rel="stylesheet" href="css/alerts.css?v=20261031-notification-devices-collapse">
 <title>GaugeIQ — Weather Alerts</title>
 </head>
 <body>
@@ -336,42 +336,46 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </form>
 </section>
 
-<section class="card notification-devices-card" aria-labelledby="notificationDevicesTitle">
-    <div class="section-heading">
-        <div>
-            <h2 id="notificationDevicesTitle">Devices with notifications enabled</h2>
-            <p class="muted">Each listed device has a saved push subscription. Send a test to one device without notifying the others.</p>
-        </div>
+<details class="card notification-devices-card daily-forecast-alert-card">
+    <summary class="daily-forecast-summary" aria-controls="notificationDevicesContent">
+        <span class="daily-forecast-summary-title">
+            <strong id="notificationDevicesTitle">Devices with notifications enabled</strong>
+            <small>Manage registered devices and send test notifications</small>
+        </span>
         <span class="status-pill <?= $notificationDevices ? 'status-good' : 'status-warn' ?>"><?= count($notificationDevices) ?> device<?= count($notificationDevices) === 1 ? '' : 's' ?></span>
-    </div>
-    <?php if (!$notificationDevices): ?>
-        <p class="muted">No devices are currently registered for push notifications.</p>
-    <?php else: ?>
-        <div class="notification-device-list">
-            <?php foreach ($notificationDevices as $device): ?>
-                <div class="notification-device-row">
-                    <div class="notification-device-details">
-                        <strong><?= h(notificationDeviceLabel($device['user_agent'] ?? null)) ?></strong>
-                        <small>Registered: <?= h((string)($device['created_at'] ?? 'Unknown')) ?></small>
-                        <small>Last seen: <?= h((string)($device['last_seen_at'] ?? 'Not recorded')) ?></small>
-                        <?php if (!empty($device['last_push_at'])): ?>
-                            <small>Last push test/alert: <?= h((string)$device['last_push_at']) ?> · <?= h((string)($device['last_push_status'] ?? 'unknown')) ?></small>
-                        <?php endif; ?>
-                        <?php if (($device['last_push_status'] ?? '') === 'failed' && !empty($device['last_push_error'])): ?>
-                            <small class="monitor-warning">Last push error: <?= h((string)$device['last_push_error']) ?></small>
-                        <?php endif; ?>
+        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div id="notificationDevicesContent" class="daily-forecast-content">
+        <?php if (!$notificationDevices): ?>
+            <p class="muted">No devices are currently registered for push notifications.</p>
+        <?php else: ?>
+            <div class="notification-device-list">
+                <?php foreach ($notificationDevices as $device): ?>
+                    <div class="notification-device-row">
+                        <div class="notification-device-details">
+                            <strong><?= h(notificationDeviceLabel($device['user_agent'] ?? null)) ?></strong>
+                            <small>Registered: <?= h((string)($device['created_at'] ?? 'Unknown')) ?></small>
+                            <small>Last seen: <?= h((string)($device['last_seen_at'] ?? 'Not recorded')) ?></small>
+                            <?php if (!empty($device['last_push_at'])): ?>
+                                <small>Last push test/alert: <?= h((string)$device['last_push_at']) ?> · <?= h((string)($device['last_push_status'] ?? 'unknown')) ?></small>
+                            <?php endif; ?>
+                            <?php if (($device['last_push_status'] ?? '') === 'failed' && !empty($device['last_push_error'])): ?>
+                                <small class="monitor-warning">Last push error: <?= h((string)$device['last_push_error']) ?></small>
+                            <?php endif; ?>
+                        </div>
+                        <form method="post" class="notification-device-test-form">
+                            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                            <input type="hidden" name="action" value="test_device_notification">
+                            <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
+                            <button type="submit">Test notification</button>
+                        </form>
                     </div>
-                    <form method="post" class="notification-device-test-form">
-                        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                        <input type="hidden" name="action" value="test_device_notification">
-                        <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
-                        <button type="submit">Test notification</button>
-                    </form>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-</section>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+    </div>
+</details>
 
 <details class="card daily-forecast-alert-card">
     <summary class="daily-forecast-summary" aria-controls="dailyForecastAlertContent">
