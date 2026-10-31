@@ -119,3 +119,18 @@
 .alert-card>summary::marker{content:""}
 .alert-card[open]>.alert-actions{margin-top:16px}
 .alert-card>.alert-edit-form{margin-top:16px}
+
+/* Compact saved-alert summary layout, especially on phones. */
+.alert-card>summary{min-width:0;align-items:center}
+.alert-card-main{flex:1;min-width:0}
+.alert-card-title{min-width:0;flex-wrap:wrap}
+.alert-card-title h3{min-width:0;overflow-wrap:anywhere}
+.alert-card-title .alert-state{flex:0 0 auto;white-space:nowrap}
+.alert-card .alert-meta{font-size:12px;line-height:1.35}
+.alert-card .alert-config{margin:12px 0 0}
+@media(max-width:560px){
+  .alert-card>summary{gap:8px}
+  .alert-card-title{gap:7px}
+  .alert-card-title h3{font-size:15px}
+  .alert-card .alert-meta{margin-top:4px;font-size:12px}
+}
