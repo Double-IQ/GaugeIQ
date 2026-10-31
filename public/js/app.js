@@ -1186,7 +1186,32 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         graphDefs.appendChild(graphGradient);
     }
     graphLine.style.setProperty('stroke', 'url(#wviScoreThresholdGradient)', 'important');
-    graphArea.style.setProperty('fill', 'url(#wviScoreThresholdGradient)', 'important');
+
+    // Keep the area fill translucent; the line gradient above stays fully opaque.
+    let graphFillGradient = graphDefs.querySelector('#wviScoreThresholdFill');
+    if (!graphFillGradient) {
+        graphFillGradient = document.createElementNS(svgNamespace, 'linearGradient');
+        graphFillGradient.setAttribute('id', 'wviScoreThresholdFill');
+        graphFillGradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+        graphFillGradient.setAttribute('x1', '0');
+        graphFillGradient.setAttribute('x2', '0');
+        graphFillGradient.setAttribute('y1', '22');
+        graphFillGradient.setAttribute('y2', '4');
+        [
+            ['0', '#35c4eb', '0.015'],
+            ['0.5999', '#35c4eb', '0.09'],
+            ['0.6001', '#ffc184', '0.09'],
+            ['1', '#ffc184', '0.09']
+        ].forEach(([offset, colour, opacity]) => {
+            const stop = document.createElementNS(svgNamespace, 'stop');
+            stop.setAttribute('offset', offset);
+            stop.setAttribute('stop-color', colour);
+            stop.setAttribute('stop-opacity', opacity);
+            graphFillGradient.appendChild(stop);
+        });
+        graphDefs.appendChild(graphFillGradient);
+    }
+    graphArea.style.setProperty('fill', 'url(#wviScoreThresholdFill)', 'important');
     if (points.length) {
         const [startX, startY] = points[0].split(',');
         const [endX, endY] = points[points.length - 1].split(',');
