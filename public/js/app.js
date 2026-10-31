@@ -1269,7 +1269,8 @@ async function loadWeatherChange() {
         const conditionsElement = document.getElementById('weatherConditions');
         const trendIcon = document.getElementById('conditionsTrendIcon');
         const trendSummary = document.getElementById('conditionsTrendSummary');
-        const trendReasons = document.getElementById('conditionsTrendReasons');
+        const trendLabel = document.getElementById('conditionsTrendLabel');
+        const trendReasons = document.getElementById('conditionsTrendReasonItems');
 
         if (result.score === null) {
             scoreElement.textContent = '—';
@@ -1392,9 +1393,8 @@ async function loadWeatherChange() {
         }
 
         if (trend.score === null) {
-            if (trendSummary) trendSummary.textContent = 'Gathering more valid readings…' + (usedRecentBackfillForTrend
-                ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
-                : '');
+            if (trendSummary) trendSummary.textContent = 'Not enough recent data to establish a directional trend yet.';
+            if (trendLabel) trendLabel.textContent = 'Gathering readings…';
             if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
             if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
@@ -1404,8 +1404,9 @@ async function loadWeatherChange() {
                 trendIcon.dataset.trend = trend.label.toLowerCase();
                 trendIcon.setAttribute('aria-label', trend.label);
             }
-            if (trendSummary) trendSummary.textContent = trend.label + ' · ' + trend.explanation + (usedRecentBackfillForTrend
-                ? ' · Temporary recent hourly model estimates used because live readings were insufficient.'
+            if (trendLabel) trendLabel.textContent = trend.label;
+            if (trendSummary) trendSummary.textContent = trend.explanation + (usedRecentBackfillForTrend
+                ? ' Temporary recent hourly model estimates were used because live readings were insufficient.'
                 : '');
             if (trendReasons) {
                 trendReasons.innerHTML = trend.reasons.length
@@ -1438,8 +1439,10 @@ async function loadWeatherChange() {
         reasonsElement.replaceChildren(summaryElement);
         reasonsElement.insertAdjacentHTML('beforeend', '<div class="weather-change-reason">Recent readings could not be loaded. The meters have not been calculated.</div>');
         const trendSummary = document.getElementById('conditionsTrendSummary');
-        const trendReasons = document.getElementById('conditionsTrendReasons');
-        if (trendSummary) trendSummary.textContent = 'Conditions trend unavailable.';
+        const trendLabel = document.getElementById('conditionsTrendLabel');
+        const trendReasons = document.getElementById('conditionsTrendReasonItems');
+        if (trendSummary) trendSummary.textContent = 'Recent readings could not be loaded, so the trend cannot be assessed.';
+        if (trendLabel) trendLabel.textContent = 'Unavailable';
         if (trendReasons) trendReasons.innerHTML = '';
         const conditionsElement = document.getElementById('weatherConditions');
         if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status unavailable">→ Unavailable</b>';
