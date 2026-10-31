@@ -712,23 +712,42 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 <script>
 (() => {
+    const root = document.documentElement;
     const select = document.getElementById('themeSelect');
     const meta = document.querySelector('meta[name="theme-color"]');
-    const applyTheme = (theme) => {
-        if (theme === 'system') document.documentElement.removeAttribute('data-theme');
-        else document.documentElement.dataset.theme = theme;
-        const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (meta) meta.setAttribute('content', dark ? '#0b1120' : '#f3f4f6');
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const readPreference = () => {
+        try { return localStorage.getItem('gaugeiq-theme') || 'system'; }
+        catch (_) { return 'system'; }
     };
-    const saved = localStorage.getItem('gaugeiq-theme') || 'system';
-    select.value = saved;
+    const savePreference = (theme) => {
+        try { localStorage.setItem('gaugeiq-theme', theme); } catch (_) {}
+    };
+    const applyTheme = (theme) => {
+        const dark = theme === 'dark' || (theme === 'system' && media.matches);
+        root.dataset.theme = theme === 'system' ? (media.matches ? 'dark' : 'light') : theme;
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        root.style.setProperty('--text', dark ? '#f3f4f6' : '#26313f');
+        root.style.setProperty('--muted', dark ? '#9ca3af' : '#687586');
+        root.style.setProperty('--background', dark ? '#0b1120' : '#e7e9ed');
+        root.style.setProperty('--card', dark ? '#111827' : '#f5f6f8');
+        root.style.setProperty('--surface', dark ? '#1f2937' : '#e4e7eb');
+        root.style.setProperty('--border', dark ? '#374151' : '#cbd1d9');
+        root.style.setProperty('--accent', dark ? '#2563eb' : '#26313f');
+        if (meta) meta.setAttribute('content', dark ? '#0b1120' : '#e7e9ed');
+    };
+    const saved = readPreference();
+    if (select) {
+        select.value = saved;
+        select.addEventListener('change', () => {
+            const theme = ['system', 'light', 'dark'].includes(select.value) ? select.value : 'system';
+            savePreference(theme);
+            applyTheme(theme);
+        });
+    }
     applyTheme(saved);
-    select.addEventListener('change', () => {
-        localStorage.setItem('gaugeiq-theme', select.value);
-        applyTheme(select.value);
-    });
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
-        if ((localStorage.getItem('gaugeiq-theme') || 'system') === 'system') applyTheme('system');
+    media.addEventListener?.('change', () => {
+        if (readPreference() === 'system') applyTheme('system');
     });
 })();
 </script>
