@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
-<link rel="stylesheet" href="css/app.css?v=20261031-wvi-needle-green-v2">
+<link rel="stylesheet" href="css/app.css?v=20261031-dew-point-zones-v2">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -619,6 +619,13 @@ if ($current && !empty($current['observed_at'])) {
         $climateBar['sparklineStartpoint'] = $valueCount >= 2 ? explode(',', $points[0]) : null;
         $climateBar['sparklineEndpoint'] = $valueCount >= 2 ? explode(',', end($points)) : null;
         $climateBar['historyCount'] = $valueCount;
+        if ($climateBar['historyKey'] === 'dew_point_c' && $valueCount >= 2) {
+            // Map the 15.5°C colour boundary into this sparkline's value scale.
+            $dewPointThresholdPosition = (15.5 - $minValue) / $range;
+            $climateBar['dewPointThresholdOffset'] = max(0.0, min(1.0, $dewPointThresholdPosition));
+            $climateBar['dewPointAllBlue'] = max($values) < 15.5;
+            $climateBar['dewPointAllOrange'] = min($values) >= 15.5;
+        }
     }
     unset($climateBar);
     ?>
@@ -676,10 +683,8 @@ if ($current && !empty($current['observed_at'])) {
                     && (float)$bar['delta'] <= -0.8;
                 $dewPointGapWarning = ($bar['historyKey'] ?? '') === 'dew_point_gap_c'
                     && (float)$bar['value'] <= 3.0;
-                $dewPointWarm = ($bar['historyKey'] ?? '') === 'dew_point_c'
-                    && (float)$bar['value'] >= 16.0;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $pressureFalling ? ' pressure-falling' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?><?= $dewPointWarm ? ' dew-point-warm' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $pressureFalling ? ' pressure-falling' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
@@ -719,12 +724,32 @@ if ($current && !empty($current['observed_at'])) {
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
                     <?php if ($bar['sparkline'] !== ''): ?>
                         <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ' trend over the last 24 hours, based on ' . $bar['historyCount'] . ' stored readings', ENT_QUOTES) ?>">
-                            <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"></polygon>
+                            <?php if (($bar['historyKey'] ?? '') === 'dew_point_c'): ?>
+                                <defs>
+                                    <?php
+                                    $dewOffset = (float)($bar['dewPointThresholdOffset'] ?? 0.5);
+                                    $dewBoundary = number_format($dewOffset * 100, 4, '.', '') . '%';
+                                    $dewLineStops = ($bar['dewPointAllBlue'] ?? false)
+                                        ? '<stop offset="0%" stop-color="#35c4eb"/><stop offset="100%" stop-color="#35c4eb"/>'
+                                        : (($bar['dewPointAllOrange'] ?? false)
+                                            ? '<stop offset="0%" stop-color="#ffc184"/><stop offset="100%" stop-color="#ffc184"/>'
+                                            : '<stop offset="' . $dewBoundary . '" stop-color="#35c4eb"/><stop offset="' . $dewBoundary . '" stop-color="#ffc184"/>');
+                                    $dewAreaStops = ($bar['dewPointAllBlue'] ?? false)
+                                        ? '<stop offset="0%" stop-color="#35c4eb" stop-opacity=".09"/><stop offset="100%" stop-color="#35c4eb" stop-opacity=".09"/>'
+                                        : (($bar['dewPointAllOrange'] ?? false)
+                                            ? '<stop offset="0%" stop-color="#ffc184" stop-opacity=".09"/><stop offset="100%" stop-color="#ffc184" stop-opacity=".09"/>'
+                                            : '<stop offset="' . $dewBoundary . '" stop-color="#35c4eb" stop-opacity=".09"/><stop offset="' . $dewBoundary . '" stop-color="#ffc184" stop-opacity=".09"/>');
+                                    ?>
+                                    <linearGradient id="dewPointZoneLine-<?= $barIndex ?>" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewLineStops ?></linearGradient>
+                                    <linearGradient id="dewPointZoneArea-<?= $barIndex ?>" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewAreaStops ?></linearGradient>
+                                </defs>
+                            <?php endif; ?>
+                            <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="fill:url(#dewPointZoneArea-' . (int)$barIndex . ')"' : '' ?>></polygon>
                             <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                             <?php if (is_array($bar['sparklineEndpoint'])): ?>
                                 <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y2="23.5"></line>
                             <?php endif; ?>
-                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"></polyline>
+                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="stroke:url(#dewPointZoneLine-' . (int)$barIndex . ')"' : '' ?>></polyline>
                             <?php if (is_array($bar['sparklineStartpoint'])): ?>
                                 <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($bar['sparklineStartpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineStartpoint'][1], ENT_QUOTES) ?>" r="1"></circle>
                             <?php endif; ?>
