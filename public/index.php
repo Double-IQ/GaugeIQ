@@ -937,7 +937,7 @@ if ($current && !empty($current['observed_at'])) {
                         <strong class="climate-bar-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
                         <strong class="climate-bar-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
                         <?php if ($windSpeedTrendCount >= 2): ?>
-                            <svg class="climate-bar-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
+                            <svg class="climate-bar-sparkline <?= $windSpeed < 15 ? 'wind-speed-band-blue' : 'wind-speed-band-orange' ?>" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="<?= htmlspecialchars('Wind speed trend over the last 24 hours, based on ' . $windSpeedTrendCount . ' stored readings', ENT_QUOTES) ?>">
                                 <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($windSpeedTrendArea, ENT_QUOTES) ?>"></polygon>
                                 <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                                 <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($windSpeedTrendEnd[1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($windSpeedTrendEnd[0], ENT_QUOTES) ?>" y2="23.5"></line>
