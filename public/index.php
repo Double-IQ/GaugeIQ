@@ -668,13 +668,16 @@ if ($current && !empty($current['observed_at'])) {
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
                 // A pressure drop of 0.8 hPa or more over the last hour is the
                 // threshold for switching the pressure graph and change indicator to orange.
+                $pressureFalling = ($bar['kind'] ?? '') === 'air-pressure'
+                    && $bar['delta'] !== null
+                    && (float)$bar['delta'] < 0;
                 $pressureDropWarning = ($bar['kind'] ?? '') === 'air-pressure'
                     && $bar['delta'] !== null
                     && (float)$bar['delta'] <= -0.8;
                 $dewPointGapWarning = ($bar['historyKey'] ?? '') === 'dew_point_gap_c'
                     && (float)$bar['value'] <= 3.0;
             ?>
-                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
+                <div class="climate-bar-row<?= isset($bar['kind']) ? ' climate-bar-' . htmlspecialchars($bar['kind'], ENT_QUOTES) : '' ?><?= $pressureDropWarning ? ' pressure-drop-warning' : '' ?><?= $pressureFalling ? ' pressure-falling' : '' ?><?= $dewPointGapWarning ? ' dew-point-gap-warning' : '' ?>" data-climate-graph="<?= htmlspecialchars((string)$bar['historyKey'], ENT_QUOTES) ?>">
                     <div class="climate-bar-label"><?= htmlspecialchars($bar['label'], ENT_QUOTES) ?></div>
                     <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'] . ', one-hour change ' . $bar['deltaDisplay'], ENT_QUOTES) ?>">
                         <?php for ($segment = 0; $segment < $segmentCount; $segment++):
