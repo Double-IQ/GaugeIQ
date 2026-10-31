@@ -2552,3 +2552,23 @@ body.gaugeiq-menu-open{overflow:hidden}
     white-space:nowrap;
   }
 }
+
+
+/* Conditions trend: description first, then the directional icon and label,
+   with its explanation kept inside the expandable More information panel. */
+.conditions-trend-card .conditions-trend-heading h2{margin:0}
+.conditions-trend-card .conditions-trend-heading p{margin:3px 0 0}
+.conditions-trend-card .conditions-trend-result{
+  display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-top:12px
+}
+.conditions-trend-card .conditions-trend-score{
+  width:42px;height:42px;flex:0 0 42px;font-size:23px
+}
+.conditions-trend-card .conditions-trend-label{
+  color:var(--text);font-size:16px;font-weight:800
+}
+.conditions-trend-card .conditions-trend-label[data-trend="improving"]{color:#25865a}
+.conditions-trend-card .conditions-trend-label[data-trend="worsening"]{color:#ffc184}
+.conditions-trend-card .weather-change-reasons-toggle{display:flex;width:max-content;margin:10px 0 0}
+.conditions-trend-card .conditions-trend-reasons{margin-top:10px}
+.conditions-trend-card .conditions-trend-summary{margin:0 0 10px;font-size:13px;font-weight:600;line-height:1.5}
