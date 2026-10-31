@@ -2678,3 +2678,18 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 .conditions-trend-card .algorithm-details{border-top-color:rgba(117,164,211,.2)}
 
+/* Match the Conditions Trend icon circle to the WVI score circle. */
+.conditions-trend-card .conditions-trend-score{
+  flex:0 0 78px;
+  width:78px;
+  height:78px;
+  font-size:30px;
+}
+@media(max-width:560px){
+  .conditions-trend-card .conditions-trend-score{
+    flex-basis:64px;
+    width:64px;
+    height:64px;
+    font-size:26px;
+  }
+}
