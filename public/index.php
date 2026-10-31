@@ -740,16 +740,16 @@ if ($current && !empty($current['observed_at'])) {
                                             ? '<stop offset="0%" stop-color="#ffc184" stop-opacity=".09"/><stop offset="100%" stop-color="#ffc184" stop-opacity=".09"/>'
                                             : '<stop offset="' . $dewBoundary . '" stop-color="#35c4eb" stop-opacity=".09"/><stop offset="' . $dewBoundary . '" stop-color="#ffc184" stop-opacity=".09"/>');
                                     ?>
-                                    <linearGradient id="dewPointZoneLine-<?= $barIndex ?>" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewLineStops ?></linearGradient>
-                                    <linearGradient id="dewPointZoneArea-<?= $barIndex ?>" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewAreaStops ?></linearGradient>
+                                    <linearGradient id="dewPointZoneLine" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewLineStops ?></linearGradient>
+                                    <linearGradient id="dewPointZoneArea" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewAreaStops ?></linearGradient>
                                 </defs>
                             <?php endif; ?>
-                            <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="fill:url(#dewPointZoneArea-' . (int)$barIndex . ')"' : '' ?>></polygon>
+                            <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="fill:url(#dewPointZoneArea-')"' : '' ?>></polygon>
                             <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                             <?php if (is_array($bar['sparklineEndpoint'])): ?>
                                 <line class="climate-sparkline-current-guide" x1="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y1="<?= htmlspecialchars($bar['sparklineEndpoint'][1], ENT_QUOTES) ?>" x2="<?= htmlspecialchars($bar['sparklineEndpoint'][0], ENT_QUOTES) ?>" y2="23.5"></line>
                             <?php endif; ?>
-                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="stroke:url(#dewPointZoneLine-' . (int)$barIndex . ')"' : '' ?>></polyline>
+                            <polyline points="<?= htmlspecialchars($bar['sparkline'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="stroke:url(#dewPointZoneLine-')"' : '' ?>></polyline>
                             <?php if (is_array($bar['sparklineStartpoint'])): ?>
                                 <circle class="climate-sparkline-startpoint" cx="<?= htmlspecialchars($bar['sparklineStartpoint'][0], ENT_QUOTES) ?>" cy="<?= htmlspecialchars($bar['sparklineStartpoint'][1], ENT_QUOTES) ?>" r="1"></circle>
                             <?php endif; ?>
