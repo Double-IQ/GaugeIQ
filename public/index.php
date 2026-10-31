@@ -1017,14 +1017,14 @@ if ($current && !empty($current['observed_at'])) {
     </section>
 
     <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
-        <div class="section-heading">
-            <div>
-                <h2 id="conditionsTrendTitle">Conditions trend</h2>
-                <p class="muted">Interprets the change in weather conditions.</p>
-            </div>
-            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
+        <div class="conditions-trend-heading">
+            <h2 id="conditionsTrendTitle">Conditions trend</h2>
+            <p class="muted">Interprets the change in weather conditions.</p>
         </div>
-        <div class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</div>
+        <div class="conditions-trend-result">
+            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
+            <strong class="conditions-trend-label" id="conditionsTrendLabel">Analysing…</strong>
+        </div>
         <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="9"></circle>
@@ -1033,7 +1033,9 @@ if ($current && !empty($current['observed_at'])) {
             </svg>
             <span id="conditionsTrendReasonsButtonLabel">More information</span>
         </button>
-        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden></div>
+        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
+            <p class="conditions-trend-summary" id="conditionsTrendSummary">Analysing recent conditions…</p>
+        </div>
         <details class="algorithm-details">
             <summary>How the conditions trend is classified</summary>
             <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
