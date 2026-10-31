@@ -264,7 +264,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="css/app.css?v=20261031-silver-light-mode-v1">
-<link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
+<link rel="stylesheet" href="css/alerts.css?v=20261031-daily-forecast-collapse">
 <title>GaugeIQ — Weather Alerts</title>
 </head>
 <body>
