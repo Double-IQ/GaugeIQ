@@ -91,3 +91,17 @@
 .notification-device-test-form{flex:0 0 auto}
 .notification-device-test-form button{white-space:nowrap}
 @media(max-width:560px){.notification-device-row{align-items:stretch;flex-direction:column;gap:10px}.notification-device-test-form button{width:100%}}
+
+
+.daily-forecast-alert-card{padding:0;overflow:hidden}
+.daily-forecast-summary{display:flex;align-items:center;gap:12px;padding:18px 20px;list-style:none;cursor:pointer}
+.daily-forecast-summary::-webkit-details-marker{display:none}
+.daily-forecast-summary::marker{content:""}
+.daily-forecast-summary-title{display:grid;gap:4px;min-width:0;flex:1}
+.daily-forecast-summary-title strong{font-size:17px;font-weight:850;color:var(--text)}
+.daily-forecast-summary-title small{font-size:13px;color:var(--muted)}
+.daily-forecast-chevron{color:var(--muted);font-size:22px;line-height:1;transition:transform .2s ease}
+.daily-forecast-alert-card[open] .daily-forecast-chevron{transform:rotate(180deg)}
+.daily-forecast-content{padding:0 20px 20px;border-top:1px solid var(--border)}
+.daily-forecast-content>p.muted{margin:14px 0}
+@media(max-width:560px){.daily-forecast-summary{padding:15px;gap:8px}.daily-forecast-summary-title strong{font-size:15px}.daily-forecast-summary .status-pill{font-size:11px;white-space:nowrap}.daily-forecast-content{padding:0 15px 15px}}
