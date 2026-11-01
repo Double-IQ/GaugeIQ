@@ -483,7 +483,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             </div>
             <div id="valueField">
                 <label for="value">Value</label>
-                <input id="value" name="value" type="number" min="0" max="10" step="1" value="3">
+                <input id="value" name="value" type="number" min="0" max="10" step="0.1" value="6.0">
                 <p id="weatherVolatilityHelp" class="alert-help muted" hidden>Alert when the WVI rises to or above this score (0–10). This uses the same six-hour weighted score shown on the dashboard.</p>
             </div>
             <div id="degreesField" class="full" hidden>
@@ -584,7 +584,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
                 <?php elseif ($rule['metric'] === 'dew_point'): ?>Dew point <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
                 <?php elseif ($rule['metric'] === 'dew_point_gap'): ?>Dew point gap <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
-                <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
+                <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>/10
                 <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                 <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
                 <?php else: ?>Wind <?= h(number_format((float)($ruleConfig['speed_min'] ?? 0), 1)) ?> km/h or faster, from <?= h(PressureService::directionLabel((float)($ruleConfig['direction_from'] ?? 0))) ?> to <?= h(PressureService::directionLabel((float)($ruleConfig['direction_to'] ?? 0))) ?>
@@ -624,6 +624,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
-<script src="js/alerts.js?v=20261101-dew-point-gap-alerts" defer></script>
+<script src="js/alerts.js?v=20261101-wvi-decimal-thresholds" defer></script>
 </body>
 </html>
