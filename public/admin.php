@@ -58,7 +58,7 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
 $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
-$monitorCronMinutes = 30;
+$monitorCronMinutes = 60;
 $monitorSettings = [];
 foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
     $monitorSettings[(string)$setting['key']] = (string)$setting['value'];
