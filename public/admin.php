@@ -115,13 +115,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
 </section>
 
-<section class="card location-history-link-card">
-    <div class="section-heading">
-        <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
-        <a class="secondary button-link" href="location-history.php">Open location &amp; history</a>
-    </div>
-</section>
-
 <section class="admin-hero card weather-alerts-link">
     <div>
         <p class="eyebrow">WEATHER ALERTS</p>
@@ -132,6 +125,13 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     <div class="alert-summary">
         <strong><?= $enabledRuleCount ?></strong>
         <span>active rule<?= $enabledRuleCount === 1 ? '' : 's' ?></span>
+    </div>
+</section>
+
+<section class="card location-history-link-card">
+    <div class="section-heading">
+        <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
+        <a class="secondary button-link" href="location-history.php">Open location &amp; history</a>
     </div>
 </section>
 
