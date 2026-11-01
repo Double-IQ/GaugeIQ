@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $metric = (string)$_POST['metric'];
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
-                if (in_array($metric, ['pressure', 'humidity', 'dew_point', 'wind_speed', 'weather_stability'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'dew_point', 'dew_point_gap', 'wind_speed', 'weather_stability'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $type = (string)$_POST['condition_type'];
                 $configuration = [];
 
-                if (in_array($metric, ['pressure', 'humidity', 'dew_point', 'wind_speed', 'weather_stability'], true)) {
+                if (in_array($metric, ['pressure', 'humidity', 'dew_point', 'dew_point_gap', 'wind_speed', 'weather_stability'], true)) {
                     $configuration['value'] = (float)$_POST['value'];
                 } elseif ($metric === 'wind_direction') {
                     $configuration['degrees'] = (float)$_POST['degrees'];
@@ -464,6 +464,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <option value="pressure">Air pressure</option>
                     <option value="humidity">Humidity</option>
                     <option value="dew_point">Dew point</option>
+                    <option value="dew_point_gap">Dew point gap</option>
                     <option value="wind_speed">Wind speed</option>
                     <option value="weather_stability">Weather Volatility Index (WVI)</option>
                     <option value="wind_direction">Wind direction</option>
@@ -582,6 +583,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                 <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
                 <?php elseif ($rule['metric'] === 'dew_point'): ?>Dew point <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
+                <?php elseif ($rule['metric'] === 'dew_point_gap'): ?>Dew point gap <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
                 <?php elseif ($rule['metric'] === 'weather_stability'): ?>Weather Volatility Index (WVI) rises to or above <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>/10
                 <?php elseif ($rule['metric'] === 'wind_speed'): ?>Wind speed <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> km/h
                 <?php elseif ($rule['metric'] === 'wind_direction'): ?>Wind direction <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['degrees'] ?? 0), 0)) ?>°
@@ -599,7 +601,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <div class="alert-grid">
                     <div class="full"><label>Alert name</label><input name="name" value="<?= h((string)$rule['name']) ?>" required></div>
                     <div><label>Monitor</label><select name="metric" data-edit-metric>
-                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','dew_point'=>'Dew point','wind_speed'=>'Wind speed','weather_stability'=>'Weather Volatility Index (WVI)','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                        <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','dew_point'=>'Dew point','dew_point_gap'=>'Dew point gap','wind_speed'=>'Wind speed','weather_stability'=>'Weather Volatility Index (WVI)','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div><label>Condition</label><select name="condition_type" data-edit-condition>
                         <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
@@ -622,6 +624,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
-<script src="js/alerts.js?v=20261101-dew-point-alerts" defer></script>
+<script src="js/alerts.js?v=20261101-dew-point-gap-alerts" defer></script>
 </body>
 </html>
