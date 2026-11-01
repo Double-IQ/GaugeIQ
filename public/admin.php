@@ -57,8 +57,6 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
 
 $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
 
-$recentAlerts = $pdo->query("SELECT e.id, e.observed_at, e.message, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8")->fetchAll(PDO::FETCH_ASSOC);
-
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
 $monitorCronMinutes = 60;
 $monitorSettings = [];
@@ -124,42 +122,17 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     </div>
 </section>
 
-<section class="admin-hero card weather-alerts-link alert-history-card" aria-labelledby="weatherAlertsTitle">
-    <div class="section-heading">
-        <div>
-            <p class="eyebrow">WEATHER ALERTS</p>
-            <h2 id="weatherAlertsTitle">Alerts</h2>
-            <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
-            <a class="secondary button-link" href="alerts.php">Open Weather Alerts</a>
-        </div>
-        <div class="alert-summary">
-            <strong><?= $enabledRuleCount ?></strong>
-            <span>active rule<?= $enabledRuleCount === 1 ? '' : 's' ?></span>
-        </div>
+<section class="admin-hero card weather-alerts-link">
+    <div>
+        <p class="eyebrow">WEATHER ALERTS</p>
+        <h2>Alerts</h2>
+        <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
+        <a class="secondary button-link" href="alerts.php">Open Weather Alerts</a>
     </div>
-    <div class="section-heading alert-history-heading">
-        <div><h3 id="alertHistoryTitle">Alert history</h3><p class="muted">Recent conditions that triggered your saved rules.</p></div>
+    <div class="alert-summary">
+        <strong><?= $enabledRuleCount ?></strong>
+        <span>active rule<?= $enabledRuleCount === 1 ? '' : 's' ?></span>
     </div>
-    <?php if (!$recentAlerts): ?>
-        <p class="muted empty-history">No alerts have been triggered yet.</p>
-    <?php else: ?>
-        <div class="alert-history-list">
-            <?php foreach ($recentAlerts as $alert): ?>
-                <article class="alert-history-item">
-                    <div class="alert-history-icon">!</div>
-                    <div class="alert-history-content">
-                        <strong><?= h((string)($alert['name'] ?: 'GaugeIQ alert')) ?></strong>
-                        <p><?= h((string)$alert['message']) ?></p>
-                        <time datetime="<?= h((string)$alert['observed_at']) ?>"><?= h(date('d M, H:i', (int)strtotime((string)$alert['observed_at']))) ?></time>
-                        <form method="post" action="delete-alert-history.php?return_to=admin" onsubmit="return confirm('Delete this alert history record?')">
-                            <input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
-                            <button type="submit" class="alert-history-delete" aria-label="Delete record" title="Delete record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2 1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/></svg></button>
-                        </form>
-                    </div>
-                </article>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
 </section>
 
 <section class="card appearance-card" aria-labelledby="appearanceTitle">
