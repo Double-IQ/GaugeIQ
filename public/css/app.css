@@ -3136,3 +3136,111 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:linear-gradient(145deg,#e1e5ea,#cbd2da)!important;
   border-color:#b0bac5!important;
 }
+
+
+/* Historical graphs card: match the Wind HUD glass palette. */
+.history-card{
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+  overflow:hidden;
+}
+.history-card .history-toggle{border-radius:12px;transition:background .18s ease}
+.history-card .history-toggle:hover{background:rgba(53,196,235,.055)}
+.history-card .history-title{color:#edf6ff;letter-spacing:.01em}
+.history-card #historyStatus{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
+  padding:7px 11px;
+  border:1px solid rgba(53,196,235,.34);
+  border-radius:9px;
+  background:linear-gradient(110deg,rgba(53,196,235,.16),rgba(53,196,235,.055));
+  color:#8edfff;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.025em;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.history-card #historyStatus::after{
+  content:"→";
+  font-size:16px;
+  line-height:12px;
+  transition:transform .18s ease;
+}
+.history-card .history-toggle:hover #historyStatus{
+  border-color:rgba(53,196,235,.62);
+  background:linear-gradient(110deg,rgba(53,196,235,.24),rgba(53,196,235,.09));
+}
+.history-card .history-toggle:hover #historyStatus::after{transform:translateX(3px)}
+.history-card .history-toggle-indicator{
+  width:34px;
+  height:34px;
+  flex-basis:34px;
+  border:1px solid rgba(117,164,211,.36);
+  border-radius:11px;
+  background:linear-gradient(145deg,rgba(53,196,235,.17),rgba(5,18,37,.5));
+  color:#8edfff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .2s ease,background .2s ease,border-color .2s ease;
+}
+.history-card .history-toggle[aria-expanded="true"] .history-toggle-indicator{
+  transform:rotate(45deg);
+  border-color:rgba(255,193,132,.48);
+  color:#ffc184;
+  background:rgba(255,193,132,.1);
+}
+.history-card #historyContent{margin-top:15px}
+.history-card .history-range{
+  width:100%;
+  box-sizing:border-box;
+  padding:4px;
+  gap:5px;
+  border:1px solid rgba(117,164,211,.2);
+  border-radius:11px;
+  background:linear-gradient(112deg,rgba(16,39,65,.72),rgba(5,18,37,.62));
+}
+.history-card .history-range-button{
+  min-height:34px;
+  border:1px solid transparent;
+  border-radius:8px;
+  color:#9bb4d1;
+  font-weight:750;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+.history-card .history-range-button:hover{
+  color:#d9f5ff;
+  background:rgba(53,196,235,.1);
+}
+.history-card .history-range-button.active{
+  color:#06172b;
+  border-color:#35c4eb;
+  background:linear-gradient(180deg,#8be4ff,#35c4eb);
+  box-shadow:0 2px 10px rgba(53,196,235,.16);
+}
+.history-card .chart-block{
+  margin-top:13px;
+  padding:12px 12px 8px;
+  border:1px solid rgba(117,164,211,.16);
+  border-radius:11px;
+  background:linear-gradient(112deg,rgba(16,39,65,.72),rgba(5,18,37,.62));
+}
+.history-card .chart-block h3{
+  margin-bottom:8px;
+  color:#b8cce4;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.history-card .muted{color:#9bb4d1}
+@media(max-width:560px){
+  .history-card .history-toggle .section-heading{gap:12px}
+  .history-card .history-title{font-size:20px}
+  .history-card #historyStatus{font-size:11px;padding:7px 9px}
+  .history-card .history-range-button{padding:7px 5px;font-size:12px}
+  .history-card .chart-block{padding:10px 8px 6px}
+}
