@@ -1,13 +1,17 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/WeatherFormulaConfig.php';
+
 final class AlertRuleService
 {
     private DateTimeZone $timezone;
+    private array $weatherFormulaValues;
 
     public function __construct(private PDO $db, ?DateTimeZone $timezone = null)
     {
         $this->timezone = $timezone ?? new DateTimeZone(date_default_timezone_get());
+        $this->weatherFormulaValues = weatherFormulaValues($this->db);
         $this->migrateLegacyWeatherChangeRules();
     }
 
@@ -412,168 +416,136 @@ final class AlertRuleService
     }
 
     /**
-     * Return the dashboard's 0–10 weighted change score. Higher means greater weather volatility.
+     * Calculate WVI with the dashboard's cumulative-gradient algorithm and saved parameters.
      */
     private function weatherChangeScore(array $readings): ?float
     {
         $fields = [
-            'temperature' => 'temperature_c',
-            'dewPoint' => 'dew_point_c',
-            'pressure' => 'pressure_hpa',
-            'humidity' => 'humidity_percent',
-            'wind' => 'wind_speed_kmh',
-            'direction' => 'wind_direction_degrees',
-            'rain' => 'rainfall_mm',
-            'cloud' => 'cloud_cover_percent',
+            'temperature' => 'temperature_c', 'dewPoint' => 'dew_point_c',
+            'pressure' => 'pressure_hpa', 'humidity' => 'humidity_percent',
+            'wind' => 'wind_speed_kmh', 'direction' => 'wind_direction_degrees',
+            'rain' => 'rainfall_mm', 'cloud' => 'cloud_cover_percent',
             'weatherCode' => 'weather_code',
         ];
-
-        $valid = [];
+        $sorted = [];
         foreach ($readings as $item) {
             $time = isset($item['_weather_timestamp']) ? (int)$item['_weather_timestamp'] : false;
-            if ($time === false) {
-                continue;
-            }
-
-            $row = [
-                'source' => $item['source'] ?? null,
-                'time' => $time,
-            ];
-            foreach ($fields as $key => $column) {
-                $row[$key] = $this->weatherNumeric($item[$column] ?? null);
-            }
-            $valid[] = $row;
+            if ($time === false) continue;
+            $row = ['source' => $item['source'] ?? null, 'time' => $time];
+            foreach ($fields as $key => $column) $row[$key] = $this->weatherNumeric($item[$column] ?? null);
+            $sorted[] = $row;
         }
-
-        usort($valid, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
-
-        // Match the dashboard: remove duplicate timestamps and prefer live
-        // observations over temporary model backfill at the same timestamp.
+        usort($sorted, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
         $byTime = [];
-        foreach ($valid as $row) {
+        foreach ($sorted as $row) {
             $key = (string)$row['time'];
             $existing = $byTime[$key] ?? null;
-            if (
-                $existing === null ||
-                (($existing['source'] ?? null) === 'Open-Meteo Recent Backfill' &&
-                    ($row['source'] ?? null) !== 'Open-Meteo Recent Backfill') ||
-                ($existing['source'] ?? null) === ($row['source'] ?? null)
-            ) {
+            if ($existing === null ||
+                (($existing['source'] ?? null) === 'Open-Meteo Recent Backfill' && ($row['source'] ?? null) !== 'Open-Meteo Recent Backfill') ||
+                ($existing['source'] ?? null) === ($row['source'] ?? null)) {
                 $byTime[$key] = $row;
             }
         }
         $valid = array_values($byTime);
         usort($valid, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
-
-        if (count($valid) < 3) {
-            return null;
-        }
-
+        if (count($valid) < $this->weatherFormula('stability_min_readings', 3)) return null;
         $totalHours = ($valid[count($valid) - 1]['time'] - $valid[0]['time']) / 3600;
-        if ($totalHours < 1) {
-            return null;
-        }
+        if ($totalHours < $this->weatherFormula('stability_min_hours', 1)) return null;
 
-        $weights = [
-            'pressure' => 2,
-            'temperature' => 1,
-            'humidity' => 1,
-            'windSpeed' => 2,
-            'windDirection' => 1,
-            'dewPointSpread' => 1,
-            'rainfall' => 2,
-            'cloudCover' => 1,
-            'weatherCode' => 1,
-        ];
         $components = [];
-        $addComponent = static function (string $key, ?array $pair, float $severity) use (&$components, $weights): void {
-            if ($pair === null || !is_finite($severity)) {
-                return;
-            }
+        $add = function (string $signal, float $value) use (&$components): void {
             $components[] = [
-                'weight' => $weights[$key],
-                'severity' => max(0.0, min(1.0, $severity)),
+                'weight' => $this->weatherFormula('stability_weight_' . $signal, 1),
+                'severity' => max(0.0, min(1.0, $value)),
             ];
         };
-
-        $pressure = $this->weatherFieldPair($valid, 'pressure');
-        if ($pressure !== null) {
-            $addComponent('pressure', $pressure, $this->weatherSeverity(abs($pressure['delta']) / $pressure['hours'], 0.3, 1.5));
-        }
-
-        $temperature = $this->weatherFieldPair($valid, 'temperature');
-        if ($temperature !== null) {
-            $addComponent('temperature', $temperature, $this->weatherSeverity(abs($temperature['delta']) * 6 / $temperature['hours'], 1, 3));
-        }
-
-        $humidity = $this->weatherFieldPair($valid, 'humidity');
-        if ($humidity !== null) {
-            $addComponent('humidity', $humidity, $this->weatherSeverity(abs($humidity['delta']) * 6 / $humidity['hours'], 4, 12));
-        }
-
-        $wind = $this->weatherFieldPair($valid, 'wind');
-        if ($wind !== null) {
-            $addComponent('windSpeed', $wind, $this->weatherSeverity(abs($wind['delta']) * 6 / $wind['hours'], 8, 20));
-        }
-
-        $direction = $this->weatherFieldPair($valid, 'direction');
-        if ($direction !== null) {
-            $shift = $this->weatherDirectionDifference($direction['first'], $direction['last']);
-            $addComponent('windDirection', $direction, $this->weatherSeverity($shift, 20, 90));
-        }
-
-        $firstTemp = $this->weatherFieldPair($valid, 'temperature');
-        $firstDew = $this->weatherFieldPair($valid, 'dewPoint');
-        if ($firstTemp !== null && $firstDew !== null) {
-            $spreadFirst = $firstTemp['first'] - $firstDew['first'];
-            $spreadLast = $firstTemp['last'] - $firstDew['last'];
-            $narrowing = $spreadFirst - $spreadLast;
-            $addComponent('dewPointSpread', [
-                'first' => $spreadFirst,
-                'last' => $spreadLast,
-                'delta' => $spreadLast - $spreadFirst,
-                'hours' => min($firstTemp['hours'], $firstDew['hours']),
-            ], $this->weatherSeverity($narrowing, 1, 3));
-        }
-
-        $rain = $this->weatherFieldPair($valid, 'rain');
-        if ($rain !== null) {
-            $addComponent('rainfall', $rain, $this->weatherSeverity(abs($rain['delta']) * 6 / $rain['hours'], 0.2, 2));
-        }
-
-        $cloud = $this->weatherFieldPair($valid, 'cloud');
-        if ($cloud !== null) {
-            $addComponent('cloudCover', $cloud, $this->weatherSeverity(abs($cloud['delta']) * 6 / $cloud['hours'], 15, 50));
-        }
-
-        $codes = $this->weatherFieldPair($valid, 'weatherCode');
-        if ($codes !== null) {
-            $severityChange = abs(
-                $this->weatherCodeSeverity((int)$codes['last']) -
-                $this->weatherCodeSeverity((int)$codes['first'])
+        $severity = fn(float $magnitude, string $signal, float $trigger, float $maximum): float =>
+            $this->weatherSeverity(
+                $magnitude,
+                $this->weatherFormula('stability_trigger_' . $signal, $trigger),
+                $this->weatherFormula('stability_max_' . $signal, $maximum)
             );
-            $changed = (int)$codes['first'] !== (int)$codes['last'];
-            $severity = $changed
-                ? max($severityChange > 0 ? $severityChange / 5 : 0.25, 0.25)
-                : 0.0;
-            $addComponent('weatherCode', $codes, $severity);
+        $movement = static function (array $rows, string $field): ?array {
+            $available = array_values(array_filter($rows, static fn(array $row): bool =>
+                $row[$field] !== null && is_finite((float)$row[$field])
+            ));
+            if (count($available) < 2) return null;
+            $distance = 0.0;
+            for ($i = 1; $i < count($available); $i++) {
+                $distance += abs((float)$available[$i][$field] - (float)$available[$i - 1][$field]);
+            }
+            $hours = ($available[count($available) - 1]['time'] - $available[0]['time']) / 3600;
+            return $hours > 0 ? ['distance' => $distance, 'hours' => $hours, 'scaled' => $distance * 6 / $hours] : null;
+        };
+
+        $pressure = $movement($valid, 'pressure');
+        if ($pressure !== null) $add('pressure', $severity($pressure['distance'] / $pressure['hours'], 'pressure', 0.3, 1.5));
+        foreach ([
+            ['temperature', 'temperature', 1.0, 3.0],
+            ['humidity', 'humidity', 4.0, 12.0],
+            ['wind_speed', 'wind', 8.0, 20.0],
+            ['rainfall', 'rain', 0.2, 2.0],
+            ['cloud_cover', 'cloud', 15.0, 50.0],
+        ] as [$signal, $field, $trigger, $maximum]) {
+            $item = $movement($valid, $field);
+            if ($item !== null) $add($signal, $severity($item['scaled'], $signal, $trigger, $maximum));
         }
 
-        if (count($components) < 5) {
-            return null;
+        $directions = array_values(array_filter($valid, static fn(array $row): bool =>
+            $row['direction'] !== null && is_finite((float)$row['direction'])
+        ));
+        if (count($directions) >= 2) {
+            $distance = 0.0;
+            for ($i = 1; $i < count($directions); $i++) {
+                $distance += $this->weatherDirectionDifference((float)$directions[$i - 1]['direction'], (float)$directions[$i]['direction']);
+            }
+            $hours = ($directions[count($directions) - 1]['time'] - $directions[0]['time']) / 3600;
+            if ($hours > 0) $add('wind_direction', $severity($distance * 6 / $hours, 'wind_direction', 20.0, 90.0));
         }
 
+        $spreads = [];
+        foreach ($valid as $row) {
+            if ($row['temperature'] !== null && $row['dewPoint'] !== null) {
+                $spreads[] = ['time' => $row['time'], 'value' => $row['temperature'] - $row['dewPoint']];
+            }
+        }
+        if (count($spreads) >= 2) {
+            $distance = 0.0;
+            for ($i = 1; $i < count($spreads); $i++) $distance += abs($spreads[$i]['value'] - $spreads[$i - 1]['value']);
+            $hours = ($spreads[count($spreads) - 1]['time'] - $spreads[0]['time']) / 3600;
+            if ($hours > 0) $add('dew_point_spread', $severity($distance * 6 / $hours, 'dew_point_spread', 1.0, 3.0));
+        }
+
+        $codes = array_values(array_filter($valid, static fn(array $row): bool =>
+            $row['weatherCode'] !== null && is_finite((float)$row['weatherCode'])
+        ));
+        if (count($codes) >= 2) {
+            $distance = 0.0;
+            for ($i = 1; $i < count($codes); $i++) {
+                $distance += abs($this->weatherCodeSeverity((int)$codes[$i]['weatherCode']) - $this->weatherCodeSeverity((int)$codes[$i - 1]['weatherCode']));
+            }
+            $hours = ($codes[count($codes) - 1]['time'] - $codes[0]['time']) / 3600;
+            if ($hours > 0) {
+                $scaled = $distance * 6 / $hours;
+                $add('weather_code', $distance > 0 ? max(0.25, $severity($scaled, 'weather_code', 1.0, 5.0)) : 0.0);
+            }
+        }
+
+        if (count($components) < $this->weatherFormula('stability_min_signals', 5)) return null;
         $availableWeight = 0.0;
         $weightedSeverity = 0.0;
         foreach ($components as $component) {
             $availableWeight += $component['weight'];
             $weightedSeverity += $component['weight'] * $component['severity'];
         }
-        if ($availableWeight <= 0) {
-            return null;
-        }
-
+        if ($availableWeight <= 0) return null;
         return round(10 * $weightedSeverity / $availableWeight, 1, PHP_ROUND_HALF_UP);
+    }
+
+    private function weatherFormula(string $key, float $fallback): float
+    {
+        $value = $this->weatherFormulaValues[$key] ?? $fallback;
+        return is_numeric($value) ? (float)$value : $fallback;
     }
 
     private function weatherFieldPair(array $readings, string $field): ?array
