@@ -258,10 +258,10 @@ final class AlertRuleService
         if ($type === 'change' && abs($value - $old) >= $threshold) {
             return sprintf('Pressure changed by %.1f hPa to %.1f hPa.', abs($value - $old), $value);
         }
-        if ($type === 'above' && $value >= $threshold && $old < $threshold) {
+        if ($type === 'above' && $value > $threshold && $old <= $threshold) {
             return sprintf('Pressure rose above %.1f hPa to %.1f hPa.', $threshold, $value);
         }
-        if ($type === 'below' && $value <= $threshold && $old > $threshold) {
+        if ($type === 'below' && $value < $threshold && $old >= $threshold) {
             return sprintf('Pressure fell below %.1f hPa to %.1f hPa.', $threshold, $value);
         }
 
@@ -277,10 +277,10 @@ final class AlertRuleService
         if ($type === 'change' && abs($value - $old) >= $threshold) {
             return sprintf('Humidity changed by %.0f%% to %.0f%%.', abs($value - $old), $value);
         }
-        if ($type === 'above' && $value >= $threshold && $old < $threshold) {
+        if ($type === 'above' && $value > $threshold && $old <= $threshold) {
             return sprintf('Humidity rose above %.0f%% to %.0f%%.', $threshold, $value);
         }
-        if ($type === 'below' && $value <= $threshold && $old > $threshold) {
+        if ($type === 'below' && $value < $threshold && $old >= $threshold) {
             return sprintf('Humidity fell below %.0f%% to %.0f%%.', $threshold, $value);
         }
 
@@ -296,10 +296,10 @@ final class AlertRuleService
         if ($type === 'change' && abs($value - $old) >= $threshold) {
             return sprintf('Wind speed changed by %.1f km/h to %.1f km/h.', abs($value - $old), $value);
         }
-        if ($type === 'above' && $value >= $threshold && $old < $threshold) {
+        if ($type === 'above' && $value > $threshold && $old <= $threshold) {
             return sprintf('Wind speed rose above %.1f km/h to %.1f km/h.', $threshold, $value);
         }
-        if ($type === 'below' && $value <= $threshold && $old > $threshold) {
+        if ($type === 'below' && $value < $threshold && $old >= $threshold) {
             return sprintf('Wind speed fell below %.1f km/h to %.1f km/h.', $threshold, $value);
         }
 
