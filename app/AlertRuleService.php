@@ -242,6 +242,7 @@ final class AlertRuleService
             'pressure' => $this->pressure($type, $config, $previous, $current),
             'humidity' => $this->humidity($type, $config, $previous, $current),
             'dew_point' => $this->dewPoint($type, $config, $previous, $current),
+            'dew_point_gap' => $this->dewPointGap($type, $config, $previous, $current),
             'wind_speed' => $this->windSpeed($type, $config, $previous, $current),
             'wind_direction' => $this->windDirection($type, $config, $previous, $current),
             'wind' => $this->combinedWind($type, $config, $previous, $current),
@@ -307,6 +308,32 @@ final class AlertRuleService
         }
         if ($type === 'below' && $value < $threshold && $old >= $threshold) {
             return sprintf('Dew point fell below %.1f°C to %.1f°C.', $threshold, $value);
+        }
+
+        return null;
+    }
+
+    private function dewPointGap(string $type, array $c, array $p, array $n): ?string
+    {
+        foreach ([$p, $n] as $reading) {
+            if (!isset($reading['temperature_c'], $reading['dew_point_c']) ||
+                !is_numeric($reading['temperature_c']) || !is_numeric($reading['dew_point_c'])) {
+                return null;
+            }
+        }
+
+        $value = (float)$n['temperature_c'] - (float)$n['dew_point_c'];
+        $old = (float)$p['temperature_c'] - (float)$p['dew_point_c'];
+        $threshold = (float)($c['value'] ?? 0);
+
+        if ($type === 'change' && abs($value - $old) >= $threshold) {
+            return sprintf('Dew point gap changed by %.1f°C to %.1f°C.', abs($value - $old), $value);
+        }
+        if ($type === 'above' && $value > $threshold && $old <= $threshold) {
+            return sprintf('Dew point gap rose above %.1f°C to %.1f°C.', $threshold, $value);
+        }
+        if ($type === 'below' && $value < $threshold && $old >= $threshold) {
+            return sprintf('Dew point gap fell below %.1f°C to %.1f°C.', $threshold, $value);
         }
 
         return null;
@@ -680,7 +707,7 @@ final class AlertRuleService
 
     private function validate(string $metric, string $type, array $configuration): void
     {
-        $allowedMetrics = ['pressure', 'humidity', 'dew_point', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
+        $allowedMetrics = ['pressure', 'humidity', 'dew_point', 'dew_point_gap', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
         $allowedTypes = ['change', 'above', 'below', 'specific', 'speed_and_direction'];
 
         if (!in_array($metric, $allowedMetrics, true) || !in_array($type, $allowedTypes, true)) {
