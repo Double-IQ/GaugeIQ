@@ -3296,7 +3296,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     .weather-alerts-link .button-link,
     .location-history-link-card .button-link,
     .admin-main-back{
-        width:100%;
-        white-space:normal;
+        width:auto;
+        white-space:nowrap;
     }
 }
