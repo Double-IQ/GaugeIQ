@@ -375,7 +375,7 @@ final class AlertRuleService
         $recentBackfill = [];
         foreach ($rows as $row) {
             $source = $row['source'] ?? null;
-            $isLive = $source === null || $source === 'Open-Meteo';
+            $isLive = $source === null || $source === 'Open-Meteo' || $source === 'Open-Meteo Historical Weather';
             $isBackfill = $source === 'Open-Meteo Recent Backfill';
             if (!$isLive && !$isBackfill) {
                 continue;
