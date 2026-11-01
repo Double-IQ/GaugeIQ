@@ -165,10 +165,8 @@ try {
 }
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
-// The cPanel cron is scheduled every 30 minutes in production. Keep monitoring
-// health separate from the weather/alert check interval so the actual cron
-// cadence is not incorrectly reported as overdue.
-$monitorCronMinutes = 30;
+// The cPanel background monitor is scheduled hourly.
+$monitorCronMinutes = 60;
 $nextMonitorAt = $lastMonitorAt ? strtotime($lastMonitorAt) + ($monitorCronMinutes * 60) : null;
 $monitorAge = $lastMonitorAt ? time() - (int)strtotime($lastMonitorAt) : null;
 $monitorHealthy = $monitorAge !== null && $monitorAge <= ($monitorCronMinutes * 60 * 1.5);
@@ -230,7 +228,7 @@ if ($current && !empty($current['observed_at'])) {
     $humidityZoneClass = !$current ? 'unavailable' : ($humidityPercent >= 75 ? 'humid-high' : strtolower(str_replace(' ', '-', $humidityZone)));
     $rainfallMm = $current ? max(0.0, (float)($current['rainfall_mm'] ?? 0.0)) : 0.0;
     // Sum one stored Open-Meteo rainfall sample per hour over the latest 24 hours.
-    // Live refreshes can run every 30 minutes, so keep only the latest sample
+    // The hourly monitor stores one sample per hour; keep the latest sample
     // within each hour to avoid double-counting the same hourly period.
     $rainfall24hMm = 0.0;
     try {
@@ -1049,7 +1047,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <details class="algorithm-details">
             <summary>How the WVI is calculated</summary>
-            <p>GaugeIQ compares the current six-hour change with up to <?= (int)$weatherFormulaValues['baseline_days'] ?> previous comparable six-hour windows. This is a short-term local pattern, not a seasonal climate normal.</p>
+            <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
         </details>
     </section>
 
