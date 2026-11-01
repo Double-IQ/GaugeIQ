@@ -97,8 +97,8 @@ try {
         $current['forecast'] = is_array($decodedForecast) ? $decodedForecast : [];
     }
     // Show the pressure change over approximately one hour, using only
-    // readings stored by the regular Open-Meteo cron. The ±30-minute window
-    // accommodates the 30-minute collection cadence without fetching on open.
+    // readings stored by the hourly Open-Meteo cron. The ±30-minute window
+    // accommodates the hourly collection cadence without fetching on open.
     $change = 0.0;
     if ($latest && !empty($latest['observed_at'])) {
         $latestTimestamp = strtotime((string)$latest['observed_at']);
