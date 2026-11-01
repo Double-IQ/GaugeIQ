@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $totalStabilityWeight += (float)($candidate['stability_weight_' . $weightSignal] ?? 0);
             }
             if ($totalStabilityWeight <= 0) {
-                $errors[] = 'At least one Weather Stability signal weight must be greater than zero.';
+                $errors[] = 'At least one WVI signal weight must be greater than zero.';
             }
             if (isset($candidate['baseline_min_windows'], $candidate['baseline_days']) && $candidate['baseline_min_windows'] > $candidate['baseline_days']) {
                 $errors[] = 'Minimum comparable windows cannot exceed the number of look-back days.';
@@ -141,17 +141,16 @@ foreach ($fields as $key => $field) {
 
     <section class="card formula-intro">
         <h2>How to use this page</h2>
-        <p>These controls change the parameters used by the dashboard's Weather Stability and Conditions Trend algorithms. Values are saved in GaugeIQ's settings database, not just in your browser. Reload the dashboard after saving to see the new calculation.</p>
+        <p>These controls change the parameters used by the dashboard's Weather Volatility Index (WVI) and Conditions Trend calculations. Push alerts use the same WVI calculation and saved parameters. Values are saved in GaugeIQ's settings database, not just in your browser. Reload the dashboard after saving to see the new calculation.</p>
         <p><strong>Important:</strong> these are tunable engineering parameters, not statistically calibrated forecasts. Change a few values at a time and compare the resulting scores against observed conditions.</p>
     </section>
 
     <section class="card formula-equations">
         <h2>Core formulas</h2>
-        <div class="formula-equation"><strong>Per-signal severity</strong><code>severity = 0, when magnitude is below trigger; otherwise clamp(magnitude / full-severity level, 0, 1)</code></div>
-        <div class="formula-equation"><strong>Weather-change score</strong><code>10 × Σ(weight × severity) ÷ Σ(valid signal weights)</code></div>
-        <div class="formula-equation"><strong>Weather Stability</strong><code>10 − weather-change score</code><p>Both scores are rounded to one decimal place and bounded to 0–10. Missing signals are excluded from the weighted denominator. At least the configured minimum number of valid signals is required.</p></div>
+        <div class="formula-equation"><strong>Per-signal severity</strong><code>severity = 0 below the configured trigger; otherwise clamp(magnitude ÷ full-severity level, 0, 1)</code><p>Magnitude is based on cumulative movement between successive readings, scaled to a six-hour equivalent. Air pressure uses cumulative movement per hour. Wind direction uses the shortest angular movement.</p></div>
+        <div class="formula-equation"><strong>Weather Volatility Index (WVI)</strong><code>10 × Σ(signal weight × signal severity) ÷ Σ(weights for valid signals)</code><p>The result is rounded to one decimal place on a 0–10 scale. Missing signals are excluded from the weighted denominator. The configured minimum number of valid signals, readings and observation span must all be met.</p></div>
         <div class="formula-equation"><strong>Conditions Trend</strong><code>Σ(direction strength × signal weight)</code><p>Positive scores indicate Worsening, negative scores indicate Improving, and scores between the configured positive/negative cut-offs are Steady.</p></div>
-        <div class="formula-equation"><strong>Local baseline</strong><code>median(previous comparable six-hour weather-change scores)</code><p>The current six-hour change is compared with previous days. A configured minimum number of valid historical windows is required before the median is displayed.</p></div>
+        <div class="formula-equation"><strong>Local baseline</strong><code>median(previous comparable six-hour weather-change scores)</code><p>This is contextual information only; it does not feed back into or alter the WVI score. A configured minimum number of valid historical windows is required before the median is displayed.</p></div>
     </section>
 
     <form method="post" class="formula-form">
@@ -182,7 +181,7 @@ foreach ($fields as $key => $field) {
     <section class="card formula-readonly">
         <h2>Other dashboard values</h2>
         <p><strong>Rain Probability</strong> is supplied by the weather forecast provider; GaugeIQ displays the provider's probability rather than inventing its own probability formula.</p>
-        <p><strong>Current temperature, humidity, wind, pressure and forecast values</strong> are observations or forecasts from the configured data provider. The dashboard formats and displays them; they are not calculated from the Weather Stability score.</p>
+        <p><strong>Current temperature, humidity, wind, pressure and forecast values</strong> are observations or forecasts from the configured data provider. The dashboard formats and displays them; they are not calculated from the WVI.</p>
         <p><strong>Weather-code severity mapping</strong> currently uses fixed WMO-code groups in the code (clear/cloudy, fog, drizzle, rain, snow and thunderstorm categories). The group mapping itself is documented here but is not editable on this page yet.</p>
     </section>
 </main>
