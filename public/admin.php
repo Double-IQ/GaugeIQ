@@ -122,10 +122,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
         <a class="secondary button-link" href="alerts.php">Open Weather Alerts</a>
     </div>
-    <div class="alert-summary">
-        <strong><?= $enabledRuleCount ?></strong>
-        <span>active rule<?= $enabledRuleCount === 1 ? '' : 's' ?></span>
-    </div>
+    
 </section>
 
 <section class="card location-history-link-card">
