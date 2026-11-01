@@ -592,7 +592,7 @@ final class AlertRuleService
 
     private function weatherDirectionDifference(float $a, float $b): float
     {
-        $difference = abs(fmod($a - $b + 360.0, 360.0));
+        $difference = abs(fmod(fmod($a - $b, 360.0) + 360.0, 360.0));
         return min($difference, 360.0 - $difference);
     }
 
