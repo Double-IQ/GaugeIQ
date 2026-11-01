@@ -622,6 +622,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
-<script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
+<script src="js/alerts.js?v=20261101-dew-point-alerts" defer></script>
 </body>
 </html>
