@@ -3248,7 +3248,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Admin dashboard action links */
 .weather-alerts-link .button-link,
-.location-history-link-card .button-link{
+.location-history-link-card .button-link,
+.admin-main-back{
     display:inline-flex;
     align-items:center;
     justify-content:center;
@@ -3277,7 +3278,8 @@ body.gaugeiq-menu-open{overflow:hidden}
     line-height:.8;
 }
 .weather-alerts-link .button-link:hover,
-.location-history-link-card .button-link:hover{
+.location-history-link-card .button-link:hover,
+.admin-main-back:hover{
     background:linear-gradient(180deg,#438cf4,#286bd2);
     border-color:#5795ed;
     box-shadow:0 5px 13px rgba(20,75,155,.3),inset 0 1px 0 rgba(255,255,255,.24);
@@ -3285,13 +3287,15 @@ body.gaugeiq-menu-open{overflow:hidden}
     text-decoration:none;
 }
 .weather-alerts-link .button-link:focus-visible,
-.location-history-link-card .button-link:focus-visible{
+.location-history-link-card .button-link:focus-visible,
+.admin-main-back:focus-visible{
     outline:3px solid rgba(76,145,245,.45);
     outline-offset:3px;
 }
 @media(max-width:560px){
     .weather-alerts-link .button-link,
-    .location-history-link-card .button-link{
+    .location-history-link-card .button-link,
+    .admin-main-back{
         width:100%;
         white-space:normal;
     }
