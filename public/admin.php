@@ -104,7 +104,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 <section class="card monitoring-card" aria-labelledby="monitoringTitle">
     <div class="section-heading">
-        <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled background monitor.</p></div>
+        <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled hourly background monitor.</p></div>
         <span class="status-pill <?= $monitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $monitorHealthy ? '● Monitoring active' : '● Check required' ?></span>
     </div>
     <div class="status-grid">
