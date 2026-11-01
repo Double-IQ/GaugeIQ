@@ -120,7 +120,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="eyebrow">WEATHER ALERTS</p>
         <h2>Alerts</h2>
         <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
-        <a class="secondary button-link" href="alerts.php">Open Weather Alerts</a>
+        <a class="secondary button-link" href="alerts.php">Manage Alerts</a>
     </div>
     
 </section>
@@ -128,7 +128,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <section class="card location-history-link-card">
     <div class="section-heading">
         <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
-        <a class="secondary button-link" href="location-history.php">Open location &amp; history</a>
+        <a class="secondary button-link" href="location-history.php">Manage Data</a>
     </div>
 </section>
 
@@ -155,7 +155,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
             <button type="submit">Install update</button>
         </form>
     </div>
-    <a class="secondary button-link" href="./">Back to GaugeIQ</a>
+    <a class="secondary button-link admin-main-back" href="./">Back to GaugeIQ</a>
 </section>
 
 
