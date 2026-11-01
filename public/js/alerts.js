@@ -23,6 +23,10 @@ function refreshFields() {
             valueInput.min = '0';
             valueInput.max = '10';
             valueInput.step = '1';
+        } else if (m === 'dew_point') {
+            valueInput.min = '-100';
+            valueInput.max = '60';
+            valueInput.step = '0.1';
         } else if (m === 'humidity') {
             valueInput.min = '0';
             valueInput.max = '100';
@@ -151,6 +155,10 @@ function setupAlertEditing() {
                     valueInput.min = '0';
                     valueInput.max = '10';
                     valueInput.step = '1';
+                } else if (metric.value === 'dew_point') {
+                    valueInput.min = '-100';
+                    valueInput.max = '60';
+                    valueInput.step = '0.1';
                 } else if (metric.value === 'humidity') {
                     valueInput.min = '0';
                     valueInput.max = '100';
