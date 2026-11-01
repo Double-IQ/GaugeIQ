@@ -392,7 +392,7 @@ final class AlertRuleService
         }
 
         return sprintf(
-            'Weather Volatility Index (WVI) was %.1f/10 at the latest check (alert threshold: %.0f/10).',
+            'Weather Volatility Index (WVI) was %.1f/10 at the latest check (alert threshold: %.1f/10).',
             $score,
             $threshold
         );
