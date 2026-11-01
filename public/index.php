@@ -151,7 +151,7 @@ try {
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
     $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
         && (float)$stabilityThresholdValue >= 0 && (float)$stabilityThresholdValue <= 10)
-        ? 10 - (int)$stabilityThresholdValue
+        ? 10.0 - (float)$stabilityThresholdValue
         : null;
 } catch (Throwable $e) {
     $current = null;
