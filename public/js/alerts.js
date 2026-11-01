@@ -154,7 +154,7 @@ function setupAlertEditing() {
                 if (isWeatherStability) {
                     valueInput.min = '0';
                     valueInput.max = '10';
-                    valueInput.step = '1';
+                    valueInput.step = '0.1';
                 } else if (metric.value === 'dew_point') {
                     valueInput.min = '-100';
                     valueInput.max = '60';
