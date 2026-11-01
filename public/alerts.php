@@ -18,6 +18,9 @@ $rules = new AlertRuleService($pdo);
 $updated = trim((string)($_GET['updated'] ?? ''));
 $updateError = isset($_GET['update_error']);
 $notice = '';
+if (isset($_GET['history_deleted'])) {
+    $notice = 'Alert history record deleted.';
+}
 $errors = [];
 
 function h(string $value): string {
@@ -524,6 +527,32 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
     </div>
 </details>
+
+<section class="card alert-history-card" aria-labelledby="alertHistoryTitle">
+    <div class="section-heading">
+        <div><h2 id="alertHistoryTitle">Alert history</h2><p class="muted">Recent conditions that triggered your saved rules.</p></div>
+    </div>
+    <?php if (!$recentAlerts): ?>
+        <p class="muted empty-history">No alerts have been triggered yet.</p>
+    <?php else: ?>
+        <div class="alert-history-list">
+            <?php foreach ($recentAlerts as $alert): ?>
+                <article class="alert-history-item">
+                    <div class="alert-history-icon">!</div>
+                    <div class="alert-history-content">
+                        <strong><?= h((string)($alert['name'] ?: 'GaugeIQ alert')) ?></strong>
+                        <p><?= h((string)$alert['message']) ?></p>
+                        <time datetime="<?= h((string)$alert['observed_at']) ?>"><?= h(date('d M, H:i', (int)strtotime((string)$alert['observed_at']))) ?></time>
+                        <form method="post" action="delete-alert-history.php?return_to=alerts" onsubmit="return confirm('Delete this alert history record?')">
+                            <input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
+                            <button type="submit" class="alert-history-delete" aria-label="Delete record" title="Delete record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2-1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/></svg></button>
+                        </form>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
 
 <section class="alerts-list-section">
     <div class="section-heading">
