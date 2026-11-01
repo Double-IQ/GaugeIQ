@@ -126,8 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!is_numeric($thresholdInput) || (float)$thresholdInput < 0 || (float)$thresholdInput > 10) {
                         throw new InvalidArgumentException('The WVI alert threshold must be between 0 and 10, or left disabled.');
                     }
-                    $threshold = (int)round((float)$thresholdInput);
-                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10 - $threshold));
+                    $threshold = (float)$thresholdInput;
+                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10.0 - $threshold));
                     $notice = 'Stability bar alert threshold saved.';
                 }
             } elseif ($action === 'test_device_notification') {
@@ -238,7 +238,7 @@ $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_eval
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
-$stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10 - (int)$stabilityAlertThresholdValue : null;
+$stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10.0 - (float)$stabilityAlertThresholdValue : null;
 $notificationDevices = $pdo->query('SELECT id, created_at, updated_at, user_agent, last_seen_at, last_push_at, last_push_status, last_push_error FROM gaugeiq_push_subscriptions ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
 $recentAlerts = $pdo->query(
     'SELECT e.id, e.message, e.observed_at, r.name FROM gaugeiq_alert_events e LEFT JOIN gaugeiq_alert_rules r ON r.id = e.rule_id ORDER BY e.id DESC LIMIT 8'
@@ -327,15 +327,10 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <input type="hidden" name="action" value="save_stability_threshold">
         <label for="stability_alert_threshold">Flash when Weather Volatility Index (WVI) rises to or above</label>
         <div class="lookback-controls">
-            <select id="stability_alert_threshold" name="stability_alert_threshold">
-                <option value="" <?= $stabilityAlertThreshold === null ? 'selected' : '' ?>>Disabled</option>
-                <?php for ($thresholdOption = 0; $thresholdOption <= 10; $thresholdOption++): ?>
-                    <option value="<?= $thresholdOption ?>" <?= $stabilityAlertThreshold === $thresholdOption ? 'selected' : '' ?>><?= $thresholdOption ?> / 10</option>
-                <?php endfor; ?>
-            </select>
+            <input id="stability_alert_threshold" name="stability_alert_threshold" type="number" min="0" max="10" step="0.1" value="<?= $stabilityAlertThreshold !== null ? h(number_format($stabilityAlertThreshold, 1, '.', '')) : '' ?>" placeholder="Disabled">
             <button type="submit">Save threshold</button>
         </div>
-        <p class="alert-help muted">The bar keeps its green, yellow or red colour. Reaching this score adds the flashing warning and yellow track border. Leave it disabled if you do not want the bar to flash.</p>
+        <p class="alert-help muted">The bar keeps its green, yellow or red colour. Reaching this score adds the flashing warning and yellow track border. Leave the threshold blank to disable flashing.</p>
     </form>
 </section>
 
