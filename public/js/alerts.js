@@ -22,7 +22,7 @@ function refreshFields() {
         if (weatherVolatility) {
             valueInput.min = '0';
             valueInput.max = '10';
-            valueInput.step = '1';
+            valueInput.step = '0.1';
         } else if (m === 'dew_point') {
             valueInput.min = '-100';
             valueInput.max = '60';
