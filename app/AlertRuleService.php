@@ -241,6 +241,7 @@ final class AlertRuleService
         return match ($metric) {
             'pressure' => $this->pressure($type, $config, $previous, $current),
             'humidity' => $this->humidity($type, $config, $previous, $current),
+            'dew_point' => $this->dewPoint($type, $config, $previous, $current),
             'wind_speed' => $this->windSpeed($type, $config, $previous, $current),
             'wind_direction' => $this->windDirection($type, $config, $previous, $current),
             'wind' => $this->combinedWind($type, $config, $previous, $current),
@@ -282,6 +283,30 @@ final class AlertRuleService
         }
         if ($type === 'below' && $value < $threshold && $old >= $threshold) {
             return sprintf('Humidity fell below %.0f%% to %.0f%%.', $threshold, $value);
+        }
+
+        return null;
+    }
+
+    private function dewPoint(string $type, array $c, array $p, array $n): ?string
+    {
+        if (!isset($p['dew_point_c'], $n['dew_point_c']) ||
+            !is_numeric($p['dew_point_c']) || !is_numeric($n['dew_point_c'])) {
+            return null;
+        }
+
+        $value = (float)$n['dew_point_c'];
+        $old = (float)$p['dew_point_c'];
+        $threshold = (float)($c['value'] ?? 0);
+
+        if ($type === 'change' && abs($value - $old) >= $threshold) {
+            return sprintf('Dew point changed by %.1f°C to %.1f°C.', abs($value - $old), $value);
+        }
+        if ($type === 'above' && $value > $threshold && $old <= $threshold) {
+            return sprintf('Dew point rose above %.1f°C to %.1f°C.', $threshold, $value);
+        }
+        if ($type === 'below' && $value < $threshold && $old >= $threshold) {
+            return sprintf('Dew point fell below %.1f°C to %.1f°C.', $threshold, $value);
         }
 
         return null;
@@ -655,7 +680,7 @@ final class AlertRuleService
 
     private function validate(string $metric, string $type, array $configuration): void
     {
-        $allowedMetrics = ['pressure', 'humidity', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
+        $allowedMetrics = ['pressure', 'humidity', 'dew_point', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
         $allowedTypes = ['change', 'above', 'below', 'specific', 'speed_and_direction'];
 
         if (!in_array($metric, $allowedMetrics, true) || !in_array($type, $allowedTypes, true)) {
