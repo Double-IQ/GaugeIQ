@@ -691,11 +691,6 @@ protocolOptions.fileReaderConfig = {
             const message = event?.error?.message || 'A map resource failed to load.';
             setStatus('Map error: ' + message);
         });
-        map.once('idle', () => {
-            if (!animationSources.length && activeSources.length && activeSources.every(id => map.getSource(id))) {
-                setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
-            }
-        });
         timeRangeSelect.addEventListener('change', () => {
             clearAnimation();
             frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
