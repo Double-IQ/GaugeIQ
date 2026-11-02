@@ -119,6 +119,8 @@ protocolOptions.fileReaderConfig = {
         let animationPreparing = false;
         let animationCurrentFrame = 0;
         let animationLoadTimeout = null;
+        let animationLoadPoll = null;
+        let animationLoadError = null;
 
         function setStatus(message) {
             status.textContent = message;
@@ -149,6 +151,11 @@ protocolOptions.fileReaderConfig = {
                 clearTimeout(animationLoadTimeout);
                 animationLoadTimeout = null;
             }
+            if (animationLoadPoll !== null) {
+                clearInterval(animationLoadPoll);
+                animationLoadPoll = null;
+            }
+            animationLoadError = null;
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) map.removeLayer(item.id);
             });
@@ -304,24 +311,27 @@ protocolOptions.fileReaderConfig = {
 
                 animationPreparing = false;
                 animationCurrentFrame = 0;
+                animationLoadError = null;
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
+                    const detail = animationLoadError ? ' ' + animationLoadError : '';
                     clearAnimation();
-                    setStatus('The first weather frame did not load in time. Please try again.');
-                }, 60000);
+                    setStatus('The first weather frame could not load.' + detail);
+                }, 120000);
                 const firstFrameLoaded = () => {
                     const firstFrame = animationFrames[0];
                     return !!firstFrame && firstFrame.sourceIds.every(id => map.isSourceLoaded(id));
                 };
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!firstFrameLoaded()) {
-                        map.once('idle', waitForInitialFrame);
-                        return;
-                    }
+                    if (!firstFrameLoaded()) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
+                    }
+                    if (animationLoadPoll !== null) {
+                        clearInterval(animationLoadPoll);
+                        animationLoadPoll = null;
                     }
                     activeLayers.forEach(id => {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
@@ -329,7 +339,10 @@ protocolOptions.fileReaderConfig = {
                     setStatus('');
                     runAnimation();
                 };
-                map.once('idle', waitForInitialFrame);
+                // Poll source readiness directly. An 'idle' event is not guaranteed
+                // while other map requests remain active, so it must not gate startup.
+                waitForInitialFrame();
+                animationLoadPoll = setInterval(waitForInitialFrame, 500);
             } catch (error) {
                 if (token !== animationToken) return;
                 animationPreparing = false;
@@ -552,6 +565,10 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => showWeatherLayer(layerSelect.value));
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
+            const sourceId = event?.sourceId || event?.source?.id || '';
+            if (animationPreparing && String(sourceId).startsWith('gaugeiq-animation-source-')) {
+                animationLoadError = message;
+            }
             setStatus('Map error: ' + message);
         });
         timeRangeSelect.addEventListener('change', () => {
