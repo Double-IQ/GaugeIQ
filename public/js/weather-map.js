@@ -364,13 +364,10 @@ const appearanceDefaults = {
             const message = event?.error?.message || 'A map resource failed to load.';
             setStatus('Map error: ' + message);
         });
-        map.on('idle', () => {
+        map.once('idle', () => {
             if (!animationSources.length && activeSources.length && activeSources.every(id => map.getSource(id))) {
                 setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
             }
-        });
-        layerSelect.addEventListener('change', () => {
-            if (mapInstance && mapInstance.isStyleLoaded()) showWeatherLayer(layerSelect.value);
         });
         timeRangeSelect.addEventListener('change', () => {
             clearAnimation();
