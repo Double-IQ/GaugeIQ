@@ -113,7 +113,6 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 
  <section class="card history-management-card" id="historicalDatasetStatus"
     data-weather-count="<?= $historicalWeatherCount ?>"
-    data-forecast-count="<?= $historicalForecastCount ?>"
     aria-labelledby="openMeteoHistoryTitle">
     <div class="section-heading">
         <div>
