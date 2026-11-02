@@ -4,5 +4,5 @@ Options -Indexes
     Header always unset Content-Security-Policy
     Header always unset Cross-Origin-Opener-Policy
     Header always unset Cross-Origin-Embedder-Policy
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://tile.openstreetmap.org; font-src 'self' data: https://static-assets.open-meteo.com https://unpkg.com; connect-src 'self' https://unpkg.com https://openmeteo.s3.amazonaws.com https://static-assets.open-meteo.com; worker-src 'self' blob: https://unpkg.com; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://tile.openstreetmap.org; font-src 'self' data: https://static-assets.open-meteo.com https://unpkg.com; connect-src 'self' https://unpkg.com https://tile.openstreetmap.org https://openmeteo.s3.amazonaws.com https://static-assets.open-meteo.com; worker-src 'self' blob: https://unpkg.com; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 </IfModule>
