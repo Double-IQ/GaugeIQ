@@ -205,21 +205,21 @@ const appearanceDefaults = {
                 }
 
                 const now = Date.now();
-                let currentIndex = 0;
-                let nearestDistance = Infinity;
+                let pastIndex = -1;
+                let futureIndex = -1;
                 parsedTimes.forEach((timestamp, index) => {
-                    const distance = Math.abs(timestamp - now);
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        currentIndex = index;
-                    }
+                    if (timestamp <= now) pastIndex = index;
+                    if (futureIndex === -1 && timestamp >= now) futureIndex = index;
                 });
+                const currentIndex = timeRangeSelect.value === 'past'
+                    ? (pastIndex >= 0 ? pastIndex : 0)
+                    : (futureIndex >= 0 ? futureIndex : Math.max(0, pastIndex));
 
                 let frameSpecs = [];
                 if (timeRangeSelect.value === 'past') {
                     const currentTime = parsedTimes[currentIndex];
                     const firstFrameTime = currentTime - (5 * 60 * 60 * 1000);
-                    const previousRunTime = Math.floor((firstFrameTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)) * (6 * 60 * 60 * 1000);
+                    const previousRunTime = Math.floor((firstFrameTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)) * (6 * 60 * 60 * 1000) - (6 * 60 * 60 * 1000);
                     const runDate = new Date(previousRunTime);
                     const runFolder = [
                         runDate.getUTCFullYear(),
