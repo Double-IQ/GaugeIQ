@@ -208,6 +208,7 @@ if ($current && !empty($current['observed_at'])) {
     <header>
         <div class="header-actions">
             <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" class="menu-logo"></button>
+            <a class="secondary button-link" href="weather-map/" aria-label="Open interactive weather map">Weather map</a>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
