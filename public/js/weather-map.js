@@ -161,6 +161,7 @@ const appearanceDefaults = {
  function openMap(){view.hidden=false;document.body.classList.add('weather-map-open');createMap();requestAnimationFrame(()=>{if(window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});}
  function closeMap(){view.hidden=true;document.body.classList.remove('weather-map-open');}
  openButton.addEventListener('click',openMap);closeButton.addEventListener('click',closeMap);
+ if(new URLSearchParams(window.location.search).get('openWeatherMap')==='1')openMap();
  window.addEventListener('resize',()=>{if(!view.hidden&&window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});
  window.addEventListener('orientationchange',()=>setTimeout(()=>{if(!view.hidden&&window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();},180));
 })();
