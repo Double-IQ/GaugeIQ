@@ -445,6 +445,15 @@ function base64UrlToUint8Array(base64UrlData) {
     return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
+async function savePushSubscription(subscription) {
+    const saveResponse = await fetch('../api/subscribe.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription.toJSON())
+    });
+    if (!saveResponse.ok) throw new Error('GaugeIQ could not save this device for notifications.');
+}
+
 async function enablePushNotifications() {
     if (!('PushManager' in window) || !('Notification' in window)) {
         throw new Error('This browser does not support Web Push notifications.');
@@ -467,14 +476,7 @@ async function enablePushNotifications() {
         });
     }
 
-    const saveResponse = await fetch('../api/subscribe.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription.toJSON())
-    });
-
-    if (!saveResponse.ok) throw new Error('GaugeIQ could not save this device for notifications.');
-
+    await savePushSubscription(subscription);
     if (status) status.textContent = '';
     showNotificationsEnabledUI();
 }
@@ -542,9 +544,17 @@ async function showAlertsOnIfAlreadyEnabled() {
     if (Notification.permission !== 'granted') return;
     try {
         const registration = await getRegistration();
-        if (await registration.pushManager.getSubscription()) showNotificationsEnabledUI();
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return;
+
+        // Browser permission and a local subscription are not enough: the
+        // server may have been reset or the device record may have been deleted.
+        // Re-register it before showing the enabled state.
+        await savePushSubscription(subscription);
+        showNotificationsEnabledUI();
     } catch {
-        // Leave the status as Disabled if an active subscription cannot be confirmed.
+        // Keep Enable alerts visible unless the server confirms this device.
+        setTemperatureAlertsStatus('disabled');
     }
 }
 
