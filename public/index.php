@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261102-dark-base" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=20261102-map-animation" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261101-history-wind-hud">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261102-dark-base"></script>
+<script type="module" src="js/weather-map.js?v=20261102-map-animation"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -1016,6 +1016,14 @@ if ($current && !empty($current['observed_at'])) {
                 <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
             </div>
         </header>
+        <div class="gaugeiq-weather-map-timeline">
+            <select id="map-time-range" aria-label="Animation time range">
+                <option value="past">Past 6 hours</option>
+                <option value="future" selected>Next 6 hours</option>
+            </select>
+            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false">Play</button>
+            <span id="map-frame-time" aria-live="polite">Six hourly frames</span>
+        </div>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
