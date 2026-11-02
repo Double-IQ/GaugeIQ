@@ -28,7 +28,127 @@ const appearanceDefaults = {
             ];
         }
 
-        const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
+        
+class PersistentMapBlockCache {
+    constructor() {
+        this.cacheName = 'gaugeiq-weather-map-blocks-v1';
+        this.blockSizeBytes = 64 * 1024;
+        this.maxBytes = 192 * 1024 * 1024;
+        this.cachePromise = null;
+        this.inflight = new Map();
+    }
+
+    blockSize() { return this.blockSizeBytes; }
+
+    async openCache() {
+        this.cachePromise ??= caches.open(this.cacheName);
+        return this.cachePromise;
+    }
+
+    cacheRequest(key) {
+        return new Request(new URL('/__gaugeiq_weather_map_cache__/' + encodeURIComponent(String(key)), location.origin));
+    }
+
+    async size(key) {
+        const response = await (await this.openCache()).match(this.cacheRequest(key));
+        const value = response?.headers.get('X-Om-File-Size');
+        return value ? Number(value) : undefined;
+    }
+
+    async get(key, fetchFn, fileSize, signal) {
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        const cache = await this.openCache();
+        const request = this.cacheRequest(key);
+        const cached = await cache.match(request);
+        if (cached) return new Uint8Array(await cached.arrayBuffer());
+
+        let entry = this.inflight.get(String(key));
+        if (!entry) {
+            const controller = new AbortController();
+            entry = { controller, subscribers: 0, promise: null };
+            entry.promise = (async () => {
+                const data = await fetchFn(controller.signal);
+                const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+                const headers = {
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Length': String(data.byteLength),
+                    'X-Om-Created-At': String(Date.now())
+                };
+                if (fileSize !== undefined) headers['X-Om-File-Size'] = String(fileSize);
+                await cache.put(request, new Response(buffer, { status: 200, headers }));
+                this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
+                return data;
+            })().finally(() => {
+                if (this.inflight.get(String(key)) === entry) this.inflight.delete(String(key));
+            });
+            this.inflight.set(String(key), entry);
+        }
+
+        entry.subscribers++;
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            const finish = (callback, value) => {
+                if (settled) return;
+                settled = true;
+                if (signal) signal.removeEventListener('abort', onAbort);
+                entry.subscribers = Math.max(0, entry.subscribers - 1);
+                callback(value);
+            };
+            const onAbort = () => {
+                finish(reject, new DOMException('Aborted', 'AbortError'));
+                if (entry.subscribers === 0) entry.controller.abort();
+            };
+            if (signal) {
+                if (signal.aborted) return onAbort();
+                signal.addEventListener('abort', onAbort, { once: true });
+            }
+            entry.promise.then(
+                data => finish(resolve, data),
+                error => finish(reject, error)
+            );
+        });
+    }
+
+    async prefetch(key, fetchFn, fileSize, signal) {
+        await this.get(key, fetchFn, fileSize, signal).catch(() => {});
+    }
+
+    async evictIfNeeded(cache) {
+        const keys = await cache.keys();
+        const entries = [];
+        let total = 0;
+        for (const request of keys) {
+            const response = await cache.match(request);
+            const size = Number(response?.headers.get('Content-Length') || 0);
+            total += size;
+            entries.push({
+                request,
+                size,
+                created: Number(response?.headers.get('X-Om-Created-At') || 0)
+            });
+        }
+        if (total <= this.maxBytes) return;
+        entries.sort((a, b) => a.created - b.created);
+        for (const entry of entries) {
+            if (total <= this.maxBytes * 0.85) break;
+            await cache.delete(entry.request);
+            total -= entry.size;
+        }
+    }
+
+    async clear() {
+        for (const entry of this.inflight.values()) entry.controller.abort();
+        this.inflight.clear();
+        this.cachePromise = null;
+        await caches.delete(this.cacheName);
+    }
+}
+
+const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
+protocolOptions.fileReaderConfig = {
+    ...protocolOptions.fileReaderConfig,
+    cache: new PersistentMapBlockCache()
+};
         protocolOptions.colorScales = {
             ...protocolOptions.colorScales,
             precipitation: {
@@ -182,7 +302,10 @@ const appearanceDefaults = {
             animationToggle.textContent = 'Pause';
             animationToggle.setAttribute('aria-pressed', 'true');
             animationTimer = setInterval(() => {
-                animationCurrentFrame = (animationCurrentFrame + 1) % animationFrames.length;
+                const nextFrame = (animationCurrentFrame + 1) % animationFrames.length;
+                const frame = animationFrames[nextFrame];
+                if (!frame || !frame.sourceIds.every(id => map.isSourceLoaded(id))) return;
+                animationCurrentFrame = nextFrame;
                 showFrame(animationCurrentFrame);
             }, 1200);
         }
@@ -255,7 +378,7 @@ const appearanceDefaults = {
                 }
                 const variables = weatherVariables(layerSelect.value);
                 frameSpecs.forEach((frameSpec, framePosition) => {
-                    const frame = { time: frameSpec.time, layerIds: [] };
+                    const frame = { time: frameSpec.time, layerIds: [], sourceIds: [] };
                     variables.forEach((item, variableIndex) => {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + framePosition + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + framePosition + '-' + variableIndex;
@@ -277,6 +400,7 @@ const appearanceDefaults = {
                         });
 
                         animationSources.push(sourceId);
+                        frame.sourceIds.push(sourceId);
                         animationLayers.push({ id: layerId, frameIndex: framePosition, opacity: item.opacity });
                         frame.layerIds.push(layerId);
                     });
@@ -288,13 +412,16 @@ const appearanceDefaults = {
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
                     clearAnimation();
-                    setStatus('Weather frames took too long to load. Please try again.');
-                }, 30000);
-                const waitForTiles = () => {
+                    setStatus('The first weather frame did not load in time. Please try again.');
+                }, 60000);
+                const firstFrameLoaded = () => {
+                    const firstFrame = animationFrames[0];
+                    return !!firstFrame && firstFrame.sourceIds.every(id => map.isSourceLoaded(id));
+                };
+                const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    const allLoaded = animationSources.every(id => map.isSourceLoaded(id));
-                    if (!allLoaded) {
-                        map.once('idle', waitForTiles);
+                    if (!firstFrameLoaded()) {
+                        map.once('idle', waitForInitialFrame);
                         return;
                     }
                     if (animationLoadTimeout !== null) {
@@ -307,7 +434,7 @@ const appearanceDefaults = {
                     setStatus('');
                     runAnimation();
                 };
-                map.once('idle', waitForTiles);
+                map.once('idle', waitForInitialFrame);
             } catch (error) {
                 if (token !== animationToken) return;
                 animationPreparing = false;
