@@ -566,7 +566,7 @@ protocolOptions.fileReaderConfig = {
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
             const sourceId = event?.sourceId || event?.source?.id || '';
-            if (animationPreparing && String(sourceId).startsWith('gaugeiq-animation-source-')) {
+            if (animationLoadTimeout !== null && String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 animationLoadError = message;
             }
             setStatus('Map error: ' + message);
