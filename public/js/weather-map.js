@@ -36,6 +36,8 @@ class PersistentMapBlockCache {
         this.maxBytes = 192 * 1024 * 1024;
         this.cachePromise = null;
         this.inflight = new Map();
+        this.writeCount = 0;
+        this.evictionPromise = null;
     }
 
     blockSize() { return this.blockSizeBytes; }
@@ -76,7 +78,10 @@ class PersistentMapBlockCache {
                 };
                 if (fileSize !== undefined) headers['X-Om-File-Size'] = String(fileSize);
                 await cache.put(request, new Response(buffer, { status: 200, headers }));
-                this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
+                this.writeCount++;
+                if (this.writeCount % 64 === 0) {
+                    this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
+                }
                 return data;
             })().finally(() => {
                 if (this.inflight.get(String(key)) === entry) this.inflight.delete(String(key));
@@ -114,25 +119,33 @@ class PersistentMapBlockCache {
     }
 
     async evictIfNeeded(cache) {
-        const keys = await cache.keys();
-        const entries = [];
-        let total = 0;
-        for (const request of keys) {
-            const response = await cache.match(request);
-            const size = Number(response?.headers.get('Content-Length') || 0);
-            total += size;
-            entries.push({
-                request,
-                size,
-                created: Number(response?.headers.get('X-Om-Created-At') || 0)
-            });
-        }
-        if (total <= this.maxBytes) return;
-        entries.sort((a, b) => a.created - b.created);
-        for (const entry of entries) {
-            if (total <= this.maxBytes * 0.85) break;
-            await cache.delete(entry.request);
-            total -= entry.size;
+        if (this.evictionPromise) return this.evictionPromise;
+        this.evictionPromise = (async () => {
+            const keys = await cache.keys();
+            const entries = [];
+            let total = 0;
+            for (const request of keys) {
+                const response = await cache.match(request);
+                const size = Number(response?.headers.get('Content-Length') || 0);
+                total += size;
+                entries.push({
+                    request,
+                    size,
+                    created: Number(response?.headers.get('X-Om-Created-At') || 0)
+                });
+            }
+            if (total <= this.maxBytes) return;
+            entries.sort((a, b) => a.created - b.created);
+            for (const entry of entries) {
+                if (total <= this.maxBytes * 0.85) break;
+                await cache.delete(entry.request);
+                total -= entry.size;
+            }
+        })();
+        try {
+            await this.evictionPromise;
+        } finally {
+            this.evictionPromise = null;
         }
     }
 
