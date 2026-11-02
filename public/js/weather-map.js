@@ -69,6 +69,15 @@ const appearanceDefaults = {
         }
         locationLabel.textContent = config.locationName + ' · ' + config.latitude.toFixed(3) + ', ' + config.longitude.toFixed(3);
 
+        const savedMapZoom = (() => {
+            try {
+                const value = Number(localStorage.getItem('gaugeiqWeatherMapZoom'));
+                return Number.isFinite(value) && value >= 0 && value <= 12 ? value : 5;
+            } catch (error) {
+                return 5;
+            }
+        })();
+
         let mapInstance = null;
         function createMap() {
         if (mapInstance) { mapInstance.resize(); return; }
@@ -90,7 +99,7 @@ const appearanceDefaults = {
                 ]
             },
             center: [config.longitude, config.latitude],
-            zoom: 5,
+            zoom: savedMapZoom,
             maxZoom: 12,
             attributionControl: true
         });
@@ -153,6 +162,13 @@ const appearanceDefaults = {
         });
         map.on('idle', () => {
             if (activeSources.length && activeSources.every(id => map.getSource(id))) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+        });
+        map.on('zoomend', () => {
+            try {
+                localStorage.setItem('gaugeiqWeatherMapZoom', String(map.getZoom()));
+            } catch (error) {
+                console.warn('Could not save the weather-map zoom level.', error);
+            }
         });
         mapInstance = map;
         window.GaugeIQWeatherMapResize = () => { if (mapInstance) mapInstance.resize(); };
