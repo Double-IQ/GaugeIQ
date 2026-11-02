@@ -37,7 +37,7 @@ const appearanceDefaults = {
                 breakpoints: [0, 0.2, 1, 5, 20],
                 colors: [
                     [0, 0, 0, 0],
-                    ...appearance.precipitationColors.map(color => hexToRgba(color))
+                    ...appearance.precipitationColors.map((color, index) => hexToRgba(color, Math.max(0, Math.min(100, Number(appearance.precipitationColorOpacities?.[index] ?? 100))) / 100))
                 ]
             },
             cloud_cover: {
@@ -46,7 +46,7 @@ const appearanceDefaults = {
                 breakpoints: [0, 25, 50, 75, 100],
                 colors: [
                     [0, 0, 0, 0],
-                    ...appearance.cloudColors.map(color => hexToRgba(color))
+                    ...appearance.cloudColors.map((color, index) => hexToRgba(color, Math.max(0, Math.min(100, Number(appearance.cloudColorOpacities?.[index] ?? 100))) / 100))
                 ]
             }
         };
