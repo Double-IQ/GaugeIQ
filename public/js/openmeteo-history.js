@@ -8,7 +8,6 @@
     const start = panel.dataset.start || '';
     const end = panel.dataset.end || '';
     const weatherStatus = document.getElementById('historicalWeatherStatus');
-    const forecastStatus = document.getElementById('historicalForecastStatus');
     const message = document.getElementById('historicalDatasetMessage');
     const setStatus = (element, text) => { if (element) element.textContent = text; };
 
@@ -80,9 +79,7 @@
 
     async function run() {
         const weatherCount = Number(panel.dataset.weatherCount) || 0;
-        const forecastCount = Number(panel.dataset.forecastCount) || 0;
         const weatherLatest = panel.dataset.weatherLatest || '';
-        const forecastLatest = panel.dataset.forecastLatest || '';
         const repairStart = recentRepairStart();
         let completed = [];
 
@@ -97,20 +94,11 @@
                 setStatus(weatherStatus, 'Available — ' + weatherCount.toLocaleString() + ' hourly records found through ' + String(weatherLatest).slice(0, 10) + '.');
             }
 
-            if (forecastCount < 5000) {
-                const count = await importSource('forecast', 'Historical Forecast', forecastStatus);
-                completed.push('forecast (' + count.toLocaleString() + ' records)');
-            } else if (coverageIsStale(forecastLatest)) {
-                const count = await importSource('forecast', 'Recent historical forecast backfill', forecastStatus, repairStart, end);
-                completed.push('recent forecast backfill (' + count.toLocaleString() + ' records)');
-            } else {
-                setStatus(forecastStatus, 'Available — ' + forecastCount.toLocaleString() + ' hourly forecasts found through ' + String(forecastLatest).slice(0, 10) + '.');
-            }
 
             if (completed.length) {
                 setStatus(message, 'Automatic historical download/backfill finished for the configured location. ' + completed.join(' and ') + '.');
             } else {
-                setStatus(message, 'Both historical datasets are present through the latest required date. No duplicate import was needed.');
+                setStatus(message, 'Historical weather data is present through the latest required date. No duplicate import was needed.');
             }
         } catch (error) {
             setStatus(message, (error instanceof Error ? error.message : 'Historical download failed.') + ' Existing records are preserved and duplicate timestamps are skipped.');
