@@ -101,6 +101,7 @@ const appearanceDefaults = {
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
+            cooperativeGestures: true,
             attributionControl: true
         });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
