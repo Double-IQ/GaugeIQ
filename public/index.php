@@ -1001,6 +1001,37 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
+    <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
+        <div class="section-heading weather-change-heading">
+            <div>
+                <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
+                <p class="muted">Interprets the degree and speed of changing conditions.</p>
+            </div>
+        </div>
+        <div class="weather-change-metrics">
+            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
+            <div class="weather-change-level" id="weatherChangeLevel" role="img" aria-label="WVI level">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 10.5v6"></path>
+                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+            </svg>
+            <span id="weatherChangeReasonsButtonLabel">More information</span>
+        </button>
+        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden>
+            <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
+        </div>
+        <details class="algorithm-details">
+            <summary>How the WVI is calculated</summary>
+            <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
+        </details>
+    </section>
+
     <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
         <div class="conditions-trend-heading">
             <h2 id="conditionsTrendTitle">Conditions trend</h2>
@@ -1064,36 +1095,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
-        <div class="section-heading weather-change-heading">
-            <div>
-                <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
-                <p class="muted">Interprets the degree and speed of changing conditions.</p>
-            </div>
-        </div>
-        <div class="weather-change-metrics">
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
-            <div class="weather-change-level" id="weatherChangeLevel" role="img" aria-label="WVI level">
-                <span></span><span></span><span></span><span></span><span></span>
-                <span></span><span></span><span></span><span></span><span></span>
-            </div>
-        </div>
-        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 10.5v6"></path>
-                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
-            </svg>
-            <span id="weatherChangeReasonsButtonLabel">More information</span>
-        </button>
-        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden>
-            <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
-        </div>
-        <details class="algorithm-details">
-            <summary>How the WVI is calculated</summary>
-            <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
-        </details>
-    </section>
+
 
     <section class="card history-card" data-history-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>">
         <button type="button" class="history-toggle" id="historyToggle" aria-expanded="false" aria-controls="historyContent">
