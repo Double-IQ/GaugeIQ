@@ -416,7 +416,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
                     <div class="top-status-indicators" aria-label="Notification, weather alert and scheduled data update status">
-                        <span class="top-status-indicator <?= $subscriptionCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>" title="Notifications <?= $subscriptionCount > 0 ? 'enabled' : 'disabled' ?>">
+                        <span id="topNotificationStatus" class="top-status-indicator is-off" role="img" aria-label="Notifications not enabled on this device" title="Notifications not enabled on this device">
                             <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="top-status-dash"></span>
                         </span>
                         <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>">
