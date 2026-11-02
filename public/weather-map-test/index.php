@@ -73,6 +73,7 @@ $mapConfig = json_encode([
                 <option value="cloud_cover">Cloud cover only</option>
                 <option value="wind_speed_10m">Wind speed</option>
             </select>
+            <a class="back" href="appearance.php">Appearance</a>
             <a class="back" href="../">GaugeIQ</a>
         </div>
     </header>
@@ -86,8 +87,58 @@ $mapConfig = json_encode([
     <script type="module">
         import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs';
 
-        const { omProtocol } = await import('https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs');
-        maplibregl.addProtocol('om', omProtocol);
+        const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs');
+
+        const appearanceDefaults = {
+            precipitationOpacity: 78,
+            cloudOpacity: 34,
+            precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
+            cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569']
+        };
+        let appearance = { ...appearanceDefaults };
+        try {
+            const savedAppearance = JSON.parse(localStorage.getItem('gaugeiqWeatherMapAppearance') || 'null');
+            if (savedAppearance && typeof savedAppearance === 'object') {
+                appearance = { ...appearanceDefaults, ...savedAppearance };
+            }
+        } catch (error) {
+            console.warn('Could not read saved weather-map appearance settings.', error);
+        }
+
+        function hexToRgba(hex, alpha = 1) {
+            const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+            return [
+                parseInt(value.slice(0, 2), 16),
+                parseInt(value.slice(2, 4), 16),
+                parseInt(value.slice(4, 6), 16),
+                alpha
+            ];
+        }
+
+        const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
+        protocolOptions.colorScales = {
+            precipitation: {
+                type: 'breakpoint',
+                unit: 'mm/h',
+                breakpoints: [0, 0.2, 1, 5, 20],
+                colors: [
+                    [0, 0, 0, 0],
+                    ...appearance.precipitationColors.map(color => hexToRgba(color))
+                ]
+            },
+            cloud_cover: {
+                type: 'breakpoint',
+                unit: '%',
+                breakpoints: [0, 25, 50, 75, 100],
+                colors: [
+                    [0, 0, 0, 0],
+                    ...appearance.cloudColors.map(color => hexToRgba(color))
+                ]
+            }
+        };
+        maplibregl.addProtocol('om', (params, abortController) =>
+            OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
+        );
 
         const config = window.GAUGEIQ_MAP_CONFIG;
         const status = document.getElementById('map-status');
@@ -140,10 +191,10 @@ $mapConfig = json_encode([
 
             const variables = selection === 'precipitation_cloud_cover'
                 ? [
-                    { variable: 'cloud_cover', label: 'cloud cover', opacity: 0.34 },
-                    { variable: 'precipitation', label: 'precipitation', opacity: 0.78 }
+                    { variable: 'cloud_cover', label: 'cloud cover', opacity: Number(appearance.cloudOpacity) / 100 },
+                    { variable: 'precipitation', label: 'precipitation', opacity: Number(appearance.precipitationOpacity) / 100 }
                 ]
-                : [{ variable: selection, label: layerSelect.selectedOptions[0].textContent.toLowerCase(), opacity: 0.78 }];
+                : [{ variable: selection, label: layerSelect.selectedOptions[0].textContent.toLowerCase(), opacity: selection === 'cloud_cover' ? Number(appearance.cloudOpacity) / 100 : Number(appearance.precipitationOpacity) / 100 }];
 
             setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
