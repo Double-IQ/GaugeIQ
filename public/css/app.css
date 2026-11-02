@@ -3359,6 +3359,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 :root[data-theme="light"] .gaugeiq-weather-map-heading strong{color:#202b38}
 :root[data-theme="light"] .gaugeiq-weather-map-heading span{color:#536171}
+:root[data-theme="light"] .gaugeiq-weather-map-timeline span{color:#536171}
 :root[data-theme="light"] .gaugeiq-weather-map-controls select,
 :root[data-theme="light"] .gaugeiq-weather-map-action,
 :root[data-theme="light"] .gaugeiq-weather-map-timeline select,
