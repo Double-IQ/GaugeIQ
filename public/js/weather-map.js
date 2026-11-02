@@ -213,6 +213,7 @@ protocolOptions.fileReaderConfig = {
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         new maplibregl.Marker({ color: '#f97316' }).setLngLat([config.longitude, config.latitude]).addTo(map);
 
+        let weatherLayerToken = 0;
         let activeSources = [];
         let activeLayers = [];
         let activeLayerOpacities = [];
@@ -445,8 +446,92 @@ protocolOptions.fileReaderConfig = {
             }
         }
 
+        async function resolveCurrentOmUrls(variables) {
+            const response = await fetch(
+                'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json',
+                { cache: 'no-store' }
+            );
+            if (!response.ok) throw new Error('Latest weather-map metadata could not be loaded.');
+            const metadata = await response.json();
+            const runDate = new Date(metadata.reference_time);
+            if (!Number.isFinite(runDate.getTime())) throw new Error('Weather-map model run time is invalid.');
+
+            const fileDate = new Date();
+            fileDate.setUTCMinutes(0, 0, 0);
+            const validTimes = Array.isArray(metadata.valid_times)
+                ? metadata.valid_times.map(value => Date.parse(value))
+                : [];
+            const timeIndex = validTimes.indexOf(fileDate.getTime());
+            let deltaTimeHours;
+            if (timeIndex > 0) {
+                deltaTimeHours = (validTimes[timeIndex] - validTimes[timeIndex - 1]) / 3600000;
+            } else if (timeIndex === 0 && validTimes.length > 1) {
+                deltaTimeHours = (validTimes[1] - validTimes[0]) / 3600000;
+            }
+
+            const pad = value => String(value).padStart(2, '0');
+            const runFolder = [
+                runDate.getUTCFullYear(),
+                pad(runDate.getUTCMonth() + 1),
+                pad(runDate.getUTCDate())
+            ].join('/') + '/' + pad(runDate.getUTCHours()) + '00Z';
+            const fileName = fileDate.toISOString().slice(0, 10) + 'T' + pad(fileDate.getUTCHours()) + '00.om';
+            const baseUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' + runFolder + '/' + fileName;
+
+            return variables.map(item => {
+                const params = new URLSearchParams({ variable: item.variable });
+                if (Number.isFinite(deltaTimeHours) && deltaTimeHours > 0) {
+                    params.set('delta_time_hours', String(deltaTimeHours));
+                }
+                return baseUrl + '?' + params.toString();
+            });
+        }
+
+        function addWeatherSources(urls, variables, suffix, opacityScale) {
+            const sourceIds = [];
+            const layerIds = [];
+            variables.forEach((item, index) => {
+                const sourceId = 'gaugeiq-weather-source-' + suffix + '-' + index;
+                const layerId = 'gaugeiq-weather-layer-' + suffix + '-' + index;
+                map.addSource(sourceId, {
+                    type: 'raster',
+                    url: 'om://' + urls[index],
+                    maxzoom: 12
+                });
+                map.addLayer({
+                    id: layerId,
+                    type: 'raster',
+                    source: sourceId,
+                    paint: { 'raster-opacity': item.opacity * opacityScale }
+                });
+                sourceIds.push(sourceId);
+                layerIds.push(layerId);
+            });
+            return { sourceIds, layerIds };
+        }
+
+        function waitForWeatherSources(sourceIds, token, onLoaded, onTimeout) {
+            const timeout = setTimeout(() => {
+                if (token === weatherLayerToken) onTimeout();
+            }, 60000);
+            const check = () => {
+                if (token !== weatherLayerToken) {
+                    clearTimeout(timeout);
+                    return;
+                }
+                if (sourceIds.every(id => map.isSourceLoaded(id))) {
+                    clearTimeout(timeout);
+                    onLoaded();
+                    return;
+                }
+                map.once('idle', check);
+            };
+            map.once('idle', check);
+        }
+
         function showWeatherLayer(selection) {
             clearAnimation();
+            const token = ++weatherLayerToken;
             activeLayers.forEach(id => {
                 if (map.getLayer(id)) map.removeLayer(id);
             });
@@ -458,30 +543,90 @@ protocolOptions.fileReaderConfig = {
             activeLayerOpacities = [];
 
             const variables = weatherVariables(selection);
-            setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
+            const isCombined = selection === 'precipitation_cloud_cover';
+            let savedSnapshot = null;
+            if (isCombined) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('gaugeiqWeatherMapCombinedSnapshot') || 'null');
+                    if (saved && Array.isArray(saved.urls) && saved.urls.length === variables.length &&
+                        Number.isFinite(saved.savedAt) && Date.now() - saved.savedAt <= 24 * 60 * 60 * 1000) {
+                        savedSnapshot = saved;
+                    } else {
+                        localStorage.removeItem('gaugeiqWeatherMapCombinedSnapshot');
+                    }
+                } catch (error) {
+                    console.warn('Could not read the saved Combined weather-map snapshot.', error);
+                }
+            }
 
-            variables.forEach((item, index) => {
-                const sourceId = 'gaugeiq-weather-source-' + index;
-                const layerId = 'gaugeiq-weather-layer-' + index;
-                const dataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=current_time_1H&variable=' + encodeURIComponent(item.variable);
+            if (savedSnapshot) {
+                const cached = addWeatherSources(savedSnapshot.urls, variables, 'cached-' + token, 1);
+                activeSources = cached.sourceIds;
+                activeLayers = cached.layerIds;
+                activeLayerOpacities = variables.map(item => item.opacity);
+                setStatus('Showing saved Combined map · updating…');
+            } else {
+                setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
+            }
 
-                map.addSource(sourceId, {
-                    type: 'raster',
-                    url: 'om://' + dataUrl,
-                    maxzoom: 12
-                });
-                map.addLayer({
-                    id: layerId,
-                    type: 'raster',
-                    source: sourceId,
-                    paint: { 'raster-opacity': item.opacity }
-                });
-
-                activeSources.push(sourceId);
-                activeLayers.push(layerId);
-                activeLayerOpacities.push(item.opacity);
-            });
             frameTimeLabel.textContent = 'Six hourly frames';
+
+            (async () => {
+                try {
+                    const latestUrls = await resolveCurrentOmUrls(variables);
+                    if (token !== weatherLayerToken) return;
+
+                    const latest = addWeatherSources(latestUrls, variables, 'latest-' + token, savedSnapshot ? 0.001 : 1);
+                    if (!savedSnapshot) {
+                        activeSources = latest.sourceIds;
+                        activeLayers = latest.layerIds;
+                        activeLayerOpacities = variables.map(item => item.opacity);
+                    }
+
+                    waitForWeatherSources(latest.sourceIds, token, () => {
+                        latest.layerIds.forEach((id, index) => {
+                            if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', variables[index].opacity);
+                        });
+
+                        if (savedSnapshot) {
+                            activeLayers.forEach(id => {
+                                if (map.getLayer(id)) map.removeLayer(id);
+                            });
+                            activeSources.forEach(id => {
+                                if (map.getSource(id)) map.removeSource(id);
+                            });
+                            activeSources = latest.sourceIds;
+                            activeLayers = latest.layerIds;
+                            activeLayerOpacities = variables.map(item => item.opacity);
+                        }
+
+                        if (isCombined) {
+                            try {
+                                localStorage.setItem('gaugeiqWeatherMapCombinedSnapshot', JSON.stringify({
+                                    urls: latestUrls,
+                                    savedAt: Date.now()
+                                }));
+                            } catch (error) {
+                                console.warn('Could not save the Combined weather-map snapshot.', error);
+                            }
+                        }
+                        setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+                    }, () => {
+                        if (savedSnapshot) {
+                            latest.layerIds.forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
+                            latest.sourceIds.forEach(id => { if (map.getSource(id)) map.removeSource(id); });
+                            setStatus('Showing saved Combined map · latest update is taking longer than expected.');
+                        } else {
+                            setStatus('Weather layer took too long to load. Please try again.');
+                        }
+                    });
+                } catch (error) {
+                    if (token !== weatherLayerToken) return;
+                    setStatus(savedSnapshot
+                        ? 'Showing saved Combined map · latest update unavailable.'
+                        : (error?.message || 'Weather map could not be loaded.'));
+                }
+            })();
         }
 
         function toggleAnimation() {
