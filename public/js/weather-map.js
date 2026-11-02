@@ -52,17 +52,31 @@ class PersistentMapBlockCache {
     }
 
     async size(key) {
-        const response = await (await this.openCache()).match(this.cacheRequest(key));
-        const value = response?.headers.get('X-Om-File-Size');
-        return value ? Number(value) : undefined;
+        try {
+            const response = await (await this.openCache()).match(this.cacheRequest(key));
+            const value = response?.headers.get('X-Om-File-Size');
+            return value ? Number(value) : undefined;
+        } catch (error) {
+            return undefined;
+        }
     }
 
     async get(key, fetchFn, fileSize, signal) {
         if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-        const cache = await this.openCache();
+        let cache;
+        try {
+            cache = await this.openCache();
+        } catch (error) {
+            console.warn('Persistent weather-map cache is unavailable; using network data.', error);
+            return fetchFn(signal || new AbortController().signal);
+        }
         const request = this.cacheRequest(key);
-        const cached = await cache.match(request);
-        if (cached) return new Uint8Array(await cached.arrayBuffer());
+        try {
+            const cached = await cache.match(request);
+            if (cached) return new Uint8Array(await cached.arrayBuffer());
+        } catch (error) {
+            console.warn('Could not read the persistent weather-map cache.', error);
+        }
 
         let entry = this.inflight.get(String(key));
         if (!entry) {
@@ -77,10 +91,14 @@ class PersistentMapBlockCache {
                     'X-Om-Created-At': String(Date.now())
                 };
                 if (fileSize !== undefined) headers['X-Om-File-Size'] = String(fileSize);
-                await cache.put(request, new Response(buffer, { status: 200, headers }));
-                this.writeCount++;
-                if (this.writeCount % 64 === 0) {
-                    this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
+                try {
+                    await cache.put(request, new Response(buffer, { status: 200, headers }));
+                    this.writeCount++;
+                    if (this.writeCount % 64 === 0) {
+                        this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
+                    }
+                } catch (error) {
+                    console.warn('Could not persist a weather-map data block.', error);
                 }
                 return data;
             })().finally(() => {
@@ -524,15 +542,21 @@ protocolOptions.fileReaderConfig = {
         }
 
         function waitForWeatherSources(sourceIds, token, onLoaded, onTimeout) {
+            let finished = false;
             const timeout = setTimeout(() => {
-                if (token === weatherLayerToken) onTimeout();
+                if (finished || token !== weatherLayerToken) return;
+                finished = true;
+                onTimeout();
             }, 60000);
             const check = () => {
+                if (finished) return;
                 if (token !== weatherLayerToken) {
+                    finished = true;
                     clearTimeout(timeout);
                     return;
                 }
                 if (sourceIds.every(id => map.isSourceLoaded(id))) {
+                    finished = true;
                     clearTimeout(timeout);
                     onLoaded();
                     return;
