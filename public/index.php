@@ -995,7 +995,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <a class="card satellite-map-card" href="https://maps.open-meteo.com/?variable=precipitation" target="_blank" rel="noopener noreferrer" aria-label="Open interactive Open-Meteo weather map in a new tab">
+    <button class="card satellite-map-card" id="openWeatherMapCardButton" type="button" aria-label="Open interactive weather map inside GaugeIQ" aria-controls="weatherMapView" aria-expanded="false">
         <h2 class="satellite-map-heading" id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
         <div class="satellite-map-card-main">
             <div class="satellite-map-icon" aria-hidden="true">
@@ -1007,15 +1007,15 @@ if ($current && !empty($current['observed_at'])) {
                 </svg>
             </div>
             <div class="satellite-map-copy">
-                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers in Open-Meteo.</p>
+                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers without leaving GaugeIQ.</p>
             </div>
-            <span class="satellite-map-arrow" aria-hidden="true">↗</span>
+            <span class="satellite-map-arrow" aria-hidden="true">→</span>
         </div>
         <div class="satellite-map-card-footer">
             <span>Open interactive weather map</span>
-            <span class="satellite-map-external">Open-Meteo ↗</span>
+            <span class="satellite-map-external">Inside GaugeIQ</span>
         </div>
-    </a>
+    </button>
     </section>
 
 
