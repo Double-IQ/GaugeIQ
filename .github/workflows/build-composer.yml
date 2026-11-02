@@ -21,8 +21,7 @@ concurrency:
 
 jobs:
   composer:
-    # paths-ignore cannot suppress a run when the generated commit also
-    # changes composer.lock. Guard by commit message as a second line of defence.
+    # A generated commit may update composer.lock, so skip that commit by message.
     if: github.event_name != 'push' || github.event.head_commit.message != 'Build Composer dependencies'
     runs-on: ubuntu-latest
     steps:
