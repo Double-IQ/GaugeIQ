@@ -6745,3 +6745,11 @@ body.gaugeiq-menu-open{overflow:hidden}
   .gaugeiq-weather-map-heading span{font-size:11px}
   .gaugeiq-weather-map-controls{grid-template-columns:minmax(0,1fr) auto}
 }
+
+/* Keep the map attribution control collapsed until the info button is tapped. */
+.gaugeiq-weather-map-canvas .maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-inner{
+  display:none!important;
+}
+.gaugeiq-weather-map-canvas .maplibregl-ctrl-attrib.maplibregl-compact.maplibregl-compact-show .maplibregl-ctrl-attrib-inner{
+  display:block!important;
+}
