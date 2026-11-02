@@ -425,10 +425,21 @@ function setTemperatureAlertsStatus(state) {
     temperatureAlertsStatus.innerHTML = 'Alerts: <b>' + (labels[state] || labels.na) + '</b>';
 }
 
+function setTopNotificationStatus(enabled) {
+    const indicator = document.getElementById('topNotificationStatus');
+    if (!indicator) return;
+    indicator.classList.toggle('is-on', enabled);
+    indicator.classList.toggle('is-off', !enabled);
+    const label = enabled ? 'Notifications enabled on this device' : 'Notifications not enabled on this device';
+    indicator.setAttribute('aria-label', label);
+    indicator.title = label;
+}
+
 function showNotificationsEnabledUI() {
     if (notifyButton) notifyButton.hidden = true;
     if (notificationEnabledNote) notificationEnabledNote.hidden = false;
     setTemperatureAlertsStatus('enabled');
+    setTopNotificationStatus(true);
 }
 
 async function getRegistration() {
@@ -541,6 +552,7 @@ async function showAlertsOnIfAlreadyEnabled() {
         return;
     }
     setTemperatureAlertsStatus('disabled');
+    setTopNotificationStatus(false);
     if (Notification.permission !== 'granted') return;
     try {
         const registration = await getRegistration();
