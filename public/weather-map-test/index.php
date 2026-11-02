@@ -68,8 +68,9 @@ $mapConfig = json_encode([
         <div class="controls">
             <select id="layer-select" aria-label="Weather layer">
                 <option value="temperature_2m">Temperature</option>
-                <option value="precipitation" selected>Precipitation</option>
-                <option value="cloud_cover">Cloud cover</option>
+                <option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option>
+                <option value="precipitation">Precipitation only</option>
+                <option value="cloud_cover">Cloud cover only</option>
                 <option value="wind_speed_10m">Wind speed</option>
             </select>
             <a class="back" href="../">GaugeIQ</a>
@@ -119,33 +120,52 @@ $mapConfig = json_encode([
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         new maplibregl.Marker({ color: '#f97316' }).setLngLat([config.longitude, config.latitude]).addTo(map);
 
-        let activeSource = null;
-        let activeLayer = null;
+        let activeSources = [];
+        let activeLayers = [];
 
         function setStatus(message) {
             status.textContent = message;
             status.hidden = !message;
         }
 
-        function showWeatherLayer(variable) {
-            if (activeLayer && map.getLayer(activeLayer)) map.removeLayer(activeLayer);
-            if (activeSource && map.getSource(activeSource)) map.removeSource(activeSource);
+        function showWeatherLayer(selection) {
+            activeLayers.forEach(id => {
+                if (map.getLayer(id)) map.removeLayer(id);
+            });
+            activeSources.forEach(id => {
+                if (map.getSource(id)) map.removeSource(id);
+            });
+            activeSources = [];
+            activeLayers = [];
 
-            activeSource = 'gaugeiq-weather-source';
-            activeLayer = 'gaugeiq-weather-layer';
+            const variables = selection === 'precipitation_cloud_cover'
+                ? [
+                    { variable: 'cloud_cover', label: 'cloud cover', opacity: 0.34 },
+                    { variable: 'precipitation', label: 'precipitation', opacity: 0.78 }
+                ]
+                : [{ variable: selection, label: layerSelect.selectedOptions[0].textContent.toLowerCase(), opacity: 0.78 }];
+
             setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
-            const dataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=current_time_1H&variable=' + encodeURIComponent(variable);
-            map.addSource(activeSource, {
-                type: 'raster',
-                url: 'om://' + dataUrl,
-                maxzoom: 12
-            });
-            map.addLayer({
-                id: activeLayer,
-                type: 'raster',
-                source: activeSource,
-                paint: { 'raster-opacity': 0.78 }
+            variables.forEach((item, index) => {
+                const sourceId = 'gaugeiq-weather-source-' + index;
+                const layerId = 'gaugeiq-weather-layer-' + index;
+                const dataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=current_time_1H&variable=' + encodeURIComponent(item.variable);
+
+                map.addSource(sourceId, {
+                    type: 'raster',
+                    url: 'om://' + dataUrl,
+                    maxzoom: 12
+                });
+                map.addLayer({
+                    id: layerId,
+                    type: 'raster',
+                    source: sourceId,
+                    paint: { 'raster-opacity': item.opacity }
+                });
+
+                activeSources.push(sourceId);
+                activeLayers.push(layerId);
             });
         }
 
@@ -155,7 +175,7 @@ $mapConfig = json_encode([
             setStatus('Map error: ' + message);
         });
         map.on('idle', () => {
-            if (activeSource && map.getSource(activeSource)) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+            if (activeSources.length && activeSources.every(id => map.getSource(id))) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
         });
         layerSelect.addEventListener('change', () => {
             if (map.isStyleLoaded()) showWeatherLayer(layerSelect.value);
