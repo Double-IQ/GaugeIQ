@@ -80,21 +80,7 @@ const appearanceDefaults = {
         if (mapInstance) { mapInstance.resize(); return; }
         const map = new maplibregl.Map({
             container: 'map',
-            style: {
-                version: 8,
-                sources: {
-                    osm: {
-                        type: 'raster',
-                        tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'],
-                        tileSize: 256,
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    }
-                },
-                layers: [
-                    { id: 'osm-background', type: 'background', paint: { 'background-color': '#0b1b3b' } },
-                    { id: 'osm-raster', type: 'raster', source: 'osm' }
-                ]
-            },
+            style: 'https://tiles.openfreemap.org/styles/dark',
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
