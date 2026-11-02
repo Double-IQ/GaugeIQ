@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v84';
+const CACHE = 'gaugeiq-v85';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -22,7 +22,8 @@ self.addEventListener('install', event => {
             './css/app.css',
             './js/local-weather.js',
             './js/loading-screen.js',
-            './js/app.js'
+            './js/app.js',
+            './js/weather-map.js'
         ]))
     );
     self.skipWaiting();
