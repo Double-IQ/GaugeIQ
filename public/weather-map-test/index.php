@@ -68,7 +68,7 @@ $mapConfig = json_encode([
         <div class="controls">
             <select id="layer-select" aria-label="Weather layer">
                 <option value="temperature_2m">Temperature</option>
-                <option value="precipitation">Precipitation</option>
+                <option value="precipitation" selected>Precipitation</option>
                 <option value="wind_speed_10m">Wind speed</option>
             </select>
             <a class="back" href="../">GaugeIQ</a>
