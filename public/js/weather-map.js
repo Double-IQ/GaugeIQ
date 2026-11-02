@@ -586,7 +586,7 @@ protocolOptions.fileReaderConfig = {
                 try {
                     const saved = JSON.parse(localStorage.getItem('gaugeiqWeatherMapCombinedSnapshot') || 'null');
                     if (saved && Array.isArray(saved.urls) && saved.urls.length === variables.length &&
-                        Number.isFinite(saved.savedAt) && Date.now() - saved.savedAt <= 24 * 60 * 60 * 1000) {
+                        Number.isFinite(saved.savedAt)) {
                         savedSnapshot = saved;
                     } else {
                         localStorage.removeItem('gaugeiqWeatherMapCombinedSnapshot');
@@ -601,7 +601,11 @@ protocolOptions.fileReaderConfig = {
                 activeSources = cached.sourceIds;
                 activeLayers = cached.layerIds;
                 activeLayerOpacities = variables.map(item => item.opacity);
-                setStatus('Showing saved Combined map · updating…');
+                const ageHours = Math.max(0, Math.floor((Date.now() - savedSnapshot.savedAt) / 3600000));
+                const ageLabel = ageHours < 1 ? 'less than an hour old'
+                    : ageHours < 24 ? ageHours + ' hours old'
+                    : Math.floor(ageHours / 24) + ' days old';
+                setStatus('Showing saved Combined map · ' + ageLabel + ' · updating…');
             } else {
                 setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
             }
