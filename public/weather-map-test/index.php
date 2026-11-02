@@ -95,7 +95,21 @@ $mapConfig = json_encode([
 
         const map = new maplibregl.Map({
             container: 'map',
-            style: 'https://static-assets.open-meteo.com/map-assets/styles/minimal-planet-maps.json',
+            style: {
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }
+                },
+                layers: [
+                    { id: 'osm-background', type: 'background', paint: { 'background-color': '#0b1b3b' } },
+                    { id: 'osm-raster', type: 'raster', source: 'osm' }
+                ]
+            },
             center: [config.longitude, config.latitude],
             zoom: 5,
             maxZoom: 12,
@@ -131,7 +145,7 @@ $mapConfig = json_encode([
                 type: 'raster',
                 source: activeSource,
                 paint: { 'raster-opacity': 0.78 }
-            }, 'waterway-tunnel');
+            });
         }
 
         map.on('load', () => showWeatherLayer(layerSelect.value));
