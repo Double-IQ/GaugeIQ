@@ -1021,7 +1021,7 @@ if ($current && !empty($current['observed_at'])) {
                 <option value="past">Past 6 hours</option>
                 <option value="future" selected>Next 6 hours</option>
             </select>
-            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false">Play</button>
+            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
             <span id="map-frame-time" aria-live="polite">Six hourly frames</span>
         </div>
         <div id="map" class="gaugeiq-weather-map-canvas"
