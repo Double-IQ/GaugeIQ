@@ -29,7 +29,7 @@ const appearanceDefaults = {
         }
 
         
-const { BrowserBlockCache } = await import('https://unpkg.com/@openmeteo/file-reader@0.0.21/dist/index.mjs');
+const { BrowserBlockCache } = await import('https://unpkg.com/@openmeteo/file-reader@0.0.21/dist/esm/index.browser.js');
 
 const persistentMapCache = new BrowserBlockCache({
     cacheName: 'om-gaugeiq-weather-map-blocks-v1',
