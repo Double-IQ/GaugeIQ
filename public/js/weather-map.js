@@ -31,7 +31,7 @@ const appearanceDefaults = {
         
 class PersistentMapBlockCache {
     constructor() {
-        this.cacheName = 'gaugeiq-weather-map-blocks-v1';
+        this.cacheName = 'om-gaugeiq-weather-map-blocks-v1';
         this.blockSizeBytes = 64 * 1024;
         this.maxBytes = 192 * 1024 * 1024;
         this.cachePromise = null;
