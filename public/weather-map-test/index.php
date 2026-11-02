@@ -66,7 +66,6 @@ $mapConfig = json_encode([
             <div class="location" id="location-label">Loading configured location…</div>
         </div>
         <div class="controls">
-            <label for="layer-select" class="visually-hidden">Weather layer</label>
             <select id="layer-select" aria-label="Weather layer">
                 <option value="temperature_2m">Temperature</option>
                 <option value="precipitation">Precipitation</option>
@@ -132,7 +131,7 @@ $mapConfig = json_encode([
                 type: 'raster',
                 source: activeSource,
                 paint: { 'raster-opacity': 0.78 }
-            });
+            }, 'waterway-tunnel');
         }
 
         map.on('load', () => showWeatherLayer(layerSelect.value));
@@ -141,7 +140,7 @@ $mapConfig = json_encode([
             setStatus('Map error: ' + message);
         });
         map.on('idle', () => {
-            if (map.getSource(activeSource)) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+            if (activeSource && map.getSource(activeSource)) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
         });
         layerSelect.addEventListener('change', () => {
             if (map.isStyleLoaded()) showWeatherLayer(layerSelect.value);
