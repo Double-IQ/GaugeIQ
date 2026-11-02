@@ -1011,7 +1011,10 @@ if ($current && !empty($current['observed_at'])) {
                 <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
             </div>
         </header>
-        <div id="map" class="gaugeiq-weather-map-canvas">
+        <div id="map" class="gaugeiq-weather-map-canvas"
+             data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
+             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
+             data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>">
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
     </section>
@@ -1115,14 +1118,6 @@ if ($current && !empty($current['observed_at'])) {
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
 </main>
 <?php
-$weatherMapConfig = json_encode([
-    'latitude' => (float)$dashboardLatitude,
-    'longitude' => (float)$dashboardLongitude,
-    'locationName' => $locationName,
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
-?>
-<script>window.GAUGEIQ_MAP_CONFIG = <?= $weatherMapConfig ?>;</script>
-<?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
 $historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
@@ -1154,6 +1149,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261031-wvi-fill-opacity-v1"></script>
-<script type="module" src="js/weather-map.js?v=20261102-in-app-route-fix"></script>
+<script type="module" src="js/weather-map.js?v=20261102-csp-config-fix"></script>
 </body>
 </html>
