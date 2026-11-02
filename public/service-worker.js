@@ -1,4 +1,4 @@
-const CACHE = 'gaugeiq-v83';
+const CACHE = 'gaugeiq-v84';
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -80,12 +80,24 @@ self.addEventListener('fetch', event => {
 
     const url = new URL(event.request.url);
 
+    // Let third-party assets (MapLibre, Open-Meteo and other CDNs) bypass
+    // this same-origin app cache. A failed caches.match() returns undefined,
+    // which makes respondWith() fail with a null response.
+    if (url.origin !== self.location.origin) return;
+
     if (url.pathname.endsWith('/service-worker.js') || url.pathname.endsWith('/manifest.json')) {
         event.respondWith(fetch(event.request));
         return;
     }
 
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request, { ignoreSearch: true }))
+        fetch(event.request).catch(async () => {
+            const cached = await caches.match(event.request, { ignoreSearch: true });
+            return cached || new Response('This GaugeIQ resource is unavailable offline.', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+            });
+        })
     );
 });
