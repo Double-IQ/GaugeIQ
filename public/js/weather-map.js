@@ -153,28 +153,16 @@ const appearanceDefaults = {
         }
     
 
-(() => {
- const openButton=document.getElementById('openWeatherMapButton');
- const cardButton=document.getElementById('openWeatherMapCardButton');
- const closeButton=document.getElementById('closeWeatherMapButton');
- const view=document.getElementById('weatherMapView');
- if(!openButton||!closeButton||!view)return;
- const openTriggers=[openButton,cardButton].filter(Boolean);
- function openMap(){
-  view.hidden=false;
-  document.body.classList.add('weather-map-open');
-  openTriggers.forEach(button=>button.setAttribute('aria-expanded','true'));
-  createMap();
-  requestAnimationFrame(()=>{if(window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});
- }
- function closeMap(){
-  view.hidden=true;
-  document.body.classList.remove('weather-map-open');
-  openTriggers.forEach(button=>button.setAttribute('aria-expanded','false'));
- }
- openTriggers.forEach(button=>button.addEventListener('click',openMap));
- closeButton.addEventListener('click',closeMap);
- if(new URLSearchParams(window.location.search).get('openWeatherMap')==='1')openMap();
- window.addEventListener('resize',()=>{if(!view.hidden&&window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});
- window.addEventListener('orientationchange',()=>setTimeout(()=>{if(!view.hidden&&window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();},180));
-})();
+// The map is part of the dashboard, so initialise it as soon as the module loads.
+createMap();
+requestAnimationFrame(() => {
+    if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
+});
+window.addEventListener('resize', () => {
+    if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
+});
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
+    }, 180);
+});
