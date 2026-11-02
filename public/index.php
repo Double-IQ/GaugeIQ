@@ -1162,6 +1162,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261031-wvi-fill-opacity-v1"></script>
+<script src="js/app.js?v=20261102-push-registration-recheck"></script>
 </body>
 </html>
