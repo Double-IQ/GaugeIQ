@@ -212,29 +212,49 @@ const appearanceDefaults = {
                     }
                 });
 
-                const firstIndex = timeRangeSelect.value === 'past' ? currentIndex - 5 : currentIndex;
-                const lastIndex = firstIndex + 5;
-                if (firstIndex < 0 || lastIndex >= validTimes.length) {
-                    const available = timeRangeSelect.value === 'past'
-                        ? currentIndex + 1
-                        : Math.max(0, validTimes.length - currentIndex);
-                    throw new Error(
-                        (timeRangeSelect.value === 'past' ? 'Past' : 'Future') +
-                        ' six-hour animation is not fully available in the latest ECMWF run (' +
-                        available + ' hourly frames available).'
-                    );
+                let frameSpecs = [];
+                if (timeRangeSelect.value === 'past') {
+                    const currentTime = parsedTimes[currentIndex];
+                    const firstFrameTime = currentTime - (5 * 60 * 60 * 1000);
+                    const previousRunTime = Math.floor((firstFrameTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)) * (6 * 60 * 60 * 1000);
+                    const runDate = new Date(previousRunTime);
+                    const runFolder = [
+                        runDate.getUTCFullYear(),
+                        String(runDate.getUTCMonth() + 1).padStart(2, '0'),
+                        String(runDate.getUTCDate()).padStart(2, '0')
+                    ].join('/') + '/' + String(runDate.getUTCHours()).padStart(2, '0') + '00Z';
+
+                    frameSpecs = Array.from({ length: 6 }, (_, offset) => {
+                        const timestamp = firstFrameTime + (offset * 60 * 60 * 1000);
+                        const frameDate = new Date(timestamp);
+                        const timeToken = frameDate.toISOString().slice(0, 10) + 'T' +
+                            String(frameDate.getUTCHours()).padStart(2, '0') +
+                            String(frameDate.getUTCMinutes()).padStart(2, '0');
+                        return {
+                            time: timestamp,
+                            directFile: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' +
+                                runFolder + '/' + timeToken + '.om'
+                        };
+                    });
+                } else {
+                    if (currentIndex + 5 >= validTimes.length) {
+                        throw new Error('The next six hourly forecast frames are not yet available in the latest ECMWF run.');
+                    }
+                    frameSpecs = Array.from({ length: 6 }, (_, offset) => ({
+                        time: parsedTimes[currentIndex + offset],
+                        validIndex: currentIndex + offset
+                    }));
                 }
-
                 const variables = weatherVariables(layerSelect.value);
-                const frameIndices = Array.from({ length: 6 }, (_, offset) => firstIndex + offset);
-
-                frameIndices.forEach((validIndex, framePosition) => {
-                    const frame = { time: parsedTimes[validIndex], layerIds: [] };
+                frameSpecs.forEach((frameSpec, framePosition) => {
+                    const frame = { time: frameSpec.time, layerIds: [] };
                     variables.forEach((item, variableIndex) => {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + framePosition + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + framePosition + '-' + variableIndex;
-                        const dataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
-                            validIndex + '&variable=' + encodeURIComponent(item.variable);
+                        const dataUrl = frameSpec.directFile
+                            ? frameSpec.directFile + '?variable=' + encodeURIComponent(item.variable) + '&delta_time_hours=1'
+                            : 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
+                                frameSpec.validIndex + '&variable=' + encodeURIComponent(item.variable);
 
                         map.addSource(sourceId, {
                             type: 'raster',
