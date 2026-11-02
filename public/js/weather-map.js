@@ -273,7 +273,7 @@ const appearanceDefaults = {
                             id: layerId,
                             type: 'raster',
                             source: sourceId,
-                            paint: { 'raster-opacity': framePosition === 0 ? item.opacity : 0.001 }
+                            paint: { 'raster-opacity': 0.001 }
                         });
 
                         animationSources.push(sourceId);
