@@ -190,6 +190,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="icon" type="image/png" sizes="192x192" href="/branding/icon-192.png">
 <link rel="apple-touch-icon" href="/branding/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css?v=20261101-history-wind-hud">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -208,7 +209,7 @@ if ($current && !empty($current['observed_at'])) {
     <header>
         <div class="header-actions">
             <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" class="menu-logo"></button>
-            <a class="secondary button-link" href="weather-map/" aria-label="Open interactive weather map">Weather map</a>
+            <button id="openWeatherMapButton" class="secondary" type="button" aria-label="Open interactive weather map">Weather map</button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
@@ -1115,6 +1116,25 @@ if ($current && !empty($current['observed_at'])) {
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
 </main>
 <?php
+$weatherMapConfig = json_encode([
+    'latitude' => (float)$dashboardLatitude,
+    'longitude' => (float)$dashboardLongitude,
+    'locationName' => $locationName,
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
+?>
+<section id="weatherMapView" class="gaugeiq-weather-map-view" hidden aria-label="Interactive weather map">
+    <header class="gaugeiq-weather-map-toolbar">
+        <div class="gaugeiq-weather-map-heading"><strong>Weather Map</strong><span id="location-label"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></span></div>
+        <div class="gaugeiq-weather-map-controls">
+            <select id="layer-select" aria-label="Weather layer"><option value="temperature_2m">Temperature</option><option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option><option value="precipitation">Precipitation only</option><option value="cloud_cover">Cloud cover only</option><option value="wind_speed_10m">Wind speed</option></select>
+            <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
+            <button id="closeWeatherMapButton" class="gaugeiq-weather-map-action" type="button">Dashboard</button>
+        </div>
+    </header>
+    <div id="map" class="gaugeiq-weather-map-canvas"><div class="gaugeiq-weather-map-status" id="map-status" role="status">Open the map to load weather layers…</div></div>
+</section>
+<script>window.GAUGEIQ_MAP_CONFIG = <?= $weatherMapConfig ?>;</script>
+<?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
 $historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
@@ -1146,5 +1166,6 @@ $historyForecastLatest = (string)($historyForecastLatestStmt->fetchColumn() ?: '
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261031-wvi-fill-opacity-v1"></script>
+<script type="module" src="js/weather-map.js?v=20261102-responsive-in-app"></script>
 </body>
 </html>
