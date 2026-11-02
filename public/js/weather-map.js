@@ -29,156 +29,19 @@ const appearanceDefaults = {
         }
 
         
-class PersistentMapBlockCache {
-    constructor() {
-        this.cacheName = 'om-gaugeiq-weather-map-blocks-v1';
-        this.blockSizeBytes = 64 * 1024;
-        this.maxBytes = 192 * 1024 * 1024;
-        this.cachePromise = null;
-        this.inflight = new Map();
-        this.writeCount = 0;
-        this.evictionPromise = null;
-    }
+const { BrowserBlockCache } = await import('https://unpkg.com/@openmeteo/file-reader@0.0.21/dist/index.mjs');
 
-    blockSize() { return this.blockSizeBytes; }
-
-    async openCache() {
-        this.cachePromise ??= caches.open(this.cacheName);
-        return this.cachePromise;
-    }
-
-    cacheRequest(key) {
-        return new Request(new URL('/__gaugeiq_weather_map_cache__/' + encodeURIComponent(String(key)), location.origin));
-    }
-
-    async size(key) {
-        try {
-            const response = await (await this.openCache()).match(this.cacheRequest(key));
-            const value = response?.headers.get('X-Om-File-Size');
-            return value ? Number(value) : undefined;
-        } catch (error) {
-            return undefined;
-        }
-    }
-
-    async get(key, fetchFn, fileSize, signal) {
-        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-        let cache;
-        try {
-            cache = await this.openCache();
-        } catch (error) {
-            console.warn('Persistent weather-map cache is unavailable; using network data.', error);
-            return fetchFn(signal || new AbortController().signal);
-        }
-        const request = this.cacheRequest(key);
-        try {
-            const cached = await cache.match(request);
-            if (cached) return new Uint8Array(await cached.arrayBuffer());
-        } catch (error) {
-            console.warn('Could not read the persistent weather-map cache.', error);
-        }
-
-        let entry = this.inflight.get(String(key));
-        if (!entry) {
-            const controller = new AbortController();
-            entry = { controller, subscribers: 0, promise: null };
-            entry.promise = (async () => {
-                const data = await fetchFn(controller.signal);
-                const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-                const headers = {
-                    'Content-Type': 'application/octet-stream',
-                    'Content-Length': String(data.byteLength),
-                    'X-Om-Created-At': String(Date.now())
-                };
-                if (fileSize !== undefined) headers['X-Om-File-Size'] = String(fileSize);
-                try {
-                    await cache.put(request, new Response(buffer, { status: 200, headers }));
-                    this.writeCount++;
-                    if (this.writeCount % 64 === 0) {
-                        this.evictIfNeeded(cache).catch(error => console.warn('Weather-map cache eviction failed.', error));
-                    }
-                } catch (error) {
-                    console.warn('Could not persist a weather-map data block.', error);
-                }
-                return data;
-            })().finally(() => {
-                if (this.inflight.get(String(key)) === entry) this.inflight.delete(String(key));
-            });
-            this.inflight.set(String(key), entry);
-        }
-
-        entry.subscribers++;
-        return new Promise((resolve, reject) => {
-            let settled = false;
-            const finish = (callback, value) => {
-                if (settled) return;
-                settled = true;
-                if (signal) signal.removeEventListener('abort', onAbort);
-                entry.subscribers = Math.max(0, entry.subscribers - 1);
-                callback(value);
-            };
-            const onAbort = () => {
-                finish(reject, new DOMException('Aborted', 'AbortError'));
-                if (entry.subscribers === 0) entry.controller.abort();
-            };
-            if (signal) {
-                if (signal.aborted) return onAbort();
-                signal.addEventListener('abort', onAbort, { once: true });
-            }
-            entry.promise.then(
-                data => finish(resolve, data),
-                error => finish(reject, error)
-            );
-        });
-    }
-
-    async prefetch(key, fetchFn, fileSize, signal) {
-        await this.get(key, fetchFn, fileSize, signal).catch(() => {});
-    }
-
-    async evictIfNeeded(cache) {
-        if (this.evictionPromise) return this.evictionPromise;
-        this.evictionPromise = (async () => {
-            const keys = await cache.keys();
-            const entries = [];
-            let total = 0;
-            for (const request of keys) {
-                const response = await cache.match(request);
-                const size = Number(response?.headers.get('Content-Length') || 0);
-                total += size;
-                entries.push({
-                    request,
-                    size,
-                    created: Number(response?.headers.get('X-Om-Created-At') || 0)
-                });
-            }
-            if (total <= this.maxBytes) return;
-            entries.sort((a, b) => a.created - b.created);
-            for (const entry of entries) {
-                if (total <= this.maxBytes * 0.85) break;
-                await cache.delete(entry.request);
-                total -= entry.size;
-            }
-        })();
-        try {
-            await this.evictionPromise;
-        } finally {
-            this.evictionPromise = null;
-        }
-    }
-
-    async clear() {
-        for (const entry of this.inflight.values()) entry.controller.abort();
-        this.inflight.clear();
-        this.cachePromise = null;
-        await caches.delete(this.cacheName);
-    }
-}
+const persistentMapCache = new BrowserBlockCache({
+    cacheName: 'om-gaugeiq-weather-map-blocks-v1',
+    blockSize: 64 * 1024,
+    maxBytes: 192 * 1024 * 1024,
+    evictionFraction: 0.15
+});
 
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
 protocolOptions.fileReaderConfig = {
     ...protocolOptions.fileReaderConfig,
-    cache: new PersistentMapBlockCache()
+    cache: persistentMapCache
 };
         protocolOptions.colorScales = {
             ...protocolOptions.colorScales,
