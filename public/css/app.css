@@ -3362,7 +3362,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .gaugeiq-weather-map-controls select,
 :root[data-theme="light"] .gaugeiq-weather-map-action,
 :root[data-theme="light"] .gaugeiq-weather-map-timeline select,
-:root[data-theme="light"] .gaugeiq-weather-map-timeline button:root {
+:root[data-theme="light"] .gaugeiq-weather-map-timeline button{
+  color:#26384b;background:linear-gradient(180deg,#e7ebf0,#cbd2da);border-color:#aab4c0;
+}
+:root {
     --theme-color: #f3f4f6;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
     color-scheme: light dark;
