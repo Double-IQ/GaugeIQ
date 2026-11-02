@@ -117,6 +117,7 @@ $mapConfig = json_encode([
 
         const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
         protocolOptions.colorScales = {
+            ...protocolOptions.colorScales,
             precipitation: {
                 type: 'breakpoint',
                 unit: 'mm/h',
