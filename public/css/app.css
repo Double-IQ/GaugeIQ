@@ -3300,3 +3300,45 @@ body.gaugeiq-menu-open{overflow:hidden}
         white-space:nowrap;
     }
 }
+
+
+/* Responsive full-screen weather map view inside GaugeIQ. */
+.gaugeiq-weather-map-view[hidden]{display:none!important}
+.gaugeiq-weather-map-view{
+ position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;
+ width:100%;height:100vh;height:100dvh;min-width:0;overflow:hidden;
+ padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+ background:#061648;color:#f8fafc
+}
+body.weather-map-open{overflow:hidden}
+.gaugeiq-weather-map-toolbar{
+ z-index:2;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;flex:0 0 auto;min-width:0;padding:10px 14px;
+ background:#081d55;border-bottom:1px solid rgba(148,163,184,.25)
+}
+.gaugeiq-weather-map-heading{display:flex;flex-direction:column;gap:3px;min-width:0}
+.gaugeiq-weather-map-heading strong{font-size:17px;font-weight:750}
+.gaugeiq-weather-map-heading span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b9c9e8;font-size:12px}
+.gaugeiq-weather-map-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.gaugeiq-weather-map-controls select,.gaugeiq-weather-map-action{
+ min-height:40px;max-width:100%;border:1px solid rgba(148,163,184,.4);border-radius:10px;
+ padding:0 11px;background:#102b68;color:#fff;font:inherit;font-size:13px;font-weight:650;
+ text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center
+}
+.gaugeiq-weather-map-controls select{min-width:0}
+.gaugeiq-weather-map-canvas{position:relative;flex:1 1 auto;min-width:0;min-height:0;width:100%;height:100%;background:#0b1b3b}
+.gaugeiq-weather-map-canvas .maplibregl-map{position:absolute;inset:0;width:100%;height:100%}
+.gaugeiq-weather-map-status{position:absolute;z-index:1;left:12px;bottom:14px;max-width:calc(100% - 24px);padding:8px 11px;border:1px solid rgba(148,163,184,.25);border-radius:9px;background:rgba(6,22,72,.88);color:#dbeafe;font-size:12px;pointer-events:none}
+.gaugeiq-weather-map-canvas .maplibregl-ctrl-group{border-radius:10px!important;overflow:hidden}
+@media(max-width:680px){
+ .gaugeiq-weather-map-toolbar{align-items:stretch;flex-direction:column;gap:8px;padding:9px 10px}
+ .gaugeiq-weather-map-controls{display:grid;grid-template-columns:minmax(0,1fr) auto auto;width:100%;gap:6px}
+ .gaugeiq-weather-map-controls select,.gaugeiq-weather-map-action{min-height:38px;padding:0 8px;font-size:12px}
+}
+@media(max-width:380px){
+ .gaugeiq-weather-map-heading strong{font-size:15px}
+ .gaugeiq-weather-map-heading span{font-size:11px}
+ .gaugeiq-weather-map-controls{grid-template-columns:minmax(0,1fr) auto}
+ .gaugeiq-weather-map-controls select{grid-column:1/-1;width:100%}
+ .gaugeiq-weather-map-action{width:100%}
+}
