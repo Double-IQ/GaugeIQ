@@ -1004,8 +1004,7 @@ if ($current && !empty($current['observed_at'])) {
     <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
         <header class="gaugeiq-weather-map-toolbar">
             <div class="gaugeiq-weather-map-heading">
-                <strong id="interactiveWeatherMapsTitle">Interactive Weather Maps</strong>
-                <span id="location-label"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></span>
+                <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
             </div>
             <div class="gaugeiq-weather-map-controls">
                 <select id="layer-select" aria-label="Weather layer">
@@ -1019,8 +1018,7 @@ if ($current && !empty($current['observed_at'])) {
         </header>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
-             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
-             data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>">
+             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
     </section>
