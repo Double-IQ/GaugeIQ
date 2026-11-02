@@ -57,6 +57,9 @@ const appearanceDefaults = {
         const mapElement = document.getElementById('map');
         const status = document.getElementById('map-status');
         const layerSelect = document.getElementById('layer-select');
+        const timeRangeSelect = document.getElementById('map-time-range');
+        const animationToggle = document.getElementById('map-animation-toggle');
+        const frameTimeLabel = document.getElementById('map-frame-time');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -92,13 +95,193 @@ const appearanceDefaults = {
 
         let activeSources = [];
         let activeLayers = [];
+        let activeLayerOpacities = [];
+        let animationSources = [];
+        let animationLayers = [];
+        let animationFrames = [];
+        let animationTimer = null;
+        let animationToken = 0;
+        let animationPreparing = false;
 
         function setStatus(message) {
             status.textContent = message;
             status.hidden = !message;
         }
 
+        function weatherVariables(selection) {
+            return selection === 'precipitation_cloud_cover'
+                ? [
+                    { variable: 'cloud_cover', opacity: Number(appearance.cloudOpacity) / 100 },
+                    { variable: 'precipitation', opacity: Number(appearance.precipitationOpacity) / 100 }
+                ]
+                : [{
+                    variable: selection,
+                    opacity: selection === 'cloud_cover'
+                        ? Number(appearance.cloudOpacity) / 100
+                        : Number(appearance.precipitationOpacity) / 100
+                }];
+        }
+
+        function clearAnimation() {
+            animationToken++;
+            if (animationTimer !== null) {
+                clearInterval(animationTimer);
+                animationTimer = null;
+            }
+            animationLayers.forEach(item => {
+                if (map.getLayer(item.id)) map.removeLayer(item.id);
+            });
+            animationSources.forEach(id => {
+                if (map.getSource(id)) map.removeSource(id);
+            });
+            animationLayers = [];
+            animationSources = [];
+            animationFrames = [];
+            animationPreparing = false;
+            activeLayers.forEach((id, index) => {
+                if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', activeLayerOpacities[index] ?? 1);
+            });
+            animationToggle.disabled = false;
+            animationToggle.textContent = 'Play';
+            animationToggle.setAttribute('aria-pressed', 'false');
+        }
+
+        function updateFrameLabel(index) {
+            const frame = animationFrames[index];
+            if (!frame) return;
+            const label = new Date(frame.time).toLocaleString(undefined, {
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            frameTimeLabel.textContent = 'Frame ' + (index + 1) + '/6 · ' + label;
+        }
+
+        function showFrame(index) {
+            animationLayers.forEach(item => {
+                if (map.getLayer(item.id)) {
+                    map.setPaintProperty(item.id, 'raster-opacity', item.frameIndex === index ? item.opacity : 0);
+                }
+            });
+            updateFrameLabel(index);
+        }
+
+        function runAnimation() {
+            if (!animationFrames.length || animationTimer !== null) return;
+            let currentFrame = 0;
+            showFrame(currentFrame);
+            animationToggle.disabled = false;
+            animationToggle.textContent = 'Pause';
+            animationToggle.setAttribute('aria-pressed', 'true');
+            animationTimer = setInterval(() => {
+                currentFrame = (currentFrame + 1) % animationFrames.length;
+                showFrame(currentFrame);
+            }, 1200);
+        }
+
+        async function prepareAnimation() {
+            clearAnimation();
+            const token = animationToken;
+            animationPreparing = true;
+            animationToggle.disabled = true;
+            setStatus('Preparing six hourly weather frames…');
+
+            try {
+                const metadataResponse = await fetch(
+                    'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json',
+                    { cache: 'no-cache' }
+                );
+                if (!metadataResponse.ok) throw new Error('Weather-map time data could not be loaded.');
+                const metadata = await metadataResponse.json();
+                if (token !== animationToken) return;
+
+                const validTimes = Array.isArray(metadata.valid_times) ? metadata.valid_times : [];
+                const parsedTimes = validTimes.map(value => Date.parse(value));
+                if (!parsedTimes.length || parsedTimes.some(value => !Number.isFinite(value))) {
+                    throw new Error('The latest forecast does not contain usable hourly timestamps.');
+                }
+
+                const now = Date.now();
+                let currentIndex = 0;
+                let nearestDistance = Infinity;
+                parsedTimes.forEach((timestamp, index) => {
+                    const distance = Math.abs(timestamp - now);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        currentIndex = index;
+                    }
+                });
+
+                const firstIndex = timeRangeSelect.value === 'past' ? currentIndex - 5 : currentIndex;
+                const lastIndex = firstIndex + 5;
+                if (firstIndex < 0 || lastIndex >= validTimes.length) {
+                    const available = timeRangeSelect.value === 'past'
+                        ? currentIndex + 1
+                        : Math.max(0, validTimes.length - currentIndex);
+                    throw new Error(
+                        (timeRangeSelect.value === 'past' ? 'Past' : 'Future') +
+                        ' six-hour animation is not fully available in the latest ECMWF run (' +
+                        available + ' hourly frames available).'
+                    );
+                }
+
+                const variables = weatherVariables(layerSelect.value);
+                const frameIndices = Array.from({ length: 6 }, (_, offset) => firstIndex + offset);
+
+                frameIndices.forEach((validIndex, framePosition) => {
+                    const frame = { time: parsedTimes[validIndex], layerIds: [] };
+                    variables.forEach((item, variableIndex) => {
+                        const sourceId = 'gaugeiq-animation-source-' + token + '-' + framePosition + '-' + variableIndex;
+                        const layerId = 'gaugeiq-animation-layer-' + token + '-' + framePosition + '-' + variableIndex;
+                        const dataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
+                            validIndex + '&variable=' + encodeURIComponent(item.variable);
+
+                        map.addSource(sourceId, {
+                            type: 'raster',
+                            url: 'om://' + dataUrl,
+                            maxzoom: 12
+                        });
+                        map.addLayer({
+                            id: layerId,
+                            type: 'raster',
+                            source: sourceId,
+                            paint: { 'raster-opacity': framePosition === 0 ? item.opacity : 0.001 }
+                        });
+
+                        animationSources.push(sourceId);
+                        animationLayers.push({ id: layerId, frameIndex: framePosition, opacity: item.opacity });
+                        frame.layerIds.push(layerId);
+                    });
+                    animationFrames.push(frame);
+                });
+
+                animationPreparing = false;
+                const waitForTiles = () => {
+                    if (token !== animationToken) return;
+                    const allLoaded = animationSources.every(id => map.isSourceLoaded(id));
+                    if (!allLoaded) {
+                        map.once('idle', waitForTiles);
+                        return;
+                    }
+                    activeLayers.forEach(id => {
+                        if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
+                    });
+                    setStatus('');
+                    runAnimation();
+                };
+                map.once('idle', waitForTiles);
+            } catch (error) {
+                if (token !== animationToken) return;
+                animationPreparing = false;
+                animationToggle.disabled = false;
+                animationToggle.textContent = 'Play';
+                animationToggle.setAttribute('aria-pressed', 'false');
+                setStatus(error?.message || 'Weather animation could not be prepared.');
+            }
+        }
+
         function showWeatherLayer(selection) {
+            clearAnimation();
             activeLayers.forEach(id => {
                 if (map.getLayer(id)) map.removeLayer(id);
             });
@@ -107,14 +290,9 @@ const appearanceDefaults = {
             });
             activeSources = [];
             activeLayers = [];
+            activeLayerOpacities = [];
 
-            const variables = selection === 'precipitation_cloud_cover'
-                ? [
-                    { variable: 'cloud_cover', label: 'cloud cover', opacity: Number(appearance.cloudOpacity) / 100 },
-                    { variable: 'precipitation', label: 'precipitation', opacity: Number(appearance.precipitationOpacity) / 100 }
-                ]
-                : [{ variable: selection, label: layerSelect.selectedOptions[0].textContent.toLowerCase(), opacity: selection === 'cloud_cover' ? Number(appearance.cloudOpacity) / 100 : Number(appearance.precipitationOpacity) / 100 }];
-
+            const variables = weatherVariables(selection);
             setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
             variables.forEach((item, index) => {
@@ -136,7 +314,25 @@ const appearanceDefaults = {
 
                 activeSources.push(sourceId);
                 activeLayers.push(layerId);
+                activeLayerOpacities.push(item.opacity);
             });
+            frameTimeLabel.textContent = 'Six hourly frames';
+        }
+
+        function toggleAnimation() {
+            if (animationPreparing) return;
+            if (animationTimer !== null) {
+                clearInterval(animationTimer);
+                animationTimer = null;
+                animationToggle.textContent = 'Play';
+                animationToggle.setAttribute('aria-pressed', 'false');
+                return;
+            }
+            if (animationFrames.length && animationLayers.length) {
+                runAnimation();
+                return;
+            }
+            prepareAnimation();
         }
 
         map.on('load', () => showWeatherLayer(layerSelect.value));
@@ -145,8 +341,19 @@ const appearanceDefaults = {
             setStatus('Map error: ' + message);
         });
         map.on('idle', () => {
-            if (activeSources.length && activeSources.every(id => map.getSource(id))) setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+            if (!animationSources.length && activeSources.length && activeSources.every(id => map.getSource(id))) {
+                setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
+            }
         });
+        layerSelect.addEventListener('change', () => {
+            if (mapInstance && mapInstance.isStyleLoaded()) showWeatherLayer(layerSelect.value);
+        });
+        timeRangeSelect.addEventListener('change', () => {
+            clearAnimation();
+            frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
+            setStatus('');
+        });
+        animationToggle.addEventListener('click', toggleAnimation);
         map.on('zoomend', () => {
             try {
                 localStorage.setItem('gaugeiqWeatherMapZoom', String(map.getZoom()));
