@@ -63,9 +63,6 @@ $historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format(
 $weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
 $weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
 $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
-$historicalForecastCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at >= ? AND forecast_at <= ?");
-$historicalForecastCountStmt->execute([$historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
-$historicalForecastCount = (int)$historicalForecastCountStmt->fetchColumn();
 ?>
 <!doctype html>
 <html lang="en"><head>
@@ -120,14 +117,13 @@ $historicalForecastCount = (int)$historicalForecastCountStmt->fetchColumn();
     aria-labelledby="openMeteoHistoryTitle">
     <div class="section-heading">
         <div>
-            <h2 id="openMeteoHistoryTitle">Historical weather datasets</h2>
-            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather and historical forecasts for the configured location. Your existing weather records are kept; forecast probabilities are stored separately.</p>
+            <h2 id="openMeteoHistoryTitle">Historical weather data</h2>
+            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather for the configured location. Existing weather records are kept.</p>
         </div>
     </div>
     <div class="local-weather-tools">
         <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Waiting for the automatic dashboard download to finish.' ?></span></p>
-        <p><strong>Historical Forecast:</strong> <span id="historicalForecastStatus" role="status" aria-live="polite"><?= $historicalForecastCount >= 5000 ? 'Available — ' . number_format($historicalForecastCount) . ' hourly forecasts found.' : 'Waiting for the automatic dashboard download to finish.' ?></span></p>
-        <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Forecast probabilities are kept in a separate dataset so they cannot replace historical weather observations.</p>
+        <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Historical weather records are stored separately from current readings and future forecasts.</p>
     </div>
 </section>
 </main>
