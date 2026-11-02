@@ -1013,7 +1013,6 @@ if ($current && !empty($current['observed_at'])) {
                     <option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option>
                     <option value="precipitation">Precipitation only</option>
                     <option value="cloud_cover">Cloud cover only</option>
-                    <option value="wind_speed_10m">Wind speed</option>
                 </select>
                 <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
             </div>
