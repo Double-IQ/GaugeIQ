@@ -103,6 +103,7 @@ const appearanceDefaults = {
         let animationToken = 0;
         let animationPreparing = false;
         let animationCurrentFrame = 0;
+        let animationLoadTimeout = null;
 
         function setStatus(message) {
             status.textContent = message;
@@ -128,6 +129,10 @@ const appearanceDefaults = {
             if (animationTimer !== null) {
                 clearInterval(animationTimer);
                 animationTimer = null;
+            }
+            if (animationLoadTimeout !== null) {
+                clearTimeout(animationLoadTimeout);
+                animationLoadTimeout = null;
             }
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) map.removeLayer(item.id);
@@ -280,12 +285,21 @@ const appearanceDefaults = {
 
                 animationPreparing = false;
                 animationCurrentFrame = 0;
+                animationLoadTimeout = setTimeout(() => {
+                    if (token !== animationToken) return;
+                    clearAnimation();
+                    setStatus('Weather frames took too long to load. Please try again.');
+                }, 30000);
                 const waitForTiles = () => {
                     if (token !== animationToken) return;
                     const allLoaded = animationSources.every(id => map.isSourceLoaded(id));
                     if (!allLoaded) {
                         map.once('idle', waitForTiles);
                         return;
+                    }
+                    if (animationLoadTimeout !== null) {
+                        clearTimeout(animationLoadTimeout);
+                        animationLoadTimeout = null;
                     }
                     activeLayers.forEach(id => {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
