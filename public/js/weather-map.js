@@ -147,10 +147,10 @@ const appearanceDefaults = {
         });
         mapInstance = map;
         window.GaugeIQWeatherMapResize = () => { if (mapInstance) mapInstance.resize(); };
-        }
         layerSelect.addEventListener('change', () => {
             if (mapInstance && mapInstance.isStyleLoaded()) showWeatherLayer(layerSelect.value);
         });
+        }
     
 
 (() => {
@@ -158,7 +158,7 @@ const appearanceDefaults = {
  const closeButton=document.getElementById('closeWeatherMapButton');
  const view=document.getElementById('weatherMapView');
  if(!openButton||!closeButton||!view)return;
- function openMap(){view.hidden=false;document.body.classList.add('weather-map-open');if(typeof createMap==='function')createMap();requestAnimationFrame(()=>{if(window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});}
+ function openMap(){view.hidden=false;document.body.classList.add('weather-map-open');createMap();requestAnimationFrame(()=>{if(window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});}
  function closeMap(){view.hidden=true;document.body.classList.remove('weather-map-open');}
  openButton.addEventListener('click',openMap);closeButton.addEventListener('click',closeMap);
  window.addEventListener('resize',()=>{if(!view.hidden&&window.GaugeIQWeatherMapResize)window.GaugeIQWeatherMapResize();});
