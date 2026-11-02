@@ -1001,6 +1001,34 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
+    <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
+        <div class="conditions-trend-heading">
+            <h2 id="conditionsTrendTitle">Conditions trend</h2>
+            <p class="muted">Interprets the change in weather conditions.</p>
+        </div>
+        <div class="conditions-trend-result">
+            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
+            <strong class="conditions-trend-label" id="conditionsTrendLabel"></strong>
+        </div>
+        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 10.5v6"></path>
+                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+            </svg>
+            <span id="conditionsTrendReasonsButtonLabel">More information</span>
+        </button>
+        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
+            <p class="conditions-trend-summary" id="conditionsTrendSummary"></p>
+            <div id="conditionsTrendReasonItems"></div>
+        </div>
+        <details class="algorithm-details">
+            <summary>How the conditions trend is classified</summary>
+            <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
+            <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
+        </details>
+    </section>
+
     <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
         <header class="gaugeiq-weather-map-toolbar">
             <div class="gaugeiq-weather-map-heading">
@@ -1064,34 +1092,6 @@ if ($current && !empty($current['observed_at'])) {
         <details class="algorithm-details">
             <summary>How the WVI is calculated</summary>
             <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
-        </details>
-    </section>
-
-    <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
-        <div class="conditions-trend-heading">
-            <h2 id="conditionsTrendTitle">Conditions trend</h2>
-            <p class="muted">Interprets the change in weather conditions.</p>
-        </div>
-        <div class="conditions-trend-result">
-            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
-            <strong class="conditions-trend-label" id="conditionsTrendLabel"></strong>
-        </div>
-        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 10.5v6"></path>
-                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
-            </svg>
-            <span id="conditionsTrendReasonsButtonLabel">More information</span>
-        </button>
-        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
-            <p class="conditions-trend-summary" id="conditionsTrendSummary"></p>
-            <div id="conditionsTrendReasonItems"></div>
-        </div>
-        <details class="algorithm-details">
-            <summary>How the conditions trend is classified</summary>
-            <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
-            <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
         </details>
     </section>
 
