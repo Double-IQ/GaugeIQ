@@ -102,7 +102,7 @@ protocolOptions.fileReaderConfig = {
             zoom: savedMapZoom,
             maxZoom: 12,
             cooperativeGestures: true,
-            attributionControl: true
+            attributionControl: { compact: true }
         });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         new maplibregl.Marker({ color: '#f97316' }).setLngLat([config.longitude, config.latitude]).addTo(map);
