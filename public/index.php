@@ -1010,7 +1010,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="gaugeiq-weather-map-controls">
                 <select id="layer-select" aria-label="Weather layer">
                     <option value="temperature_2m">Temperature</option>
-                    <option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option>
+                    <option value="precipitation_cloud_cover" selected>Combined</option>
                     <option value="precipitation">Precipitation only</option>
                     <option value="cloud_cover">Cloud cover only</option>
                 </select>
