@@ -57,17 +57,14 @@ const appearanceDefaults = {
         const mapElement = document.getElementById('map');
         const status = document.getElementById('map-status');
         const layerSelect = document.getElementById('layer-select');
-        const locationLabel = document.getElementById('location-label');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
-            longitude: Number(mapElement?.dataset.longitude),
-            locationName: mapElement?.dataset.locationName || ''
+            longitude: Number(mapElement?.dataset.longitude)
         };
         if (!mapElement || !Number.isFinite(config.latitude) || !Number.isFinite(config.longitude)) {
             status.textContent = 'Map unavailable: location coordinates are missing.';
             throw new Error('GaugeIQ weather map configuration is missing or invalid.');
         }
-        locationLabel.textContent = config.locationName + ' · ' + config.latitude.toFixed(3) + ', ' + config.longitude.toFixed(3);
 
         const savedMapZoom = (() => {
             try {
