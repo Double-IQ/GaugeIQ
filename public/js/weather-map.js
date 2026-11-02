@@ -102,6 +102,7 @@ const appearanceDefaults = {
         let animationTimer = null;
         let animationToken = 0;
         let animationPreparing = false;
+        let animationCurrentFrame = 0;
 
         function setStatus(message) {
             status.textContent = message;
@@ -138,9 +139,12 @@ const appearanceDefaults = {
             animationSources = [];
             animationFrames = [];
             animationPreparing = false;
-            activeLayers.forEach((id, index) => {
-                if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', activeLayerOpacities[index] ?? 1);
-            });
+            animationCurrentFrame = 0;
+            if (map.isStyleLoaded()) {
+                activeLayers.forEach((id, index) => {
+                    if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', activeLayerOpacities[index] ?? 1);
+                });
+            }
             animationToggle.disabled = false;
             animationToggle.textContent = 'Play';
             animationToggle.setAttribute('aria-pressed', 'false');
@@ -168,14 +172,13 @@ const appearanceDefaults = {
 
         function runAnimation() {
             if (!animationFrames.length || animationTimer !== null) return;
-            let currentFrame = 0;
-            showFrame(currentFrame);
+            showFrame(animationCurrentFrame);
             animationToggle.disabled = false;
             animationToggle.textContent = 'Pause';
             animationToggle.setAttribute('aria-pressed', 'true');
             animationTimer = setInterval(() => {
-                currentFrame = (currentFrame + 1) % animationFrames.length;
-                showFrame(currentFrame);
+                animationCurrentFrame = (animationCurrentFrame + 1) % animationFrames.length;
+                showFrame(animationCurrentFrame);
             }, 1200);
         }
 
@@ -276,6 +279,7 @@ const appearanceDefaults = {
                 });
 
                 animationPreparing = false;
+                animationCurrentFrame = 0;
                 const waitForTiles = () => {
                     if (token !== animationToken) return;
                     const allLoaded = animationSources.every(id => map.isSourceLoaded(id));
