@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - main
-    # Composer writes vendor/ back to main. Ignore those generated commits so
-    # the workflow does not keep rebuilding its own generated installed.php.
-    paths-ignore:
-      - 'vendor/**'
+    # Rebuild dependencies only when dependency definitions change.
+    # Ordinary application commits must not queue redundant vendor commits.
+    paths:
+      - 'composer.json'
+      - 'composer.lock'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,7 @@ permissions:
 # Only one dependency-build job may commit to main at a time.
 concurrency:
   group: gaugeiq-composer-dependencies-main
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   composer:
