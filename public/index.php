@@ -209,7 +209,6 @@ if ($current && !empty($current['observed_at'])) {
     <header>
         <div class="header-actions">
             <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration"><img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="110" height="32" class="menu-logo"></button>
-            <button id="openWeatherMapButton" class="secondary" type="button" aria-label="Open interactive weather map">Weather map</button>
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
@@ -995,27 +994,27 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <button class="card satellite-map-card" id="openWeatherMapCardButton" type="button" aria-label="Open interactive weather map inside GaugeIQ" aria-controls="weatherMapView" aria-expanded="false">
-        <h2 class="satellite-map-heading" id="interactiveWeatherMapsTitle">Interactive Weather Maps</h2>
-        <div class="satellite-map-card-main">
-            <div class="satellite-map-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" focusable="false">
-                    <circle cx="24" cy="24" r="8"></circle>
-                    <path d="M18 18 10 10M30 18l8-8M18 30l-8 8M30 30l8 8"></path>
-                    <path d="M7 7l7 1-1 7M41 7l-7-1 1 7M7 41l7-1-1-7M41 41l-7-1 1-7"></path>
-                    <path d="M21 21h6v6h-6z"></path>
-                </svg>
+    <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
+        <header class="gaugeiq-weather-map-toolbar">
+            <div class="gaugeiq-weather-map-heading">
+                <strong id="interactiveWeatherMapsTitle">Interactive Weather Maps</strong>
+                <span id="location-label"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></span>
             </div>
-            <div class="satellite-map-copy">
-                <p class="muted">Explore temperature, wind, precipitation and cloud-cover layers without leaving GaugeIQ.</p>
+            <div class="gaugeiq-weather-map-controls">
+                <select id="layer-select" aria-label="Weather layer">
+                    <option value="temperature_2m">Temperature</option>
+                    <option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option>
+                    <option value="precipitation">Precipitation only</option>
+                    <option value="cloud_cover">Cloud cover only</option>
+                    <option value="wind_speed_10m">Wind speed</option>
+                </select>
+                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
             </div>
-            <span class="satellite-map-arrow" aria-hidden="true">→</span>
+        </header>
+        <div id="map" class="gaugeiq-weather-map-canvas">
+            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
-        <div class="satellite-map-card-footer">
-            <span>Open interactive weather map</span>
-            <span class="satellite-map-external">Inside GaugeIQ</span>
-        </div>
-    </button>
+    </section>
     </section>
 
 
@@ -1122,17 +1121,6 @@ $weatherMapConfig = json_encode([
     'locationName' => $locationName,
 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
 ?>
-<section id="weatherMapView" class="gaugeiq-weather-map-view" hidden aria-label="Interactive weather map">
-    <header class="gaugeiq-weather-map-toolbar">
-        <div class="gaugeiq-weather-map-heading"><strong>Weather Map</strong><span id="location-label"><?= htmlspecialchars($locationName, ENT_QUOTES) ?></span></div>
-        <div class="gaugeiq-weather-map-controls">
-            <select id="layer-select" aria-label="Weather layer"><option value="temperature_2m">Temperature</option><option value="precipitation_cloud_cover" selected>Precipitation + cloud cover</option><option value="precipitation">Precipitation only</option><option value="cloud_cover">Cloud cover only</option><option value="wind_speed_10m">Wind speed</option></select>
-            <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
-            <button id="closeWeatherMapButton" class="gaugeiq-weather-map-action" type="button">Dashboard</button>
-        </div>
-    </header>
-    <div id="map" class="gaugeiq-weather-map-canvas"><div class="gaugeiq-weather-map-status" id="map-status" role="status">Open the map to load weather layers…</div></div>
-</section>
 <script>window.GAUGEIQ_MAP_CONFIG = <?= $weatherMapConfig ?>;</script>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
