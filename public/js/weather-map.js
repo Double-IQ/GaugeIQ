@@ -38,6 +38,34 @@ const persistentMapCache = new BrowserBlockCache({
     evictionFraction: 0.15
 });
 
+// Route immutable ECMWF .om range reads through GaugeIQ's shared server cache.
+// The Open-Meteo protocol uses the standard Fetch API for its HTTP backend;
+// metadata JSON requests remain direct so the latest run can still be resolved.
+const gaugeIqOriginalFetch = window.fetch.bind(window);
+window.fetch = (input, init) => {
+    const requestUrl = input instanceof Request ? input.url : String(input);
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(requestUrl, window.location.href);
+    } catch (error) {
+        return gaugeIqOriginalFetch(input, init);
+    }
+
+    if (parsedUrl.protocol === 'https:' &&
+        parsedUrl.hostname === 'openmeteo.s3.amazonaws.com' &&
+        parsedUrl.pathname.startsWith('/data_spatial/ecmwf_ifs/') &&
+        parsedUrl.pathname.endsWith('.om')) {
+        const proxyUrl = new URL('/api/weather-map-proxy.php', window.location.origin);
+        proxyUrl.searchParams.set('url', parsedUrl.href);
+        const proxyRequest = input instanceof Request
+            ? new Request(proxyUrl.href, input)
+            : proxyUrl.href;
+        return gaugeIqOriginalFetch(proxyRequest, init);
+    }
+
+    return gaugeIqOriginalFetch(input, init);
+};
+
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
 protocolOptions.fileReaderConfig = {
     ...protocolOptions.fileReaderConfig,
