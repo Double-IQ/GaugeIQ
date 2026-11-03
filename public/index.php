@@ -416,9 +416,9 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="temperature-stability-row temperature-comfort-alerts-row temperature-comfort-below" data-weather-stability-alert-threshold="<?= $weatherStabilityAlertThreshold !== null ? htmlspecialchars((string)$weatherStabilityAlertThreshold, ENT_QUOTES) : '' ?>">
                     <div class="temperature-stability-label temperature-stability-inline" id="temperatureStabilityLabel"><span class="temperature-stability-prefix">WVI: </span><span id="temperatureStabilitySummary" class="temperature-stability-summary">—</span></div>
                     <div class="top-status-indicators" aria-label="Notification, weather alert and scheduled data update status">
-                        <span id="topNotificationStatus" class="top-status-indicator is-off" role="img" aria-label="Notifications not enabled on this device" title="Notifications not enabled on this device">
+                        <button id="topNotificationStatus" class="top-status-indicator top-notification-button is-off" type="button" aria-label="Notifications not enabled on this device" title="Notifications not enabled on this device" aria-haspopup="dialog">
                             <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="top-status-dash"></span>
-                        </span>
+                        </button>
                         <span class="top-status-indicator <?= $enabledRuleCount > 0 ? 'is-on' : 'is-off' ?>" role="img" aria-label="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>" title="Alerts <?= $enabledRuleCount > 0 ? 'enabled' : 'disabled' ?>">
                             <svg class="top-status-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg><span class="top-status-dash"></span>
                         </span>
@@ -1128,6 +1128,17 @@ if ($current && !empty($current['observed_at'])) {
 
     
 
+    <dialog id="notificationRepairDialog" class="notification-repair-dialog" aria-labelledby="notificationRepairTitle">
+        <div class="notification-repair-content">
+            <button id="notificationRepairClose" class="notification-repair-close" type="button" aria-label="Close">×</button>
+            <p class="eyebrow">GAUGЕIQ NOTIFICATIONS</p>
+            <h2 id="notificationRepairTitle">Notification connection needs repair</h2>
+            <p>Your device still allows GaugeIQ notifications, but its saved connection no longer matches GaugeIQ's current push credentials. Weather alerts may not reach this device until the connection is repaired.</p>
+            <p>Repairing will replace this device's old push subscription. It will not change your notification permission or affect other devices.</p>
+            <p id="notificationRepairError" class="notification-repair-error" role="alert" hidden></p>
+            <button id="notificationRepairButton" type="button">Repair connection</button>
+        </div>
+    </dialog>
     <p id="status" class="status"></p>
     <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
 </main>
