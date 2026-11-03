@@ -134,3 +134,9 @@
   .alert-card-title h3{font-size:15px}
   .alert-card .alert-meta{margin-top:4px;font-size:12px}
 }
+
+
+.notification-device-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.notification-device-actions form{margin:0}
+.notification-device-remove-form button{white-space:nowrap}
+@media(max-width:560px){.notification-device-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.notification-device-actions form,.notification-device-actions button{width:100%}}
