@@ -69,6 +69,15 @@ if (!is_file($configPath)) {
                 </select>
             </div>
         </div>
+        <div class="opacity-row">
+            <label for="map-projection">Map view</label>
+            <div class="opacity-control">
+                <select id="map-projection" aria-label="Map view" style="width:100%;min-height:40px;padding:0 10px;border:1px solid rgba(148,163,184,.4);border-radius:9px;background:#102b68;color:#fff;font:inherit;font-size:13px">
+                    <option value="mercator">Flat</option>
+                    <option value="globe">Globe</option>
+                </select>
+            </div>
+        </div>
     </section>
 
     <section class="panel" aria-labelledby="precip-heading">
@@ -137,6 +146,7 @@ if (!is_file($configPath)) {
     const KEY = 'gaugeiqWeatherMapAppearance';
     const defaults = {
         mapStyle: 'dark',
+        mapProjection: 'mercator',
         precipitationOpacity: 78,
         cloudOpacity: 34,
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
@@ -167,6 +177,7 @@ if (!is_file($configPath)) {
 
     function render() {
         document.getElementById('map-style').value = settings.mapStyle === 'light' ? 'light' : 'dark';
+        document.getElementById('map-projection').value = settings.mapProjection === 'globe' ? 'globe' : 'mercator';
         for (const [key, id] of Object.entries(ids)) {
             const input = document.getElementById(id);
             const value = Math.max(0, Math.min(100, Number(settings[key]) || 0));
@@ -190,6 +201,9 @@ if (!is_file($configPath)) {
 
     document.getElementById('map-style').addEventListener('change', event => {
         settings.mapStyle = event.target.value === 'light' ? 'light' : 'dark';
+    });
+    document.getElementById('map-projection').addEventListener('change', event => {
+        settings.mapProjection = event.target.value === 'globe' ? 'globe' : 'mercator';
     });
 
     document.getElementById('precip-opacity').addEventListener('input', event => {
