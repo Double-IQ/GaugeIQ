@@ -116,7 +116,7 @@ try {
     if (!$schedule->isScheduledFile($upstreamUrl)) {
         // Bootstrap an empty schedule, or recover a stale one if a model hour
         // rolled over between scheduled cron runs.
-        $schedule->refreshScheduleIfDue(300);
+        $schedule->refreshScheduleIfDue(60);
         if (!$schedule->isScheduledFile($upstreamUrl)) {
             weatherMapProxyFail(404, 'This weather-map frame is not in the current rolling schedule.');
         }
