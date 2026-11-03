@@ -6753,3 +6753,43 @@ body.gaugeiq-menu-open{overflow:hidden}
 .gaugeiq-weather-map-canvas .maplibregl-ctrl-attrib.maplibregl-compact.maplibregl-compact-show .maplibregl-ctrl-attrib-inner{
   display:block!important;
 }
+
+
+/* Notification connection recovery: clickable status and focused repair dialog. */
+.top-notification-button{
+  appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer;
+}
+.top-notification-button.is-on{cursor:default}
+.top-notification-button.is-error{
+  color:#ef4444;border-color:rgba(239,68,68,.42);background:rgba(239,68,68,.09);
+  animation:notification-status-pulse 1.25s ease-in-out infinite;
+}
+.top-notification-button.is-error .top-status-icon{color:#ef4444;opacity:1}
+.top-notification-button.is-error .top-status-dash{
+  background:#ef4444;opacity:1;box-shadow:0 0 8px rgba(239,68,68,.75)
+}
+@keyframes notification-status-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+  50%{box-shadow:0 0 0 4px rgba(239,68,68,.13)}
+}
+@media(prefers-reduced-motion:reduce){
+  .top-notification-button.is-error{animation:none}
+}
+.notification-repair-dialog{
+  width:min( calc(100% - 32px), 440px);max-width:440px;padding:0;
+  border:1px solid var(--border);border-radius:18px;background:var(--card);
+  color:var(--text);box-shadow:0 24px 70px rgba(0,0,0,.35)
+}
+.notification-repair-dialog::backdrop{background:rgba(5,12,25,.66);backdrop-filter:blur(3px)}
+.notification-repair-content{position:relative;padding:24px}
+.notification-repair-content h2{margin:5px 36px 12px 0;font-size:21px;line-height:1.2}
+.notification-repair-content p{color:var(--muted);font-size:14px;line-height:1.55}
+.notification-repair-content .eyebrow{font-size:10px;font-weight:850;letter-spacing:.1em}
+.notification-repair-close{
+  position:absolute;top:12px;right:12px;width:34px;height:34px;padding:0;
+  border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--text);font-size:23px;line-height:1;cursor:pointer
+}
+.notification-repair-content #notificationRepairButton{width:100%;margin-top:8px}
+.notification-repair-error{padding:9px 11px;border:1px solid rgba(239,68,68,.3);border-radius:9px;color:#ef4444!important;background:rgba(239,68,68,.07)}
+.notification-repair-error[hidden]{display:none}
