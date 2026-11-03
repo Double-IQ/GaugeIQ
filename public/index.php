@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=20261102-map-animation" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261102-map-attribution-compact">
+<link rel="stylesheet" href="css/app.css?v=20261103-notification-repair-dialog">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=20261102-map-animation"></script>
 <title>GaugeIQ</title>
@@ -1165,6 +1165,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261102-device-notification-indicator"></script>
+<script src="js/app.js?v=20261103-notification-repair-action"></script>
 </body>
 </html>
