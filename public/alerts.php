@@ -149,6 +149,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $reason = is_array($deviceResult) ? (string)($deviceResult['reason'] ?? 'Push delivery failed.') : 'Push delivery failed.';
                     throw new RuntimeException('Test notification failed: ' . $reason);
                 }
+            } elseif ($action === 'delete_notification_device') {
+                $deviceId = filter_var($_POST['device_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                if ($deviceId === false || $deviceId === null) {
+                    throw new InvalidArgumentException('Choose a valid notification device.');
+                }
+                $deleteDevice = $pdo->prepare('DELETE FROM gaugeiq_push_subscriptions WHERE id = ?');
+                $deleteDevice->execute([(int)$deviceId]);
+                if ($deleteDevice->rowCount() > 0) {
+                    $notice = 'Notification device removed.';
+                } else {
+                    $notice = 'That notification device was already removed.';
+                }
             } elseif ($action === 'delete') {
                 $rules->delete((int)$_POST['id']);
                 $notice = 'Alert deleted.';
@@ -361,12 +373,20 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                                 <small class="monitor-warning">Last push error: <?= h((string)$device['last_push_error']) ?></small>
                             <?php endif; ?>
                         </div>
-                        <form method="post" class="notification-device-test-form">
-                            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                            <input type="hidden" name="action" value="test_device_notification">
-                            <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
-                            <button type="submit">Test notification</button>
-                        </form>
+                        <div class="notification-device-actions">
+                            <form method="post" class="notification-device-test-form">
+                                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                                <input type="hidden" name="action" value="test_device_notification">
+                                <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
+                                <button type="submit">Test notification</button>
+                            </form>
+                            <form method="post" class="notification-device-remove-form" onsubmit="return confirm('Remove this device from GaugeIQ notifications? It will no longer receive alerts unless it is registered again.');">
+                                <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+                                <input type="hidden" name="action" value="delete_notification_device">
+                                <input type="hidden" name="device_id" value="<?= (int)$device['id'] ?>">
+                                <button type="submit" class="danger-button">Remove device</button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
