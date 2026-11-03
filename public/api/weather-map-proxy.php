@@ -8,7 +8,6 @@ if (!is_file($configPath)) {
 }
 
 require_once __DIR__ . '/../../app/Database.php';
-require_once __DIR__ . '/../../app/Schema.php';
 require_once __DIR__ . '/../../app/WeatherMapCacheService.php';
 
 header('X-Content-Type-Options: nosniff');
@@ -113,10 +112,14 @@ try {
     $config = require $configPath;
     $database = new Database($config);
     $pdo = $database->pdo();
-    migrateDatabase($pdo);
     $schedule = new WeatherMapCacheService($pdo, $config);
     if (!$schedule->isScheduledFile($upstreamUrl)) {
-        weatherMapProxyFail(404, 'This weather-map frame is not in the current rolling schedule.');
+        // Bootstrap an empty schedule, or recover a stale one if a model hour
+        // rolled over between scheduled cron runs.
+        $schedule->refreshScheduleIfDue(300);
+        if (!$schedule->isScheduledFile($upstreamUrl)) {
+            weatherMapProxyFail(404, 'This weather-map frame is not in the current rolling schedule.');
+        }
     }
 
     $canonicalUrl = 'https://openmeteo.s3.amazonaws.com' . $parts['path'];
