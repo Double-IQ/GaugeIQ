@@ -465,6 +465,40 @@ async function savePushSubscription(subscription) {
     if (!saveResponse.ok) throw new Error('GaugeIQ could not save this device for notifications.');
 }
 
+function pushSubscriptionMatchesKey(subscription, publicKey) {
+    const existingKey = subscription?.options?.applicationServerKey;
+    if (!existingKey) return false;
+
+    const existingBytes = new Uint8Array(existingKey);
+    const expectedBytes = base64UrlToUint8Array(publicKey);
+    if (existingBytes.length !== expectedBytes.length) return false;
+
+    return existingBytes.every((value, index) => value === expectedBytes[index]);
+}
+
+async function getCurrentPushSubscription(registration, publicKey, replaceMismatch = false) {
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (subscription && !pushSubscriptionMatchesKey(subscription, publicKey)) {
+        if (!replaceMismatch) return null;
+
+        const removed = await subscription.unsubscribe();
+        if (!removed) {
+            throw new Error('GaugeIQ could not replace this device’s old notification connection. Please try again.');
+        }
+        subscription = null;
+    }
+
+    if (!subscription && replaceMismatch) {
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64UrlToUint8Array(publicKey)
+        });
+    }
+
+    return subscription;
+}
+
 async function enablePushNotifications() {
     if (!('PushManager' in window) || !('Notification' in window)) {
         throw new Error('This browser does not support Web Push notifications.');
@@ -478,14 +512,8 @@ async function enablePushNotifications() {
 
     const { publicKey } = await response.json();
     const registration = await getRegistration();
-    let subscription = await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: base64UrlToUint8Array(publicKey)
-        });
-    }
+    const subscription = await getCurrentPushSubscription(registration, publicKey, true);
+    if (!subscription) throw new Error('GaugeIQ could not create this device’s notification connection.');
 
     await savePushSubscription(subscription);
     if (status) status.textContent = '';
@@ -555,13 +583,19 @@ async function showAlertsOnIfAlreadyEnabled() {
     setTopNotificationStatus(false);
     if (Notification.permission !== 'granted') return;
     try {
-        const registration = await getRegistration();
-        const subscription = await registration.pushManager.getSubscription();
-        if (!subscription) return;
+        const response = await fetch('../api/push-config.php', { cache: 'no-store' });
+        if (!response.ok) return;
+        const { publicKey } = await response.json();
 
-        // Browser permission and a local subscription are not enough: the
-        // server may have been reset or the device record may have been deleted.
-        // Re-register it before showing the enabled state.
+        const registration = await getRegistration();
+        const subscription = await getCurrentPushSubscription(registration, publicKey, false);
+        if (!subscription) {
+            if (status) status.textContent = 'The notification connection needs updating. Tap Enable alerts to repair it.';
+            return;
+        }
+
+        // Only confirm this device as enabled when its browser subscription
+        // was created with the public key currently configured on the server.
         await savePushSubscription(subscription);
         showNotificationsEnabledUI();
     } catch {
