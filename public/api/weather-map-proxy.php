@@ -113,16 +113,19 @@ try {
     $database = new Database($config);
     $pdo = $database->pdo();
     $schedule = new WeatherMapCacheService($pdo, $config);
+    $canonicalUrl = 'https://openmeteo.s3.amazonaws.com' . $parts['path'];
     if (!$schedule->isScheduledFile($upstreamUrl)) {
-        // Bootstrap an empty schedule, or recover a stale one if a model hour
-        // rolled over between scheduled cron runs.
+        // Refresh a stale schedule first. If the browser's current valid frame
+        // still falls just outside the rolling window, verify the allowlisted
+        // upstream object directly instead of incorrectly rejecting it.
         $schedule->refreshScheduleIfDue(60);
         if (!$schedule->isScheduledFile($upstreamUrl)) {
-            weatherMapProxyFail(404, 'This weather-map frame is not in the current rolling schedule.');
+            $head = weatherMapProxyCurl($canonicalUrl, true);
+            if ($head['status'] !== 200) {
+                weatherMapProxyFail($head['status'] === 404 ? 404 : 502, 'The requested Open-Meteo map frame is not available.');
+            }
         }
     }
-
-    $canonicalUrl = 'https://openmeteo.s3.amazonaws.com' . $parts['path'];
     $projectRoot = dirname(__DIR__, 2);
     $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? ($projectRoot . '/storage/weather-map-cache'));
     if ($cacheRoot === '' || $cacheRoot[0] !== '/') {
