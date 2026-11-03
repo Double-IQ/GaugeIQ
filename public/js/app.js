@@ -425,21 +425,28 @@ function setTemperatureAlertsStatus(state) {
     temperatureAlertsStatus.innerHTML = 'Alerts: <b>' + (labels[state] || labels.na) + '</b>';
 }
 
-function setTopNotificationStatus(enabled) {
+function setTopNotificationStatus(state) {
     const indicator = document.getElementById('topNotificationStatus');
     if (!indicator) return;
-    indicator.classList.toggle('is-on', enabled);
-    indicator.classList.toggle('is-off', !enabled);
-    const label = enabled ? 'Notifications enabled on this device' : 'Notifications not enabled on this device';
+    indicator.classList.toggle('is-on', state === 'on');
+    indicator.classList.toggle('is-off', state === 'off');
+    indicator.classList.toggle('is-error', state === 'error');
+    const labels = {
+        on: 'Notifications enabled on this device',
+        off: 'Notifications not enabled on this device',
+        error: 'Notification connection needs repair. Tap for details.'
+    };
+    const label = labels[state] || labels.off;
     indicator.setAttribute('aria-label', label);
     indicator.title = label;
+    indicator.dataset.state = state || 'off';
 }
 
 function showNotificationsEnabledUI() {
     if (notifyButton) notifyButton.hidden = true;
     if (notificationEnabledNote) notificationEnabledNote.hidden = false;
     setTemperatureAlertsStatus('enabled');
-    setTopNotificationStatus(true);
+    setTopNotificationStatus('on');
 }
 
 async function getRegistration() {
@@ -574,13 +581,91 @@ async function installGaugeIQ() {
     return true;
 }
 
+const notificationRepairDialog = document.getElementById('notificationRepairDialog');
+const notificationRepairButton = document.getElementById('notificationRepairButton');
+const notificationRepairClose = document.getElementById('notificationRepairClose');
+let notificationRepairRequired = false;
+
+function showNotificationRepairDialog() {
+    if (!notificationRepairDialog) return;
+    if (typeof notificationRepairDialog.showModal === 'function') {
+        if (!notificationRepairDialog.open) notificationRepairDialog.showModal();
+    } else {
+        notificationRepairDialog.hidden = false;
+    }
+}
+
+function closeNotificationRepairDialog() {
+    if (!notificationRepairDialog) return;
+    if (typeof notificationRepairDialog.close === 'function' && notificationRepairDialog.open) {
+        notificationRepairDialog.close();
+    } else {
+        notificationRepairDialog.hidden = true;
+    }
+}
+
+async function repairPushConnection() {
+    if (!notificationRepairRequired || !('Notification' in window) || Notification.permission !== 'granted') {
+        throw new Error('Notifications must remain allowed for GaugeIQ in your device settings.');
+    }
+    if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+        throw new Error('This browser cannot repair the notification connection.');
+    }
+
+    const response = await fetch('../api/push-config.php', { cache: 'no-store' });
+    if (!response.ok) throw new Error('GaugeIQ could not retrieve its current notification credentials.');
+    const { publicKey } = await response.json();
+    if (!publicKey) throw new Error('GaugeIQ notification credentials are unavailable.');
+
+    const registration = await getRegistration();
+    const subscription = await getCurrentPushSubscription(registration, publicKey, true);
+    if (!subscription) throw new Error('GaugeIQ could not create a replacement notification connection.');
+
+    await savePushSubscription(subscription);
+    notificationRepairRequired = false;
+    if (status) status.textContent = '';
+    showNotificationsEnabledUI();
+    closeNotificationRepairDialog();
+}
+
+if (notificationRepairButton) {
+    notificationRepairButton.addEventListener('click', async () => {
+        notificationRepairButton.disabled = true;
+        notificationRepairButton.textContent = 'Repairing…';
+        try {
+            await repairPushConnection();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'GaugeIQ could not repair the notification connection.';
+            const detail = document.getElementById('notificationRepairError');
+            if (detail) {
+                detail.textContent = message;
+                detail.hidden = false;
+            }
+        } finally {
+            notificationRepairButton.disabled = false;
+            notificationRepairButton.textContent = 'Repair connection';
+        }
+    });
+}
+
+if (notificationRepairClose) {
+    notificationRepairClose.addEventListener('click', closeNotificationRepairDialog);
+}
+
+const topNotificationIndicator = document.getElementById('topNotificationStatus');
+if (topNotificationIndicator) {
+    topNotificationIndicator.addEventListener('click', () => {
+        if (notificationRepairRequired) showNotificationRepairDialog();
+    });
+}
+
 async function showAlertsOnIfAlreadyEnabled() {
     if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
         setTemperatureAlertsStatus('na');
         return;
     }
     setTemperatureAlertsStatus('disabled');
-    setTopNotificationStatus(false);
+    setTopNotificationStatus('off');
     if (Notification.permission !== 'granted') return;
     try {
         const response = await fetch('../api/push-config.php', { cache: 'no-store' });
@@ -590,7 +675,9 @@ async function showAlertsOnIfAlreadyEnabled() {
         const registration = await getRegistration();
         const subscription = await getCurrentPushSubscription(registration, publicKey, false);
         if (!subscription) {
-            if (status) status.textContent = 'The notification connection needs updating. Tap Enable alerts to repair it.';
+            notificationRepairRequired = true;
+            setTopNotificationStatus('error');
+            setTemperatureAlertsStatus('disabled');
             return;
         }
 
