@@ -306,6 +306,37 @@ SQL);
         $version = 10;
     }
 
+
+    if ($version === 10) {
+        if ($driver === 'mysql') {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_weather_map_frames (
+    slot_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+    frame_type VARCHAR(8) NOT NULL,
+    frame_time VARCHAR(32) NOT NULL,
+    file_url VARCHAR(1024) NOT NULL,
+    model_run_time VARCHAR(32) NOT NULL,
+    refreshed_at VARCHAR(64) NOT NULL,
+    INDEX idx_gaugeiq_weather_map_time (frame_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL);
+        } else {
+            $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS gaugeiq_weather_map_frames (
+    slot_id INTEGER PRIMARY KEY,
+    frame_type TEXT NOT NULL,
+    frame_time TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    model_run_time TEXT NOT NULL,
+    refreshed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_gaugeiq_weather_map_time ON gaugeiq_weather_map_frames(frame_time);
+SQL);
+        }
+        $db->exec("UPDATE gaugeiq_schema SET version = 11");
+        $version = 11;
+    }
+
     // The old display called this a change-score threshold, while the card now
     // shows the inverse Weather Stability score. Convert the saved threshold
     // once so it continues to represent the same alert point after inversion.
