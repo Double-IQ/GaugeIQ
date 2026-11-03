@@ -197,7 +197,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="js/weather-map.js?v=20261103-globe-view" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261103-notification-repair-dialog">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261102-map-animation"></script>
+<script type="module" src="js/weather-map.js?v=20261103-globe-view"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
