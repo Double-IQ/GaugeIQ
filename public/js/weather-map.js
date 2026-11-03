@@ -595,6 +595,13 @@ protocolOptions.fileReaderConfig = {
         }
 
         map.on('load', () => {
+            // Always start with attribution collapsed; MapLibre's own info button
+            // remains responsible for opening and closing the attribution text.
+            const attribution = map.getContainer().querySelector('.maplibregl-ctrl-attrib');
+            if (attribution) {
+                attribution.classList.add('maplibregl-compact');
+                attribution.classList.remove('maplibregl-compact-show');
+            }
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             showWeatherLayer(layerSelect.value);
         });
