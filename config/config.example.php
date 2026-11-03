@@ -49,4 +49,11 @@ return [
         'public_key' => '',
         'private_key' => '',
     ],
+
+    // Optional shared Open-Meteo map cache. The defaults are 256 MiB and
+    // GaugeIQ/storage/weather-map-cache; keep the directory outside public/.
+    'weather_map_cache' => [
+        // 'directory' => '/absolute/path/to/GaugeIQ/storage/weather-map-cache',
+        'max_bytes' => 268435456,
+    ],
 ];
