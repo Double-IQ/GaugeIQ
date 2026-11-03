@@ -602,7 +602,7 @@ protocolOptions.fileReaderConfig = {
                 attribution.classList.add('maplibregl-compact');
                 attribution.classList.remove('maplibregl-compact-show');
             }
-            map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
+            // Diagnostic isolation: use MapLibre's default flat projection while testing weather overlays.
             showWeatherLayer(layerSelect.value);
         });
         map.on('error', event => {
