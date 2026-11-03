@@ -40,8 +40,63 @@ const persistentMapCache = new BrowserBlockCache({
     evictionFraction: 0.15
 });
 
-// Diagnostic isolation: let Open-Meteo's file reader fetch .om files directly.
-// This bypasses the PHP proxy while preserving the browser-side block cache.
+// Proxy Open-Meteo .om traffic through GaugeIQ while preserving the HTTP
+// contract expected by OmHttpBackend: HEAD metadata with Content-Length,
+// followed by byte-range GET requests.
+const gaugeIqOriginalFetch = window.fetch.bind(window);
+window.fetch = (input, init) => {
+    let request;
+    try {
+        request = input instanceof Request ? new Request(input, init) : new Request(input, init);
+    } catch (error) {
+        return gaugeIqOriginalFetch(input, init);
+    }
+
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(request.url, window.location.href);
+    } catch (error) {
+        return gaugeIqOriginalFetch(input, init);
+    }
+
+    if (parsedUrl.protocol !== 'https:' ||
+        parsedUrl.hostname !== 'openmeteo.s3.amazonaws.com' ||
+        !parsedUrl.pathname.startsWith('/data_spatial/ecmwf_ifs/') ||
+        !parsedUrl.pathname.endsWith('.om')) {
+        return gaugeIqOriginalFetch(input, init);
+    }
+
+    const proxyUrl = new URL('/api/weather-map-proxy.php', window.location.origin);
+    proxyUrl.searchParams.set('url', parsedUrl.href);
+
+    // OmHttpBackend determines the file size exclusively from a HEAD
+    // response's Content-Length. Use a same-origin JSON metadata request and
+    // synthesize that HEAD response, avoiding hosting-stack HEAD header quirks.
+    if (request.method === 'HEAD') {
+        proxyUrl.searchParams.set('metadata', '1');
+        return gaugeIqOriginalFetch(proxyUrl.href, {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            signal: request.signal
+        }).then(async response => {
+            if (!response.ok) return response;
+            const metadata = await response.json();
+            if (!Number.isSafeInteger(Number(metadata.size)) || Number(metadata.size) <= 0) {
+                throw new Error('Weather-map proxy returned invalid file-size metadata.');
+            }
+            const headers = new Headers({
+                'Content-Length': String(metadata.size),
+                'Accept-Ranges': 'bytes'
+            });
+            if (metadata.etag) headers.set('ETag', metadata.etag);
+            if (metadata.last_modified) headers.set('Last-Modified', metadata.last_modified);
+            return new Response(null, { status: 200, headers });
+        });
+    }
+
+    return gaugeIqOriginalFetch(new Request(proxyUrl.href, request));
+};
 
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
 protocolOptions.fileReaderConfig = {
