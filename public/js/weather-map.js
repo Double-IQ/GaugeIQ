@@ -4,6 +4,7 @@ const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map
 
 const appearanceDefaults = {
             mapStyle: 'dark',
+            mapProjection: 'mercator',
             precipitationOpacity: 78,
             cloudOpacity: 34,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
@@ -593,7 +594,10 @@ protocolOptions.fileReaderConfig = {
             prepareAnimation();
         }
 
-        map.on('load', () => showWeatherLayer(layerSelect.value));
+        map.on('load', () => {
+            map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
+            showWeatherLayer(layerSelect.value);
+        });
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
             const sourceId = event?.sourceId || event?.source?.id || '';
