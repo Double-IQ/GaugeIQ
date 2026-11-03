@@ -145,18 +145,21 @@ try {
         }
     }
     if ($metadata === null) {
-        $head = weatherMapProxyCurl($canonicalUrl, true);
-        if ($head['status'] !== 200) {
-            weatherMapProxyFail($head['status'] === 404 ? 404 : 502, 'The requested Open-Meteo map frame is not available.');
+        // S3-compatible origins can omit Content-Length on HEAD. A one-byte
+        // range GET reliably returns the complete object size in Content-Range.
+        $probe = weatherMapProxyCurl($canonicalUrl, false, '0-0');
+        if ($probe['status'] !== 206 ||
+            !preg_match('/^bytes\\s+0-0\\/(\\d+)$/i', (string)($probe['headers']['content-range'] ?? ''), $sizeMatch)) {
+            weatherMapProxyFail($probe['status'] === 404 ? 404 : 502, 'Open-Meteo did not provide valid map-frame size metadata.');
         }
-        $fileSize = (int)($head['headers']['content-length'] ?? 0);
-        if ($fileSize <= 0) {
-            weatherMapProxyFail(502, 'Open-Meteo did not provide the map-frame size.');
+        $fileSize = (int)$sizeMatch[1];
+        if ($fileSize <= 0 || strlen($probe['body']) !== 1) {
+            weatherMapProxyFail(502, 'Open-Meteo returned invalid map-frame size metadata.');
         }
         $metadata = [
             'size' => $fileSize,
-            'etag' => (string)($head['headers']['etag'] ?? ''),
-            'last_modified' => (string)($head['headers']['last-modified'] ?? ''),
+            'etag' => (string)($probe['headers']['etag'] ?? ''),
+            'last_modified' => (string)($probe['headers']['last-modified'] ?? ''),
         ];
         $temporaryMetadata = $metadataPath . '.' . bin2hex(random_bytes(5)) . '.tmp';
         if (file_put_contents($temporaryMetadata, json_encode($metadata, JSON_UNESCAPED_SLASHES), LOCK_EX) !== false) {
