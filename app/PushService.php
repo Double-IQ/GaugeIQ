@@ -83,15 +83,37 @@ final class PushService
 
                 $status = $report->getResponse()?->getStatusCode();
                 $reason = trim((string)$report->getReason());
+                $responseContent = trim((string)($report->getResponseContent() ?? ''));
+                $responseContent = preg_replace('/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]+/', ' ', $responseContent) ?? '';
+                $responseContent = trim((string)preg_replace('/\\s+/', ' ', $responseContent));
+                if (function_exists('mb_substr')) {
+                    $responseContent = mb_substr($responseContent, 0, 1200, 'UTF-8');
+                } else {
+                    $responseContent = substr($responseContent, 0, 1200);
+                }
+
+                $diagnosticParts = [];
+                if ($status !== null) {
+                    $diagnosticParts[] = 'HTTP ' . $status;
+                }
+                if ($reason !== '') {
+                    $diagnosticParts[] = $reason;
+                }
+                if ($responseContent !== '') {
+                    $diagnosticParts[] = 'Response: ' . $responseContent;
+                }
+                $errorDetail = $diagnosticParts
+                    ? implode(' · ', $diagnosticParts)
+                    : 'Push service rejected the notification.';
 
                 $mark = $this->db->prepare('UPDATE gaugeiq_push_subscriptions SET last_push_at = ?, last_push_status = ?, last_push_error = ? WHERE id = ?');
-                $mark->execute([gmdate('c'), 'failed', $reason !== '' ? $reason : 'Push service rejected the notification.', $id]);
+                $mark->execute([gmdate('c'), 'failed', $errorDetail, $id]);
 
                 $results[] = [
                     'id' => $id,
                     'ok' => false,
                     'status' => $status,
-                    'reason' => $reason !== '' ? $reason : 'Push service rejected the notification.',
+                    'reason' => $errorDetail,
                 ];
 
                 if ($status === 404 || $status === 410) {
