@@ -88,7 +88,7 @@ This creates:
 storage/gaugeiq.sqlite
 ```
 
-The PHP process needs write access to the `storage/` directory. GaugeIQ also creates `storage/weather-map-cache/` for the shared Open-Meteo map range cache; keep this directory writable by PHP and outside the public web root.
+The PHP process needs write access to the `storage/` directory. GaugeIQ also creates `storage/weather-map-cache/` for the shared Open-Meteo map range cache; keep this directory writable by PHP and outside the public web root. The cache is bounded to 256 MiB by default and evicts least-recently-used range blocks when full.
 
 ## 6. Generate VAPID keys
 
