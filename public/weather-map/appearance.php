@@ -57,6 +57,20 @@ if (!is_file($configPath)) {
         <a class="back" href="./">Back to map</a>
     </header>
 
+    <section class="panel" aria-labelledby="basemap-heading">
+        <h2 id="basemap-heading">Base map appearance</h2>
+        <p class="description">Choose the background map style. This does not change the weather overlay colours.</p>
+        <div class="opacity-row">
+            <label for="map-style">Map theme</label>
+            <div class="opacity-control">
+                <select id="map-style" aria-label="Base map theme" style="width:100%;min-height:40px;padding:0 10px;border:1px solid rgba(148,163,184,.4);border-radius:9px;background:#102b68;color:#fff;font:inherit;font-size:13px">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
     <section class="panel" aria-labelledby="precip-heading">
         <h2 id="precip-heading">Precipitation</h2>
         <p class="description">Colour scale from light to very heavy rainfall. The zero-rain value remains transparent.</p>
@@ -122,6 +136,7 @@ if (!is_file($configPath)) {
 (() => {
     const KEY = 'gaugeiqWeatherMapAppearance';
     const defaults = {
+        mapStyle: 'dark',
         precipitationOpacity: 78,
         cloudOpacity: 34,
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
@@ -151,6 +166,7 @@ if (!is_file($configPath)) {
     }
 
     function render() {
+        document.getElementById('map-style').value = settings.mapStyle === 'light' ? 'light' : 'dark';
         for (const [key, id] of Object.entries(ids)) {
             const input = document.getElementById(id);
             const value = Math.max(0, Math.min(100, Number(settings[key]) || 0));
@@ -171,6 +187,10 @@ if (!is_file($configPath)) {
             paintGradient(type);
         });
     }
+
+    document.getElementById('map-style').addEventListener('change', event => {
+        settings.mapStyle = event.target.value === 'light' ? 'light' : 'dark';
+    });
 
     document.getElementById('precip-opacity').addEventListener('input', event => {
         settings.precipitationOpacity = Number(event.target.value);
