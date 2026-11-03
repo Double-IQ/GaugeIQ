@@ -85,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                 @opcache_invalidate($configPath, true);
             }
 
-            // This is a one-use recovery endpoint; remove it after successful use.
-            @unlink(__FILE__);
+            // The completion marker makes this endpoint permanently one-use.
             $success = true;
         } catch (Throwable $exception) {
             $error = 'VAPID recovery failed: ' . $exception->getMessage();
