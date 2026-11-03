@@ -3,6 +3,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
 const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs');
 
 const appearanceDefaults = {
+            mapStyle: 'dark',
             precipitationOpacity: 78,
             cloudOpacity: 34,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
@@ -125,7 +126,9 @@ protocolOptions.fileReaderConfig = {
         if (mapInstance) { mapInstance.resize(); return; }
         const map = new maplibregl.Map({
             container: 'map',
-            style: 'https://tiles.openfreemap.org/styles/dark',
+            style: appearance.mapStyle === 'light'
+                ? 'https://tiles.openfreemap.org/styles/positron'
+                : 'https://tiles.openfreemap.org/styles/dark',
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
