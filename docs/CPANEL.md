@@ -88,7 +88,7 @@ This creates:
 storage/gaugeiq.sqlite
 ```
 
-The PHP process needs write access to the `storage/` directory.
+The PHP process needs write access to the `storage/` directory. GaugeIQ also creates `storage/weather-map-cache/` for the shared Open-Meteo map range cache; keep this directory writable by PHP and outside the public web root.
 
 ## 6. Generate VAPID keys
 
@@ -135,7 +135,7 @@ Use the PHP CLI binary provided by your host if cPanel requires an absolute exec
 which php
 ```
 
-Do not run the cron URL through the browser. Run the PHP file from the server.
+Do not run the cron URL through the browser. Run the PHP file from the server. The same cron also refreshes GaugeIQ's rolling six-past/six-future ECMWF map-frame schedule once an hour; no additional cron job is required.
 
 ## 9. Connect the iPhone
 
