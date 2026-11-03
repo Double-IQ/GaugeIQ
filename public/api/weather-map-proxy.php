@@ -177,6 +177,25 @@ try {
         header('Last-Modified: ' . $metadata['last_modified']);
     }
 
+    // Metadata is requested as GET so the browser can construct the exact
+    // HEAD response OmHttpBackend expects, even on hosts that suppress HEAD
+    // Content-Length headers for PHP responses.
+    if (($_GET['metadata'] ?? '') === '1') {
+        $metadataBody = json_encode([
+            'size' => (int)$metadata['size'],
+            'etag' => (string)($metadata['etag'] ?? ''),
+            'last_modified' => (string)($metadata['last_modified'] ?? ''),
+        ], JSON_UNESCAPED_SLASHES);
+        if (!is_string($metadataBody)) {
+            weatherMapProxyFail(500, 'Unable to encode weather-map file metadata.');
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Length: ' . strlen($metadataBody));
+        http_response_code(200);
+        echo $metadataBody;
+        exit;
+    }
+
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD') {
         header('Content-Length: ' . (int)$metadata['size']);
         http_response_code(200);
