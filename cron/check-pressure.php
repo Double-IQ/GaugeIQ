@@ -21,11 +21,11 @@ $service = new PressureService($config, $pdo);
 try {
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
     if ($weatherMapCache->refreshScheduleIfDue(3600)) {
-        echo "Weather-map frame schedule refreshed (6 past + 6 future).\\n";
+        echo "Weather-map frame schedule refreshed (6 past + 6 future).\n";
     }
 } catch (Throwable $weatherMapError) {
     error_log('GaugeIQ weather-map schedule refresh failed: ' . $weatherMapError->getMessage());
-    fwrite(STDERR, "Weather-map schedule refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\\n");
+    fwrite(STDERR, "Weather-map schedule refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\n");
 }
 
 function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
