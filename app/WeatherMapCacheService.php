@@ -61,8 +61,7 @@ final class WeatherMapCacheService
         }
 
         $runDate = new DateTimeImmutable((string)($metadata['reference_time'] ?? ''), new DateTimeZone('UTC'));
-        $futureRunFolder = $runDate->format('Y/m/d/Hi') . 'Z';
-        $futureRunFolder = substr($futureRunFolder, 0, -3) . '00Z';
+        $futureRunFolder = $runDate->format('Y/m/d/H') . '00Z';
 
         $frames = [];
         for ($offset = 0; $offset < self::FRAME_COUNT; $offset++) {
