@@ -95,7 +95,7 @@ checkPfor16Fixture(
 
 function packVerticalPfor16ForTest(array $values, int $width): string
 {
-    $packed = str_repeat("\\0", $width * 16);
+    $packed = str_repeat("\0", $width * 16);
     foreach ($values as $index => $value) {
         $lane = $index % 8;
         $slot = intdiv($index, 8);
