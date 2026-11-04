@@ -48,7 +48,7 @@ final class WeatherMapRainfallNowcastService
         $futureFrames = [];
         foreach ($frames as $frame) {
             $timestamp = strtotime((string)($frame['frame_time'] ?? ''));
-            if ($timestamp === false || $timestamp < $now - 600 || $timestamp > $now + 2 * 3600 + 600) continue;
+            if ($timestamp === false || $timestamp < $now || $timestamp > $now + 2 * 3600) continue;
             $futureFrames[] = $frame + ['timestamp' => $timestamp];
         }
         if ($futureFrames === []) {
@@ -197,10 +197,11 @@ final class WeatherMapRainfallNowcastService
         $stmt->execute();
         $settings = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) $settings[(string)$row['key']] = (string)$row['value'];
-        return [
-            $settings['location_latitude'] ?? $settings['active_location_latitude'] ?? (string)($this->config['pressure']['latitude'] ?? ''),
-            $settings['location_longitude'] ?? $settings['active_location_longitude'] ?? (string)($this->config['pressure']['longitude'] ?? ''),
-        ];
+        $latitude = $settings['location_latitude'] ?? $settings['active_location_latitude'] ?? (string)($this->config['pressure']['latitude'] ?? '');
+        $longitude = $settings['location_longitude'] ?? $settings['active_location_longitude'] ?? (string)($this->config['pressure']['longitude'] ?? '');
+        if (trim($latitude) === '') $latitude = $settings['active_location_latitude'] ?? (string)($this->config['pressure']['latitude'] ?? '');
+        if (trim($longitude) === '') $longitude = $settings['active_location_longitude'] ?? (string)($this->config['pressure']['longitude'] ?? '');
+        return [$latitude, $longitude];
     }
 
     private function setting(string $key): string
