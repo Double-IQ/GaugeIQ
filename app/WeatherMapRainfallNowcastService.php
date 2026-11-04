@@ -76,6 +76,9 @@ final class WeatherMapRainfallNowcastService
                 fn(int $offset, int $length): string => $this->fetchRange($baseUrl, $url, $offset, $length),
                 $fileSize
             );
+            if (!str_contains($reader->getString('crs_wkt'), 'Gaussian Grid')) {
+                throw new RuntimeException('The ECMWF precipitation frame does not use a Gaussian grid.');
+            }
             $field = $reader->getArrayInfo('precipitation');
             $pointCount = (int)($field['dimensions'][1] ?? 0);
             $samples = WeatherMapOmReader::gaussianNeighborhood(
