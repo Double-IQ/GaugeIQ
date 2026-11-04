@@ -50,6 +50,46 @@ checkFixture(
 );
 checkFixture('64-bit zero blocks', '000000', array_fill(0, 137, 0));
 
+function checkPfor16Fixture(string $name, string $hex, array $expected): void
+{
+    $actual = WeatherMapOmReader::decodePforDelta16(hex2bin($hex), count($expected));
+    if ($actual !== $expected) {
+        for ($i = 0; $i < min(count($actual), count($expected)); $i++) {
+            if ($actual[$i] !== $expected[$i]) {
+                throw new RuntimeException("$name mismatch at $i: expected {$expected[$i]}, got {$actual[$i]}");
+            }
+        }
+        throw new RuntimeException("$name length mismatch.");
+    }
+    echo "PASS $name (" . count($actual) . " values)\\n";
+}
+
+$zigzagTail = [];
+for ($i = 0; $i < 9; $i++) $zigzagTail[] = 10 + ($i % 2 === 1 ? intdiv($i + 1, 2) : -intdiv($i, 2));
+checkPfor16Fixture('ECMWF 16-bit zigzag tail', '0a043276bafe', $zigzagTail);
+
+$zigzagBlocks = [];
+for ($i = 0; $i < 137; $i++) $zigzagBlocks[] = $i % 8;
+checkPfor16Fixture(
+    'ECMWF 16-bit vertical block plus tail',
+    '00820280808080808080808080808080808080ffffffffaaaaaaaaaaaaaaaaaaaaaaaaaaaa5555aaaaaaaaaaaaaaaaaaaaaaaaaaaa555504222222d2',
+    $zigzagBlocks
+);
+
+$zigzagExceptions = [];
+$value = 1;
+$zigzagExceptions[] = $value;
+for ($i = 1; $i < 129; $i++) {
+    $value = ($value + ($i === 64 ? 16384 : 1)) & 0xffff;
+    $zigzagExceptions[] = $value >= 0x8000 ? $value - 0x10000 : $value;
+}
+checkPfor16Fixture(
+    'ECMWF 16-bit variable-byte exception',
+    '014201aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaad04f3f',
+    $zigzagExceptions
+);
+
+
 function encodeSmallSeed(int $value): string
 {
     if ($value < 128) return chr($value);
