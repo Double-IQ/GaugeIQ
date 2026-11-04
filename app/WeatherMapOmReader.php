@@ -252,6 +252,16 @@ final class WeatherMapOmReader
         return $values;
     }
 
+    /** Apply the OM Float32/PFor-int16 scale convention, including its NaN sentinel. */
+    public static function decodeScaledPfor16Value(int $raw, float $scaleFactor, float $addOffset): float
+    {
+        if ($raw === 32767) return NAN;
+        if (!is_finite($scaleFactor) || $scaleFactor == 0.0 || !is_finite($addOffset)) {
+            throw new RuntimeException('The ECMWF field has invalid value scaling metadata.');
+        }
+        return ($raw / $scaleFactor) - $addOffset;
+    }
+
     /** Decode a selected range from a flattened 16-bit ECMWF float array. */
     public function decodeFloatArrayRange(array $arrayInfo, int $startIndex, int $endIndex): array
     {
@@ -286,7 +296,7 @@ final class WeatherMapOmReader
             $to = min($endIndex, $chunkStart + $chunkCount);
             for ($index = $from; $index < $to; $index++) {
                 $raw = $integers[$index - $chunkStart];
-                $decoded[$index] = ($raw * (float)$arrayInfo['scale_factor']) + (float)$arrayInfo['add_offset'];
+                $decoded[$index] = self::decodeScaledPfor16Value($raw, (float)$arrayInfo['scale_factor'], (float)$arrayInfo['add_offset']);
             }
         }
         return $decoded;
