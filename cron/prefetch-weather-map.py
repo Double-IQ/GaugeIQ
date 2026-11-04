@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 import tempfile
 from urllib.parse import quote, urlparse
