@@ -121,8 +121,10 @@ if ($reader->getString('crs_wkt') !== 'Reduced Gaussian Grid O1280') {
     throw new RuntimeException('v3 metadata string lookup failed.');
 }
 $arrayInfo = $reader->getArrayInfo('cloud_cover');
-if ($arrayInfo['dimensions'] !== [1, 8] || $arrayInfo['chunks'] !== [1, 2]) {
-    throw new RuntimeException('v3 array metadata layout failed.');
+if ($arrayInfo['dimensions'] !== [1, 8] || $arrayInfo['chunks'] !== [1, 2] ||
+    $arrayInfo['data_type'] !== 20 || $arrayInfo['compression_type'] !== 0 ||
+    $arrayInfo['scale_factor'] !== 1.0 || $arrayInfo['add_offset'] !== 0.0) {
+    throw new RuntimeException('v3 array metadata layout or encoding metadata failed.');
 }
 $selected = WeatherMapOmReader::selectChunkRanges($arrayInfo, 2, 6);
 if ($selected !== [[110, 120], [120, 130]]) {
