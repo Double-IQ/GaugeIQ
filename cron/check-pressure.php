@@ -251,6 +251,84 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
     }
 }
 
+function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config): void
+{
+    if (getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_enabled', '0') !== '1') {
+        return;
+    }
+
+    $radiusKm = (int)getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_radius_km', '50');
+    if (!in_array($radiusKm, [15, 50, 100], true)) $radiusKm = 50;
+
+    $json = getGaugeIqSetting($pdo, 'weather_map_rainfall_nowcast', '');
+    $payload = is_string($json) && $json !== '' ? json_decode($json, true) : null;
+    if (!is_array($payload)) return;
+
+    $updatedAt = strtotime((string)($payload['updated_at'] ?? ''));
+    if ($updatedAt === false || $updatedAt < time() - 3 * 3600) return;
+
+    $candidates = [];
+    foreach (($payload['frames'] ?? []) as $frame) {
+        if (!is_array($frame) || !is_numeric($frame['nearest_rain_km'] ?? null)) continue;
+        $distance = (float)$frame['nearest_rain_km'];
+        if ($distance <= $radiusKm) {
+            $frameTime = strtotime((string)($frame['time'] ?? ''));
+            if ($frameTime !== false) $candidates[] = ['time' => $frameTime, 'distance' => $distance];
+        }
+    }
+    if ($candidates === []) return;
+
+    usort($candidates, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
+    $target = $candidates[0];
+    $lastSent = strtotime(getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at', ''));
+    if ($lastSent !== false && $lastSent >= time() - 3 * 3600) return;
+
+    try {
+        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+    } catch (Throwable) {
+        $timezone = new DateTimeZone('UTC');
+    }
+    $locationName = getGaugeIqSetting(
+        $pdo,
+        'location_name',
+        (string)($config['pressure']['location_name'] ?? 'your location')
+    );
+    $forecastTime = (new DateTimeImmutable('@' . $target['time']))->setTimezone($timezone)->format('H:i');
+    $message = sprintf(
+        'ECMWF IFS forecasts rain within %d km of %s around %s. The nearest forecast rain is approximately %.0f km away. This is model guidance, not live radar.',
+        $radiusKm,
+        $locationName !== '' ? $locationName : 'your location',
+        $forecastTime,
+        $target['distance']
+    );
+
+    try {
+        $push = new PushService($config, $pdo);
+        $result = $push->sendDetailed(
+            'GaugeIQ rainfall outlook',
+            $message,
+            rtrim((string)$config['app']['base_url'], '/') . '/'
+        );
+        $sent = (int)($result['sent'] ?? 0);
+        $subscriptions = (int)($result['subscriptions'] ?? 0);
+        if ($sent > 0) {
+            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_sent_at', gmdate('c'));
+            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_status', 'Sent to ' . $sent . ' device(s): rain forecast within ' . $radiusKm . ' km around ' . $forecastTime . '.');
+            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_error', '');
+            printf("ECMWF rainfall alert: sent to %d device(s).\n", $sent);
+        } else {
+            $status = $subscriptions === 0
+                ? 'Rainfall condition matched, but no devices are subscribed.'
+                : 'Rainfall condition matched, but push delivery failed.';
+            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_status', $status);
+            printf("ECMWF rainfall alert: %s\n", $status);
+        }
+    } catch (Throwable $error) {
+        setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_error', $error->getMessage());
+        error_log('GaugeIQ ECMWF rainfall alert failed: ' . $error->getMessage());
+    }
+}
+
 // Refresh the temporary, model-derived hourly backfill at most about once an hour.
 // This is deliberately non-fatal: an unavailable fallback must never stop normal
 // live monitoring or alert evaluation.
@@ -296,6 +374,7 @@ try {
 // Daily forecast notifications are independent of ordinary event-triggered alerts.
 // This call occurs before the normal alert code can exit early when no rule matches.
 evaluateDailyForecastAlert($pdo, $config, $current);
+evaluateEcmwfRainfallOutlookAlert($pdo, $config);
 
 $lookbackHours = 3;
 $lookbackSetting = $pdo->prepare(
