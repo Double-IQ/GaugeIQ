@@ -619,9 +619,7 @@ protocolOptions.fileReaderConfig = {
             }
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             showWeatherLayer(layerSelect.value);
-            // Warm the existing browser block cache before the user presses Play.
-            // The 12 regional frame sources remain loaded but hidden until playback.
-            prepareAnimation(false);
+            // Keep the live weather layer independent of animation preparation.
         });
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
@@ -650,7 +648,6 @@ protocolOptions.fileReaderConfig = {
             if (mapInstance && mapInstance.isStyleLoaded()) {
                 clearAnimation();
                 showWeatherLayer(layerSelect.value);
-                prepareAnimation(false);
             }
         });
         }
