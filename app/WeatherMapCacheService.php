@@ -166,7 +166,11 @@ final class WeatherMapCacheService
                 throw new RuntimeException('A public HTTPS app.base_url is required for regional weather-map prefetch.');
             }
 
-            $python = trim((string)($this->config['weather_map_cache']['python_binary'] ?? 'python3'));
+            $defaultPython = dirname(__DIR__) . '/storage/weather-map-python/bin/python';
+            $configuredPython = $this->config['weather_map_cache']['python_binary'] ?? null;
+            $python = trim(is_string($configuredPython) && $configuredPython !== ''
+                ? $configuredPython
+                : (is_executable($defaultPython) ? $defaultPython : 'python3'));
             if ($python === '') {
                 throw new RuntimeException('The weather-map Python executable is not configured.');
             }
