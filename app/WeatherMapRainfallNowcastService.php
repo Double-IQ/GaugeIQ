@@ -20,7 +20,7 @@ final class WeatherMapRainfallNowcastService
         }
     }
 
-    public function refreshIfDue(int $intervalSeconds = 1800, bool $force = false): array
+    public function refreshIfDue(int $intervalSeconds = 1800, bool $force = false, ?array $locationOverride = null, bool $persist = true): array
     {
         $last = $this->setting('weather_map_rainfall_nowcast_updated_at');
         $lastTimestamp = $last !== '' ? strtotime($last) : false;
@@ -28,7 +28,9 @@ final class WeatherMapRainfallNowcastService
             return ['skipped' => true, 'message' => 'ECMWF rainfall outlook is still current.'];
         }
 
-        [$latitude, $longitude] = $this->locationCoordinates();
+        [$latitude, $longitude] = $locationOverride !== null
+            ? [(string)($locationOverride['latitude'] ?? ''), (string)($locationOverride['longitude'] ?? '')]
+            : $this->locationCoordinates();
         $latitudeValue = filter_var($latitude, FILTER_VALIDATE_FLOAT);
         $longitudeValue = filter_var($longitude, FILTER_VALIDATE_FLOAT);
         if ($latitudeValue === false || $longitudeValue === false ||
@@ -223,9 +225,11 @@ final class WeatherMapRainfallNowcastService
             'frames' => $frameResults,
             'note' => 'Model forecast derived from decoded ECMWF precipitation grid values; not live radar.',
         ];
-        $this->saveSetting('weather_map_rainfall_nowcast', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
-        $this->saveSetting('weather_map_rainfall_nowcast_updated_at', gmdate('c'));
-        $this->saveSetting('weather_map_rainfall_nowcast_error', '');
+        if ($persist) {
+            $this->saveSetting('weather_map_rainfall_nowcast', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->saveSetting('weather_map_rainfall_nowcast_updated_at', gmdate('c'));
+            $this->saveSetting('weather_map_rainfall_nowcast_error', '');
+        }
 
         return ['skipped' => false, 'payload' => $payload, 'message' => $summary];
     }
