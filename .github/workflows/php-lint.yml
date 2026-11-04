@@ -27,6 +27,9 @@ jobs:
       - name: Lint PHP files
         run: find app public cron bin database -type f -name '*.php' -print0 | xargs -0 -n1 php -l
 
+      - name: Run Open-Meteo weather-map reader tests
+        run: php -l tests/weather-map-om-reader.test.php && php tests/weather-map-om-reader.test.php
+
       - name: Check updater shell syntax
         run: bash -n cron/update-from-github.sh
 
