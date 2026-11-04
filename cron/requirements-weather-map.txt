@@ -1,0 +1,2 @@
+omfiles[fsspec,grids]>=1.2.0
+fsspec[http]>=2024.2.0
