@@ -6865,3 +6865,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="dark"] .temperature-conditions-inline .conditions-status.worsening{color:#ffc184;border-color:#ffc184}
 :root[data-theme="light"] .temperature-conditions-inline .conditions-status.improving{color:#16834f;border-color:#16834f}
 :root[data-theme="light"] .temperature-conditions-inline .conditions-status.worsening{color:#c56b25;border-color:#c56b25}
+
+
+/* WVI gauge fill stays blue regardless of the score band. */
+.climate-gauge-card .climate-bar-wvi .climate-segment.active{background:#35c4eb!important;box-shadow:none!important}
+.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value{stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))!important}
