@@ -6912,27 +6912,56 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 
-/* Keep the source credits visually attached to the bottom edge of the weather map. */
+/* Source credits form a designed footer visually attached to the weather map. */
 .weather-map-dashboard-card{margin-bottom:0;border-radius:18px 18px 0 0}
 .weather-map-credits-card{
-  margin:0 0 16px;padding:13px 16px 15px;color:#dbeafe;
-  background:linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
-  border:1px solid rgba(104,163,218,.34);border-top:1px solid rgba(148,163,184,.22);
-  border-radius:0 0 18px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 30px rgba(2,8,23,.12);
+  position:relative;overflow:hidden;margin:0 0 16px;padding:20px 20px 15px;color:#e7f2ff;
+  background:radial-gradient(ellipse at 92% 0%,rgba(35,133,211,.22),transparent 42%),
+    linear-gradient(145deg,#10294a 0%,#081a33 55%,#061329 100%);
+  border:1px solid rgba(104,163,218,.38);border-top:1px solid rgba(148,163,184,.2);
+  border-radius:0 0 18px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 30px rgba(2,8,23,.12);
 }
-.weather-map-credits-card h2{margin:0 0 8px;color:#edf6ff;font-size:14px;font-weight:750}
-.weather-map-credit-line,.weather-map-credit-disclaimer{margin:5px 0;color:#c6d6ec;font-size:11px;line-height:1.5}
-.weather-map-credit-line a{color:#93c5fd;text-decoration:underline;text-underline-offset:2px}
-.weather-map-credit-disclaimer{color:#9fb2ca;font-size:10px}
-.gaugeiq-hide-attribution{
-  display:inline-block;margin:4px 0 2px;padding:4px 8px;border:1px solid rgba(148,163,184,.55);
-  border-radius:6px;background:#102b68;color:#fff;font:inherit;font-size:11px;font-weight:650;cursor:pointer;
+.weather-map-credits-heading{position:relative;margin-bottom:15px}
+.weather-map-credits-kicker{display:block;margin-bottom:5px;color:#72b9f2;font-size:9px;font-weight:800;letter-spacing:.17em}
+.weather-map-credits-heading h2{margin:0;color:#f2f8ff;font-size:18px;font-weight:750;letter-spacing:-.02em}
+.weather-map-credits-heading>p{margin:4px 0 0;color:#a9bfd9;font-size:11px;line-height:1.45}
+.weather-map-credit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.weather-map-credit-source{
+  display:flex;align-items:flex-start;gap:11px;min-width:0;padding:13px;
+  border:1px solid rgba(143,183,221,.2);border-radius:12px;
+  background:linear-gradient(145deg,rgba(38,76,116,.48),rgba(12,34,62,.62));
 }
+.weather-map-credit-source.ecmwf-source{grid-column:1/-1;background:linear-gradient(110deg,rgba(29,83,128,.55),rgba(13,38,69,.7))}
+.weather-map-credit-icon{
+  display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;
+  border:1px solid rgba(125,190,242,.3);border-radius:9px;
+  background:rgba(42,129,195,.16);color:#8bcaff;font-size:19px;line-height:1;
+}
+.weather-map-credit-label{display:block;margin:0 0 5px;color:#83bde9;font-size:9px;font-weight:800;letter-spacing:.1em}
+.weather-map-credit-source p{margin:0;color:#e1ecf8;font-size:11px;line-height:1.55}
+.weather-map-credit-source small{display:block;margin-top:5px;color:#a9bfd6;font-size:10px;line-height:1.5}
+.weather-map-credit-source a{color:#9bd0ff;text-decoration:underline;text-decoration-color:rgba(155,208,255,.55);text-underline-offset:2px}
+.weather-map-credit-source a:hover{color:#fff}
+.weather-map-credit-source .ecmwf-required-credit{font-size:11px;font-weight:650}
+.weather-map-credit-disclaimer{margin:12px 2px 0;padding-top:10px;border-top:1px solid rgba(143,183,221,.16);color:#91a9c3;font-size:9px;line-height:1.5}
 :root[data-theme="light"] .weather-map-credits-card{
-  color:#344256;background:linear-gradient(145deg,#e7ebef 0%,#d1d7df 58%,#c5ccd5 100%);
-  border-color:#aab4c0;box-shadow:0 8px 22px rgba(32,43,56,.12),inset 0 1px 0 rgba(255,255,255,.78);
+  color:#344256;background:radial-gradient(ellipse at 92% 0%,rgba(59,130,246,.12),transparent 42%),
+    linear-gradient(145deg,#edf3f9 0%,#dce5ef 58%,#d1dce8 100%);
+  border-color:#aabccc;box-shadow:0 8px 22px rgba(32,43,56,.12),inset 0 1px 0 rgba(255,255,255,.85);
 }
-:root[data-theme="light"] .weather-map-credits-card h2{color:#202b38}
-:root[data-theme="light"] .weather-map-credit-line,:root[data-theme="light"] .weather-map-credit-disclaimer{color:#536171}
-:root[data-theme="light"] .weather-map-credit-line a{color:#174ea6}
-:root[data-theme="light"] .gaugeiq-hide-attribution{background:#dce3eb;color:#26384b;border-color:#aab4c0}
+:root[data-theme="light"] .weather-map-credits-heading h2{color:#202b38}
+:root[data-theme="light"] .weather-map-credits-heading>p{color:#53677d}
+:root[data-theme="light"] .weather-map-credits-kicker{color:#236ba6}
+:root[data-theme="light"] .weather-map-credit-source{background:rgba(255,255,255,.58);border-color:#bdcbd9}
+:root[data-theme="light"] .weather-map-credit-source.ecmwf-source{background:rgba(255,255,255,.72)}
+:root[data-theme="light"] .weather-map-credit-icon{color:#236ba6;background:#e1edf8;border-color:#bfd2e5}
+:root[data-theme="light"] .weather-map-credit-label{color:#326c9d}
+:root[data-theme="light"] .weather-map-credit-source p{color:#26384b}
+:root[data-theme="light"] .weather-map-credit-source small{color:#53677d}
+:root[data-theme="light"] .weather-map-credit-source a{color:#175b9a}
+:root[data-theme="light"] .weather-map-credit-disclaimer{color:#687b90;border-color:#c4d1de}
+@media(max-width:480px){
+  .weather-map-credits-card{padding:17px 14px 13px}
+  .weather-map-credit-grid{grid-template-columns:1fr}
+  .weather-map-credit-source.ecmwf-source{grid-column:auto}
+}
