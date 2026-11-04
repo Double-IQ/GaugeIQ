@@ -342,15 +342,14 @@ final class WeatherMapOmReader
         $start = $position;
         $values = [];
         for ($i = 0; $i < $count; $i++) {
+            // TurboPFor's vertical layout stores 64-value groups in 16-byte
+            // vectors. Each of the eight 16-bit lanes packs eight values.
+            $vector = intdiv($i, 64);
             $lane = $i % 8;
-            $group = intdiv($i, 8);
-            $value = 0;
-            for ($bit = 0; $bit < $width; $bit++) {
-                $wordOffset = $start + ($bit * 8 + $lane) * 2;
-                $word = ord($input[$wordOffset]) | (ord($input[$wordOffset + 1]) << 8);
-                if (($word & (1 << $group)) !== 0) $value |= 1 << $bit;
-            }
-            $values[] = $value;
+            $slot = intdiv($i % 64, 8);
+            $wordOffset = $start + ($vector * 16) + ($lane * 2);
+            $word = ord($input[$wordOffset]) | (ord($input[$wordOffset + 1]) << 8);
+            $values[] = ($word >> ($slot * $width)) & ((1 << $width) - 1);
         }
         $position += $byteCount;
         return $values;
