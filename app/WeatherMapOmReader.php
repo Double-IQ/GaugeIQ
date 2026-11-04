@@ -252,6 +252,46 @@ final class WeatherMapOmReader
         return $values;
     }
 
+    /** Decode a selected range from a flattened 16-bit ECMWF float array. */
+    public function decodeFloatArrayRange(array $arrayInfo, int $startIndex, int $endIndex): array
+    {
+        if (($arrayInfo['data_type'] ?? null) !== 20 || ($arrayInfo['compression_type'] ?? null) !== 0) {
+            throw new RuntimeException('The ECMWF field does not use the supported Float32/PFor-int16 encoding.');
+        }
+        [$height, $width] = $arrayInfo['dimensions'];
+        [, $chunkWidth] = $arrayInfo['chunks'];
+        if ($height !== 1 || $startIndex < 0 || $endIndex <= $startIndex || $endIndex > $width) {
+            throw new RuntimeException('The ECMWF field range is outside the expected flattened Gaussian grid.');
+        }
+        $firstChunk = intdiv($startIndex, $chunkWidth);
+        $lastChunk = intdiv($endIndex - 1, $chunkWidth);
+        $decoded = [];
+        for ($chunkIndex = $firstChunk; $chunkIndex <= $lastChunk; $chunkIndex++) {
+            if (!isset($arrayInfo['lut'][$chunkIndex + 1])) {
+                throw new RuntimeException('The ECMWF field lookup table is missing a requested data chunk.');
+            }
+            $chunkStart = $chunkIndex * $chunkWidth;
+            $chunkCount = min($chunkWidth, $width - $chunkStart);
+            $byteStart = $arrayInfo['lut'][$chunkIndex];
+            $byteEnd = $arrayInfo['lut'][$chunkIndex + 1];
+            if ($byteEnd <= $byteStart) {
+                throw new RuntimeException('An ECMWF data chunk has no compressed payload.');
+            }
+            $compressed = $this->readAt($byteStart, $byteEnd - $byteStart);
+            $integers = self::decodePforDelta16($compressed, $chunkCount);
+            if (count($integers) !== $chunkCount) {
+                throw new RuntimeException('The ECMWF data chunk decoded to an unexpected number of values.');
+            }
+            $from = max($startIndex, $chunkStart);
+            $to = min($endIndex, $chunkStart + $chunkCount);
+            for ($index = $from; $index < $to; $index++) {
+                $raw = $integers[$index - $chunkStart];
+                $decoded[$index] = ($raw * (float)$arrayInfo['scale_factor']) + (float)$arrayInfo['add_offset'];
+            }
+        }
+        return $decoded;
+    }
+
     /** Decode Open-Meteo's 16-bit PFor-zigzag stream used by ECMWF float arrays. */
     public static function decodePforDelta16(string $input, int $count): array
     {
