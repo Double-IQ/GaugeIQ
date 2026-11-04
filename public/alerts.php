@@ -117,6 +117,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw $saveError;
                 }
                 $notice = $enabled ? 'Daily forecast notification settings saved.' : 'Daily forecast notification disabled.';
+            } elseif ($action === 'save_ecmwf_rainfall_alert') {
+                $enabled = isset($_POST['ecmwf_rainfall_alert_enabled']);
+                $radius = (int)($_POST['ecmwf_rainfall_alert_radius'] ?? 50);
+                if (!in_array($radius, [15, 50, 100], true)) {
+                    throw new InvalidArgumentException('Choose a rainfall alert radius of 15, 50 or 100 km.');
+                }
+                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled', $enabled ? '1' : '0');
+                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km', (string)$radius);
+                $notice = $enabled ? 'ECMWF rainfall outlook alert enabled.' : 'ECMWF rainfall outlook alert disabled.';
             } elseif ($action === 'save_stability_threshold') {
                 $thresholdInput = trim((string)($_POST['stability_alert_threshold'] ?? ''));
                 if ($thresholdInput === '') {
@@ -249,6 +258,11 @@ $dailyForecastAlertAlways = gaugeSetting($pdo, 'daily_forecast_alert_always', '0
 $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_evaluated_date', '') ?? '';
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status', '') ?? '';
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error', '') ?? '';
+$ecmwfRainfallAlertEnabled = gaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled', '0') === '1';
+$ecmwfRainfallAlertRadius = (int)(gaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km', '50') ?? '50');
+if (!in_array($ecmwfRainfallAlertRadius, [15, 50, 100], true)) $ecmwfRainfallAlertRadius = 50;
+$ecmwfRainfallAlertLastStatus = gaugeSetting($pdo, 'ecmwf_rainfall_alert_last_status', '') ?? '';
+$ecmwfRainfallAlertLastError = gaugeSetting($pdo, 'ecmwf_rainfall_alert_last_error', '') ?? '';
 $stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10.0 - (float)$stabilityAlertThresholdValue : null;
 $notificationDevices = $pdo->query('SELECT id, created_at, updated_at, user_agent, last_seen_at, last_push_at, last_push_status, last_push_error FROM gaugeiq_push_subscriptions ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
@@ -452,6 +466,46 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <?php if ($dailyForecastAlertLastError !== ''): ?>
             <p class="monitor-warning">Daily forecast alert issue: <?= h($dailyForecastAlertLastError) ?></p>
         <?php endif; ?>
+        </form>
+    </div>
+</details>
+
+<details class="card daily-forecast-alert-card">
+    <summary class="daily-forecast-summary" aria-controls="ecmwfRainfallAlertContent">
+        <span class="daily-forecast-summary-title">
+            <strong>ECMWF rainfall outlook alert</strong>
+            <small><?= $ecmwfRainfallAlertEnabled ? 'Enabled' : 'Disabled' ?> · Within <?= $ecmwfRainfallAlertRadius ?> km</small>
+        </span>
+        <span class="status-pill <?= $ecmwfRainfallAlertEnabled ? 'status-good' : 'status-warn' ?>"><?= $ecmwfRainfallAlertEnabled ? '● Enabled' : '● Disabled' ?></span>
+        <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div id="ecmwfRainfallAlertContent" class="daily-forecast-content">
+        <p class="muted">Get a push notification when the ECMWF IFS precipitation grid forecasts rain within your chosen distance during the next two hours.</p>
+        <form method="post" class="daily-forecast-form">
+            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+            <input type="hidden" name="action" value="save_ecmwf_rainfall_alert">
+            <label class="daily-forecast-enable">
+                <input type="checkbox" name="ecmwf_rainfall_alert_enabled" value="1" <?= $ecmwfRainfallAlertEnabled ? 'checked' : '' ?>>
+                <span><strong>Enable ECMWF rainfall outlook alerts</strong><small>Checked by your existing scheduled monitor; no additional cron is needed.</small></span>
+            </label>
+            <div class="daily-forecast-time-row">
+                <div>
+                    <label for="ecmwf_rainfall_alert_radius">Alert when forecast rain is within</label>
+                    <select id="ecmwf_rainfall_alert_radius" name="ecmwf_rainfall_alert_radius">
+                        <option value="15" <?= $ecmwfRainfallAlertRadius === 15 ? 'selected' : '' ?>>15 km · Very close</option>
+                        <option value="50" <?= $ecmwfRainfallAlertRadius === 50 ? 'selected' : '' ?>>50 km · Nearby</option>
+                        <option value="100" <?= $ecmwfRainfallAlertRadius === 100 ? 'selected' : '' ?>>100 km · Surrounding area</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit">Save rainfall outlook alert</button>
+            <p class="alert-help muted">GaugeIQ checks the latest two-hour ECMWF outlook every 30 minutes. To avoid repeated notifications for the same passing system, alerts have a three-hour cooldown. This is model guidance, not live radar.</p>
+            <?php if ($ecmwfRainfallAlertLastStatus !== ''): ?>
+                <p class="daily-forecast-last-status" role="status"><?= h($ecmwfRainfallAlertLastStatus) ?></p>
+            <?php endif; ?>
+            <?php if ($ecmwfRainfallAlertLastError !== ''): ?>
+                <p class="monitor-warning">Rainfall outlook alert issue: <?= h($ecmwfRainfallAlertLastError) ?></p>
+            <?php endif; ?>
         </form>
     </div>
 </details>
