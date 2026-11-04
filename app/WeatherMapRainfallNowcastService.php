@@ -107,7 +107,8 @@ final class WeatherMapRainfallNowcastService
             }
             if ($nearestCell === null) throw new RuntimeException('The ECMWF Gaussian grid has no cells around the configured location.');
 
-            $localAmount = max(0.0, (float)($values[$nearestCell['index']] ?? 0.0));
+            $localValue = (float)($values[$nearestCell['index']] ?? 0.0);
+            $localAmount = is_finite($localValue) ? max(0.0, $localValue) : 0.0;
             $wet15 = 0;
             $wet50 = 0;
             $wet100 = 0;
@@ -115,7 +116,9 @@ final class WeatherMapRainfallNowcastService
             $maximum = 0.0;
             $wetCount = 0;
             foreach ($samples as $cell) {
-                $amount = max(0.0, (float)($values[$cell['index']] ?? 0.0));
+                $rawAmount = (float)($values[$cell['index']] ?? 0.0);
+                if (!is_finite($rawAmount)) continue;
+                $amount = max(0.0, $rawAmount);
                 $maximum = max($maximum, $amount);
                 if ($amount < self::WET_THRESHOLD_MM) continue;
                 $wetCount++;
