@@ -31,6 +31,18 @@ try {
     error_log('GaugeIQ regional weather-map refresh failed: ' . $weatherMapError->getMessage());
     fwrite(STDERR, "Weather-map refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\n");
 }
+
+require_once __DIR__ . '/../app/WeatherMapRainfallNowcastService.php';
+try {
+    $rainfallNowcast = new WeatherMapRainfallNowcastService($pdo, $config);
+    $nowcastResult = $rainfallNowcast->refreshIfDue(1800);
+    if (!$nowcastResult['skipped']) {
+        echo "ECMWF rainfall outlook: " . $nowcastResult['message'] . "\n";
+    }
+} catch (Throwable $nowcastError) {
+    error_log('GaugeIQ ECMWF rainfall outlook failed: ' . $nowcastError->getMessage());
+    fwrite(STDERR, "ECMWF rainfall outlook unavailable (monitoring continues): " . $nowcastError->getMessage() . "\n");
+}
 function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
 {
     $exists = $pdo->prepare('SELECT 1 FROM gaugeiq_settings WHERE `key` = ?');
