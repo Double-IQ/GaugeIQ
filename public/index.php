@@ -1060,43 +1060,6 @@ if ($current && !empty($current['observed_at'])) {
         </details>
     </section>
 
-    <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
-        <header class="gaugeiq-weather-map-toolbar">
-            <div class="gaugeiq-weather-map-heading">
-                <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
-            </div>
-            <div class="gaugeiq-weather-map-controls">
-                <select id="layer-select" aria-label="Weather layer">
-                    <option value="temperature_2m">Temperature</option>
-                    <option value="precipitation_cloud_cover" selected>Combined</option>
-                    <option value="precipitation">Precipitation only</option>
-                    <option value="cloud_cover">Cloud cover only</option>
-                </select>
-                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
-            </div>
-        </header>
-        <div class="gaugeiq-weather-map-timeline">
-            <select id="map-time-range" aria-label="Animation time range">
-                <option value="past">Past 6 hours</option>
-                <option value="future" selected>Next 6 hours</option>
-            </select>
-            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
-            <span id="map-frame-time" aria-live="polite">Six hourly frames</span>
-        </div>
-        <div id="map" class="gaugeiq-weather-map-canvas"
-             data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
-             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
-            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
-        </div>
-    </section>
-    </section>
-
-
-
-
-
-
-
     <section class="card history-card" data-history-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>">
         <button type="button" class="history-toggle" id="historyToggle" aria-expanded="false" aria-controls="historyContent">
             <span class="section-heading">
