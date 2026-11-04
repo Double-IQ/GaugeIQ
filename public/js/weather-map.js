@@ -289,65 +289,33 @@ protocolOptions.fileReaderConfig = {
             setStatus('Preparing 12 hourly weather frames (6 past + 6 forecast)…');
 
             try {
-                const metadataResponse = await fetch(
-                    'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json',
-                    { cache: 'no-cache' }
-                );
-                if (!metadataResponse.ok) throw new Error('Weather-map time data could not be loaded.');
-                const metadata = await metadataResponse.json();
+                const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
+                if (!scheduleResponse.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
+                const schedule = await scheduleResponse.json();
                 if (token !== animationToken) return;
 
-                const validTimes = Array.isArray(metadata.valid_times) ? metadata.valid_times : [];
-                const parsedTimes = validTimes.map(value => Date.parse(value));
-                if (!parsedTimes.length || parsedTimes.some(value => !Number.isFinite(value))) {
-                    throw new Error('The latest forecast does not contain usable hourly timestamps.');
+                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 12) {
+                    throw new Error('The server has not supplied all 12 scheduled weather frames.');
                 }
 
-                const now = Date.now();
-                let pastIndex = -1;
-                let futureIndex = -1;
-                parsedTimes.forEach((timestamp, index) => {
-                    if (timestamp <= now) pastIndex = index;
-                    if (futureIndex === -1 && timestamp >= now) futureIndex = index;
-                });
-                if (pastIndex < 0 || futureIndex < 0 || futureIndex + 5 >= parsedTimes.length) {
-                    throw new Error('The latest ECMWF run cannot provide six past and six future hourly frames.');
-                }
-
-                const currentPastTime = parsedTimes[pastIndex];
-                const firstPastTime = currentPastTime - (5 * 60 * 60 * 1000);
-                const previousRunTime = Math.floor(
-                    (firstPastTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)
-                ) * (6 * 60 * 60 * 1000) - (6 * 60 * 60 * 1000);
-                const runDate = new Date(previousRunTime);
-                const runFolder = [
-                    runDate.getUTCFullYear(),
-                    String(runDate.getUTCMonth() + 1).padStart(2, '0'),
-                    String(runDate.getUTCDate()).padStart(2, '0')
-                ].join('/') + '/' + String(runDate.getUTCHours()).padStart(2, '0') + '00Z';
-
-                const pastFrames = Array.from({ length: 6 }, (_, offset) => {
-                    const timestamp = firstPastTime + (offset * 60 * 60 * 1000);
-                    const frameDate = new Date(timestamp);
-                    const timeToken = frameDate.toISOString().slice(0, 10) + 'T' +
-                        String(frameDate.getUTCHours()).padStart(2, '0') +
-                        String(frameDate.getUTCMinutes()).padStart(2, '0');
-                    return {
-                        id: 'past-' + offset,
-                        type: 'past',
-                        time: timestamp,
-                        url: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' +
-                            runFolder + '/' + timeToken + '.om?delta_time_hours=1'
-                    };
-                });
-
-                const futureFrames = Array.from({ length: 6 }, (_, offset) => ({
-                    id: 'future-' + offset,
-                    type: 'future',
-                    time: parsedTimes[futureIndex + offset],
-                    url: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
-                        (futureIndex + offset)
+                const scheduledFrames = schedule.frames.map(item => ({
+                    id: item.type + '-' + item.slot,
+                    type: item.type,
+                    time: Date.parse(item.time),
+                    url: item.url
                 }));
+                if (scheduledFrames.some(frame =>
+                    !Number.isFinite(frame.time) ||
+                    !/^https:\/\/openmeteo\\.s3\\.amazonaws\\.com\/data_spatial\/ecmwf_ifs\/.+\\.om$/.test(frame.url)
+                )) {
+                    throw new Error('The scheduled weather-map frame list contains an invalid frame.');
+                }
+
+                const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
+                const futureFrames = scheduledFrames.filter(frame => frame.type === 'future');
+                if (pastFrames.length !== 6 || futureFrames.length !== 6) {
+                    throw new Error('The server schedule must contain six past and six forecast frames.');
+                }
 
                 const variables = weatherVariables(layerSelect.value);
                 [...pastFrames, ...futureFrames].forEach(frame => {
@@ -356,11 +324,13 @@ protocolOptions.fileReaderConfig = {
                     variables.forEach((item, variableIndex) => {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-' + variableIndex;
-                        const dataUrl = frame.url + '&variable=' + encodeURIComponent(item.variable);
+                        const dataUrl = new URL(frame.url);
+                        if (frame.type === 'past') dataUrl.searchParams.set('delta_time_hours', '1');
+                        dataUrl.searchParams.set('variable', item.variable);
 
                         map.addSource(sourceId, {
                             type: 'raster',
-                            url: 'om://' + dataUrl,
+                            url: 'om://' + dataUrl.href,
                             maxzoom: 12
                         });
                         map.addLayer({
@@ -423,43 +393,23 @@ protocolOptions.fileReaderConfig = {
         }
 
         async function resolveCurrentOmUrls(variables) {
-            const response = await fetch(
-                'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json',
-                { cache: 'no-store' }
-            );
-            if (!response.ok) throw new Error('Latest weather-map metadata could not be loaded.');
-            const metadata = await response.json();
-            const runDate = new Date(metadata.reference_time);
-            if (!Number.isFinite(runDate.getTime())) throw new Error('Weather-map model run time is invalid.');
+            const response = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
+            if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
+            const schedule = await response.json();
+            const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
+            if (frames.length !== 12) throw new Error('The server has not supplied all 12 scheduled weather frames.');
 
-            const fileDate = new Date();
-            fileDate.setUTCMinutes(0, 0, 0);
-            const validTimes = Array.isArray(metadata.valid_times)
-                ? metadata.valid_times.map(value => Date.parse(value))
-                : [];
-            const timeIndex = validTimes.indexOf(fileDate.getTime());
-            let deltaTimeHours;
-            if (timeIndex > 0) {
-                deltaTimeHours = (validTimes[timeIndex] - validTimes[timeIndex - 1]) / 3600000;
-            } else if (timeIndex === 0 && validTimes.length > 1) {
-                deltaTimeHours = (validTimes[1] - validTimes[0]) / 3600000;
-            }
-
-            const pad = value => String(value).padStart(2, '0');
-            const runFolder = [
-                runDate.getUTCFullYear(),
-                pad(runDate.getUTCMonth() + 1),
-                pad(runDate.getUTCDate())
-            ].join('/') + '/' + pad(runDate.getUTCHours()) + '00Z';
-            const fileName = fileDate.toISOString().slice(0, 10) + 'T' + pad(fileDate.getUTCHours()) + '00.om';
-            const baseUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' + runFolder + '/' + fileName;
+            const now = Date.now();
+            const currentFrame = frames
+                .filter(frame => Number.isFinite(Date.parse(frame.time)))
+                .sort((a, b) => Math.abs(Date.parse(a.time) - now) - Math.abs(Date.parse(b.time) - now))[0];
+            if (!currentFrame) throw new Error('No usable current weather-map frame was found.');
 
             return variables.map(item => {
-                const params = new URLSearchParams({ variable: item.variable });
-                if (Number.isFinite(deltaTimeHours) && deltaTimeHours > 0) {
-                    params.set('delta_time_hours', String(deltaTimeHours));
-                }
-                return baseUrl + '?' + params.toString();
+                const url = new URL(currentFrame.url);
+                if (currentFrame.type === 'past') url.searchParams.set('delta_time_hours', '1');
+                url.searchParams.set('variable', item.variable);
+                return url.href;
             });
         }
 
