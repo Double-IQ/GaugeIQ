@@ -6899,3 +6899,14 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#22c55e!important;
   border-color:#22c55e!important;
 }
+
+
+/* WVI gauge fill is always blue; override both score-band and hourly-rise colour rules. */
+.climate-gauge-card .climate-bar-wvi:is([data-wvi-band="blue"],[data-wvi-band="orange"],[data-wvi-change="rise"],[data-wvi-change="fall"],[data-wvi-change="steady"]) .climate-segment.active{
+  background:#35c4eb!important;
+  box-shadow:none!important;
+}
+.climate-gauge-card .climate-bar-wvi:is([data-wvi-band="blue"],[data-wvi-band="orange"],[data-wvi-change="rise"],[data-wvi-change="fall"],[data-wvi-change="steady"]) .climate-mobile-gauge-value{
+  stroke:#35c4eb!important;
+  filter:drop-shadow(0 0 2px rgba(53,196,235,.25))!important;
+}
