@@ -122,6 +122,21 @@ final class WeatherMapRainfallNowcastService
             ];
         }
 
+        $wetDistanceFrames = array_values(array_filter(
+            $frameResults,
+            static fn(array $result): bool => is_numeric($result['nearest_rain_km'] ?? null)
+        ));
+        $movementTrend = 'steady';
+        $distanceChangeKm = null;
+        if (count($wetDistanceFrames) >= 2) {
+            $distanceChangeKm = (float)$wetDistanceFrames[count($wetDistanceFrames) - 1]['nearest_rain_km']
+                - (float)$wetDistanceFrames[0]['nearest_rain_km'];
+            if ($distanceChangeKm <= -10.0) {
+                $movementTrend = 'closing';
+            } elseif ($distanceChangeKm >= 10.0) {
+                $movementTrend = 'receding';
+            }
+        }
         $status = 'clear';
         $summary = 'No ECMWF precipitation signal is forecast within 100 km over the next two hours.';
         $firstRain = null;
@@ -174,6 +189,9 @@ final class WeatherMapRainfallNowcastService
             'location' => ['latitude' => (float)$latitudeValue, 'longitude' => (float)$longitudeValue],
             'search_radius_km' => self::SEARCH_RADIUS_KM,
             'wet_threshold_mm' => self::WET_THRESHOLD_MM,
+            'rain_footprint_trend' => $movementTrend,
+            'nearest_rain_distance_change_km' => $distanceChangeKm === null ? null : round($distanceChangeKm, 1),
+            'grid_cells_sampled' => count($samples),
             'updated_at' => gmdate('c'),
             'frames' => $frameResults,
             'note' => 'Model forecast derived from decoded ECMWF precipitation grid values; not live radar.',
