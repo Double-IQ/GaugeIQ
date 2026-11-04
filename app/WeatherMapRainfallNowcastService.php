@@ -86,8 +86,11 @@ final class WeatherMapRainfallNowcastService
             ];
             if ($encodingInfo === null) {
                 $encodingInfo = $currentEncoding;
-            } elseif ($encodingInfo !== $currentEncoding) {
-                throw new RuntimeException('The ECMWF precipitation frame encoding changed within the two-hour outlook window.');
+            } elseif ($encodingInfo['data_type'] !== $currentEncoding['data_type'] ||
+                $encodingInfo['compression_type'] !== $currentEncoding['compression_type'] ||
+                $encodingInfo['dimensions'] !== $currentEncoding['dimensions'] ||
+                $encodingInfo['chunks'] !== $currentEncoding['chunks']) {
+                throw new RuntimeException('The ECMWF precipitation frame layout changed within the two-hour outlook window.');
             }
             $pointCount = (int)($field['dimensions'][1] ?? 0);
             $samples = WeatherMapOmReader::gaussianNeighborhood(
