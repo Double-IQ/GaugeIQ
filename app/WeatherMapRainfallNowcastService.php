@@ -60,13 +60,7 @@ final class WeatherMapRainfallNowcastService
             throw new RuntimeException('A public HTTPS app.base_url is required for ECMWF rainfall decoding.');
         }
 
-        $samples = WeatherMapOmReader::gaussianNeighborhood(
-            6599680,
-            (float)$latitudeValue,
-            (float)$longitudeValue,
-            self::SEARCH_RADIUS_KM
-        );
-        $indices = array_column($samples, 'index');
+
         $nearestCell = null;
         foreach ($samples as $cell) {
             if ($nearestCell === null || $cell['distance_km'] < $nearestCell['distance_km']) $nearestCell = $cell;
@@ -84,9 +78,13 @@ final class WeatherMapRainfallNowcastService
             );
             $field = $reader->getArrayInfo('precipitation');
             $pointCount = (int)($field['dimensions'][1] ?? 0);
-            if ($pointCount !== 6599680) {
-                throw new RuntimeException('The ECMWF precipitation field is not the expected O1280 Gaussian grid.');
-            }
+            $samples = WeatherMapOmReader::gaussianNeighborhood(
+                $pointCount,
+                (float)$latitudeValue,
+                (float)$longitudeValue,
+                self::SEARCH_RADIUS_KM
+            );
+            $indices = array_column($samples, 'index');
             $values = $reader->decodeFloatArrayIndices($field, $indices);
 
             $localAmount = max(0.0, (float)($values[$nearestCell['index']] ?? 0.0));
