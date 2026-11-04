@@ -166,60 +166,20 @@ final class WeatherMapCacheService
                 throw new RuntimeException('A public HTTPS app.base_url is required for regional weather-map prefetch.');
             }
 
-            $defaultPython = dirname(__DIR__) . '/storage/weather-map-python/bin/python';
-            $configuredPython = $this->config['weather_map_cache']['python_binary'] ?? null;
-            $python = trim(is_string($configuredPython) && $configuredPython !== ''
-                ? $configuredPython
-                : (is_executable($defaultPython) ? $defaultPython : 'python3'));
-            if ($python === '') {
-                throw new RuntimeException('The weather-map Python executable is not configured.');
-            }
-            $script = dirname(__DIR__) . '/cron/prefetch-weather-map.py';
-            if (!is_file($script)) {
-                throw new RuntimeException('The regional weather-map prefetch script is missing.');
-            }
-            if (!function_exists('proc_open')) {
-                throw new RuntimeException('PHP proc_open is required to run the regional weather-map prefetcher.');
-            }
-
-            $process = proc_open(
-                [$python, $script, '--proxy-base-url', $baseUrl],
-                [
-                    0 => ['pipe', 'r'],
-                    1 => ['pipe', 'w'],
-                    2 => ['pipe', 'w'],
-                ],
-                $pipes,
-                dirname(__DIR__)
-            );
-            if (!is_resource($process)) {
-                throw new RuntimeException('Unable to start the regional weather-map prefetch process.');
-            }
-
-            $payload = json_encode($frames, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-            $written = fwrite($pipes[0], $payload);
-            fclose($pipes[0]);
-            $stdout = stream_get_contents($pipes[1]);
-            fclose($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]);
-            fclose($pipes[2]);
-            $exitCode = proc_close($process);
-
-            if ($written !== strlen($payload) || $exitCode !== 0) {
-                $detail = trim((string)$stderr);
-                if ($detail === '') {
-                    $detail = trim((string)$stdout);
-                }
-                throw new RuntimeException(
-                    'Regional ECMWF prefetch process failed' .
-                    ($detail !== '' ? ': ' . $detail : ' (exit code ' . $exitCode . ').')
-                );
-            }
+            require_once __DIR__ . '/WeatherMapRegionalPrefetcher.php';
+            $concurrency = max(1, min(16, (int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
+            $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency);
+            $result = $prefetcher->prefetch($frames);
 
             $this->saveSetting('weather_map_prefetch_last_success_at', gmdate('c'));
             $this->saveSetting('weather_map_prefetch_last_error', '');
-            $this->saveSetting('weather_map_prefetch_last_output', trim((string)$stdout));
-            return ['skipped' => false, 'frames' => count($frames), 'output' => trim((string)$stdout)];
+            $this->saveSetting('weather_map_prefetch_last_output', $result['output']);
+            return [
+                'skipped' => false,
+                'frames' => $result['frames'],
+                'blocks' => $result['blocks'],
+                'output' => $result['output'],
+            ];
         } catch (Throwable $error) {
             $this->saveSetting('weather_map_prefetch_last_error', $error->getMessage());
             throw $error;
