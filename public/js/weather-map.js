@@ -310,7 +310,7 @@ protocolOptions.fileReaderConfig = {
                     if (timestamp <= now) pastIndex = index;
                     if (futureIndex === -1 && timestamp >= now) futureIndex = index;
                 });
-                if (pastIndex < 5 || futureIndex < 0 || futureIndex + 5 >= parsedTimes.length) {
+                if (pastIndex < 0 || futureIndex < 0 || futureIndex + 5 >= parsedTimes.length) {
                     throw new Error('The latest ECMWF run cannot provide six past and six future hourly frames.');
                 }
 
