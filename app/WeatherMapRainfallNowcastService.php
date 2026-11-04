@@ -61,11 +61,6 @@ final class WeatherMapRainfallNowcastService
         }
 
 
-        $nearestCell = null;
-        foreach ($samples as $cell) {
-            if ($nearestCell === null || $cell['distance_km'] < $nearestCell['distance_km']) $nearestCell = $cell;
-        }
-        if ($nearestCell === null) throw new RuntimeException('The ECMWF Gaussian grid has no cells around the configured location.');
 
         $frameResults = [];
         foreach ($futureFrames as $frame) {
