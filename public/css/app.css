@@ -6981,3 +6981,79 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-nowcast-frame small{color:var(--muted);font-size:11px;line-height:1.3}
 .rainfall-nowcast-footnote{margin:12px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
 @media(max-width:560px){.rainfall-nowcast-card{padding:17px}.rainfall-nowcast-frames{gap:6px}.rainfall-nowcast-frame{padding:9px}}
+
+
+/* Rainfall outlook uses the same glass surface, depth and colour treatment as Wind. */
+.rainfall-nowcast-card.wind-hud-card{
+  margin-top:16px;
+  color:#edf6ff;
+}
+.rainfall-nowcast-card .rainfall-nowcast-heading{
+  align-items:center;
+}
+.rainfall-nowcast-card .rainfall-nowcast-heading h2{
+  color:#edf6ff;
+  font-size:22px;
+  font-weight:750;
+  letter-spacing:-.02em;
+}
+.rainfall-nowcast-card .rainfall-nowcast-heading .label{
+  margin:0 0 5px;
+  color:#edf6ff;
+  font-size:22px;
+  font-weight:750;
+}
+.rainfall-nowcast-card .rainfall-nowcast-source{
+  padding:6px 8px;
+  border:1px solid rgba(104,210,255,.25);
+  border-radius:6px;
+  background:rgba(53,196,235,.08);
+  color:#9bd0ff;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+}
+.rainfall-nowcast-card .rainfall-nowcast-summary{
+  color:#dcecff;
+}
+.rainfall-nowcast-card .rainfall-nowcast-frame{
+  border:1px solid rgba(117,164,211,.2);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(38,76,116,.42),rgba(1,10,24,.3));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.rainfall-nowcast-card .rainfall-nowcast-frame span,
+.rainfall-nowcast-card .rainfall-nowcast-frame small,
+.rainfall-nowcast-card .rainfall-nowcast-footnote{
+  color:#91a9c7;
+}
+.rainfall-nowcast-card .rainfall-nowcast-frame strong{
+  color:#edf6ff;
+}
+:root[data-theme="light"] .rainfall-nowcast-card.wind-hud-card{
+  color:#26313f;
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
+  border:1px solid #c3cbd5!important;
+  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-heading h2,
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-heading .label,
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-summary,
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-frame strong{
+  color:#26313f;
+}
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-source{
+  color:#087da5;
+  border-color:rgba(8,151,194,.35);
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(222,246,252,.72));
+}
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-frame{
+  border-color:#c3cbd5;
+  background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(222,229,237,.78));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95);
+}
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-frame span,
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-frame small,
+:root[data-theme="light"] .rainfall-nowcast-card .rainfall-nowcast-footnote{
+  color:#657487;
+}
