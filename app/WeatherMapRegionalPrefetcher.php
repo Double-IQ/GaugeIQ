@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/WeatherMapOmReader.php';
 
-/** Prefetches only the existing server-cache blocks intersecting the map's regional .om chunks. */
+/** Prefetches only newly scheduled frames and their regional .om cache blocks. */
 final class WeatherMapRegionalPrefetcher
 {
     private const BLOCK_SIZE = 65536;
@@ -25,8 +25,8 @@ final class WeatherMapRegionalPrefetcher
     /** @return array{frames:int,blocks:int,output:string} */
     public function prefetch(array $frames): array
     {
-        if (count($frames) !== 12) {
-            throw new RuntimeException('Regional weather-map prefetch requires exactly 12 scheduled ECMWF frames.');
+        if (count($frames) < 1 || count($frames) > 12) {
+            throw new RuntimeException('Regional weather-map prefetch requires between 1 and 12 newly scheduled ECMWF frames.');
         }
         // Forecast frames (current hour onward) first; then work backwards from the newest past frame.
         usort($frames, static function (array $a, array $b): int {
