@@ -369,31 +369,29 @@ protocolOptions.fileReaderConfig = {
                 animationPreparing = false;
                 animationCurrentFrame = 0;
                 animationLoadError = null;
+                const initialFrame = () => selectedAnimationFrames()[0];
+                const isFrameLoaded = frame => Boolean(
+                    frame &&
+                    frame.sourceIds.length > 0 &&
+                    frame.sourceIds.every(id => map.isSourceLoaded(id))
+                );
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const pending = animationFrames
-                        .filter(frame => !frame.sourceIds.every(id => map.isSourceLoaded(id)))
-                        .slice(0, 4)
-                        .map(frame => {
-                            const pendingSources = frame.sourceIds.filter(id => !map.isSourceLoaded(id));
-                            return frame.id + ': ' + pendingSources.join(', ');
-                        });
+                    const frame = initialFrame();
+                    const pendingSources = frame
+                        ? frame.sourceIds.filter(id => !map.isSourceLoaded(id))
+                        : [];
                     const detail = [
                         animationLoadError,
-                        pending.length ? 'Still loading: ' + pending.join('; ') : ''
+                        pendingSources.length ? 'Still loading: ' + pendingSources.join(', ') : ''
                     ].filter(Boolean).join(' | ');
                     clearAnimation();
-                    setStatus('The 12 hourly weather frames could not be preloaded.' + (detail ? ' ' + detail : ''));
+                    setStatus('The first hourly weather frame could not be loaded.' + (detail ? ' ' + detail : ''));
                 }, 120000);
 
-                const allFramesLoaded = () => animationFrames.length === 12 &&
-                    animationFrames.every(frame =>
-                        frame.sourceIds.length > 0 &&
-                        frame.sourceIds.every(id => map.isSourceLoaded(id))
-                    );
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!allFramesLoaded()) return;
+                    if (!isFrameLoaded(initialFrame())) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
@@ -405,7 +403,9 @@ protocolOptions.fileReaderConfig = {
                     activeLayers.forEach(id => {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
+                    animationToggle.disabled = false;
                     setStatus('');
+                    showFrame(0);
                     if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
