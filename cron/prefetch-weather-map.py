@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """Prefetch only the ECMWF .om data chunks intersecting GaugeIQ's map region.
 
-Reads through GaugeIQ's byte-range proxy so every upstream range is stored in
-its existing server-side cache. The temporary fsspec cache is discarded after
-each run; it is not the source of truth.
+Reads through GaugeIQ's byte-range proxy so every upstream range is stored
+in its existing server-side cache.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-import tempfile
 from urllib.parse import quote, urlparse
 
 import fsspec
@@ -79,15 +77,14 @@ def proxy_url(proxy_base: str, upstream_url: str) -> str:
     )
 
 
-def prefetch_frame(frame: dict, proxy_base: str, cache_dir: str) -> None:
+def prefetch_frame(frame: dict, proxy_base: str) -> None:
     url = proxy_url(proxy_base, str(frame["url"]))
     # OmFileReader uses random-access reads. The HTTP block size matches the
-    # PHP proxy's 64 KiB maximum range, so the proxy persists each fetched block.
+    # PHP proxy's 64 KiB maximum range; the proxy persists every fetched block.
     backend = fsspec.open(
-        f"blockcache::{url}",
+        url,
         mode="rb",
         http={"block_size": BLOCK_SIZE},
-        blockcache={"cache_storage": cache_dir},
     )
 
     with OmFileReader(backend) as root:
@@ -127,11 +124,10 @@ def main() -> int:
     if not isinstance(frames, list) or len(frames) != 12:
         raise RuntimeError("The prefetch input must contain exactly 12 scheduled frames.")
 
-    with tempfile.TemporaryDirectory(prefix="gaugeiq-om-prefetch-") as cache_dir:
-        for frame in frames:
-            if not isinstance(frame, dict) or not frame.get("url"):
-                raise RuntimeError("The scheduled frame list contains an invalid entry.")
-            prefetch_frame(frame, args.proxy_base_url, cache_dir)
+    for frame in frames:
+        if not isinstance(frame, dict) or not frame.get("url"):
+            raise RuntimeError("The scheduled frame list contains an invalid entry.")
+        prefetch_frame(frame, args.proxy_base_url)
 
     print("Regional ECMWF prefetch completed for all 12 frames.", flush=True)
     return 0
