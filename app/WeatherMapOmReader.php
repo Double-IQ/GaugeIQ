@@ -252,6 +252,142 @@ final class WeatherMapOmReader
         return $values;
     }
 
+    /** Decode Open-Meteo's 16-bit PFor-zigzag stream used by ECMWF float arrays. */
+    public static function decodePforDelta16(string $input, int $count): array
+    {
+        if ($count < 1) throw new InvalidArgumentException('The ECMWF PFor stream must contain at least one value.');
+        $position = 0;
+        $seed = self::readSeed64($input, $position);
+        if ($seed > 65535) throw new RuntimeException('The ECMWF PFor seed exceeds 16 bits.');
+        $previous = ($seed & 0x8000) !== 0 ? $seed - 65536 : $seed;
+        $values = [$previous];
+
+        while (count($values) < $count) {
+            self::need($input, $position, 1);
+            $header = ord($input[$position++]);
+            $width = $header & 0x3f;
+            $remaining = min(128, $count - count($values));
+            if (($header & 0xc0) === 0xc0) {
+                if ($width > 16) throw new RuntimeException('Invalid constant-block width in ECMWF PFor data.');
+                $constant = self::readLittleUnsigned($input, $position, intdiv($width + 7, 8));
+                $deltas = array_fill(0, $remaining, $constant);
+            } elseif (($header & 0x40) === 0) {
+                $exceptionWidth = 0;
+                if (($header & 0x80) !== 0) {
+                    self::need($input, $position, 1);
+                    $exceptionWidth = ord($input[$position++]);
+                    if ($width >= 16 || $exceptionWidth < 1 || $exceptionWidth > 16 - $width) {
+                        throw new RuntimeException('Invalid bitmap exception widths in ECMWF PFor data.');
+                    }
+                    $bitmapLength = intdiv($remaining + 7, 8);
+                    self::need($input, $position, $bitmapLength);
+                    $bitmap = substr($input, $position, $bitmapLength);
+                    $position += $bitmapLength;
+                    $exceptionPositions = [];
+                    for ($i = 0; $i < $remaining; $i++) {
+                        if ((ord($bitmap[intdiv($i, 8)]) & (1 << ($i % 8))) !== 0) $exceptionPositions[] = $i;
+                    }
+                    if (($remaining % 8) !== 0 && $bitmapLength > 0 &&
+                        (ord($bitmap[$bitmapLength - 1]) & (0xff << ($remaining % 8))) !== 0) {
+                        throw new RuntimeException('Invalid bitmap padding in ECMWF PFor data.');
+                    }
+                    $exceptions = self::unpackBits($input, $position, count($exceptionPositions), $exceptionWidth);
+                    $base = self::unpackPfor16Values($input, $position, $remaining, $width, $remaining === 128);
+                    foreach ($exceptionPositions as $index => $target) {
+                        $base[$target] += $exceptions[$index] << $width;
+                    }
+                    $deltas = $base;
+                } else {
+                    $deltas = self::unpackPfor16Values($input, $position, $remaining, $width, $remaining === 128);
+                }
+            } else {
+                // Variable-byte exception blocks use Open-Meteo's 64-bit SIMD
+                // VByte thresholds (VB_MAX=254, VB_B2=6, VB_B3=3).
+                self::need($input, $position, 1);
+                $exceptionCount = ord($input[$position++]);
+                if ($width >= 16 || $exceptionCount < 1 || $exceptionCount > $remaining) {
+                    throw new RuntimeException('Invalid variable-byte exception header in ECMWF PFor data.');
+                }
+                $base = self::unpackPfor16Values($input, $position, $remaining, $width, false);
+                $exceptions = self::readOpenMeteoVariableByte16($input, $position, $exceptionCount);
+                self::need($input, $position, $exceptionCount);
+                $positions = array_values(unpack('C*', substr($input, $position, $exceptionCount)) ?: []);
+                $position += $exceptionCount;
+                foreach ($positions as $index => $target) {
+                    if ($target >= $remaining) throw new RuntimeException('ECMWF PFor exception position is outside its block.');
+                    $base[$target] += $exceptions[$index] << $width;
+                }
+                $deltas = $base;
+            }
+
+            foreach ($deltas as $encodedDelta) {
+                if ($encodedDelta < 0 || $encodedDelta > 65535) {
+                    throw new RuntimeException('ECMWF PFor delta exceeds its 16-bit representation.');
+                }
+                $delta = ($encodedDelta >> 1) ^ (-($encodedDelta & 1));
+                $unsigned = ($previous + $delta) & 0xffff;
+                $previous = ($unsigned & 0x8000) !== 0 ? $unsigned - 65536 : $unsigned;
+                $values[] = $previous;
+            }
+        }
+        return $values;
+    }
+
+    private static function unpackPfor16Values(string $input, int &$position, int $count, int $width, bool $vertical): array
+    {
+        if ($width < 0 || $width > 16) throw new RuntimeException('Invalid 16-bit ECMWF PFor bit width.');
+        if (!$vertical) return self::unpackBits($input, $position, $count, $width);
+        $byteCount = $width * 16;
+        self::need($input, $position, $byteCount);
+        $start = $position;
+        $values = [];
+        for ($i = 0; $i < $count; $i++) {
+            $lane = $i % 8;
+            $group = intdiv($i, 8);
+            $value = 0;
+            for ($bit = 0; $bit < $width; $bit++) {
+                $wordOffset = $start + ($bit * 8 + $lane) * 2;
+                $word = ord($input[$wordOffset]) | (ord($input[$wordOffset + 1]) << 8);
+                if (($word & (1 << $group)) !== 0) $value |= 1 << $bit;
+            }
+            $values[] = $value;
+        }
+        $position += $byteCount;
+        return $values;
+    }
+
+    private static function readOpenMeteoVariableByte16(string $input, int &$position, int $count): array
+    {
+        self::need($input, $position, 1);
+        if (ord($input[$position]) === 255) {
+            $position++;
+            $values = [];
+            for ($i = 0; $i < $count; $i++) $values[] = self::readLittleUnsigned($input, $position, 2);
+            return $values;
+        }
+        $values = [];
+        for ($i = 0; $i < $count; $i++) {
+            self::need($input, $position, 1);
+            $first = ord($input[$position++]);
+            if ($first < 177) {
+                $value = $first;
+            } elseif ($first < 241) {
+                self::need($input, $position, 1);
+                $value = (($first << 8) + ord($input[$position++])) + (177 - (177 << 8));
+            } elseif ($first < 249) {
+                $low = self::readLittleUnsigned($input, $position, 2);
+                $value = $low + (($first - 241) << 16) + 16561;
+            } else {
+                $bytes = 3 + $first - 249;
+                if ($bytes > 4) throw new RuntimeException('ECMWF variable-byte exception exceeds 32 bits.');
+                $value = self::readLittleUnsigned($input, $position, $bytes);
+            }
+            if ($value < 0 || $value > 65535) throw new RuntimeException('ECMWF variable-byte exception exceeds 16 bits.');
+            $values[] = $value;
+        }
+        return $values;
+    }
+
     public static function decodeV3LookupTable(string $compressed, int $chunkCount): array
     {
         if ($chunkCount < 1) throw new InvalidArgumentException('The array must contain at least one data chunk.');
