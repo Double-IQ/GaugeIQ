@@ -1121,13 +1121,45 @@ if ($current && !empty($current['observed_at'])) {
         </div>
     </section>
 
-
-
-
-
-
-    
-
+    <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
+        <header class="gaugeiq-weather-map-toolbar">
+            <div class="gaugeiq-weather-map-heading">
+                <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
+            </div>
+            <div class="gaugeiq-weather-map-controls">
+                <select id="layer-select" aria-label="Weather layer">
+                    <option value="temperature_2m">Temperature</option>
+                    <option value="precipitation_cloud_cover" selected>Combined</option>
+                    <option value="precipitation">Precipitation only</option>
+                    <option value="cloud_cover">Cloud cover only</option>
+                </select>
+                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
+            </div>
+        </header>
+        <div class="gaugeiq-weather-map-timeline">
+            <select id="map-time-range" aria-label="Animation time range">
+                <option value="past">Past 6 hours</option>
+                <option value="future" selected>Next 6 hours</option>
+            </select>
+            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
+            <span id="map-frame-time" aria-live="polite">Six hourly frames</span>
+        </div>
+        <div id="map" class="gaugeiq-weather-map-canvas"
+             data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
+             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
+            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
+        </div>
+    </section>
+    <section class="weather-map-credits-card" aria-labelledby="weatherMapCreditsTitle">
+        <h2 id="weatherMapCreditsTitle">Credits &amp; Data Sources</h2>
+        <p class="weather-map-credit-line">Map data: <a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
+        <p class="weather-map-credit-line"><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a>.</p>
+        <p class="weather-map-credit-line">This service is based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF).</p>
+        <p class="weather-map-credit-line">ECMWF data is made available under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution 4.0 International (CC BY 4.0) licence</a>. Source: <a href="https://www.ecmwf.int/" target="_blank" rel="noopener noreferrer">www.ecmwf.int</a>.</p>
+        <p class="weather-map-credit-line">Weather data is processed and visually styled by GaugeIQ.</p>
+        <p class="weather-map-credit-disclaimer">ECMWF does not accept any liability whatsoever for any error or omission in the data, their availability, or for any loss or damage arising from their use.</p>
+    </section>
+    </section>
     <dialog id="notificationRepairDialog" class="notification-repair-dialog" aria-labelledby="notificationRepairTitle">
         <div class="notification-repair-content">
             <button id="notificationRepairClose" class="notification-repair-close" type="button" aria-label="Close">×</button>
