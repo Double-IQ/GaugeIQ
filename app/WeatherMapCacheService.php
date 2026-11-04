@@ -116,6 +116,11 @@ final class WeatherMapCacheService
             }
             $this->saveSetting('weather_map_schedule_last_success_at', $refreshedAt);
             $this->saveSetting('weather_map_schedule_last_error', '');
+            // A newly published 12-frame schedule changes the upstream file URLs.
+            // Invalidate the prefetch timestamp so the same cron run immediately
+            // fills regional cache blocks for the new frames instead of skipping
+            // because the previous schedule was prefetched less than an hour ago.
+            $this->saveSetting('weather_map_prefetch_last_success_at', '');
             $this->pdo->commit();
         } catch (Throwable $error) {
             if ($this->pdo->inTransaction()) {
