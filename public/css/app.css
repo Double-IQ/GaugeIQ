@@ -6870,3 +6870,22 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* WVI gauge fill stays blue regardless of the score band. */
 .climate-gauge-card .climate-bar-wvi .climate-segment.active{background:#35c4eb!important;box-shadow:none!important}
 .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value{stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))!important}
+
+
+/* Match the Trend card's green text, score ring and outer card ring exactly. */
+.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]){
+  border-color:#8fdaa9!important;
+}
+.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-label,
+.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{
+  color:#8fdaa9!important;
+  border-color:#8fdaa9!important;
+}
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]){
+  border-color:#16834f!important;
+}
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-label,
+:root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{
+  color:#16834f!important;
+  border-color:#16834f!important;
+}
