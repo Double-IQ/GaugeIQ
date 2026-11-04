@@ -338,7 +338,7 @@ final class WeatherMapOmReader
             $integers = self::decodePforDelta16($this->readAt($byteStart, $byteEnd - $byteStart), $chunkCount);
             foreach ($chunkIndices as $index) {
                 $raw = $integers[$index - $chunkStart];
-                $decoded[$index] = ($raw * (float)$arrayInfo['scale_factor']) + (float)$arrayInfo['add_offset'];
+                $decoded[$index] = self::decodeScaledPfor16Value($raw, (float)$arrayInfo['scale_factor'], (float)$arrayInfo['add_offset']);
             }
         }
         return $decoded;
