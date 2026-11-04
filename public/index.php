@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=20261104-no-map-attribution" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261104-rainfall-nowcast">
+<link rel="stylesheet" href="css/app.css?v=20261104-rainfall-alert-wind-card">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=20261104-no-map-attribution"></script>
 <title>GaugeIQ</title>
@@ -469,8 +469,8 @@ if ($current && !empty($current['observed_at'])) {
         $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? $rainfallNowcast['frames'] : [];
         $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
         ?>
-        <article class="card rainfall-nowcast-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
-            <div class="rainfall-nowcast-heading">
+        <article class="card wind-hud-card rainfall-nowcast-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
+            <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
                     <p class="label">ECMWF IFS · Next two hours</p>
                     <h2>Rainfall outlook</h2>
