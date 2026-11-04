@@ -93,6 +93,49 @@ checkPfor16Fixture(
 );
 
 
+function packVerticalPfor16ForTest(array $values, int $width): string
+{
+    $packed = str_repeat("\\0", $width * 16);
+    foreach ($values as $index => $value) {
+        $lane = $index % 8;
+        $slot = intdiv($index, 8);
+        $bitOffset = $slot * $width;
+        $wordIndex = intdiv($bitOffset, 16);
+        $shift = $bitOffset % 16;
+        $offset = $wordIndex * 16 + $lane * 2;
+        $word = ord($packed[$offset]) | (ord($packed[$offset + 1]) << 8);
+        $word |= ($value << $shift) & 0xffff;
+        $packed[$offset] = chr($word & 0xff);
+        $packed[$offset + 1] = chr(($word >> 8) & 0xff);
+        if ($shift + $width > 16) {
+            $nextOffset = ($wordIndex + 1) * 16 + $lane * 2;
+            $nextWord = ord($packed[$nextOffset]) | (ord($packed[$nextOffset + 1]) << 8);
+            $nextWord |= $value >> (16 - $shift);
+            $packed[$nextOffset] = chr($nextWord & 0xff);
+            $packed[$nextOffset + 1] = chr(($nextWord >> 8) & 0xff);
+        }
+    }
+    return $packed;
+}
+
+foreach ([1, 3, 5, 8, 16] as $width) {
+    $encoded = [];
+    for ($i = 0; $i < 128; $i++) {
+        $mask = (1 << $width) - 1;
+        $encoded[] = ($i * 37 + 11) & $mask;
+    }
+    $expected = [0];
+    $previous = 0;
+    foreach ($encoded as $raw) {
+        $delta = ($raw >> 1) ^ (-($raw & 1));
+        $unsigned = ($previous + $delta) & 0xffff;
+        $previous = ($unsigned & 0x8000) !== 0 ? $unsigned - 65536 : $unsigned;
+        $expected[] = $previous;
+    }
+    $stream = chr(0) . chr($width) . packVerticalPfor16ForTest($encoded, $width);
+    checkPfor16Fixture("ECMWF 16-bit vertical width $width", bin2hex($stream), $expected);
+}
+
 function encodeSmallSeed(int $value): string
 {
     if ($value < 128) return chr($value);
