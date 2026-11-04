@@ -292,6 +292,100 @@ final class WeatherMapOmReader
         return $decoded;
     }
 
+    /** Decode only requested grid indices, fetching each compressed chunk once. */
+    public function decodeFloatArrayIndices(array $arrayInfo, array $indices): array
+    {
+        if (($arrayInfo['data_type'] ?? null) !== 20 || ($arrayInfo['compression_type'] ?? null) !== 0) {
+            throw new RuntimeException('The ECMWF field does not use the supported Float32/PFor-int16 encoding.');
+        }
+        [$height, $width] = $arrayInfo['dimensions'];
+        [, $chunkWidth] = $arrayInfo['chunks'];
+        if ($height !== 1 || $chunkWidth < 1) {
+            throw new RuntimeException('The ECMWF field is not in the expected flattened Gaussian-grid layout.');
+        }
+        $requested = [];
+        foreach ($indices as $index) {
+            $index = (int)$index;
+            if ($index < 0 || $index >= $width) throw new RuntimeException('A requested ECMWF grid index is outside the array.');
+            $requested[$index] = true;
+        }
+        if ($requested === []) return [];
+        $byChunk = [];
+        foreach (array_keys($requested) as $index) {
+            $byChunk[intdiv($index, $chunkWidth)][] = $index;
+        }
+        ksort($byChunk, SORT_NUMERIC);
+        $decoded = [];
+        foreach ($byChunk as $chunkIndex => $chunkIndices) {
+            if (!isset($arrayInfo['lut'][$chunkIndex + 1])) {
+                throw new RuntimeException('The ECMWF field lookup table is missing a requested data chunk.');
+            }
+            $chunkStart = $chunkIndex * $chunkWidth;
+            $chunkCount = min($chunkWidth, $width - $chunkStart);
+            $byteStart = $arrayInfo['lut'][$chunkIndex];
+            $byteEnd = $arrayInfo['lut'][$chunkIndex + 1];
+            if ($byteEnd <= $byteStart) throw new RuntimeException('An ECMWF data chunk has no compressed payload.');
+            $integers = self::decodePforDelta16($this->readAt($byteStart, $byteEnd - $byteStart), $chunkCount);
+            foreach ($chunkIndices as $index) {
+                $raw = $integers[$index - $chunkStart];
+                $decoded[$index] = ($raw * (float)$arrayInfo['scale_factor']) + (float)$arrayInfo['add_offset'];
+            }
+        }
+        return $decoded;
+    }
+
+    /** Return real Gaussian-grid cells within a great-circle radius of a point. */
+    public static function gaussianNeighborhood(int $pointCount, float $latitude, float $longitude, float $radiusKm): array
+    {
+        $lines = match ($pointCount) {
+            6599680 => 1280,
+            421120 => 320,
+            default => throw new RuntimeException('Unsupported ECMWF Gaussian grid point count: ' . $pointCount),
+        };
+        if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180 ||
+            $radiusKm <= 0 || $radiusKm > 1000) {
+            throw new InvalidArgumentException('Invalid ECMWF Gaussian-grid neighbourhood coordinates or radius.');
+        }
+        $dy = 180.0 / (2.0 * $lines + 0.5);
+        $latMargin = $radiusKm / 110.5 + $dy;
+        $cosLat = max(0.05, cos(deg2rad($latitude)));
+        $lonMargin = min(180.0, $radiusKm / (111.0 * $cosLat) + 0.2);
+        $prefix = 0;
+        $cells = [];
+        for ($y = 0; $y < 2 * $lines; $y++) {
+            $nx = $y < $lines ? 20 + 4 * $y : (2 * $lines - $y - 1) * 4 + 20;
+            $cellLatitude = ($lines - $y - 1) * $dy + $dy / 2.0;
+            if (abs($cellLatitude - $latitude) <= $latMargin) {
+                $step = 360.0 / $nx;
+                $centreX = (int)round($longitude / $step, 0, PHP_ROUND_HALF_EVEN);
+                $columnRadius = (int)ceil($lonMargin / $step) + 1;
+                for ($dx = -$columnRadius; $dx <= $columnRadius; $dx++) {
+                    $x = (($centreX + $dx) % $nx + $nx) % $nx;
+                    $cellLongitude = $x * $step;
+                    if ($cellLongitude > 180.0) $cellLongitude -= 360.0;
+                    $lat1 = deg2rad($latitude);
+                    $lat2 = deg2rad($cellLatitude);
+                    $deltaLat = $lat2 - $lat1;
+                    $deltaLon = deg2rad($cellLongitude - $longitude);
+                    $a = sin($deltaLat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($deltaLon / 2) ** 2;
+                    $distance = 6371.0 * 2.0 * asin(min(1.0, sqrt($a)));
+                    if ($distance <= $radiusKm) {
+                        $index = $prefix + $x;
+                        $cells[$index] = [
+                            'index' => $index,
+                            'latitude' => $cellLatitude,
+                            'longitude' => $cellLongitude,
+                            'distance_km' => $distance,
+                        ];
+                    }
+                }
+            }
+            $prefix += $nx;
+        }
+        ksort($cells, SORT_NUMERIC);
+        return array_values($cells);
+    }
+
     /** Decode Open-Meteo's 16-bit PFor-zigzag stream used by ECMWF float arrays. */
     public static function decodePforDelta16(string $input, int $count): array
     {
