@@ -16,13 +16,18 @@ try {
     migrateDatabase($pdo);
 
     $service = new WeatherMapRainfallNowcastService($pdo, $config);
-    $result = $service->refreshIfDue(0, true);
+    // East London is used only for this diagnostic run; do not persist its result
+    // or alter GaugeIQ's configured location/dashboard outlook.
+    $testLocation = ['latitude' => -33.0153, 'longitude' => 27.9116];
+    $result = $service->refreshIfDue(0, true, $testLocation, false);
     $payload = is_array($result['payload'] ?? null) ? $result['payload'] : [];
     $encoding = is_array($payload['encoding'] ?? null) ? $payload['encoding'] : [];
 
     printf(
-        "ECMWF rainfall diagnostic: %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\n",
+        "ECMWF rainfall diagnostic (East London): %s [lat=%.4f, lon=%.4f, frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\n",
         (string)($result['message'] ?? 'No result message'),
+        (float)$testLocation['latitude'],
+        (float)$testLocation['longitude'],
         count($payload['frames'] ?? []),
         (int)($payload['grid_cells_sampled'] ?? 0),
         (int)($encoding['data_type'] ?? -1),
