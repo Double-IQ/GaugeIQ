@@ -127,6 +127,101 @@ final class WeatherMapCacheService
         return true;
     }
 
+    /**
+     * Prefetch regional .om chunks through the public range proxy so the
+     * browser and scheduled job share the same on-disk byte-range cache.
+     *
+     * @return array{skipped:bool,frames:int,output?:string}
+     */
+    public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
+    {
+        $stmt = $this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $stmt->execute(['weather_map_prefetch_last_success_at']);
+        $last = $stmt->fetchColumn();
+        $lastTimestamp = is_string($last) ? strtotime($last) : false;
+        if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds) {
+            return ['skipped' => true, 'frames' => 12];
+        }
+
+        try {
+            $framesQuery = $this->pdo->query(
+                'SELECT slot_id, frame_type, frame_time, file_url
+                 FROM gaugeiq_weather_map_frames ORDER BY slot_id ASC'
+            );
+            $frames = [];
+            foreach ($framesQuery->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $frames[] = [
+                    'slot' => (int)$row['slot_id'],
+                    'type' => (string)$row['frame_type'],
+                    'time' => (string)$row['frame_time'],
+                    'url' => (string)$row['file_url'],
+                ];
+            }
+            if (count($frames) !== 12) {
+                throw new RuntimeException('Regional prefetch requires all 12 scheduled ECMWF frames.');
+            }
+
+            $baseUrl = rtrim((string)($this->config['app']['base_url'] ?? ''), '/');
+            if (!str_starts_with($baseUrl, 'https://')) {
+                throw new RuntimeException('A public HTTPS app.base_url is required for regional weather-map prefetch.');
+            }
+
+            $python = trim((string)($this->config['weather_map_cache']['python_binary'] ?? 'python3'));
+            if ($python === '') {
+                throw new RuntimeException('The weather-map Python executable is not configured.');
+            }
+            $script = dirname(__DIR__) . '/cron/prefetch-weather-map.py';
+            if (!is_file($script)) {
+                throw new RuntimeException('The regional weather-map prefetch script is missing.');
+            }
+            if (!function_exists('proc_open')) {
+                throw new RuntimeException('PHP proc_open is required to run the regional weather-map prefetcher.');
+            }
+
+            $process = proc_open(
+                [$python, $script, '--proxy-base-url', $baseUrl],
+                [
+                    0 => ['pipe', 'r'],
+                    1 => ['pipe', 'w'],
+                    2 => ['pipe', 'w'],
+                ],
+                $pipes,
+                dirname(__DIR__)
+            );
+            if (!is_resource($process)) {
+                throw new RuntimeException('Unable to start the regional weather-map prefetch process.');
+            }
+
+            $payload = json_encode($frames, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            $written = fwrite($pipes[0], $payload);
+            fclose($pipes[0]);
+            $stdout = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[2]);
+            $exitCode = proc_close($process);
+
+            if ($written !== strlen($payload) || $exitCode !== 0) {
+                $detail = trim((string)$stderr);
+                if ($detail === '') {
+                    $detail = trim((string)$stdout);
+                }
+                throw new RuntimeException(
+                    'Regional ECMWF prefetch process failed' .
+                    ($detail !== '' ? ': ' . $detail : ' (exit code ' . $exitCode . ').')
+                );
+            }
+
+            $this->saveSetting('weather_map_prefetch_last_success_at', gmdate('c'));
+            $this->saveSetting('weather_map_prefetch_last_error', '');
+            $this->saveSetting('weather_map_prefetch_last_output', trim((string)$stdout));
+            return ['skipped' => false, 'frames' => count($frames), 'output' => trim((string)$stdout)];
+        } catch (Throwable $error) {
+            $this->saveSetting('weather_map_prefetch_last_error', $error->getMessage());
+            throw $error;
+        }
+    }
+
     public function isScheduledFile(string $url): bool
     {
         $parts = parse_url($url);
