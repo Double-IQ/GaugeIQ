@@ -380,13 +380,17 @@ protocolOptions.fileReaderConfig = {
                     clearAnimation();
                     setStatus('The first weather frame could not load.' + detail);
                 }, 120000);
-                const firstFrameLoaded = () => {
-                    const firstFrame = animationFrames[0];
-                    return !!firstFrame && firstFrame.sourceIds.every(id => map.isSourceLoaded(id));
-                };
+                // Wait for all six hourly frames, not just the first one.
+                // The six low-opacity raster layers above keep their sources active
+                // so MapLibre can request and cache their initial visible tiles.
+                const allFramesLoaded = () => animationFrames.length === 6 &&
+                    animationFrames.every(frame =>
+                        frame.sourceIds.length > 0 &&
+                        frame.sourceIds.every(id => map.isSourceLoaded(id))
+                    );
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!firstFrameLoaded()) return;
+                    if (!allFramesLoaded()) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
@@ -632,7 +636,7 @@ protocolOptions.fileReaderConfig = {
                 attribution.classList.add('maplibregl-compact');
                 attribution.classList.remove('maplibregl-compact-show');
             }
-            // Diagnostic isolation: use MapLibre's default flat projection while testing weather overlays.
+            map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             showWeatherLayer(layerSelect.value);
         });
         map.on('error', event => {
