@@ -67,6 +67,9 @@ function checkPfor16Fixture(string $name, string $hex, array $expected): void
 $zigzagTail = [];
 for ($i = 0; $i < 9; $i++) $zigzagTail[] = 10 + ($i % 2 === 1 ? intdiv($i + 1, 2) : -intdiv($i, 2));
 checkPfor16Fixture('ECMWF 16-bit zigzag tail', '0a043276bafe', $zigzagTail);
+checkPfor16Fixture('ECMWF 16-bit zero blocks', '000000', array_fill(0, 137, 0));
+checkPfor16Fixture('ECMWF 16-bit signed seed', 'c0ffff', [-1]);
+
 
 $zigzagBlocks = [];
 for ($i = 0; $i < 137; $i++) $zigzagBlocks[] = $i % 8;
