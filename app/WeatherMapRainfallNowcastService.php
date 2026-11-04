@@ -143,9 +143,10 @@ final class WeatherMapRainfallNowcastService
             $frameResults,
             static fn(array $result): bool => is_numeric($result['nearest_rain_km'] ?? null)
         ));
-        $movementTrend = 'steady';
+        $movementTrend = 'not_assessed';
         $distanceChangeKm = null;
         if (count($wetDistanceFrames) >= 2) {
+            $movementTrend = 'steady';
             $distanceChangeKm = (float)$wetDistanceFrames[count($wetDistanceFrames) - 1]['nearest_rain_km']
                 - (float)$wetDistanceFrames[0]['nearest_rain_km'];
             if ($distanceChangeKm <= -10.0) {
