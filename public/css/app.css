@@ -6858,3 +6858,10 @@ body.gaugeiq-menu-open{overflow:hidden}
   background-color:rgba(53,196,235,.13)!important;
 }
 
+
+
+/* Keep the top-card Trend status colours identical to the Trend card in each theme. */
+:root[data-theme="dark"] .temperature-conditions-inline .conditions-status.improving{color:#8fdaa9;border-color:#8fdaa9}
+:root[data-theme="dark"] .temperature-conditions-inline .conditions-status.worsening{color:#ffc184;border-color:#ffc184}
+:root[data-theme="light"] .temperature-conditions-inline .conditions-status.improving{color:#16834f;border-color:#16834f}
+:root[data-theme="light"] .temperature-conditions-inline .conditions-status.worsening{color:#c56b25;border-color:#c56b25}
