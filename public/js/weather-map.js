@@ -239,8 +239,12 @@ protocolOptions.fileReaderConfig = {
             animationToggle.setAttribute('aria-pressed', 'false');
         }
 
+        function selectedAnimationFrames() {
+            return animationFrames.filter(frame => frame.type === timeRangeSelect.value);
+        }
+
         function updateFrameLabel(index) {
-            const frame = animationFrames[index];
+            const frame = selectedAnimationFrames()[index];
             if (!frame) return;
             const label = new Date(frame.time).toLocaleString(undefined, {
                 weekday: 'short',
@@ -251,23 +255,26 @@ protocolOptions.fileReaderConfig = {
         }
 
         function showFrame(index) {
+            const frame = selectedAnimationFrames()[index];
+            if (!frame) return;
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) {
-                    map.setPaintProperty(item.id, 'raster-opacity', item.frameIndex === index ? item.opacity : 0);
+                    map.setPaintProperty(item.id, 'raster-opacity', item.frameId === frame.id ? item.opacity : 0);
                 }
             });
             updateFrameLabel(index);
         }
 
         function runAnimation() {
-            if (!animationFrames.length || animationTimer !== null) return;
+            const frames = selectedAnimationFrames();
+            if (!frames.length || animationTimer !== null) return;
             showFrame(animationCurrentFrame);
             animationToggle.disabled = false;
             animationToggle.textContent = 'Pause';
             animationToggle.setAttribute('aria-pressed', 'true');
             animationTimer = setInterval(() => {
-                const nextFrame = (animationCurrentFrame + 1) % animationFrames.length;
-                const frame = animationFrames[nextFrame];
+                const nextFrame = (animationCurrentFrame + 1) % frames.length;
+                const frame = frames[nextFrame];
                 if (!frame || !frame.sourceIds.every(id => map.isSourceLoaded(id))) return;
                 animationCurrentFrame = nextFrame;
                 showFrame(animationCurrentFrame);
@@ -279,7 +286,7 @@ protocolOptions.fileReaderConfig = {
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
-            setStatus('Preparing six hourly weather frames…');
+            setStatus('Preparing 12 hourly weather frames (6 past + 6 forecast)…');
 
             try {
                 const metadataResponse = await fetch(
@@ -303,53 +310,53 @@ protocolOptions.fileReaderConfig = {
                     if (timestamp <= now) pastIndex = index;
                     if (futureIndex === -1 && timestamp >= now) futureIndex = index;
                 });
-                const currentIndex = timeRangeSelect.value === 'past'
-                    ? (pastIndex >= 0 ? pastIndex : 0)
-                    : (futureIndex >= 0 ? futureIndex : Math.max(0, pastIndex));
-
-                let frameSpecs = [];
-                if (timeRangeSelect.value === 'past') {
-                    const currentTime = parsedTimes[currentIndex];
-                    const firstFrameTime = currentTime - (5 * 60 * 60 * 1000);
-                    const previousRunTime = Math.floor((firstFrameTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)) * (6 * 60 * 60 * 1000) - (6 * 60 * 60 * 1000);
-                    const runDate = new Date(previousRunTime);
-                    const runFolder = [
-                        runDate.getUTCFullYear(),
-                        String(runDate.getUTCMonth() + 1).padStart(2, '0'),
-                        String(runDate.getUTCDate()).padStart(2, '0')
-                    ].join('/') + '/' + String(runDate.getUTCHours()).padStart(2, '0') + '00Z';
-
-                    frameSpecs = Array.from({ length: 6 }, (_, offset) => {
-                        const timestamp = firstFrameTime + (offset * 60 * 60 * 1000);
-                        const frameDate = new Date(timestamp);
-                        const timeToken = frameDate.toISOString().slice(0, 10) + 'T' +
-                            String(frameDate.getUTCHours()).padStart(2, '0') +
-                            String(frameDate.getUTCMinutes()).padStart(2, '0');
-                        return {
-                            time: timestamp,
-                            directFile: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' +
-                                runFolder + '/' + timeToken + '.om'
-                        };
-                    });
-                } else {
-                    if (currentIndex + 5 >= validTimes.length) {
-                        throw new Error('The next six hourly forecast frames are not yet available in the latest ECMWF run.');
-                    }
-                    frameSpecs = Array.from({ length: 6 }, (_, offset) => ({
-                        time: parsedTimes[currentIndex + offset],
-                        validIndex: currentIndex + offset
-                    }));
+                if (pastIndex < 5 || futureIndex < 0 || futureIndex + 5 >= parsedTimes.length) {
+                    throw new Error('The latest ECMWF run cannot provide six past and six future hourly frames.');
                 }
+
+                const currentPastTime = parsedTimes[pastIndex];
+                const firstPastTime = currentPastTime - (5 * 60 * 60 * 1000);
+                const previousRunTime = Math.floor(
+                    (firstPastTime - 60 * 60 * 1000) / (6 * 60 * 60 * 1000)
+                ) * (6 * 60 * 60 * 1000) - (6 * 60 * 60 * 1000);
+                const runDate = new Date(previousRunTime);
+                const runFolder = [
+                    runDate.getUTCFullYear(),
+                    String(runDate.getUTCMonth() + 1).padStart(2, '0'),
+                    String(runDate.getUTCDate()).padStart(2, '0')
+                ].join('/') + '/' + String(runDate.getUTCHours()).padStart(2, '0') + '00Z';
+
+                const pastFrames = Array.from({ length: 6 }, (_, offset) => {
+                    const timestamp = firstPastTime + (offset * 60 * 60 * 1000);
+                    const frameDate = new Date(timestamp);
+                    const timeToken = frameDate.toISOString().slice(0, 10) + 'T' +
+                        String(frameDate.getUTCHours()).padStart(2, '0') +
+                        String(frameDate.getUTCMinutes()).padStart(2, '0');
+                    return {
+                        id: 'past-' + offset,
+                        type: 'past',
+                        time: timestamp,
+                        url: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/' +
+                            runFolder + '/' + timeToken + '.om?delta_time_hours=1'
+                    };
+                });
+
+                const futureFrames = Array.from({ length: 6 }, (_, offset) => ({
+                    id: 'future-' + offset,
+                    type: 'future',
+                    time: parsedTimes[futureIndex + offset],
+                    url: 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
+                        (futureIndex + offset)
+                }));
+
                 const variables = weatherVariables(layerSelect.value);
-                frameSpecs.forEach((frameSpec, framePosition) => {
-                    const frame = { time: frameSpec.time, layerIds: [], sourceIds: [] };
+                [...pastFrames, ...futureFrames].forEach(frame => {
+                    frame.layerIds = [];
+                    frame.sourceIds = [];
                     variables.forEach((item, variableIndex) => {
-                        const sourceId = 'gaugeiq-animation-source-' + token + '-' + framePosition + '-' + variableIndex;
-                        const layerId = 'gaugeiq-animation-layer-' + token + '-' + framePosition + '-' + variableIndex;
-                        const dataUrl = frameSpec.directFile
-                            ? frameSpec.directFile + '?variable=' + encodeURIComponent(item.variable) + '&delta_time_hours=1'
-                            : 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json?time_step=valid_times_' +
-                                frameSpec.validIndex + '&variable=' + encodeURIComponent(item.variable);
+                        const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-' + variableIndex;
+                        const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-' + variableIndex;
+                        const dataUrl = frame.url + '&variable=' + encodeURIComponent(item.variable);
 
                         map.addSource(sourceId, {
                             type: 'raster',
@@ -365,7 +372,7 @@ protocolOptions.fileReaderConfig = {
 
                         animationSources.push(sourceId);
                         frame.sourceIds.push(sourceId);
-                        animationLayers.push({ id: layerId, frameIndex: framePosition, opacity: item.opacity });
+                        animationLayers.push({ id: layerId, frameId: frame.id, opacity: item.opacity });
                         frame.layerIds.push(layerId);
                     });
                     animationFrames.push(frame);
@@ -378,12 +385,10 @@ protocolOptions.fileReaderConfig = {
                     if (token !== animationToken) return;
                     const detail = animationLoadError ? ' ' + animationLoadError : '';
                     clearAnimation();
-                    setStatus('The first weather frame could not load.' + detail);
+                    setStatus('The 12 hourly weather frames could not be preloaded.' + detail);
                 }, 120000);
-                // Wait for all six hourly frames, not just the first one.
-                // The six low-opacity raster layers above keep their sources active
-                // so MapLibre can request and cache their initial visible tiles.
-                const allFramesLoaded = () => animationFrames.length === 6 &&
+
+                const allFramesLoaded = () => animationFrames.length === 12 &&
                     animationFrames.every(frame =>
                         frame.sourceIds.length > 0 &&
                         frame.sourceIds.every(id => map.isSourceLoaded(id))
@@ -405,8 +410,6 @@ protocolOptions.fileReaderConfig = {
                     setStatus('');
                     runAnimation();
                 };
-                // Poll source readiness directly. An 'idle' event is not guaranteed
-                // while other map requests remain active, so it must not gate startup.
                 waitForInitialFrame();
                 animationLoadPoll = setInterval(waitForInitialFrame, 500);
             } catch (error) {
