@@ -281,7 +281,7 @@ protocolOptions.fileReaderConfig = {
             }, 1200);
         }
 
-        async function prepareAnimation() {
+        async function prepareAnimation(autoStart = true) {
             clearAnimation();
             const token = animationToken;
             animationPreparing = true;
@@ -378,7 +378,7 @@ protocolOptions.fileReaderConfig = {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
                     setStatus('');
-                    runAnimation();
+                    if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
                 animationLoadPoll = setInterval(waitForInitialFrame, 500);
@@ -591,6 +591,9 @@ protocolOptions.fileReaderConfig = {
             }
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             showWeatherLayer(layerSelect.value);
+            // Warm the existing browser block cache before the user presses Play.
+            // The 12 regional frame sources remain loaded but hidden until playback.
+            prepareAnimation(false);
         });
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
@@ -601,7 +604,6 @@ protocolOptions.fileReaderConfig = {
             setStatus('Map error: ' + message);
         });
         timeRangeSelect.addEventListener('change', () => {
-            clearAnimation();
             frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
             setStatus('');
         });
@@ -616,7 +618,11 @@ protocolOptions.fileReaderConfig = {
         mapInstance = map;
         window.GaugeIQWeatherMapResize = () => { if (mapInstance) mapInstance.resize(); };
         layerSelect.addEventListener('change', () => {
-            if (mapInstance && mapInstance.isStyleLoaded()) showWeatherLayer(layerSelect.value);
+            if (mapInstance && mapInstance.isStyleLoaded()) {
+                clearAnimation();
+                showWeatherLayer(layerSelect.value);
+                prepareAnimation(false);
+            }
         });
         }
     
