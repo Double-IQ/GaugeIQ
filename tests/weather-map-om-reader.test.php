@@ -178,4 +178,21 @@ foreach ([6599680 => [2940270, 5771535], 421120 => [187842, 367698]] as $count =
     }
     echo "PASS Gaussian regional index mapping for $count points\n";
 }
+$nearbyO1280 = WeatherMapOmReader::gaussianNeighborhood(6599680, -32.986992, 27.932365, 50.0);
+if ($nearbyO1280 === [] || count($nearbyO1280) < 10) {
+    throw new RuntimeException('O1280 Gaussian neighbourhood sampling returned too few cells.');
+}
+foreach ($nearbyO1280 as $cell) {
+    if ($cell['index'] < 0 || $cell['index'] >= 6599680 || $cell['distance_km'] > 50.0) {
+        throw new RuntimeException('O1280 Gaussian neighbourhood contains an invalid grid cell.');
+    }
+}
+echo "PASS O1280 local Gaussian-grid sampling (" . count($nearbyO1280) . " cells)\\n";
+
+$nearbyO320 = WeatherMapOmReader::gaussianNeighborhood(421120, -32.986992, 27.932365, 50.0);
+if ($nearbyO320 === [] || count($nearbyO320) < 2) {
+    throw new RuntimeException('O320 Gaussian neighbourhood sampling returned too few cells.');
+}
+echo "PASS O320 local Gaussian-grid sampling (" . count($nearbyO320) . " cells)\\n";
+
 echo "All Open-Meteo LUT reader tests passed.\n";
