@@ -314,6 +314,22 @@ if ($current && !empty($current['observed_at'])) {
         ? max(0.0, (float)$current['rainfall_mm'])
         : null;
 
+    $rainfallNowcast = null;
+    try {
+        $nowcastStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $nowcastStmt->execute(['weather_map_rainfall_nowcast']);
+        $nowcastJson = $nowcastStmt->fetchColumn();
+        if (is_string($nowcastJson) && $nowcastJson !== '') {
+            $decodedNowcast = json_decode($nowcastJson, true);
+            $updatedTimestamp = is_array($decodedNowcast) ? strtotime((string)($decodedNowcast['updated_at'] ?? '')) : false;
+            if (is_array($decodedNowcast) && $updatedTimestamp !== false && $updatedTimestamp >= time() - 3 * 3600) {
+                $rainfallNowcast = $decodedNowcast;
+            }
+        }
+    } catch (Throwable $nowcastReadError) {
+        $rainfallNowcast = null;
+    }
+
     $forecastCondition = static function (?int $code, bool $isDay = true): array {
         $clearIcon = $isDay ? 'clear-day' : 'clear-night';
         $mostlyClearIcon = $isDay ? 'clear-day' : 'clear-night';
@@ -445,6 +461,49 @@ if ($current && !empty($current['observed_at'])) {
     }
     ?>
 
+
+    <?php if (is_array($rainfallNowcast)): ?>
+        <?php
+        $nowcastStatus = (string)($rainfallNowcast['status'] ?? 'clear');
+        $nowcastSummary = (string)($rainfallNowcast['summary'] ?? 'ECMWF rainfall outlook is unavailable.');
+        $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? $rainfallNowcast['frames'] : [];
+        $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
+        ?>
+        <article class="card rainfall-nowcast-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
+            <div class="rainfall-nowcast-heading">
+                <div>
+                    <p class="label">ECMWF IFS · Next two hours</p>
+                    <h2>Rainfall outlook</h2>
+                </div>
+                <span class="rainfall-nowcast-source">Model data</span>
+            </div>
+            <p class="rainfall-nowcast-summary"><?= htmlspecialchars($nowcastSummary, ENT_QUOTES) ?></p>
+            <?php if ($nowcastFrames !== []): ?>
+                <div class="rainfall-nowcast-frames">
+                    <?php foreach ($nowcastFrames as $nowcastFrame):
+                        if (!is_array($nowcastFrame)) continue;
+                        $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
+                        if ($frameTimestamp === false) continue;
+                        $localAmount = is_numeric($nowcastFrame['local_precipitation_mm'] ?? null)
+                            ? (float)$nowcastFrame['local_precipitation_mm'] : 0.0;
+                        $nearestDistance = is_numeric($nowcastFrame['nearest_rain_km'] ?? null)
+                            ? number_format((float)$nowcastFrame['nearest_rain_km'], 0) . ' km away'
+                            : 'No rain within 100 km';
+                    ?>
+                        <div class="rainfall-nowcast-frame">
+                            <span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span>
+                            <strong><?= number_format($localAmount, 1) ?> mm</strong>
+                            <small><?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <p class="rainfall-nowcast-footnote">
+                <?= $nowcastUpdatedAt !== false ? 'Updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
+                Forecast model, not live radar
+            </p>
+        </article>
+    <?php endif; ?>
 
     <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
         <div class="section-heading forecast-preview-heading" style="text-align: left; justify-content: flex-start;">
