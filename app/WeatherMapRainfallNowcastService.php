@@ -127,20 +127,22 @@ final class WeatherMapRainfallNowcastService
         $status = 'clear';
         $summary = 'No ECMWF precipitation signal is forecast within 100 km over the next two hours.';
         $firstRain = null;
+        $statusPriority = ['clear' => 0, 'rain_in_area' => 1, 'rain_nearby' => 2, 'rain_near_location' => 3];
         foreach ($frameResults as $result) {
+            $frameStatus = 'clear';
             if ($result['local_precipitation_mm'] >= self::WET_THRESHOLD_MM ||
                 $result['wet_cells_within_15km'] > 0) {
-                $status = 'rain_near_location';
+                $frameStatus = 'rain_near_location';
+            } elseif ($result['wet_cells_within_50km'] > 0) {
+                $frameStatus = 'rain_nearby';
+            } elseif ($result['wet_cells_within_100km'] > 0) {
+                $frameStatus = 'rain_in_area';
+            }
+            if ($statusPriority[$frameStatus] > $statusPriority[$status]) {
+                $status = $frameStatus;
                 $firstRain = $result;
-                break;
             }
-            if ($result['wet_cells_within_50km'] > 0) {
-                $status = 'rain_nearby';
-                $firstRain ??= $result;
-            } elseif ($result['wet_cells_within_100km'] > 0 && $status === 'clear') {
-                $status = 'rain_in_area';
-                $firstRain ??= $result;
-            }
+            if ($status === 'rain_near_location') break;
         }
 
         if ($firstRain !== null) {
