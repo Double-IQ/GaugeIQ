@@ -6889,3 +6889,24 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#16834f!important;
   border-color:#16834f!important;
 }
+
+/* WVI gauge fill is blue in both themes and every score/change state. */
+:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-segment.active,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-segment.active {
+  background: #35c4eb !important;
+  box-shadow: none !important;
+}
+:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value {
+  stroke: #35c4eb !important;
+  filter: drop-shadow(0 0 2px rgba(53,196,235,.25)) !important;
+}
+:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle,
+:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-endpoint,
+:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-pivot,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-endpoint,
+:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-pivot {
+  fill: #35c4eb !important;
+}
+
