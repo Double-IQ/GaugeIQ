@@ -131,7 +131,7 @@ final class WeatherMapCacheService
      * Prefetch regional .om chunks through the public range proxy so the
      * browser and scheduled job share the same on-disk byte-range cache.
      *
-     * @return array{skipped:bool,frames:int,output?:string}
+     * @return array{skipped:bool,frames:int,blocks?:int,output?:string}
      */
     public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
     {
