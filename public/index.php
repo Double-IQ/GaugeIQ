@@ -1159,7 +1159,6 @@ if ($current && !empty($current['observed_at'])) {
         </div>
     </dialog>
     <p id="status" class="status"></p>
-    <p id="notificationEnabledNote" class="notification-enabled-note" hidden>GaugeIQ notifications are enabled for this device.</p>
 </main>
 <?php
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
