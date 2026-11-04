@@ -16,18 +16,21 @@ $pdo = $db->pdo();
 migrateDatabase($pdo);
 $service = new PressureService($config, $pdo);
 
-// Refresh the twelve rolling ECMWF map-frame references hourly. This is
-// intentionally non-fatal: a map metadata outage must not interrupt monitoring.
+// Refresh the twelve rolling ECMWF map-frame references and prefetch their
+// regional data chunks hourly. Both operations are non-fatal to monitoring.
 try {
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
     if ($weatherMapCache->refreshScheduleIfDue(3600)) {
-        echo "Weather-map frame schedule refreshed (6 past + 6 future); browser cache preloads all 12 frames when animation is prepared.\n";
+        echo "Weather-map frame schedule refreshed (6 past + 6 future).\n";
+    }
+    $prefetchResult = $weatherMapCache->prefetchRegionalFramesIfDue(3600);
+    if (!$prefetchResult['skipped']) {
+        echo "Regional weather-map prefetch completed for 12 frames (25W-60E, 45S-5N).\n";
     }
 } catch (Throwable $weatherMapError) {
-    error_log('GaugeIQ weather-map schedule refresh failed: ' . $weatherMapError->getMessage());
-    fwrite(STDERR, "Weather-map schedule refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\n");
+    error_log('GaugeIQ regional weather-map refresh failed: ' . $weatherMapError->getMessage());
+    fwrite(STDERR, "Weather-map refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\n");
 }
-
 function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
 {
     $exists = $pdo->prepare('SELECT 1 FROM gaugeiq_settings WHERE `key` = ?');
