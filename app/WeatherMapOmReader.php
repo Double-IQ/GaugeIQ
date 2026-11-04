@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Bounds-checked reader for Open-Meteo .om v3 metadata and 64-bit PFor-delta
- * lookup tables. It never decodes weather field values.
+ * lookup tables. It exposes array encoding metadata for field decoders.
  */
 final class WeatherMapOmReader
 {
@@ -67,6 +67,10 @@ final class WeatherMapOmReader
         }
         return [
             'name' => $name,
+            'data_type' => $node['data_type'],
+            'compression_type' => $node['compression_type'],
+            'scale_factor' => $node['scale_factor'],
+            'add_offset' => $node['add_offset'],
             'dimensions' => $dimensions,
             'chunks' => $chunks,
             'chunk_count' => $chunkCount,
@@ -357,6 +361,9 @@ final class WeatherMapOmReader
             'chunks' => [],
             'lut_offset' => 0,
             'lut_size' => 0,
+            'compression_type' => 0,
+            'scale_factor' => 1.0,
+            'add_offset' => 0.0,
             'string_value' => null,
         ];
         if ($isArray) {
@@ -367,6 +374,12 @@ final class WeatherMapOmReader
             $lutSize = self::unpackUInt64(substr($bytes, 8, 8));
             $lutOffset = self::unpackUInt64(substr($bytes, 16, 8));
             $dimensionCount = self::unpackUInt64(substr($bytes, $dimensionCountOffset, 8));
+            $node['compression_type'] = ord($bytes[1]);
+            $node['scale_factor'] = unpack('gvalue', substr($bytes, 32, 4))['value'];
+            $node['add_offset'] = unpack('gvalue', substr($bytes, 36, 4))['value'];
+            if (!is_finite($node['scale_factor']) || $node['scale_factor'] == 0.0 || !is_finite($node['add_offset'])) {
+                throw new RuntimeException('The .om array has invalid value scaling metadata.');
+            }
             if ($dimensionCount !== 2) {
                 throw new RuntimeException('Only two-dimensional ECMWF .om arrays are supported.');
             }
