@@ -25,7 +25,7 @@ try {
     }
     $prefetchResult = $weatherMapCache->prefetchRegionalFramesIfDue(3600);
     if (!$prefetchResult['skipped']) {
-        echo "Regional weather-map prefetch completed for 12 frames (25W-60E, 45S-5N).\n";
+        echo $prefetchResult['output'] . "\n";
     }
 } catch (Throwable $weatherMapError) {
     error_log('GaugeIQ regional weather-map refresh failed: ' . $weatherMapError->getMessage());
