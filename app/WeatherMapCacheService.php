@@ -97,6 +97,27 @@ final class WeatherMapCacheService
             ];
         }
 
+        $previousUrlQuery = $this->pdo->query('SELECT file_url FROM gaugeiq_weather_map_frames');
+        $previousUrls = [];
+        foreach ($previousUrlQuery->fetchAll(PDO::FETCH_COLUMN) as $previousUrl) {
+            $previousUrls[(string)$previousUrl] = true;
+        }
+        $pendingQuery = $this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
+        $pendingValue = $pendingQuery->fetchColumn();
+        $pendingUrls = is_string($pendingValue) ? json_decode($pendingValue, true) : [];
+        if (!is_array($pendingUrls)) $pendingUrls = [];
+        $scheduledUrls = array_column($frames, 'file_url');
+        $scheduledUrlSet = array_fill_keys($scheduledUrls, true);
+        $newUrls = array_values(array_filter(
+            $scheduledUrls,
+            static fn(string $url): bool => !isset($previousUrls[$url])
+        ));
+        $pendingUrls = array_values(array_unique(array_filter(
+            array_merge($pendingUrls, $newUrls),
+            static fn($url): bool => is_string($url) && isset($scheduledUrlSet[$url])
+        )));
+
         $refreshedAt = gmdate('c');
         $this->pdo->beginTransaction();
         try {
@@ -116,11 +137,8 @@ final class WeatherMapCacheService
             }
             $this->saveSetting('weather_map_schedule_last_success_at', $refreshedAt);
             $this->saveSetting('weather_map_schedule_last_error', '');
-            // A newly published 12-frame schedule changes the upstream file URLs.
-            // Invalidate the prefetch timestamp so the same cron run immediately
-            // fills regional cache blocks for the new frames instead of skipping
-            // because the previous schedule was prefetched less than an hour ago.
-            $this->saveSetting('weather_map_prefetch_last_success_at', '');
+            // Persist only newly introduced URLs; failed prefetches remain queued for retry.
+            $this->saveSetting('weather_map_prefetch_pending_urls', json_encode($pendingUrls, JSON_UNESCAPED_SLASHES));
             $this->pdo->commit();
         } catch (Throwable $error) {
             if ($this->pdo->inTransaction()) {
@@ -140,12 +158,14 @@ final class WeatherMapCacheService
      */
     public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
     {
-        $stmt = $this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
-        $stmt->execute(['weather_map_prefetch_last_success_at']);
-        $last = $stmt->fetchColumn();
-        $lastTimestamp = is_string($last) ? strtotime($last) : false;
-        if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds) {
-            return ['skipped' => true, 'frames' => 12];
+        $pendingQuery = $this->pdo->prepare(
+            "SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1"
+        );
+        $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
+        $pendingValue = $pendingQuery->fetchColumn();
+        $pendingUrls = is_string($pendingValue) ? json_decode($pendingValue, true) : [];
+        if (!is_array($pendingUrls) || $pendingUrls === []) {
+            return ['skipped' => true, 'frames' => 0, 'blocks' => 0, 'output' => 'No new ECMWF frames require prefetch.'];
         }
 
         try {
@@ -154,16 +174,20 @@ final class WeatherMapCacheService
                  FROM gaugeiq_weather_map_frames ORDER BY slot_id ASC'
             );
             $frames = [];
+            $pendingSet = array_fill_keys(array_filter($pendingUrls, 'is_string'), true);
             foreach ($framesQuery->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $url = (string)$row['file_url'];
+                if (!isset($pendingSet[$url])) continue;
                 $frames[] = [
                     'slot' => (int)$row['slot_id'],
                     'type' => (string)$row['frame_type'],
                     'time' => (string)$row['frame_time'],
-                    'url' => (string)$row['file_url'],
+                    'url' => $url,
                 ];
             }
-            if (count($frames) !== 12) {
-                throw new RuntimeException('Regional prefetch requires all 12 scheduled ECMWF frames.');
+            if ($frames === []) {
+                $this->saveSetting('weather_map_prefetch_pending_urls', '[]');
+                return ['skipped' => true, 'frames' => 0, 'blocks' => 0, 'output' => 'No new scheduled ECMWF frames require prefetch.'];
             }
 
             $baseUrl = rtrim((string)($this->config['app']['base_url'] ?? ''), '/');
@@ -176,6 +200,12 @@ final class WeatherMapCacheService
             $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency);
             $result = $prefetcher->prefetch($frames);
 
+            $completedUrls = array_fill_keys(array_column($frames, 'url'), true);
+            $remainingUrls = array_values(array_filter(
+                $pendingUrls,
+                static fn($url): bool => is_string($url) && !isset($completedUrls[$url])
+            ));
+            $this->saveSetting('weather_map_prefetch_pending_urls', json_encode($remainingUrls, JSON_UNESCAPED_SLASHES));
             $this->saveSetting('weather_map_prefetch_last_success_at', gmdate('c'));
             $this->saveSetting('weather_map_prefetch_last_error', '');
             $this->saveSetting('weather_map_prefetch_last_output', $result['output']);
