@@ -275,7 +275,7 @@ protocolOptions.fileReaderConfig = {
             animationTimer = setInterval(() => {
                 const nextFrame = (animationCurrentFrame + 1) % frames.length;
                 const frame = frames[nextFrame];
-                if (!frame || !frame.sourceIds.every(id => map.isSourceLoaded(id))) return;
+                if (!frame || !frame.sourceIds.length || !frame.sourceIds.every(id => map.isSourceLoaded(id))) return;
                 animationCurrentFrame = nextFrame;
                 showFrame(animationCurrentFrame);
             }, 1200);
@@ -336,9 +336,13 @@ protocolOptions.fileReaderConfig = {
                 });
 
                 const variables = weatherVariables(layerSelect.value);
-                [...pastFrames, ...futureFrames].forEach(frame => {
-                    frame.layerIds = [];
-                    frame.sourceIds = [];
+                animationFrames = [...pastFrames, ...futureFrames].map(frame => ({
+                    ...frame,
+                    layerIds: [],
+                    sourceIds: []
+                }));
+                const addFrameSources = frame => {
+                    if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-' + variableIndex;
@@ -363,13 +367,13 @@ protocolOptions.fileReaderConfig = {
                         animationLayers.push({ id: layerId, frameId: frame.id, opacity: item.opacity });
                         frame.layerIds.push(layerId);
                     });
-                    animationFrames.push(frame);
-                });
+                };
 
                 animationPreparing = false;
                 animationCurrentFrame = 0;
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[0];
+                addFrameSources(initialFrame());
                 const isFrameLoaded = frame => Boolean(
                     frame &&
                     frame.sourceIds.length > 0 &&
@@ -406,6 +410,11 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(0);
+                    // Prioritise the first visible frame. Only after it is ready
+                    // do the remaining eleven frames begin fetching in parallel.
+                    animationFrames.forEach(frame => {
+                        if (frame.id !== initialFrame().id) addFrameSources(frame);
+                    });
                     if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
