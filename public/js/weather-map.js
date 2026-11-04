@@ -155,14 +155,6 @@ protocolOptions.fileReaderConfig = {
         let mapInstance = null;
         function createMap() {
         if (mapInstance) { mapInstance.resize(); return; }
-        const attributionHiddenKey = 'gaugeiq-map-attribution-hidden-v1';
-        let attributionPermanentlyHidden = false;
-        try {
-            attributionPermanentlyHidden = localStorage.getItem(attributionHiddenKey) === 'true';
-        } catch (error) {
-            console.warn('Could not read the map attribution preference.', error);
-        }
-
         const map = new maplibregl.Map({
             container: 'map',
             style: appearance.mapStyle === 'light'
@@ -174,10 +166,6 @@ protocolOptions.fileReaderConfig = {
             cooperativeGestures: true,
             attributionControl: false
         });
-        const attributionControl = new maplibregl.AttributionControl({ compact: true });
-        if (!attributionPermanentlyHidden) {
-            map.addControl(attributionControl, 'bottom-right');
-        }
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         new maplibregl.Marker({ color: '#f97316' }).setLngLat([config.longitude, config.latitude]).addTo(map);
 
@@ -647,34 +635,6 @@ protocolOptions.fileReaderConfig = {
         }
 
         map.on('load', () => {
-            // Keep the map clean by default. If the user opens the attribution
-            // panel, they can dismiss the map control permanently for this browser.
-            if (!attributionPermanentlyHidden) {
-                const attribution = map.getContainer().querySelector('.maplibregl-ctrl-attrib');
-                if (attribution) {
-                    attribution.classList.add('maplibregl-compact');
-                    attribution.classList.remove('maplibregl-compact-show');
-                    const attributionInner = attribution.querySelector('.maplibregl-ctrl-attrib-inner');
-                    if (attributionInner && !attributionInner.querySelector('.gaugeiq-hide-attribution')) {
-                        const hideButton = document.createElement('button');
-                        hideButton.type = 'button';
-                        hideButton.className = 'gaugeiq-hide-attribution';
-                        hideButton.textContent = "Don't show again";
-                        hideButton.addEventListener('click', event => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            try {
-                                localStorage.setItem(attributionHiddenKey, 'true');
-                            } catch (error) {
-                                console.warn('Could not save the map attribution preference.', error);
-                            }
-                            attributionPermanentlyHidden = true;
-                            map.removeControl(attributionControl);
-                        });
-                        attributionInner.append(' ', hideButton);
-                    }
-                }
-            }
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             showWeatherLayer(layerSelect.value);
             // Keep the live weather layer independent of animation preparation.
