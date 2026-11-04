@@ -39,6 +39,7 @@ final class WeatherMapRegionalPrefetcher
         });
 
         $requests = [];
+        $encodingSummaries = [];
         foreach ($frames as $frame) {
             $upstreamUrl = (string)($frame['url'] ?? '');
             $this->validateFrameUrl($upstreamUrl);
@@ -54,6 +55,14 @@ final class WeatherMapRegionalPrefetcher
 
             $cloud = $reader->getArrayInfo('cloud_cover');
             $precipitation = $reader->getArrayInfo('precipitation');
+            foreach (['cloud_cover' => $cloud, 'precipitation' => $precipitation] as $fieldName => $fieldInfo) {
+                $encodingSummaries[$fieldName][implode('|', [
+                    (string)$fieldInfo['data_type'],
+                    (string)$fieldInfo['compression_type'],
+                    sprintf('%.9g', $fieldInfo['scale_factor']),
+                    sprintf('%.9g', $fieldInfo['add_offset']),
+                ])] = true;
+            }
             if ($cloud['dimensions'] !== $precipitation['dimensions']) {
                 throw new RuntimeException('Cloud-cover and precipitation fields use different ECMWF grid dimensions.');
             }
@@ -67,13 +76,28 @@ final class WeatherMapRegionalPrefetcher
 
         $blockCount = count($requests);
         $this->fetchBlocksConcurrently(array_values($requests));
+        $encodingText = [];
+        foreach ($encodingSummaries as $fieldName => $signatures) {
+            foreach (array_keys($signatures) as $signature) {
+                [$dataType, $compressionType, $scaleFactor, $addOffset] = explode('|', $signature);
+                $encodingText[] = sprintf(
+                    '%s(data_type=%s, compression=%s, scale=%s, offset=%s)',
+                    $fieldName,
+                    $dataType,
+                    $compressionType,
+                    $scaleFactor,
+                    $addOffset
+                );
+            }
+        }
         return [
             'frames' => count($frames),
             'blocks' => $blockCount,
             'output' => sprintf(
-                'Regional ECMWF prefetch completed: %d frames, %d unique 64 KiB cache blocks.',
+                'Regional ECMWF prefetch completed: %d frames, %d unique 64 KiB cache blocks. Encoding: %s.',
                 count($frames),
-                $blockCount
+                $blockCount,
+                $encodingText === [] ? 'unavailable' : implode('; ', $encodingText)
             ),
         ];
     }
