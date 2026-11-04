@@ -180,6 +180,11 @@ final class WeatherMapRainfallNowcastService
                     $localTime
                 );
             }
+            if ($movementTrend === 'closing') {
+                $summary .= ' The forecast rain footprint moves closer over the next two hours.';
+            } elseif ($movementTrend === 'receding') {
+                $summary .= ' The forecast rain footprint moves farther away.';
+            }
         }
 
         $payload = [
