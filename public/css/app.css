@@ -6793,3 +6793,68 @@ body.gaugeiq-menu-open{overflow:hidden}
 .notification-repair-content #notificationRepairButton{width:100%;margin-top:8px}
 .notification-repair-error{padding:9px 11px;border:1px solid rgba(239,68,68,.3);border-radius:9px;color:#ef4444!important;background:rgba(239,68,68,.07)}
 .notification-repair-error[hidden]{display:none}
+
+/* Weather map controls: restrained cyan glass styling to match GaugeIQ instruments. */
+.weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action,
+.weather-map-dashboard-card .gaugeiq-weather-map-timeline button{
+  color:#9be8ff;
+  background:linear-gradient(180deg,rgba(104,210,255,.13),rgba(53,196,235,.055));
+  border:1px solid rgba(104,210,255,.48);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 10px rgba(53,196,235,.07);
+  transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action:hover,
+.weather-map-dashboard-card .gaugeiq-weather-map-timeline button:not(:disabled):hover{
+  color:#e5faff;
+  background:linear-gradient(180deg,rgba(104,210,255,.22),rgba(53,196,235,.11));
+  border-color:rgba(104,210,255,.78);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 14px rgba(53,196,235,.14);
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-timeline button:disabled{
+  color:rgba(155,232,255,.58);
+  border-color:rgba(104,210,255,.24);
+  background:rgba(53,196,235,.045);
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group{
+  overflow:hidden;
+  border:1px solid rgba(104,210,255,.38)!important;
+  border-radius:10px!important;
+  background:rgba(7,24,48,.68)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 5px 18px rgba(0,0,0,.22)!important;
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button{
+  background-color:transparent!important;
+  filter:invert(78%) sepia(35%) saturate(1114%) hue-rotate(164deg) brightness(103%) contrast(101%);
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button:hover{
+  background-color:rgba(53,196,235,.14)!important;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button+button{
+  border-top-color:rgba(104,210,255,.2)!important;
+}
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action,
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-timeline button{
+  color:#087da5;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(222,246,252,.72));
+  border-color:rgba(8,151,194,.48);
+  box-shadow:inset 0 1px 0 #fff,0 2px 7px rgba(8,125,165,.08);
+}
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action:hover,
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-timeline button:not(:disabled):hover{
+  color:#045d7b;
+  background:linear-gradient(180deg,#fff,#d9f3fa);
+  border-color:rgba(8,151,194,.72);
+}
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group{
+  border-color:rgba(8,125,165,.34)!important;
+  background:rgba(250,253,255,.78)!important;
+}
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button{
+  filter:invert(35%) sepia(73%) saturate(1063%) hue-rotate(153deg) brightness(87%) contrast(96%);
+}
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button:hover{
+  background-color:rgba(53,196,235,.13)!important;
+}
+
