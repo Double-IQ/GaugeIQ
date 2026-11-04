@@ -6889,24 +6889,3 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#16834f!important;
   border-color:#16834f!important;
 }
-
-
-/* Use one identical green for the top-card Trend indicator and all Improving accents in the Trend card. */
-.temperature-conditions-inline .conditions-status.improving{color:#22c55e!important;border-color:#22c55e!important}
-.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]){border-color:#22c55e!important}
-.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-label,
-.conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{
-  color:#22c55e!important;
-  border-color:#22c55e!important;
-}
-
-
-/* WVI gauge fill uses the Trend card's reference green in every score/change state. */
-.climate-gauge-card .climate-bar-wvi:is([data-wvi-band="blue"],[data-wvi-band="orange"],[data-wvi-change="rise"],[data-wvi-change="fall"],[data-wvi-change="steady"]) .climate-segment.active{
-  background:#22c55e!important;
-  box-shadow:none!important;
-}
-.climate-gauge-card .climate-bar-wvi:is([data-wvi-band="blue"],[data-wvi-band="orange"],[data-wvi-change="rise"],[data-wvi-change="fall"],[data-wvi-change="steady"]) .climate-mobile-gauge-value{
-  stroke:#22c55e!important;
-  filter:drop-shadow(0 0 2px rgba(34,197,94,.25))!important;
-}
