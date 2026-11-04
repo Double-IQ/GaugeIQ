@@ -63,6 +63,7 @@ final class WeatherMapRainfallNowcastService
 
 
         $frameResults = [];
+        $encodingInfo = null;
         foreach ($futureFrames as $frame) {
             $url = (string)($frame['file_url'] ?? '');
             $this->validateFrameUrl($url);
@@ -75,6 +76,19 @@ final class WeatherMapRainfallNowcastService
                 throw new RuntimeException('The ECMWF precipitation frame does not use a Gaussian grid.');
             }
             $field = $reader->getArrayInfo('precipitation');
+            $currentEncoding = [
+                'data_type' => (int)$field['data_type'],
+                'compression_type' => (int)$field['compression_type'],
+                'scale_factor' => (float)$field['scale_factor'],
+                'add_offset' => (float)$field['add_offset'],
+                'dimensions' => $field['dimensions'],
+                'chunks' => $field['chunks'],
+            ];
+            if ($encodingInfo === null) {
+                $encodingInfo = $currentEncoding;
+            } elseif ($encodingInfo !== $currentEncoding) {
+                throw new RuntimeException('The ECMWF precipitation frame encoding changed within the two-hour outlook window.');
+            }
             $pointCount = (int)($field['dimensions'][1] ?? 0);
             $samples = WeatherMapOmReader::gaussianNeighborhood(
                 $pointCount,
@@ -197,6 +211,7 @@ final class WeatherMapRainfallNowcastService
             'rain_footprint_trend' => $movementTrend,
             'nearest_rain_distance_change_km' => $distanceChangeKm === null ? null : round($distanceChangeKm, 1),
             'grid_cells_sampled' => count($samples),
+            'encoding' => $encodingInfo,
             'updated_at' => gmdate('c'),
             'frames' => $frameResults,
             'note' => 'Model forecast derived from decoded ECMWF precipitation grid values; not live radar.',
