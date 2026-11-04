@@ -20,8 +20,8 @@ $service = new PressureService($config, $pdo);
 // intentionally non-fatal: a map metadata outage must not interrupt monitoring.
 try {
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
-    if ($weatherMapCache->refreshScheduleIfDue(1800)) {
-        echo "Weather-map frame schedule refreshed (6 past + 6 future).\n";
+    if ($weatherMapCache->refreshScheduleIfDue(3600)) {
+        echo "Weather-map frame schedule refreshed (6 past + 6 future); browser cache preloads all 12 frames when animation is prepared.\n";
     }
 } catch (Throwable $weatherMapError) {
     error_log('GaugeIQ weather-map schedule refresh failed: ' . $weatherMapError->getMessage());
