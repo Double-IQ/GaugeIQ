@@ -105,7 +105,7 @@ button:disabled { opacity: .55; cursor: default; }
     h1 { font-size: 28px; }
 }
 
-.measurement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.measurement-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:16px}
 .metric-card{margin-bottom:0;min-width:0}
 .pressure-card{margin-bottom:16px;overflow:hidden}
 .pressure-card-heading{display:block}
