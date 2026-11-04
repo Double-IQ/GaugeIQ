@@ -86,6 +86,11 @@ final class WeatherMapRainfallNowcastService
             );
             $indices = array_column($samples, 'index');
             $values = $reader->decodeFloatArrayIndices($field, $indices);
+            $nearestCell = null;
+            foreach ($samples as $cell) {
+                if ($nearestCell === null || $cell['distance_km'] < $nearestCell['distance_km']) $nearestCell = $cell;
+            }
+            if ($nearestCell === null) throw new RuntimeException('The ECMWF Gaussian grid has no cells around the configured location.');
 
             $localAmount = max(0.0, (float)($values[$nearestCell['index']] ?? 0.0));
             $wet15 = 0;
