@@ -464,6 +464,9 @@ final class WeatherMapOmReader
                 $values[] = $previous;
             }
         }
+        if ($position !== strlen($input)) {
+            throw new RuntimeException('The ECMWF PFor chunk contains trailing or unconsumed bytes.');
+        }
         return $values;
     }
 
