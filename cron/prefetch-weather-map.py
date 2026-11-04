@@ -84,7 +84,7 @@ def prefetch_frame(frame: dict, proxy_base: str) -> None:
     backend = fsspec.open(
         url,
         mode="rb",
-        http={"block_size": BLOCK_SIZE},
+        block_size=BLOCK_SIZE,
     )
 
     with OmFileReader(backend) as root:
