@@ -217,6 +217,19 @@ if ($selected !== [[110, 120], [120, 130]]) {
     throw new RuntimeException('v3 regional chunk-range selection failed.');
 }
 echo "PASS v3 metadata tree, array layout and regional chunk selection\n";
+$scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
+if (abs($scaledPrecipitation - 2.8) > 0.000001) {
+    throw new RuntimeException('ECMWF PFor scale factor must divide the stored integer value.');
+}
+$offsetPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(35, 10.0, 0.5);
+if (abs($offsetPrecipitation - 3.0) > 0.000001) {
+    throw new RuntimeException('ECMWF PFor add_offset decoding failed.');
+}
+if (!is_nan(WeatherMapOmReader::decodeScaledPfor16Value(32767, 10.0, 0.0))) {
+    throw new RuntimeException('ECMWF PFor missing-value sentinel was not decoded as NaN.');
+}
+echo "PASS ECMWF PFor scale, offset and missing-value decoding\\n";
+
 
 foreach ([6599680 => [2940270, 5771535], 421120 => [187842, 367698]] as $count => $range) {
     if (WeatherMapOmReader::regionalGaussianIndexRange($count) !== $range) {
