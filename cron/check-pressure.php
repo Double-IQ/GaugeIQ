@@ -40,7 +40,7 @@ try {
         $nowcastPayload = $nowcastResult['payload'] ?? [];
         $encoding = is_array($nowcastPayload['encoding'] ?? null) ? $nowcastPayload['encoding'] : [];
         echo sprintf(
-            "ECMWF rainfall outlook: %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\\n",
+            "ECMWF rainfall outlook: %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\n",
             (string)$nowcastResult['message'],
             count($nowcastPayload['frames'] ?? []),
             (int)($nowcastPayload['grid_cells_sampled'] ?? 0),
