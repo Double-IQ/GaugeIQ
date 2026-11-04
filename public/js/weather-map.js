@@ -371,9 +371,19 @@ protocolOptions.fileReaderConfig = {
                 animationLoadError = null;
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const detail = animationLoadError ? ' ' + animationLoadError : '';
+                    const pending = animationFrames
+                        .filter(frame => !frame.sourceIds.every(id => map.isSourceLoaded(id)))
+                        .slice(0, 4)
+                        .map(frame => {
+                            const pendingSources = frame.sourceIds.filter(id => !map.isSourceLoaded(id));
+                            return frame.id + ': ' + pendingSources.join(', ');
+                        });
+                    const detail = [
+                        animationLoadError,
+                        pending.length ? 'Still loading: ' + pending.join('; ') : ''
+                    ].filter(Boolean).join(' | ');
                     clearAnimation();
-                    setStatus('The 12 hourly weather frames could not be preloaded.' + detail);
+                    setStatus('The 12 hourly weather frames could not be preloaded.' + (detail ? ' ' + detail : ''));
                 }, 120000);
 
                 const allFramesLoaded = () => animationFrames.length === 12 &&
@@ -617,9 +627,10 @@ protocolOptions.fileReaderConfig = {
             const message = event?.error?.message || 'A map resource failed to load.';
             const sourceId = event?.sourceId || event?.source?.id || '';
             if (animationLoadTimeout !== null && String(sourceId).startsWith('gaugeiq-animation-source-')) {
-                animationLoadError = message;
+                const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
+                animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
             }
-            setStatus('Map error: ' + message);
+            setStatus('Map error' + (sourceId ? ' (' + sourceId + ')' : '') + ': ' + message);
         });
         timeRangeSelect.addEventListener('change', () => {
             frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
