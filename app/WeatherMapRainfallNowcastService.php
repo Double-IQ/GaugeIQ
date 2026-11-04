@@ -237,9 +237,13 @@ final class WeatherMapRainfallNowcastService
     {
         $stmt = $this->pdo->prepare("UPDATE gaugeiq_settings SET value = ? WHERE `key` = ?");
         $stmt->execute([$value, $key]);
-        if ($stmt->rowCount() === 0 && $this->setting($key) === '') {
-            $insert = $this->pdo->prepare("INSERT INTO gaugeiq_settings (`key`, value) VALUES (?, ?)");
-            $insert->execute([$key, $value]);
+        if ($stmt->rowCount() === 0) {
+            $exists = $this->pdo->prepare("SELECT 1 FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+            $exists->execute([$key]);
+            if ($exists->fetchColumn() === false) {
+                $insert = $this->pdo->prepare("INSERT INTO gaugeiq_settings (`key`, value) VALUES (?, ?)");
+                $insert->execute([$key, $value]);
+            }
         }
     }
 
