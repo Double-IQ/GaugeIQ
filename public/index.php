@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=20261104-no-map-attribution" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261104-credits-redesign">
+<link rel="stylesheet" href="css/app.css?v=20261104-rainfall-nowcast">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=20261104-no-map-attribution"></script>
 <title>GaugeIQ</title>
