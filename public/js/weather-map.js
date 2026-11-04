@@ -306,7 +306,7 @@ protocolOptions.fileReaderConfig = {
                 }));
                 if (scheduledFrames.some(frame =>
                     !Number.isFinite(frame.time) ||
-                    !/^https:\/\/openmeteo\\.s3\\.amazonaws\\.com\/data_spatial\/ecmwf_ifs\/.+\\.om$/.test(frame.url)
+                    !/^https:\/\/openmeteo\.s3\.amazonaws\.com\/data_spatial\/ecmwf_ifs\/.+\.om$/.test(frame.url)
                 )) {
                     throw new Error('The scheduled weather-map frame list contains an invalid frame.');
                 }
