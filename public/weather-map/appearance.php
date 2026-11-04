@@ -171,8 +171,20 @@ if (!is_file($configPath)) {
 
     function paintGradient(type) {
         const colors = settings[type + 'Colors'];
+        const opacityKey = type === 'precipitation' ? 'precipitationColorOpacities' : 'cloudColorOpacities';
         const target = document.getElementById(type === 'precipitation' ? 'precip-gradient' : 'cloud-gradient');
-        target.style.background = 'linear-gradient(90deg, transparent, ' + colors.join(', ') + ')';
+        const rgba = (hex, opacity) => {
+            const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+            const red = parseInt(value.slice(0, 2), 16);
+            const green = parseInt(value.slice(2, 4), 16);
+            const blue = parseInt(value.slice(4, 6), 16);
+            const alpha = Math.max(0, Math.min(100, Number(opacity ?? 100))) / 100;
+            return 'rgba(' + red + ', ' + green + ', ' + blue + ', ' + alpha + ')';
+        };
+        const stops = colors.map((color, index) =>
+            rgba(color, settings[opacityKey]?.[index]) + ' ' + ((index + 1) * 25) + '%'
+        );
+        target.style.background = 'linear-gradient(90deg, transparent 0%, ' + stops.join(', ') + ')';
     }
 
     function render() {
@@ -234,6 +246,7 @@ if (!is_file($configPath)) {
             document.getElementById(id).addEventListener('input', event => {
                 settings[opacityKey][i] = Number(event.target.value);
                 document.getElementById(id + '-value').textContent = event.target.value + '%';
+                paintGradient(type);
             });
         }
     });
