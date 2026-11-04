@@ -37,7 +37,18 @@ try {
     $rainfallNowcast = new WeatherMapRainfallNowcastService($pdo, $config);
     $nowcastResult = $rainfallNowcast->refreshIfDue(1800);
     if (!$nowcastResult['skipped']) {
-        echo "ECMWF rainfall outlook: " . $nowcastResult['message'] . "\n";
+        $nowcastPayload = $nowcastResult['payload'] ?? [];
+        $encoding = is_array($nowcastPayload['encoding'] ?? null) ? $nowcastPayload['encoding'] : [];
+        echo sprintf(
+            "ECMWF rainfall outlook: %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\\n",
+            (string)$nowcastResult['message'],
+            count($nowcastPayload['frames'] ?? []),
+            (int)($nowcastPayload['grid_cells_sampled'] ?? 0),
+            (int)($encoding['data_type'] ?? -1),
+            (int)($encoding['compression_type'] ?? -1),
+            (string)($encoding['scale_factor'] ?? 'n/a'),
+            (string)($encoding['add_offset'] ?? 'n/a')
+        );
     }
 } catch (Throwable $nowcastError) {
     error_log('GaugeIQ ECMWF rainfall outlook failed: ' . $nowcastError->getMessage());
