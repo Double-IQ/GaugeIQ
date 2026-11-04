@@ -317,6 +317,24 @@ protocolOptions.fileReaderConfig = {
                     throw new Error('The server schedule must contain six past and six forecast frames.');
                 }
 
+                // Open-Meteo requires delta_time_hours for accumulated variables
+                // such as precipitation. Derive it from each run's actual valid-time
+                // spacing; the first frame uses the interval to the following frame.
+                const frameGroups = [pastFrames, futureFrames];
+                frameGroups.forEach(group => {
+                    group.sort((a, b) => a.time - b.time);
+                    group.forEach((frame, index) => {
+                        const neighbour = index === 0 ? group[1] : group[index - 1];
+                        const deltaHours = neighbour
+                            ? Math.abs(frame.time - neighbour.time) / 3600000
+                            : 1;
+                        if (!Number.isFinite(deltaHours) || deltaHours <= 0) {
+                            throw new Error('The scheduled weather-map frame interval is invalid.');
+                        }
+                        frame.deltaTimeHours = deltaHours;
+                    });
+                });
+
                 const variables = weatherVariables(layerSelect.value);
                 [...pastFrames, ...futureFrames].forEach(frame => {
                     frame.layerIds = [];
@@ -325,7 +343,7 @@ protocolOptions.fileReaderConfig = {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-' + variableIndex;
                         const dataUrl = new URL(frame.url);
-                        if (frame.type === 'past') dataUrl.searchParams.set('delta_time_hours', '1');
+                        dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                         dataUrl.searchParams.set('variable', item.variable);
 
                         map.addSource(sourceId, {
