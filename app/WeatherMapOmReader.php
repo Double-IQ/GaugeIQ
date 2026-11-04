@@ -471,19 +471,29 @@ final class WeatherMapOmReader
     {
         if ($width < 0 || $width > 16) throw new RuntimeException('Invalid 16-bit ECMWF PFor bit width.');
         if (!$vertical) return self::unpackBits($input, $position, $count, $width);
+        if ($width === 0) return array_fill(0, $count, 0);
         $byteCount = $width * 16;
         self::need($input, $position, $byteCount);
         $start = $position;
         $values = [];
+        $mask = (1 << $width) - 1;
         for ($i = 0; $i < $count; $i++) {
-            // TurboPFor's vertical layout stores 64-value groups in 16-byte
-            // vectors. Each of the eight 16-bit lanes packs eight values.
-            $vector = intdiv($i, 64);
+            // Each 16-bit lane carries a 16-value bitstream. Eight lanes are
+            // interleaved per 16-byte vector; values can cross word boundaries.
             $lane = $i % 8;
-            $slot = intdiv($i % 64, 8);
-            $wordOffset = $start + ($vector * 16) + ($lane * 2);
+            $slot = intdiv($i, 8);
+            $bitOffset = $slot * $width;
+            $wordIndex = intdiv($bitOffset, 16);
+            $shift = $bitOffset % 16;
+            $wordOffset = $start + ($wordIndex * 16) + ($lane * 2);
             $word = ord($input[$wordOffset]) | (ord($input[$wordOffset + 1]) << 8);
-            $values[] = ($word >> ($slot * $width)) & ((1 << $width) - 1);
+            $value = $word >> $shift;
+            if ($shift + $width > 16) {
+                $nextOffset = $start + (($wordIndex + 1) * 16) + ($lane * 2);
+                $nextWord = ord($input[$nextOffset]) | (ord($input[$nextOffset + 1]) << 8);
+                $value |= $nextWord << (16 - $shift);
+            }
+            $values[] = $value & $mask;
         }
         $position += $byteCount;
         return $values;
