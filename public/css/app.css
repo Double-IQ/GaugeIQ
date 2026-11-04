@@ -6965,3 +6965,19 @@ body.gaugeiq-menu-open{overflow:hidden}
   .weather-map-credit-grid{grid-template-columns:1fr}
   .weather-map-credit-source.ecmwf-source{grid-column:auto}
 }
+
+
+/* ECMWF short-range precipitation outlook */
+.rainfall-nowcast-card{margin-top:16px}
+.rainfall-nowcast-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.rainfall-nowcast-heading h2{margin:0;font-size:21px;color:var(--text)}
+.rainfall-nowcast-heading .label{margin:0 0 5px}
+.rainfall-nowcast-source{flex:0 0 auto;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.rainfall-nowcast-summary{margin:15px 0 0;color:var(--text);font-size:14px;line-height:1.55}
+.rainfall-nowcast-frames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:15px}
+.rainfall-nowcast-frame{display:flex;flex-direction:column;gap:4px;min-width:0;padding:11px 12px;border:1px solid var(--border);border-radius:13px}
+.rainfall-nowcast-frame span{color:var(--muted);font-size:12px;font-weight:700}
+.rainfall-nowcast-frame strong{color:var(--text);font-size:19px;font-weight:800}
+.rainfall-nowcast-frame small{color:var(--muted);font-size:11px;line-height:1.3}
+.rainfall-nowcast-footnote{margin:12px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
+@media(max-width:560px){.rainfall-nowcast-card{padding:17px}.rainfall-nowcast-frames{gap:6px}.rainfall-nowcast-frame{padding:9px}}
