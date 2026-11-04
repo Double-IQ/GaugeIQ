@@ -433,9 +433,25 @@ protocolOptions.fileReaderConfig = {
                 .sort((a, b) => Math.abs(Date.parse(a.time) - now) - Math.abs(Date.parse(b.time) - now))[0];
             if (!currentFrame) throw new Error('No usable current weather-map frame was found.');
 
+            const frameGroup = frames
+                .filter(frame => frame.type === currentFrame.type && Number.isFinite(Date.parse(frame.time)))
+                .sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
+            const currentIndex = frameGroup.findIndex(frame =>
+                frame.slot === currentFrame.slot && frame.time === currentFrame.time
+            );
+            const neighbour = currentIndex === 0
+                ? frameGroup[1]
+                : frameGroup[currentIndex - 1];
+            const deltaTimeHours = neighbour
+                ? Math.abs(Date.parse(currentFrame.time) - Date.parse(neighbour.time)) / 3600000
+                : 1;
+            if (!Number.isFinite(deltaTimeHours) || deltaTimeHours <= 0) {
+                throw new Error('The current weather-map frame interval is invalid.');
+            }
+
             return variables.map(item => {
                 const url = new URL(currentFrame.url);
-                if (currentFrame.type === 'past') url.searchParams.set('delta_time_hours', '1');
+                url.searchParams.set('delta_time_hours', String(deltaTimeHours));
                 url.searchParams.set('variable', item.variable);
                 return url.href;
             });
