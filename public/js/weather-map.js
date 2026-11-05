@@ -134,6 +134,9 @@ protocolOptions.fileReaderConfig = {
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
         const frameProgressElement = document.getElementById('map-frame-progress');
+        const frameProgressDropdown = document.getElementById('map-frame-progress-dropdown');
+        const frameProgressToggle = document.getElementById('map-frame-progress-toggle');
+        const frameProgressSummary = document.getElementById('map-frame-progress-summary');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -253,17 +256,10 @@ protocolOptions.fileReaderConfig = {
         }
 
         function updateFrameDownloadProgress() {
-            if (!frameProgressElement || animationFrames.length !== 6) return;
-            frameProgressElement.hidden = false;
+            if (!frameProgressElement || !frameProgressDropdown || !frameProgressSummary || animationFrames.length !== 6) return;
+            frameProgressDropdown.hidden = false;
             const fragment = document.createDocumentFragment();
             let readyCount = 0;
-            const panelHeading = document.createElement('div');
-            panelHeading.className = 'weather-map-frame-progress-title';
-            const panelLabel = document.createElement('strong');
-            panelLabel.textContent = 'FRAME DOWNLOADS';
-            const panelCount = document.createElement('span');
-            panelHeading.append(panelLabel, panelCount);
-            fragment.append(panelHeading);
             animationFrames.forEach((frame, index) => {
                 const loadedLayers = frame.sourceIds.filter(id =>
                     map.getSource(id) && map.isSourceLoaded(id)
@@ -295,7 +291,7 @@ protocolOptions.fileReaderConfig = {
                 row.append(heading, track);
                 fragment.append(row);
             });
-            panelCount.textContent = readyCount + ' / 6 ready';
+            frameProgressSummary.textContent = readyCount + ' / 6 ready';
             frameProgressElement.replaceChildren(fragment);
             frameProgressElement.dataset.ready = String(readyCount);
             frameProgressElement.dataset.total = '6';
@@ -308,6 +304,13 @@ protocolOptions.fileReaderConfig = {
                 frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
             );
         }
+
+        frameProgressToggle?.addEventListener('click', () => {
+            const expanded = frameProgressToggle.getAttribute('aria-expanded') === 'true';
+            frameProgressToggle.setAttribute('aria-expanded', String(!expanded));
+            frameProgressElement.hidden = expanded;
+            frameProgressDropdown.classList.toggle('is-open', !expanded);
+        });
 
         function monitorAnimationFrameProgress() {
             if (animationFrameProgressPoll !== null) return;
