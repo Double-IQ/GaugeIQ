@@ -187,6 +187,7 @@ protocolOptions.fileReaderConfig = {
         let animationFrameProgressPoll = null;
         let animationLoadError = null;
         let animationFrameSourceLoader = null;
+        let animationFrameSourceAdder = null;
 
         function setStatus(message) {
             status.textContent = message;
@@ -232,6 +233,7 @@ protocolOptions.fileReaderConfig = {
             }
             animationLoadError = null;
             animationFrameSourceLoader = null;
+            animationFrameSourceAdder = null;
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) map.removeLayer(item.id);
             });
@@ -254,7 +256,7 @@ protocolOptions.fileReaderConfig = {
         }
 
         function updateFrameDownloadProgress() {
-            if (!frameProgressElement || animationFrames.length !== 12) return;
+            if (!frameProgressElement || animationFrames.length !== 6) return;
             frameProgressElement.hidden = false;
             const fragment = document.createDocumentFragment();
             let readyCount = 0;
@@ -296,10 +298,10 @@ protocolOptions.fileReaderConfig = {
                 row.append(heading, track);
                 fragment.append(row);
             });
-            panelCount.textContent = readyCount + ' / 12 ready';
+            panelCount.textContent = readyCount + ' / 6 ready';
             frameProgressElement.replaceChildren(fragment);
             frameProgressElement.dataset.ready = String(readyCount);
-            frameProgressElement.dataset.total = '12';
+            frameProgressElement.dataset.total = '6';
         }
 
         function selectedAnimationFrames() {
@@ -314,7 +316,18 @@ protocolOptions.fileReaderConfig = {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            frameTimeLabel.textContent = 'Frame ' + (index + 1) + '/6 · ' + label;
+            frameTimeLabel.textContent = 'Frame ' + (index + 1) + '/3 · ' + label;
+        }
+
+        function removeAnimationFrameSources(frame) {
+            if (!frame) return;
+            frame.layerIds.forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
+            frame.sourceIds.forEach(id => { if (map.getSource(id)) map.removeSource(id); });
+            const layerIds = new Set(frame.layerIds), sourceIds = new Set(frame.sourceIds);
+            animationLayers = animationLayers.filter(item => !layerIds.has(item.id));
+            animationSources = animationSources.filter(id => !sourceIds.has(id));
+            frame.layerIds = [];
+            frame.sourceIds = [];
         }
 
         function showFrame(index) {
@@ -336,11 +349,21 @@ protocolOptions.fileReaderConfig = {
             animationToggle.textContent = 'Pause';
             animationToggle.setAttribute('aria-pressed', 'true');
             animationTimer = setInterval(() => {
-                const nextFrame = (animationCurrentFrame + 1) % frames.length;
-                const frame = frames[nextFrame];
-                if (!frame || !frame.sourceIds.length || !frame.sourceIds.every(id => map.isSourceLoaded(id))) return;
-                animationCurrentFrame = nextFrame;
+                const nextIndex = (animationCurrentFrame + 1) % frames.length;
+                const nextFrame = frames[nextIndex];
+                if (!nextFrame) return;
+                if (!nextFrame.sourceIds.length && animationFrameSourceAdder) animationFrameSourceAdder(nextFrame);
+                if (!nextFrame.sourceIds.length ||
+                    !nextFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) return;
+                const previousFrame = frames[animationCurrentFrame];
+                animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
+                removeAnimationFrameSources(previousFrame);
+                const upcomingFrame = frames[(nextIndex + 1) % frames.length];
+                if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
+                    animationFrameSourceAdder(upcomingFrame);
+                }
+                updateFrameDownloadProgress();
             }, 1200);
         }
 
@@ -349,7 +372,7 @@ protocolOptions.fileReaderConfig = {
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
-            setStatus('Preparing 12 hourly weather frames (6 past + 6 forecast)…');
+            setStatus('Preparing 6 hourly weather frames (3 past + 3 forecast)…');
 
             try {
                 const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
@@ -357,8 +380,8 @@ protocolOptions.fileReaderConfig = {
                 const schedule = await scheduleResponse.json();
                 if (token !== animationToken) return;
 
-                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 12) {
-                    throw new Error('The server has not supplied all 12 scheduled weather frames.');
+                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 6) {
+                    throw new Error('The server has not supplied all 6 scheduled weather frames.');
                 }
 
                 const scheduledFrames = schedule.frames.map(item => ({
@@ -376,8 +399,8 @@ protocolOptions.fileReaderConfig = {
 
                 const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
                 const futureFrames = scheduledFrames.filter(frame => frame.type === 'future');
-                if (pastFrames.length !== 6 || futureFrames.length !== 6) {
-                    throw new Error('The server schedule must contain six past and six forecast frames.');
+                if (pastFrames.length !== 3 || futureFrames.length !== 3) {
+                    throw new Error('The server schedule must contain three past and three forecast frames.');
                 }
 
                 // Open-Meteo requires delta_time_hours for accumulated variables
@@ -406,20 +429,7 @@ protocolOptions.fileReaderConfig = {
                 }));
                 updateFrameDownloadProgress();
                 if (animationFrameProgressPoll !== null) clearInterval(animationFrameProgressPoll);
-                animationFrameProgressPoll = setInterval(() => {
-                    updateFrameDownloadProgress();
-                    const requestedFrames = animationFrames.filter(frame =>
-                        frame.type === 'future' || timeRangeSelect.value === 'past'
-                    );
-                    const ready = requestedFrames.filter(frame =>
-                        frame.sourceIds.length > 0 &&
-                        frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
-                    ).length;
-                    if (ready === requestedFrames.length) {
-                        clearInterval(animationFrameProgressPoll);
-                        animationFrameProgressPoll = null;
-                    }
-                }, 500);
+                animationFrameProgressPoll = setInterval(updateFrameDownloadProgress, 500);
                 const addFrameSources = frame => {
                     if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
@@ -449,14 +459,18 @@ protocolOptions.fileReaderConfig = {
                     });
                 };
 
+                animationFrameSourceAdder = addFrameSources;
                 animationFrameSourceLoader = type => {
-                    animationFrames.filter(frame => frame.type === type).forEach(addFrameSources);
+                    animationFrames.filter(frame => frame.type !== type).forEach(removeAnimationFrameSources);
+                    animationFrames.filter(frame => frame.type === type).slice(0, 2).forEach(addFrameSources);
                 };
                 animationPreparing = false;
                 animationCurrentFrame = 0;
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[0];
+                const initialGroup = selectedAnimationFrames();
                 addFrameSources(initialFrame());
+                if (initialGroup[1]) addFrameSources(initialGroup[1]);
                 const isFrameLoaded = frame => Boolean(
                     frame &&
                     frame.sourceIds.length > 0 &&
@@ -493,10 +507,7 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(0);
-                    // Load the remaining forecast frames now. Past frames stay
-                    // untouched until the user selects the Past 6 hours range.
-                    animationFrames.filter(frame => frame.type === 'future' && frame.id !== initialFrame().id)
-                        .forEach(addFrameSources);
+                    // Keep only the visible frame and its immediate successor loaded.
                     if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
@@ -516,7 +527,7 @@ protocolOptions.fileReaderConfig = {
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 12) throw new Error('The server has not supplied all 12 scheduled weather frames.');
+            if (frames.length !== 6) throw new Error('The server has not supplied all 6 scheduled weather frames.');
 
             const now = Date.now();
             const currentFrame = frames
@@ -754,52 +765,29 @@ protocolOptions.fileReaderConfig = {
             setStatus('Map error' + (sourceId ? ' (' + sourceId + ')' : '') + ': ' + message);
         });
         timeRangeSelect.addEventListener('change', () => {
+            if (animationTimer !== null) { clearInterval(animationTimer); animationTimer = null; }
+            animationToggle.textContent = 'Play';
+            animationToggle.setAttribute('aria-pressed', 'false');
             animationCurrentFrame = 0;
             const selectedType = timeRangeSelect.value;
-            frameTimeLabel.textContent = selectedType === 'past' ? 'Past 6 hours' : 'Next 6 hours';
+            frameTimeLabel.textContent = selectedType === 'past' ? 'Past 3 hours' : 'Next 3 hours';
             const firstFrame = selectedAnimationFrames()[0];
-            if (selectedType === 'past' && animationFrameSourceLoader) {
-                if (animationFrameProgressPoll === null) {
-                    animationFrameProgressPoll = setInterval(() => {
-                        updateFrameDownloadProgress();
-                        const requested = animationFrames.filter(frame =>
-                            frame.type === 'future' || timeRangeSelect.value === 'past'
-                        );
-                        const ready = requested.filter(frame =>
-                            frame.sourceIds.length > 0 &&
-                            frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
-                        ).length;
-                        if (ready === requested.length) {
-                            clearInterval(animationFrameProgressPoll);
-                            animationFrameProgressPoll = null;
-                        }
-                    }, 500);
+            animationToggle.disabled = true;
+            setStatus(selectedType === 'past' ? 'Loading past weather frames…' : 'Loading forecast weather frames…');
+            if (animationFrameSourceLoader) animationFrameSourceLoader(selectedType);
+            if (animationFrameProgressPoll === null) animationFrameProgressPoll = setInterval(updateFrameDownloadProgress, 500);
+            const token = animationToken;
+            if (animationLoadPoll !== null) clearInterval(animationLoadPoll);
+            animationLoadPoll = setInterval(() => {
+                if (token !== animationToken || timeRangeSelect.value !== selectedType) {
+                    clearInterval(animationLoadPoll); animationLoadPoll = null; return;
                 }
-                animationToggle.disabled = true;
-                setStatus('Loading past weather frames…');
-                animationFrameSourceLoader('past');
-                const token = animationToken;
-                if (animationLoadPoll !== null) clearInterval(animationLoadPoll);
-                animationLoadPoll = setInterval(() => {
-                    if (token !== animationToken || timeRangeSelect.value !== 'past') {
-                        clearInterval(animationLoadPoll);
-                        animationLoadPoll = null;
-                        return;
-                    }
-                    if (firstFrame && firstFrame.sourceIds.length &&
-                        firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
-                        clearInterval(animationLoadPoll);
-                        animationLoadPoll = null;
-                        animationToggle.disabled = false;
-                        showFrame(0);
-                        setStatus('');
-                    }
-                }, 500);
-            } else if (firstFrame && firstFrame.sourceIds.length &&
-                firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
-                showFrame(0);
-                setStatus('');
-            }
+                if (firstFrame && firstFrame.sourceIds.length &&
+                    firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
+                    clearInterval(animationLoadPoll); animationLoadPoll = null;
+                    animationToggle.disabled = false; showFrame(0); setStatus('');
+                }
+            }, 500);
         });
         animationToggle.addEventListener('click', toggleAnimation);
         map.on('zoomend', () => {
