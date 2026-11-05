@@ -134,6 +134,7 @@ protocolOptions.fileReaderConfig = {
         const timeRangeSelect = document.getElementById('map-time-range');
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
+        const frameProgressElement = document.getElementById('map-frame-progress');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -182,6 +183,7 @@ protocolOptions.fileReaderConfig = {
         let animationCurrentFrame = 0;
         let animationLoadTimeout = null;
         let animationLoadPoll = null;
+        let animationFrameProgressPoll = null;
         let animationLoadError = null;
 
         function setStatus(message) {
@@ -217,6 +219,14 @@ protocolOptions.fileReaderConfig = {
                 clearInterval(animationLoadPoll);
                 animationLoadPoll = null;
             }
+            if (animationFrameProgressPoll !== null) {
+                clearInterval(animationFrameProgressPoll);
+                animationFrameProgressPoll = null;
+            }
+            if (frameProgressElement) {
+                frameProgressElement.replaceChildren();
+                frameProgressElement.hidden = true;
+            }
             animationLoadError = null;
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) map.removeLayer(item.id);
@@ -237,6 +247,47 @@ protocolOptions.fileReaderConfig = {
             animationToggle.disabled = false;
             animationToggle.textContent = 'Play';
             animationToggle.setAttribute('aria-pressed', 'false');
+        }
+
+        function updateFrameDownloadProgress() {
+            if (!frameProgressElement || animationFrames.length !== 12) return;
+            frameProgressElement.hidden = false;
+            const fragment = document.createDocumentFragment();
+            let readyCount = 0;
+            animationFrames.forEach((frame, index) => {
+                const loadedLayers = frame.sourceIds.filter(id =>
+                    map.getSource(id) && map.isSourceLoaded(id)
+                ).length;
+                const totalLayers = frame.sourceIds.length || weatherVariables(layerSelect.value).length;
+                const percent = frame.sourceIds.length
+                    ? Math.round((loadedLayers / totalLayers) * 100)
+                    : 0;
+                const ready = frame.sourceIds.length > 0 && loadedLayers === frame.sourceIds.length;
+                if (ready) readyCount++;
+
+                const row = document.createElement('div');
+                row.className = 'weather-map-frame-progress-row' + (ready ? ' is-ready' : '');
+                const heading = document.createElement('div');
+                heading.className = 'weather-map-frame-progress-heading';
+                const name = document.createElement('span');
+                const frameDate = new Date(frame.time);
+                const timeText = frameDate.toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+                name.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + timeText;
+                const state = document.createElement('strong');
+                state.textContent = ready ? 'Ready' : (frame.sourceIds.length ? (percent + '%') : 'Queued');
+                heading.append(name, state);
+
+                const track = document.createElement('div');
+                track.className = 'weather-map-frame-progress-track';
+                const fill = document.createElement('span');
+                fill.style.width = percent + '%';
+                track.append(fill);
+                row.append(heading, track);
+                fragment.append(row);
+            });
+            frameProgressElement.replaceChildren(fragment);
+            frameProgressElement.dataset.ready = String(readyCount);
+            frameProgressElement.dataset.total = '12';
         }
 
         function selectedAnimationFrames() {
@@ -341,6 +392,19 @@ protocolOptions.fileReaderConfig = {
                     layerIds: [],
                     sourceIds: []
                 }));
+                updateFrameDownloadProgress();
+                if (animationFrameProgressPoll !== null) clearInterval(animationFrameProgressPoll);
+                animationFrameProgressPoll = setInterval(() => {
+                    updateFrameDownloadProgress();
+                    const ready = animationFrames.filter(frame =>
+                        frame.sourceIds.length > 0 &&
+                        frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
+                    ).length;
+                    if (ready === 12) {
+                        clearInterval(animationFrameProgressPoll);
+                        animationFrameProgressPoll = null;
+                    }
+                }, 500);
                 const addFrameSources = frame => {
                     if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
@@ -366,6 +430,7 @@ protocolOptions.fileReaderConfig = {
                         frame.sourceIds.push(sourceId);
                         animationLayers.push({ id: layerId, frameId: frame.id, opacity: item.opacity });
                         frame.layerIds.push(layerId);
+                        updateFrameDownloadProgress();
                     });
                 };
 
