@@ -2,14 +2,14 @@
 declare(strict_types=1);
 
 /**
- * Maintains the twelve concrete ECMWF map frames used by GaugeIQ:
- * six past and six forecast hours. Binary map data is deliberately kept out
+ * Maintains the six concrete ECMWF map frames used by GaugeIQ:
+ * three past and three forecast hours. Binary map data is deliberately kept out
  * of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
 {
     private const METADATA_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial/ecmwf_ifs/latest.json';
-    private const FRAME_COUNT = 6;
+    private const FRAME_COUNT = 3;
     private const HOUR_MS = 3600000;
     private const SIX_HOURS_MS = 21600000;
 
@@ -23,7 +23,18 @@ final class WeatherMapCacheService
         $stmt->execute(['weather_map_schedule_last_success_at']);
         $last = $stmt->fetchColumn();
         $lastTimestamp = is_string($last) ? strtotime($last) : false;
-        if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds) {
+        $existingCounts = ['past' => 0, 'future' => 0];
+        try {
+            $countQuery = $this->pdo->query('SELECT frame_type, COUNT(*) AS total FROM gaugeiq_weather_map_frames GROUP BY frame_type');
+            foreach ($countQuery->fetchAll(PDO::FETCH_ASSOC) as $countRow) {
+                $type = (string)($countRow['frame_type'] ?? '');
+                if (isset($existingCounts[$type])) $existingCounts[$type] = (int)$countRow['total'];
+            }
+        } catch (Throwable) {
+            $existingCounts = ['past' => 0, 'future' => 0];
+        }
+        if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds &&
+            $existingCounts['past'] === self::FRAME_COUNT && $existingCounts['future'] === self::FRAME_COUNT) {
             return false;
         }
 
@@ -57,7 +68,7 @@ final class WeatherMapCacheService
             }
         }
         if ($pastIndex < 0 || $futureIndex < 0 || $futureIndex + self::FRAME_COUNT > count($timestamps)) {
-            throw new RuntimeException('The latest ECMWF run cannot provide six past and six future hourly frames.');
+            throw new RuntimeException('The latest ECMWF run cannot provide three past and three future hourly frames.');
         }
 
         $runDate = new DateTimeImmutable((string)($metadata['reference_time'] ?? ''), new DateTimeZone('UTC'));
@@ -79,7 +90,7 @@ final class WeatherMapCacheService
 
         // Match the past-frame run selection used by public/js/weather-map.js.
         $currentPastTime = $timestamps[$pastIndex];
-        $firstPastTime = $currentPastTime - (5 * self::HOUR_MS);
+        $firstPastTime = $currentPastTime - ((self::FRAME_COUNT - 1) * self::HOUR_MS);
         $previousRunTime = (int)(floor(($firstPastTime - self::HOUR_MS) / self::SIX_HOURS_MS) * self::SIX_HOURS_MS - self::SIX_HOURS_MS);
         $pastRunDate = (new DateTimeImmutable('@' . (int)floor($previousRunTime / 1000)))->setTimezone(new DateTimeZone('UTC'));
         $pastRunFolder = $pastRunDate->format('Y/m/d/H') . '00Z';
