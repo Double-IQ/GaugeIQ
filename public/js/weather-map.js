@@ -408,11 +408,14 @@ protocolOptions.fileReaderConfig = {
                 if (animationFrameProgressPoll !== null) clearInterval(animationFrameProgressPoll);
                 animationFrameProgressPoll = setInterval(() => {
                     updateFrameDownloadProgress();
-                    const ready = animationFrames.filter(frame =>
+                    const requestedFrames = animationFrames.filter(frame =>
+                        frame.type === 'future' || timeRangeSelect.value === 'past'
+                    );
+                    const ready = requestedFrames.filter(frame =>
                         frame.sourceIds.length > 0 &&
                         frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
                     ).length;
-                    if (ready === 12) {
+                    if (ready === requestedFrames.length) {
                         clearInterval(animationFrameProgressPoll);
                         animationFrameProgressPoll = null;
                     }
@@ -756,6 +759,22 @@ protocolOptions.fileReaderConfig = {
             frameTimeLabel.textContent = selectedType === 'past' ? 'Past 6 hours' : 'Next 6 hours';
             const firstFrame = selectedAnimationFrames()[0];
             if (selectedType === 'past' && animationFrameSourceLoader) {
+                if (animationFrameProgressPoll === null) {
+                    animationFrameProgressPoll = setInterval(() => {
+                        updateFrameDownloadProgress();
+                        const requested = animationFrames.filter(frame =>
+                            frame.type === 'future' || timeRangeSelect.value === 'past'
+                        );
+                        const ready = requested.filter(frame =>
+                            frame.sourceIds.length > 0 &&
+                            frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
+                        ).length;
+                        if (ready === requested.length) {
+                            clearInterval(animationFrameProgressPoll);
+                            animationFrameProgressPoll = null;
+                        }
+                    }, 500);
+                }
                 animationToggle.disabled = true;
                 setStatus('Loading past weather frames…');
                 animationFrameSourceLoader('past');
