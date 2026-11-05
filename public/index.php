@@ -1159,7 +1159,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
         </header>
         <div class="gaugeiq-weather-map-timeline">
-<button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
+            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
             <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
         </div>
         <div id="map-frame-progress" class="weather-map-frame-progress" aria-label="Weather frame download progress" aria-live="polite" hidden></div>
