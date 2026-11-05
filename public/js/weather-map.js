@@ -186,6 +186,7 @@ protocolOptions.fileReaderConfig = {
         let animationLoadPoll = null;
         let animationFrameProgressPoll = null;
         let animationLoadError = null;
+        let animationFrameSourceLoader = null;
 
         function setStatus(message) {
             status.textContent = message;
@@ -230,6 +231,7 @@ protocolOptions.fileReaderConfig = {
                 frameProgressElement.hidden = true;
             }
             animationLoadError = null;
+            animationFrameSourceLoader = null;
             animationLayers.forEach(item => {
                 if (map.getLayer(item.id)) map.removeLayer(item.id);
             });
@@ -444,6 +446,9 @@ protocolOptions.fileReaderConfig = {
                     });
                 };
 
+                animationFrameSourceLoader = type => {
+                    animationFrames.filter(frame => frame.type === type).forEach(addFrameSources);
+                };
                 animationPreparing = false;
                 animationCurrentFrame = 0;
                 animationLoadError = null;
@@ -485,11 +490,10 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(0);
-                    // Prioritise the first forecast frame. Once it is ready, queue every
-                    // remaining forecast frame before starting any past-frame requests.
-                    animationFrames.forEach(frame => {
-                        if (frame.id !== initialFrame().id) addFrameSources(frame);
-                    });
+                    // Load the remaining forecast frames now. Past frames stay
+                    // untouched until the user selects the Past 6 hours range.
+                    animationFrames.filter(frame => frame.type === 'future' && frame.id !== initialFrame().id)
+                        .forEach(addFrameSources);
                     if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
@@ -748,13 +752,35 @@ protocolOptions.fileReaderConfig = {
         });
         timeRangeSelect.addEventListener('change', () => {
             animationCurrentFrame = 0;
-            frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
+            const selectedType = timeRangeSelect.value;
+            frameTimeLabel.textContent = selectedType === 'past' ? 'Past 6 hours' : 'Next 6 hours';
             const firstFrame = selectedAnimationFrames()[0];
-            if (firstFrame && firstFrame.sourceIds.length &&
+            if (selectedType === 'past' && animationFrameSourceLoader) {
+                animationToggle.disabled = true;
+                setStatus('Loading past weather frames…');
+                animationFrameSourceLoader('past');
+                const token = animationToken;
+                if (animationLoadPoll !== null) clearInterval(animationLoadPoll);
+                animationLoadPoll = setInterval(() => {
+                    if (token !== animationToken || timeRangeSelect.value !== 'past') {
+                        clearInterval(animationLoadPoll);
+                        animationLoadPoll = null;
+                        return;
+                    }
+                    if (firstFrame && firstFrame.sourceIds.length &&
+                        firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
+                        clearInterval(animationLoadPoll);
+                        animationLoadPoll = null;
+                        animationToggle.disabled = false;
+                        showFrame(0);
+                        setStatus('');
+                    }
+                }, 500);
+            } else if (firstFrame && firstFrame.sourceIds.length &&
                 firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
                 showFrame(0);
+                setStatus('');
             }
-            setStatus('');
         });
         animationToggle.addEventListener('click', toggleAnimation);
         map.on('zoomend', () => {
