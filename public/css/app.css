@@ -7121,7 +7121,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Per-frame ECMWF map loading progress. Each bar represents the frame's
    source layers becoming available in the browser's map cache. */
- .weather-map-frame-progress{
+.weather-map-frame-progress{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px 12px;
