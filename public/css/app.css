@@ -6795,6 +6795,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .notification-repair-error[hidden]{display:none}
 
 /* Weather map controls: restrained cyan glass styling to match GaugeIQ instruments. */
+.weather-map-dashboard-card .gaugeiq-weather-map-controls select,
 .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action,
 .weather-map-dashboard-card .gaugeiq-weather-map-timeline button{
   color:#9be8ff;
@@ -6803,6 +6804,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 10px rgba(53,196,235,.07);
   transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease;
 }
+.weather-map-dashboard-card .gaugeiq-weather-map-controls select:hover,
 .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action:hover,
 .weather-map-dashboard-card .gaugeiq-weather-map-timeline button:not(:disabled):hover{
   color:#e5faff;
@@ -6834,6 +6836,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group button+button{
   border-top-color:rgba(104,210,255,.2)!important;
 }
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls select,
 :root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action,
 :root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-timeline button{
   color:#087da5;
@@ -6841,6 +6844,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   border-color:rgba(8,151,194,.48);
   box-shadow:inset 0 1px 0 #fff,0 2px 7px rgba(8,125,165,.08);
 }
+:root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls select:hover,
 :root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-controls .gaugeiq-weather-map-action:hover,
 :root[data-theme="light"] .weather-map-dashboard-card .gaugeiq-weather-map-timeline button:not(:disabled):hover{
   color:#045d7b;
