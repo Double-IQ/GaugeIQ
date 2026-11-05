@@ -709,8 +709,11 @@ protocolOptions.fileReaderConfig = {
 
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
-            showWeatherLayer(layerSelect.value);
-            // Keep the live weather layer independent of animation preparation.
+            // Prepare all twelve scheduled frames as soon as the map is ready.
+            // The first selected frame is displayed as soon as its layers load;
+            // the remaining frames continue loading in the background. Playback
+            // remains under the user's control.
+            prepareAnimation(false);
         });
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
@@ -722,7 +725,13 @@ protocolOptions.fileReaderConfig = {
             setStatus('Map error' + (sourceId ? ' (' + sourceId + ')' : '') + ': ' + message);
         });
         timeRangeSelect.addEventListener('change', () => {
+            animationCurrentFrame = 0;
             frameTimeLabel.textContent = timeRangeSelect.value === 'past' ? 'Past 6 hours' : 'Next 6 hours';
+            const firstFrame = selectedAnimationFrames()[0];
+            if (firstFrame && firstFrame.sourceIds.length &&
+                firstFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) {
+                showFrame(0);
+            }
             setStatus('');
         });
         animationToggle.addEventListener('click', toggleAnimation);
