@@ -20,6 +20,25 @@ const appearanceDefaults = {
             console.warn('Could not read saved weather-map appearance settings.', error);
         }
 
+        // The map can be restored from the browser back/forward cache after
+        // changing Appearance. Re-read saved settings on restoration so the
+        // protocol's colour scale (including per-colour cloud alpha) is rebuilt.
+        const initialAppearanceSnapshot = JSON.stringify(appearance);
+        window.addEventListener('pageshow', event => {
+            if (!event.persisted) return;
+            try {
+                const saved = JSON.parse(localStorage.getItem('gaugeiqWeatherMapAppearance') || 'null');
+                const restoredAppearance = saved && typeof saved === 'object'
+                    ? { ...appearanceDefaults, ...saved }
+                    : { ...appearanceDefaults };
+                if (JSON.stringify(restoredAppearance) !== initialAppearanceSnapshot) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.warn('Could not refresh weather-map appearance after returning from settings.', error);
+            }
+        });
+
         function hexToRgba(hex, alpha = 1) {
             const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
             return [
