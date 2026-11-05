@@ -301,6 +301,14 @@ protocolOptions.fileReaderConfig = {
             frameProgressElement.dataset.total = '6';
         }
 
+        function isAnimationFrameLoaded(frame) {
+            return Boolean(
+                frame &&
+                frame.sourceIds.length > 0 &&
+                frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
+            );
+        }
+
         function monitorAnimationFrameProgress() {
             if (animationFrameProgressPoll !== null) return;
             updateFrameDownloadProgress();
@@ -308,7 +316,7 @@ protocolOptions.fileReaderConfig = {
                 updateFrameDownloadProgress();
                 const requested = animationFrames.filter(frame => frame.sourceIds.length > 0);
                 const complete = requested.length > 0 && requested.every(frame =>
-                    frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
+                    frame.loadError || isAnimationFrameLoaded(frame)
                 );
                 if (complete) {
                     clearInterval(animationFrameProgressPoll);
@@ -357,6 +365,16 @@ protocolOptions.fileReaderConfig = {
         function runAnimation() {
             const frames = selectedAnimationFrames();
             if (!frames.length || animationTimer !== null) return;
+
+            // A manual restart after a failed frame gets one fresh retry cycle.
+            const retryFrame = frames[(animationCurrentFrame + 1) % frames.length];
+            if (retryFrame && retryFrame.loadAttempts >= 2 &&
+                (retryFrame.loadError || Date.now() - (retryFrame.loadStartedAt || 0) > 45000)) {
+                removeAnimationFrameSources(retryFrame);
+                retryFrame.loadAttempts = 0;
+                retryFrame.loadError = null;
+            }
+
             showFrame(animationCurrentFrame);
             animationToggle.disabled = false;
             animationToggle.textContent = 'Pause';
@@ -365,12 +383,36 @@ protocolOptions.fileReaderConfig = {
                 const nextIndex = (animationCurrentFrame + 1) % frames.length;
                 const nextFrame = frames[nextIndex];
                 if (!nextFrame) return;
-                if (!nextFrame.sourceIds.length && animationFrameSourceAdder) animationFrameSourceAdder(nextFrame);
-                if (!nextFrame.sourceIds.length ||
-                    !nextFrame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))) return;
+
+                if (!nextFrame.sourceIds.length && animationFrameSourceAdder) {
+                    animationFrameSourceAdder(nextFrame);
+                }
+                if (!isAnimationFrameLoaded(nextFrame)) {
+                    const age = Date.now() - (nextFrame.loadStartedAt || Date.now());
+                    if (nextFrame.loadError || age > 45000) {
+                        if ((nextFrame.loadAttempts || 0) < 2) {
+                            removeAnimationFrameSources(nextFrame);
+                            animationFrameSourceAdder(nextFrame);
+                            setStatus('Retrying the next weather frame…');
+                        } else {
+                            clearInterval(animationTimer);
+                            animationTimer = null;
+                            animationToggle.textContent = 'Play';
+                            animationToggle.setAttribute('aria-pressed', 'false');
+                            setStatus('A weather frame could not be loaded. Press Play to retry.');
+                        }
+                    } else {
+                        setStatus(nextFrame.type === 'past'
+                            ? 'Loading the next past weather frame…'
+                            : 'Loading the next forecast weather frame…');
+                    }
+                    return;
+                }
+
                 const previousFrame = frames[animationCurrentFrame];
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
+                setStatus('');
                 removeAnimationFrameSources(previousFrame);
                 const upcomingFrame = frames[(nextIndex + 1) % frames.length];
                 if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
@@ -444,8 +486,11 @@ protocolOptions.fileReaderConfig = {
                 const addFrameSources = frame => {
                     if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
-                        const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-' + variableIndex;
-                        const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-' + variableIndex;
+                        frame.loadAttempts = (frame.loadAttempts || 0) + (variableIndex === 0 ? 1 : 0);
+                        frame.loadStartedAt = Date.now();
+                        frame.loadError = null;
+                        const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
+                        const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const dataUrl = new URL(frame.url);
                         dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                         dataUrl.searchParams.set('variable', item.variable);
@@ -478,17 +523,13 @@ protocolOptions.fileReaderConfig = {
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
                 addFrameSources(initialFrame());
                 addFrameSources(initialNextFrame());
-                const isFrameLoaded = frame => Boolean(
-                    frame &&
-                    frame.sourceIds.length > 0 &&
-                    frame.sourceIds.every(id => map.isSourceLoaded(id))
-                );
+                const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const frame = initialFrame();
-                    const pendingSources = frame
-                        ? frame.sourceIds.filter(id => !map.isSourceLoaded(id))
-                        : [];
+                    const requiredFrames = [initialFrame(), initialNextFrame()];
+                    const pendingSources = requiredFrames.flatMap(frame =>
+                        frame ? frame.sourceIds.filter(id => !map.getSource(id) || !map.isSourceLoaded(id)) : []
+                    );
                     const detail = [
                         animationLoadError,
                         pendingSources.length ? 'Still loading: ' + pendingSources.join(', ') : ''
@@ -499,7 +540,7 @@ protocolOptions.fileReaderConfig = {
 
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!isFrameLoaded(initialFrame())) return;
+                    if (!isFrameLoaded(initialFrame()) || !isFrameLoaded(initialNextFrame())) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
@@ -764,9 +805,12 @@ protocolOptions.fileReaderConfig = {
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
             const sourceId = event?.sourceId || event?.source?.id || '';
-            if (animationLoadTimeout !== null && String(sourceId).startsWith('gaugeiq-animation-source-')) {
+            if (String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
-                animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
+                if (frame) frame.loadError = message;
+                if (animationLoadTimeout !== null) {
+                    animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
+                }
             }
             setStatus('Map error' + (sourceId ? ' (' + sourceId + ')' : '') + ': ' + message);
         });
