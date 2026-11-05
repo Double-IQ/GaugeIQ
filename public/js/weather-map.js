@@ -416,7 +416,15 @@ protocolOptions.fileReaderConfig = {
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
                 setStatus('');
-                removeAnimationFrameSources(previousFrame);
+
+                // Keep the outgoing frame alive until MapLibre has rendered the
+                // newly selected frame. Removing it immediately can expose a
+                // blank raster tile pass and cause a visible flash between frames.
+                map.once('idle', () => {
+                    removeAnimationFrameSources(previousFrame);
+                    updateFrameDownloadProgress();
+                });
+
                 const upcomingFrame = frames[(nextIndex + 2) % frames.length];
                 if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
                     animationFrameSourceAdder(upcomingFrame);
