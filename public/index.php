@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261105-frame-progress" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=20261105-autoload-frames" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261105-frame-progress">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261104-no-map-attribution"></script>
+<script type="module" src="js/weather-map.js?v=20261105-autoload-frames"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
