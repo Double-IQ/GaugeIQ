@@ -178,6 +178,7 @@ protocolOptions.fileReaderConfig = {
         let animationLayers = [];
         let animationFrames = [];
         let animationTimer = null;
+        let animationPausedForMapInteraction = false;
         let animationToken = 0;
         let animationPreparing = false;
         let animationCurrentFrame = 0;
@@ -211,6 +212,7 @@ protocolOptions.fileReaderConfig = {
                 clearInterval(animationTimer);
                 animationTimer = null;
             }
+            animationPausedForMapInteraction = false;
             if (animationLoadTimeout !== null) {
                 clearTimeout(animationLoadTimeout);
                 animationLoadTimeout = null;
@@ -693,6 +695,12 @@ protocolOptions.fileReaderConfig = {
 
         function toggleAnimation() {
             if (animationPreparing) return;
+            if (animationPausedForMapInteraction) {
+                animationPausedForMapInteraction = false;
+                animationToggle.textContent = 'Play';
+                animationToggle.setAttribute('aria-pressed', 'false');
+                return;
+            }
             if (animationTimer !== null) {
                 clearInterval(animationTimer);
                 animationTimer = null;
@@ -714,6 +722,20 @@ protocolOptions.fileReaderConfig = {
             // the remaining frames continue loading in the background. Playback
             // remains under the user's control.
             prepareAnimation(false);
+        });
+        // Avoid changing raster layers while MapLibre is re-rendering the map
+        // during zoom, pan, pitch or rotation gestures. Resume only if playback
+        // was active before the user interacted with the map.
+        map.on('movestart', () => {
+            if (animationTimer === null) return;
+            clearInterval(animationTimer);
+            animationTimer = null;
+            animationPausedForMapInteraction = true;
+        });
+        map.on('moveend', () => {
+            if (!animationPausedForMapInteraction) return;
+            animationPausedForMapInteraction = false;
+            runAnimation();
         });
         map.on('error', event => {
             const message = event?.error?.message || 'A map resource failed to load.';
