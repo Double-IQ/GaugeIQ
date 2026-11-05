@@ -381,7 +381,7 @@ protocolOptions.fileReaderConfig = {
                 // Open-Meteo requires delta_time_hours for accumulated variables
                 // such as precipitation. Derive it from each run's actual valid-time
                 // spacing; the first frame uses the interval to the following frame.
-                const frameGroups = [pastFrames, futureFrames];
+                const frameGroups = [futureFrames, pastFrames];
                 frameGroups.forEach(group => {
                     group.sort((a, b) => a.time - b.time);
                     group.forEach((frame, index) => {
@@ -397,7 +397,7 @@ protocolOptions.fileReaderConfig = {
                 });
 
                 const variables = weatherVariables(layerSelect.value);
-                animationFrames = [...pastFrames, ...futureFrames].map(frame => ({
+                animationFrames = [...futureFrames, ...pastFrames].map(frame => ({
                     ...frame,
                     layerIds: [],
                     sourceIds: []
@@ -485,8 +485,8 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(0);
-                    // Prioritise the first visible frame. Only after it is ready
-                    // do the remaining eleven frames begin fetching in parallel.
+                    // Prioritise the first forecast frame. Once it is ready, queue every
+                    // remaining forecast frame before starting any past-frame requests.
                     animationFrames.forEach(frame => {
                         if (frame.id !== initialFrame().id) addFrameSources(frame);
                     });
