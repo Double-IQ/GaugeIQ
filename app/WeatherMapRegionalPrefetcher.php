@@ -38,44 +38,61 @@ final class WeatherMapRegionalPrefetcher
             return $rankA === 0 ? $timeA <=> $timeB : $timeB <=> $timeA;
         });
 
-        $requests = [];
         $encodingSummaries = [];
-        foreach ($frames as $frame) {
-            $upstreamUrl = (string)($frame['url'] ?? '');
-            $this->validateFrameUrl($upstreamUrl);
-            $fileSize = $this->fetchFileSize($upstreamUrl);
-            $reader = new WeatherMapOmReader(
-                fn(int $offset, int $length): string => $this->fetchProxyRange($upstreamUrl, $offset, $length),
-                $fileSize
-            );
-            $crs = $reader->getString('crs_wkt');
-            if (!str_contains($crs, 'Gaussian Grid')) {
-                throw new RuntimeException('The ECMWF map frame does not use the expected Gaussian grid.');
-            }
+        $blockCount = 0;
+        $forecastFrames = array_values(array_filter(
+            $frames,
+            static fn(array $frame): bool => ($frame['type'] ?? '') === 'future'
+        ));
+        $pastFrames = array_values(array_filter(
+            $frames,
+            static fn(array $frame): bool => ($frame['type'] ?? '') === 'past'
+        ));
 
-            $cloud = $reader->getArrayInfo('cloud_cover');
-            $precipitation = $reader->getArrayInfo('precipitation');
-            foreach (['cloud_cover' => $cloud, 'precipitation' => $precipitation] as $fieldName => $fieldInfo) {
-                $encodingSummaries[$fieldName][implode('|', [
-                    (string)$fieldInfo['data_type'],
-                    (string)$fieldInfo['compression_type'],
-                    sprintf('%.9g', $fieldInfo['scale_factor']),
-                    sprintf('%.9g', $fieldInfo['add_offset']),
-                ])] = true;
-            }
-            if ($cloud['dimensions'] !== $precipitation['dimensions']) {
-                throw new RuntimeException('Cloud-cover and precipitation fields use different ECMWF grid dimensions.');
-            }
-            [$regionStart, $regionEnd] = WeatherMapOmReader::regionalGaussianIndexRange($cloud['dimensions'][1]);
-            foreach ([$cloud, $precipitation] as $field) {
-                foreach (WeatherMapOmReader::selectChunkRanges($field, $regionStart, $regionEnd) as [$start, $end]) {
-                    $this->addAlignedBlocks($requests, $upstreamUrl, $fileSize, $start, $end);
+        // Complete the entire forecast batch before starting any historical-frame
+        // downloads. This is a strict phase boundary, not just a sort preference.
+        foreach ([$forecastFrames, $pastFrames] as $frameGroup) {
+            if ($frameGroup === []) continue;
+
+            $requests = [];
+            foreach ($frameGroup as $frame) {
+                $upstreamUrl = (string)($frame['url'] ?? '');
+                $this->validateFrameUrl($upstreamUrl);
+                $fileSize = $this->fetchFileSize($upstreamUrl);
+                $reader = new WeatherMapOmReader(
+                    fn(int $offset, int $length): string => $this->fetchProxyRange($upstreamUrl, $offset, $length),
+                    $fileSize
+                );
+                $crs = $reader->getString('crs_wkt');
+                if (!str_contains($crs, 'Gaussian Grid')) {
+                    throw new RuntimeException('The ECMWF map frame does not use the expected Gaussian grid.');
+                }
+
+                $cloud = $reader->getArrayInfo('cloud_cover');
+                $precipitation = $reader->getArrayInfo('precipitation');
+                foreach (['cloud_cover' => $cloud, 'precipitation' => $precipitation] as $fieldName => $fieldInfo) {
+                    $encodingSummaries[$fieldName][implode('|', [
+                        (string)$fieldInfo['data_type'],
+                        (string)$fieldInfo['compression_type'],
+                        sprintf('%.9g', $fieldInfo['scale_factor']),
+                        sprintf('%.9g', $fieldInfo['add_offset']),
+                    ])] = true;
+                }
+                if ($cloud['dimensions'] !== $precipitation['dimensions']) {
+                    throw new RuntimeException('Cloud-cover and precipitation fields use different ECMWF grid dimensions.');
+                }
+                [$regionStart, $regionEnd] = WeatherMapOmReader::regionalGaussianIndexRange($cloud['dimensions'][1]);
+                foreach ([$cloud, $precipitation] as $field) {
+                    foreach (WeatherMapOmReader::selectChunkRanges($field, $regionStart, $regionEnd) as [$start, $end]) {
+                        $this->addAlignedBlocks($requests, $upstreamUrl, $fileSize, $start, $end);
+                    }
                 }
             }
-        }
 
-        $blockCount = count($requests);
-        $this->fetchBlocksConcurrently(array_values($requests));
+            $groupBlockCount = count($requests);
+            $this->fetchBlocksConcurrently(array_values($requests));
+            $blockCount += $groupBlockCount;
+        }
         $encodingText = [];
         foreach ($encodingSummaries as $fieldName => $signatures) {
             foreach (array_keys($signatures) as $signature) {
