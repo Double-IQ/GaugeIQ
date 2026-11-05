@@ -417,7 +417,7 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
                 removeAnimationFrameSources(previousFrame);
-                const upcomingFrame = frames[(nextIndex + 1) % frames.length];
+                const upcomingFrame = frames[(nextIndex + 2) % frames.length];
                 if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
                     animationFrameSourceAdder(upcomingFrame);
                 }
@@ -524,12 +524,14 @@ protocolOptions.fileReaderConfig = {
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[animationCurrentFrame];
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
+                const initialFollowingFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 2) % selectedAnimationFrames().length];
                 addFrameSources(initialFrame());
                 addFrameSources(initialNextFrame());
+                addFrameSources(initialFollowingFrame());
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const requiredFrames = [initialFrame(), initialNextFrame()];
+                    const requiredFrames = [initialFrame(), initialNextFrame(), initialFollowingFrame()];
                     const pendingSources = requiredFrames.flatMap(frame =>
                         frame ? frame.sourceIds.filter(id => !map.getSource(id) || !map.isSourceLoaded(id)) : []
                     );
@@ -543,7 +545,9 @@ protocolOptions.fileReaderConfig = {
 
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!isFrameLoaded(initialFrame()) || !isFrameLoaded(initialNextFrame())) return;
+                    if (!isFrameLoaded(initialFrame()) ||
+                        !isFrameLoaded(initialNextFrame()) ||
+                        !isFrameLoaded(initialFollowingFrame())) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
@@ -558,7 +562,7 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(animationCurrentFrame);
-                    // Keep only the visible frame and its immediate successor loaded.
+                    // Keep the visible frame and the next two frames loaded.
                     if (autoStart) runAnimation();
                 };
                 waitForInitialFrame();
@@ -787,7 +791,7 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             // Prepare one chronological sequence: three actual past frames followed
-            // by three forecast frames. Only the current and next frame stay loaded.
+            // by three forecast frames. Keep a three-frame rolling load window.
             // Playback remains under the user's control.
             prepareAnimation(false);
         });
