@@ -133,10 +133,6 @@ protocolOptions.fileReaderConfig = {
         const layerSelect = document.getElementById('layer-select');
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
-        const frameProgressElement = document.getElementById('map-frame-progress');
-        const frameProgressDropdown = document.getElementById('map-frame-progress-dropdown');
-        const frameProgressToggle = document.getElementById('map-frame-progress-toggle');
-        const frameProgressSummary = document.getElementById('map-frame-progress-summary');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -186,7 +182,6 @@ protocolOptions.fileReaderConfig = {
         let animationCurrentFrame = 0;
         let animationLoadTimeout = null;
         let animationLoadPoll = null;
-        let animationFrameProgressPoll = null;
         let animationLoadError = null;
         let animationFrameSourceAdder = null;
 
@@ -224,14 +219,6 @@ protocolOptions.fileReaderConfig = {
                 clearInterval(animationLoadPoll);
                 animationLoadPoll = null;
             }
-            if (animationFrameProgressPoll !== null) {
-                clearInterval(animationFrameProgressPoll);
-                animationFrameProgressPoll = null;
-            }
-            if (frameProgressElement) {
-                frameProgressElement.replaceChildren();
-                frameProgressElement.hidden = true;
-            }
             animationLoadError = null;
             animationFrameSourceAdder = null;
             animationLayers.forEach(item => {
@@ -255,77 +242,12 @@ protocolOptions.fileReaderConfig = {
             animationToggle.setAttribute('aria-pressed', 'false');
         }
 
-        function updateFrameDownloadProgress() {
-            if (!frameProgressElement || !frameProgressDropdown || !frameProgressSummary || animationFrames.length !== 6) return;
-            frameProgressDropdown.hidden = false;
-            const fragment = document.createDocumentFragment();
-            let readyCount = 0;
-            animationFrames.forEach((frame, index) => {
-                const loadedLayers = frame.sourceIds.filter(id =>
-                    map.getSource(id) && map.isSourceLoaded(id)
-                ).length;
-                const totalLayers = frame.sourceIds.length || weatherVariables(layerSelect.value).length;
-                const percent = frame.sourceIds.length
-                    ? Math.round((loadedLayers / totalLayers) * 100)
-                    : 0;
-                const ready = frame.sourceIds.length > 0 && loadedLayers === frame.sourceIds.length;
-                if (ready) readyCount++;
-
-                const row = document.createElement('div');
-                row.className = 'weather-map-frame-progress-row' + (ready ? ' is-ready' : '');
-                const heading = document.createElement('div');
-                heading.className = 'weather-map-frame-progress-heading';
-                const name = document.createElement('span');
-                const frameDate = new Date(frame.time);
-                const timeText = frameDate.toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
-                name.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + timeText;
-                const state = document.createElement('strong');
-                state.textContent = ready ? 'Ready' : (frame.sourceIds.length ? (percent + '%') : 'Queued');
-                heading.append(name, state);
-
-                const track = document.createElement('div');
-                track.className = 'weather-map-frame-progress-track';
-                const fill = document.createElement('span');
-                fill.style.width = percent + '%';
-                track.append(fill);
-                row.append(heading, track);
-                fragment.append(row);
-            });
-            frameProgressSummary.textContent = readyCount + ' / 6 ready';
-            frameProgressElement.replaceChildren(fragment);
-            frameProgressElement.dataset.ready = String(readyCount);
-            frameProgressElement.dataset.total = '6';
-        }
-
         function isAnimationFrameLoaded(frame) {
             return Boolean(
                 frame &&
                 frame.sourceIds.length > 0 &&
                 frame.sourceIds.every(id => map.getSource(id) && map.isSourceLoaded(id))
             );
-        }
-
-        frameProgressToggle?.addEventListener('click', () => {
-            const expanded = frameProgressToggle.getAttribute('aria-expanded') === 'true';
-            frameProgressToggle.setAttribute('aria-expanded', String(!expanded));
-            frameProgressElement.hidden = expanded;
-            frameProgressDropdown.classList.toggle('is-open', !expanded);
-        });
-
-        function monitorAnimationFrameProgress() {
-            if (animationFrameProgressPoll !== null) return;
-            updateFrameDownloadProgress();
-            animationFrameProgressPoll = setInterval(() => {
-                updateFrameDownloadProgress();
-                const requested = animationFrames.filter(frame => frame.sourceIds.length > 0);
-                const complete = requested.length > 0 && requested.every(frame =>
-                    frame.loadError || isAnimationFrameLoaded(frame)
-                );
-                if (complete) {
-                    clearInterval(animationFrameProgressPoll);
-                    animationFrameProgressPoll = null;
-                }
-            }, 500);
         }
 
         function selectedAnimationFrames() {
@@ -422,14 +344,12 @@ protocolOptions.fileReaderConfig = {
                 // blank raster tile pass and cause a visible flash between frames.
                 map.once('idle', () => {
                     removeAnimationFrameSources(previousFrame);
-                    updateFrameDownloadProgress();
-                });
+                    });
 
                 const upcomingFrame = frames[(nextIndex + 2) % frames.length];
                 if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
                     animationFrameSourceAdder(upcomingFrame);
                 }
-                updateFrameDownloadProgress();
             }, 1200);
         }
 
@@ -493,7 +413,6 @@ protocolOptions.fileReaderConfig = {
                     layerIds: [],
                     sourceIds: []
                 }));
-                updateFrameDownloadProgress();
                 const addFrameSources = frame => {
                     if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
@@ -523,8 +442,7 @@ protocolOptions.fileReaderConfig = {
                         animationLayers.push({ id: layerId, frameId: frame.id, opacity: item.opacity });
                         frame.layerIds.push(layerId);
                     });
-                    monitorAnimationFrameProgress();
-                };
+                        };
 
                 animationFrameSourceAdder = addFrameSources;
                 animationPreparing = false;
