@@ -254,6 +254,13 @@ protocolOptions.fileReaderConfig = {
             frameProgressElement.hidden = false;
             const fragment = document.createDocumentFragment();
             let readyCount = 0;
+            const panelHeading = document.createElement('div');
+            panelHeading.className = 'weather-map-frame-progress-title';
+            const panelLabel = document.createElement('strong');
+            panelLabel.textContent = 'FRAME DOWNLOADS';
+            const panelCount = document.createElement('span');
+            panelHeading.append(panelLabel, panelCount);
+            fragment.append(panelHeading);
             animationFrames.forEach((frame, index) => {
                 const loadedLayers = frame.sourceIds.filter(id =>
                     map.getSource(id) && map.isSourceLoaded(id)
@@ -285,6 +292,7 @@ protocolOptions.fileReaderConfig = {
                 row.append(heading, track);
                 fragment.append(row);
             });
+            panelCount.textContent = readyCount + ' / 12 ready';
             frameProgressElement.replaceChildren(fragment);
             frameProgressElement.dataset.ready = String(readyCount);
             frameProgressElement.dataset.total = '12';
