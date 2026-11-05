@@ -1162,10 +1162,10 @@ if ($current && !empty($current['observed_at'])) {
             <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
             <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
         </div>
-        <div id="map-frame-progress-dropdown" class="weather-map-frame-progress-dropdown" hidden>
+        <div id="map-frame-progress-dropdown" class="weather-map-frame-progress-dropdown">
             <button id="map-frame-progress-toggle" class="weather-map-frame-progress-toggle" type="button" aria-expanded="false" aria-controls="map-frame-progress">
                 <span>Frame download progress</span>
-                <span id="map-frame-progress-summary" class="weather-map-frame-progress-summary">Preparing 6 frames…</span>
+                <span id="map-frame-progress-summary" class="weather-map-frame-progress-summary">Loading frame status…</span>
                 <span class="weather-map-frame-progress-chevron" aria-hidden="true"></span>
             </button>
             <div id="map-frame-progress" class="weather-map-frame-progress" aria-label="Weather frame download progress" aria-live="polite" hidden></div>
