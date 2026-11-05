@@ -472,12 +472,12 @@ protocolOptions.fileReaderConfig = {
 
                 animationFrameSourceAdder = addFrameSources;
                 animationPreparing = false;
-                animationCurrentFrame = 0;
+                animationCurrentFrame = pastFrames.length - 1;
                 animationLoadError = null;
-                const initialFrame = () => selectedAnimationFrames()[0];
-                const initialGroup = selectedAnimationFrames();
+                const initialFrame = () => selectedAnimationFrames()[animationCurrentFrame];
+                const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
                 addFrameSources(initialFrame());
-                if (initialGroup[1]) addFrameSources(initialGroup[1]);
+                addFrameSources(initialNextFrame());
                 const isFrameLoaded = frame => Boolean(
                     frame &&
                     frame.sourceIds.length > 0 &&
@@ -513,7 +513,7 @@ protocolOptions.fileReaderConfig = {
                     });
                     animationToggle.disabled = false;
                     setStatus('');
-                    showFrame(0);
+                    showFrame(animationCurrentFrame);
                     // Keep only the visible frame and its immediate successor loaded.
                     if (autoStart) runAnimation();
                 };
