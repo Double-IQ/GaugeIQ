@@ -7126,3 +7126,19 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:520px){
   .weather-map-frame-progress{grid-template-columns:1fr;gap:9px;padding:10px}
 }
+
+.weather-map-frame-progress-title{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(117,164,211,.16);
+  color:#8faaca;
+  font-size:9px;
+  letter-spacing:.14em;
+}
+.weather-map-frame-progress-title strong{font-weight:850}
+.weather-map-frame-progress-title span{color:#68d2ff;font-size:10px;letter-spacing:.02em}
+:root[data-theme="light"] .weather-map-frame-progress-title{border-color:#d1d9e2;color:#718096}
+:root[data-theme="light"] .weather-map-frame-progress-title span{color:#087da5}
