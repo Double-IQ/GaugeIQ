@@ -16,12 +16,12 @@ $pdo = $db->pdo();
 migrateDatabase($pdo);
 $service = new PressureService($config, $pdo);
 
-// Refresh the twelve rolling ECMWF map-frame references and prefetch their
+// Refresh the six rolling ECMWF map-frame references and prefetch their
 // regional data chunks hourly. Both operations are non-fatal to monitoring.
 try {
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
     if ($weatherMapCache->refreshScheduleIfDue(3600)) {
-        echo "Weather-map frame schedule refreshed (6 past + 6 future).\n";
+        echo "Weather-map frame schedule refreshed (3 past + 3 future).\n";
     }
     $prefetchResult = $weatherMapCache->prefetchRegionalFramesIfDue(3600);
     if (!$prefetchResult['skipped']) {
