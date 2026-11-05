@@ -1166,6 +1166,7 @@ if ($current && !empty($current['observed_at'])) {
             <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
             <span id="map-frame-time" aria-live="polite">Six hourly frames</span>
         </div>
+        <div id="map-frame-progress" class="weather-map-frame-progress" aria-label="Weather frame download progress" aria-live="polite" hidden></div>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
