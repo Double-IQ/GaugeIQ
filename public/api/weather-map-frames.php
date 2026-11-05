@@ -50,8 +50,8 @@ try {
         ];
     }
 
-    if (count($frames) !== 12) {
-        throw new RuntimeException('The scheduled weather map does not contain all 12 frames.');
+    if (count($frames) !== 6) {
+        throw new RuntimeException('The scheduled weather map does not contain all 6 frames (3 past + 3 forecast).');
     }
 
     echo json_encode([
