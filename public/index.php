@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261105-six-frame-progress-dropdown" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261105-frame-progress-dropdown">
+<link rel="modulepreload" href="js/weather-map.js?v=20261105-no-frame-progress" crossorigin>
+<link rel="stylesheet" href="css/app.css?v=20261105-no-frame-progress">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261105-six-frame-progress-dropdown"></script>
+<script type="module" src="js/weather-map.js?v=20261105-no-frame-progress"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
@@ -1162,14 +1162,7 @@ if ($current && !empty($current['observed_at'])) {
             <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
             <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
         </div>
-        <div id="map-frame-progress-dropdown" class="weather-map-frame-progress-dropdown">
-            <button id="map-frame-progress-toggle" class="weather-map-frame-progress-toggle" type="button" aria-expanded="false" aria-controls="map-frame-progress">
-                <span>Frame download progress</span>
-                <span id="map-frame-progress-summary" class="weather-map-frame-progress-summary">Loading frame status…</span>
-                <span class="weather-map-frame-progress-chevron" aria-hidden="true"></span>
-            </button>
-            <div id="map-frame-progress" class="weather-map-frame-progress" aria-label="Weather frame download progress" aria-live="polite" hidden></div>
-        </div>
+</div>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
