@@ -66,6 +66,41 @@ const persistentMapCache = new BrowserBlockCache({
 // contract expected by OmHttpBackend: HEAD metadata with Content-Length,
 // followed by byte-range GET requests.
 const gaugeIqOriginalFetch = window.fetch.bind(window);
+let animationNetworkProgress = null;
+
+function trackWeatherProxyRequest(proxyUrl, sendRequest) {
+    const progress = animationNetworkProgress;
+    if (!progress) return sendRequest();
+    const isMetadata = proxyUrl.searchParams.get('metadata') === '1';
+    progress.started++;
+    if (isMetadata) progress.metadataStarted++;
+    else progress.rangeStarted++;
+    progress.active++;
+    progress.onUpdate?.();
+    const startedAt = performance.now();
+    return sendRequest().then(response => {
+        progress.active = Math.max(0, progress.active - 1);
+        progress.completed++;
+        if (isMetadata) progress.metadataCompleted++;
+        else {
+            progress.rangeCompleted++;
+            const contentRange = response.headers.get('Content-Range') || '';
+            const rangeMatch = contentRange.match(/\\/(\\d+)$/);
+            const contentLength = Number(response.headers.get('Content-Length') || 0);
+            progress.bytes += rangeMatch ? Number(rangeMatch[1]) : (Number.isFinite(contentLength) ? contentLength : 0);
+        }
+        progress.lastRequestMs = Math.round(performance.now() - startedAt);
+        progress.onUpdate?.();
+        return response;
+    }, error => {
+        progress.active = Math.max(0, progress.active - 1);
+        progress.failed++;
+        progress.lastError = error?.message || 'Network request failed';
+        progress.onUpdate?.();
+        throw error;
+    });
+}
+
 window.fetch = (input, init) => {
     let request;
     try {
@@ -96,12 +131,12 @@ window.fetch = (input, init) => {
     // synthesize that HEAD response, avoiding hosting-stack HEAD header quirks.
     if (request.method === 'HEAD') {
         proxyUrl.searchParams.set('metadata', '1');
-        return gaugeIqOriginalFetch(proxyUrl.href, {
+        return trackWeatherProxyRequest(proxyUrl, () => gaugeIqOriginalFetch(proxyUrl.href, {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store',
             signal: request.signal
-        }).then(async response => {
+        })).then(async response => {
             if (!response.ok) return response;
             const metadata = await response.json();
             if (!Number.isSafeInteger(Number(metadata.size)) || Number(metadata.size) <= 0) {
@@ -117,7 +152,7 @@ window.fetch = (input, init) => {
         });
     }
 
-    return gaugeIqOriginalFetch(new Request(proxyUrl.href, request));
+    return trackWeatherProxyRequest(proxyUrl, () => gaugeIqOriginalFetch(new Request(proxyUrl.href, request)));
 };
 
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
@@ -474,6 +509,27 @@ protocolOptions.fileReaderConfig = {
                 // frames ready before playback begins.
                 const requiredFrames = selectedAnimationFrames();
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
+                const formatBytes = bytes => bytes >= 1024 * 1024
+                    ? (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+                    : bytes >= 1024 ? Math.round(bytes / 1024) + ' KB' : bytes + ' B';
+                const updateFrameProgress = (frame, index) => {
+                    const loadedSources = frame.sourceIds.filter(id => map.getSource(id) && map.isSourceLoaded(id)).length;
+                    const totalSources = frame.sourceIds.length;
+                    const network = frame.networkProgress || { started: 0, completed: 0, active: 0, bytes: 0, failed: 0 };
+                    let phase;
+                    if (loadedSources === totalSources && totalSources > 0) {
+                        phase = 'tiles decoded · waiting for map render';
+                    } else if (network.active > 0) {
+                        phase = 'downloading · ' + network.active + ' active, ' + network.rangeCompleted + ' range requests complete';
+                    } else if (network.started > 0) {
+                        phase = 'decoding/rendering · ' + loadedSources + '/' + totalSources + ' sources ready';
+                    } else {
+                        phase = 'connecting / reading cached data';
+                    }
+                    const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
+                    const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
+                    setStatus('Loading weather frame ' + (index + 1) + '/6 · ' + phase + transfer + failed);
+                };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
                     const pendingSources = requiredFrames.flatMap(frame =>
@@ -514,7 +570,14 @@ protocolOptions.fileReaderConfig = {
                     }
 
                     const frame = requiredFrames[index];
-                    setStatus('Loading weather frame ' + (index + 1) + '/6…');
+                    frame.networkProgress = {
+                        started: 0, completed: 0, active: 0, bytes: 0,
+                        metadataStarted: 0, metadataCompleted: 0,
+                        rangeStarted: 0, rangeCompleted: 0, failed: 0,
+                        onUpdate: () => updateFrameProgress(frame, index)
+                    };
+                    animationNetworkProgress = frame.networkProgress;
+                    updateFrameProgress(frame, index);
                     addFrameSources(frame);
                     const poll = setInterval(() => {
                         if (token !== animationToken) {
@@ -522,11 +585,15 @@ protocolOptions.fileReaderConfig = {
                             if (animationLoadPoll === poll) animationLoadPoll = null;
                             return;
                         }
-                        if (!isFrameLoaded(frame)) return;
+                        if (!isFrameLoaded(frame)) {
+                            updateFrameProgress(frame, index);
+                            return;
+                        }
                         clearInterval(poll);
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
+                        setStatus('Weather frame ' + (index + 1) + '/6 ready · waiting for map render…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
                         });
