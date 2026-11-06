@@ -260,9 +260,58 @@ protocolOptions.fileReaderConfig = {
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
-            cooperativeGestures: true,
+            cooperativeGestures: false,
             attributionControl: false
         });
+        // A double tap should begin a one-finger pan, not trigger MapLibre's
+        // default double-tap zoom. Pinch-to-zoom remains enabled.
+        map.doubleClickZoom.disable();
+        const mapCanvas = map.getCanvas();
+        let lastMapTap = null;
+        let touchPanActive = false;
+        let lastTouchPanPoint = null;
+        const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
+        mapCanvas.addEventListener('touchstart', event => {
+            if (event.touches.length !== 1 || !event.changedTouches.length) {
+                lastMapTap = null;
+                return;
+            }
+            const point = getTouchPoint(event.changedTouches[0]);
+            const now = Date.now();
+            const isSecondTap = lastMapTap && now - lastMapTap.time < 350 &&
+                Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 28;
+            if (isSecondTap) {
+                touchPanActive = true;
+                lastTouchPanPoint = point;
+                lastMapTap = null;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            } else {
+                lastMapTap = { ...point, time: now };
+            }
+        }, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchmove', event => {
+            if (!touchPanActive || !event.touches.length) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const point = getTouchPoint(event.touches[0]);
+            if (lastTouchPanPoint) {
+                map.panBy([
+                    point.x - lastTouchPanPoint.x,
+                    point.y - lastTouchPanPoint.y
+                ], { animate: false });
+            }
+            lastTouchPanPoint = point;
+        }, { capture: true, passive: false });
+        const finishTouchPan = event => {
+            if (!touchPanActive) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            touchPanActive = false;
+            lastTouchPanPoint = null;
+        };
+        mapCanvas.addEventListener('touchend', finishTouchPan, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchcancel', finishTouchPan, { capture: true, passive: false });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         const locationMarker = document.createElement('div');
         locationMarker.className = 'gaugeiq-map-location-marker';
