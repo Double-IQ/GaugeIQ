@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 /**
- * Maintains the six concrete ECMWF map frames used by GaugeIQ:
- * three past and three forecast hours. Binary map data is deliberately kept out
+ * Maintains six concrete ECMWF IFS 0.25° map frames used by GaugeIQ:
+ * three past and three forecast timestamps. Binary map data is deliberately kept
  * of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
@@ -62,6 +62,8 @@ final class WeatherMapCacheService
             }
             $timestamps[] = $parsed * 1000;
         }
+        sort($timestamps, SORT_NUMERIC);
+        $timestamps = array_values(array_unique($timestamps));
 
         $now = (int)floor(microtime(true) * 1000);
         $pastIndex = -1;
@@ -97,7 +99,8 @@ final class WeatherMapCacheService
             // run's zero-hour step. Select the latest six-hourly run that puts
             // this past valid time at least three hours into its forecast.
             $validTimestamp = (int)floor($timestamp / 1000);
-            $sourceRunTimestamp = (int)(floor(($validTimestamp - 10800) / 21600) * 21600);
+            $runIntervalSeconds = (int)(self::SIX_HOURS_MS / 1000);
+            $sourceRunTimestamp = (int)(floor(($validTimestamp - 10800) / $runIntervalSeconds) * $runIntervalSeconds);
             $sourceRunDate = (new DateTimeImmutable('@' . $sourceRunTimestamp))->setTimezone(new DateTimeZone('UTC'));
             $sourceRunFolder = $sourceRunDate->format('Y/m/d/H') . '00Z';
             $fileName = $validDate->format('Y-m-d\\THi') . '.om';
