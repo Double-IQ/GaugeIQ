@@ -276,7 +276,7 @@ if ($decodedRegularCells !== [0 => 0.0, 3 => 0.0]) {
 }
 echo "PASS ECMWF regular-grid two-dimensional chunk decoding\\n";
 
-$nanChunkBytes = str_repeat("\\0", 27);
+$nanChunkBytes = str_repeat("\0", 27);
 $nanChunkReader = new WeatherMapOmReader(
     static fn(int $offset, int $length): string => substr($nanChunkBytes, $offset, $length),
     strlen($nanChunkBytes)
