@@ -26,7 +26,7 @@ final class WeatherMapRegionalPrefetcher
     public function prefetch(array $frames): array
     {
         if (count($frames) < 1 || count($frames) > 12) {
-            throw new RuntimeException('Regional weather-map prefetch requires between 1 and 12 newly scheduled ECMWF frames.');
+            throw new RuntimeException('Regional weather-map prefetch requires between 1 and 12 newly scheduled ECMWF IFS 0.25° frames.');
         }
         // Forecast frames (current hour onward) first; then work backwards from the newest past frame.
         usort($frames, static function (array $a, array $b): int {
@@ -64,8 +64,8 @@ final class WeatherMapRegionalPrefetcher
                     $fileSize
                 );
                 $crs = $reader->getString('crs_wkt');
-                if (!str_contains($crs, 'Gaussian Grid')) {
-                    throw new RuntimeException('The ECMWF map frame does not use the expected Gaussian grid.');
+                if (str_contains($crs, 'Gaussian Grid')) {
+                    throw new RuntimeException('The ECMWF IFS 0.25° map frame unexpectedly uses a Gaussian grid.');
                 }
 
                 $cloud = $reader->getArrayInfo('cloud_cover');
@@ -81,9 +81,8 @@ final class WeatherMapRegionalPrefetcher
                 if ($cloud['dimensions'] !== $precipitation['dimensions']) {
                     throw new RuntimeException('Cloud-cover and precipitation fields use different ECMWF grid dimensions.');
                 }
-                [$regionStart, $regionEnd] = WeatherMapOmReader::regionalGaussianIndexRange($cloud['dimensions'][1]);
                 foreach ([$cloud, $precipitation] as $field) {
-                    foreach (WeatherMapOmReader::selectChunkRanges($field, $regionStart, $regionEnd) as [$start, $end]) {
+                    foreach (WeatherMapOmReader::selectRegularGridChunkRanges($field) as [$start, $end]) {
                         $this->addAlignedBlocks($requests, $upstreamUrl, $fileSize, $start, $end);
                     }
                 }
@@ -126,7 +125,7 @@ final class WeatherMapRegionalPrefetcher
             ($parts['host'] ?? '') !== 'openmeteo.s3.amazonaws.com' ||
             !preg_match('#^/data_spatial/ecmwf_ifs/.+\.om$#', (string)($parts['path'] ?? '')) ||
             isset($parts['user']) || isset($parts['pass']) || isset($parts['port'])) {
-            throw new RuntimeException('The scheduled ECMWF frame URL is invalid.');
+            throw new RuntimeException('The scheduled ECMWF IFS 0.25° frame URL is invalid.');
         }
     }
 
