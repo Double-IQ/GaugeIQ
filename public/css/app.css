@@ -7062,11 +7062,6 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#657487;
 }
 
-/* Wind HUD outer card: let the dashboard surface flow without a second frame. */
-.wind-gauge-card.wind-hud-card{
-  border:0;
-}
-
 /* Subtle radar pulses around the map location marker and compass arrow. */
 .gaugeiq-map-location-marker{
   position:relative;
@@ -7122,16 +7117,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 
-/* Visibility fixes: keep the Wind card borderless in both themes and
-   render radar rings in front of the marker's stacking context. */
-.wind-gauge-card.wind-hud-card{
-  border:0!important;
-  outline:0!important;
-}
-:root[data-theme="light"] .wind-gauge-card.wind-hud-card{
-  border:0!important;
-  outline:0!important;
-}
+/* Radar visibility: render rings in front of the marker's stacking context. */
 .gaugeiq-map-location-marker{
   z-index:0;
   isolation:auto;
@@ -7151,3 +7137,27 @@ body.gaugeiq-menu-open{overflow:hidden}
   z-index:3;
   transform-origin:center;
 }
+
+/* Expandable map credits disclosure. */
+.weather-map-credits-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  list-style:none;cursor:pointer;outline:none;
+}
+.weather-map-credits-toggle::-webkit-details-marker{display:none}
+.weather-map-credits-toggle::marker{content:""}
+.weather-map-credits-heading{display:block;min-width:0;margin:0}
+.weather-map-credits-title{display:block;margin:0;color:#f2f8ff;font-size:18px;font-weight:750;letter-spacing:-.02em}
+.weather-map-credits-intro{display:block;margin:4px 0 0;color:#a9bfd9;font-size:11px;line-height:1.45}
+.weather-map-credits-chevron{
+  flex:0 0 11px;width:11px;height:11px;margin-right:4px;
+  border-right:2px solid #9bc8ed;border-bottom:2px solid #9bc8ed;
+  transform:rotate(45deg) translateY(-3px);transition:transform .2s ease;
+}
+.weather-map-credits-card[open] .weather-map-credits-chevron{transform:rotate(225deg) translate(-2px,-1px)}
+.weather-map-credits-content{padding-top:17px}
+.weather-map-credits-card:not([open]){padding-bottom:17px}
+.weather-map-credits-toggle:focus-visible{border-radius:8px;outline:2px solid #72b9f2;outline-offset:5px}
+:root[data-theme="light"] .weather-map-credits-title{color:#202b38}
+:root[data-theme="light"] .weather-map-credits-intro{color:#53677d}
+:root[data-theme="light"] .weather-map-credits-chevron{border-color:#326c9d}
+@media(prefers-reduced-motion:reduce){.weather-map-credits-chevron{transition:none}}
