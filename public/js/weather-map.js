@@ -185,7 +185,12 @@ protocolOptions.fileReaderConfig = {
             attributionControl: false
         });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
-        new maplibregl.Marker({ color: '#f97316' }).setLngLat([config.longitude, config.latitude]).addTo(map);
+        const locationMarker = document.createElement('div');
+        locationMarker.className = 'gaugeiq-map-location-marker';
+        locationMarker.setAttribute('aria-hidden', 'true');
+        new maplibregl.Marker({ element: locationMarker, anchor: 'center' })
+            .setLngLat([config.longitude, config.latitude])
+            .addTo(map);
 
         let weatherLayerToken = 0;
         let activeSources = [];
