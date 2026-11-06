@@ -57,8 +57,20 @@ try {
         .color-stop output { display: block; min-width: 0; color: #dbeafe; font-size: 10px; text-align: center; }
         .color-stop label { display: block; margin-bottom: 7px; color: #cbd5e1; font-size: 11px; line-height: 1.35; }
         input[type="color"] { width: 100%; height: 42px; padding: 3px; border: 1px solid rgba(148,163,184,.4); border-radius: 9px; background: #102b68; cursor: pointer; }
-        .gradient { height: 13px; margin-top: 14px; border-radius: 4px; background: linear-gradient(90deg, #0000, #7dd3fc, #2563eb, #7c3aed, #ec4899); }
-        .gradient.cloud { background: linear-gradient(90deg, #0000, #e2e8f0, #cbd5e1, #94a3b8, #475569); }
+        /* Checkerboard makes transparency visible instead of blending every
+           preview against the same solid dark panel colour. */
+        .gradient {
+            height: 28px;
+            margin-top: 14px;
+            border: 1px solid rgba(148,163,184,.45);
+            border-radius: 5px;
+            background-color: #fff;
+            background-image:
+                linear-gradient(90deg, transparent, transparent),
+                conic-gradient(#cbd5e1 25%, #fff 0 50%, #cbd5e1 0 75%, #fff 0);
+            background-size: 100% 100%, 12px 12px;
+        }
+        .gradient.cloud { }
         .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .save { background: #1d4ed8; border-color: #3b82f6; }
         .reset { background: transparent; }
@@ -414,7 +426,13 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         const stops = colors.map((color, index) =>
             rgba(color, settings[opacityKey]?.[index]) + ' ' + positions[index] + '%'
         );
-        target.style.background = 'linear-gradient(90deg, ' + rgba('#000000', 0) + ' 0%, ' + stops.join(', ') + ')';
+        // Keep the checkerboard underneath the colour ramp: changing alpha
+        // must visibly reveal the background pattern, not look like a colour edit.
+        target.style.backgroundImage =
+            'linear-gradient(90deg, ' + rgba('#000000', 0) + ' 0%, ' + stops.join(', ') + '), ' +
+            'conic-gradient(#cbd5e1 25%, #fff 0 50%, #cbd5e1 0 75%, #fff 0)';
+        target.style.backgroundSize = '100% 100%, 12px 12px';
+        target.style.backgroundColor = '#fff';
     }
 
     function render() {
