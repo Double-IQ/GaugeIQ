@@ -468,9 +468,10 @@ protocolOptions.fileReaderConfig = {
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[animationCurrentFrame];
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
-                // Keep the six-frame guarantee, but stagger source creation.
-                // In Combined mode each frame creates two raster sources, so
-                // loading two frames at a time caps the initial burst at four.
+                // Load one frame at a time. In Combined mode that means only
+                // two new raster sources are introduced per step. This limits
+                // cold-cache network/decode bursts while still having all six
+                // frames ready before playback begins.
                 const requiredFrames = selectedAnimationFrames();
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 animationLoadTimeout = setTimeout(() => {
@@ -484,7 +485,7 @@ protocolOptions.fileReaderConfig = {
                     ].filter(Boolean).join(' | ');
                     clearAnimation();
                     setStatus('The hourly weather frames could not all be loaded.' + (detail ? ' ' + detail : ''));
-                }, 120000);
+                }, 180000);
 
                 const finishPreparation = () => {
                     if (token !== animationToken) return;
@@ -505,30 +506,36 @@ protocolOptions.fileReaderConfig = {
                     if (autoStart) runAnimation();
                 };
 
-                const loadBatch = startIndex => {
+                const loadFrame = index => {
                     if (token !== animationToken) return;
-                    if (startIndex >= requiredFrames.length) {
+                    if (index >= requiredFrames.length) {
                         finishPreparation();
                         return;
                     }
 
-                    const batch = requiredFrames.slice(startIndex, startIndex + 2);
-                    batch.forEach(addFrameSources);
+                    const frame = requiredFrames[index];
+                    setStatus('Loading weather frame ' + (index + 1) + '/6…');
+                    addFrameSources(frame);
                     const poll = setInterval(() => {
                         if (token !== animationToken) {
                             clearInterval(poll);
                             if (animationLoadPoll === poll) animationLoadPoll = null;
                             return;
                         }
-                        if (!batch.every(isFrameLoaded)) return;
+                        if (!isFrameLoaded(frame)) return;
                         clearInterval(poll);
                         if (animationLoadPoll === poll) animationLoadPoll = null;
-                        loadBatch(startIndex + batch.length);
+                        // Give MapLibre a render turn before adding the next
+                        // frame's sources, rather than stacking source creation.
+                        map.once('render', () => {
+                            if (token === animationToken) loadFrame(index + 1);
+                        });
+                        map.triggerRepaint();
                     }, 300);
                     animationLoadPoll = poll;
                 };
 
-                loadBatch(0);
+                loadFrame(0);
             } catch (error) {
                 if (token !== animationToken) return;
                 animationPreparing = false;
