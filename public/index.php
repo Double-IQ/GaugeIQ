@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261106-ifs025-cubic-blend-3" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=20261106-ifs025-cubic-blend-4" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261106-wind-compass-original-markers">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261106-ifs025-cubic-blend-3"></script>
+<script type="module" src="js/weather-map.js?v=20261106-ifs025-cubic-blend-4"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -1109,7 +1109,7 @@ if ($current && !empty($current['observed_at'])) {
                     <span class="weather-map-credit-icon" aria-hidden="true">⌖</span>
                     <div>
                         <span class="weather-map-credit-label">MAP &amp; GEOGRAPHIC DATA</span>
-                        <p><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
+                        <p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> and <a href="https://carto.com/" target="_blank" rel="noopener noreferrer">CARTO</a> basemap tiles.</p>
                     </div>
                 </article>
                 <article class="weather-map-credit-source meteo-source">
