@@ -732,10 +732,12 @@ protocolOptions.fileReaderConfig = {
 
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
-            // Prepare one chronological sequence: three actual past frames followed
-            // by three forecast frames. All six frames are loaded before playback.
-            // Playback remains under the user's control.
-            prepareAnimation(false);
+
+            // Show the latest single weather layer first. Do not download all six
+            // animation frames during dashboard startup; that creates up to twelve
+            // raster sources at once in Combined mode and can overwhelm mobile browsers.
+            animationToggle.disabled = false;
+            showWeatherLayer(layerSelect.value);
         });
         // Avoid changing raster layers while MapLibre is re-rendering the map
         // during zoom, pan, pitch or rotation gestures. Resume only if playback
