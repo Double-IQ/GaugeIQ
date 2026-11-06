@@ -45,50 +45,98 @@ final class WeatherMapCacheService
             return false;
         }
 
-        $metadata = $this->fetchMetadata();
-        $validTimes = $metadata['valid_times'] ?? null;
-        if (!is_array($validTimes) || count($validTimes) < self::FRAME_COUNT) {
-            throw new RuntimeException('Latest ECMWF IFS 0.25° metadata does not contain enough valid times.');
-        }
-
-        $timestamps = [];
-        foreach ($validTimes as $value) {
-            if (!is_string($value)) {
-                throw new RuntimeException('Latest ECMWF IFS 0.25° metadata contains an invalid valid time.');
-            }
-            $parsed = strtotime($value);
-            if ($parsed === false) {
-                throw new RuntimeException('Latest ECMWF IFS 0.25° metadata contains an unreadable valid time.');
-            }
-            $timestamps[] = $parsed * 1000;
-        }
-        sort($timestamps, SORT_NUMERIC);
-        $timestamps = array_values(array_unique($timestamps));
-
+        // latest.json is published only after a run is complete. During the
+        // next model cycle it can therefore be stale and contain no timestamps
+        // ahead of the current time. in-progress.json is updated as forecast
+        // steps arrive, so consider both and select the newest usable run.
         $now = (int)floor(microtime(true) * 1000);
-        $pastIndex = -1;
-        $futureIndex = -1;
-        foreach ($timestamps as $index => $timestamp) {
-            if ($timestamp <= $now) $pastIndex = $index;
-            if ($futureIndex === -1 && $timestamp > $now) $futureIndex = $index;
-        }
-        if ($pastIndex < 0 || $futureIndex < 0 || $futureIndex + self::FRAME_COUNT > count($timestamps)) {
-            throw new RuntimeException('The latest ECMWF IFS 0.25° run cannot provide three past and three future frames.');
+        $candidates = [];
+        $metadataErrors = [];
+        foreach (['latest.json', 'in-progress.json'] as $metadataFile) {
+            try {
+                $metadata = $this->fetchMetadata($metadataFile);
+                $validTimes = $metadata['valid_times'] ?? null;
+                $referenceTime = $metadata['reference_time'] ?? null;
+                if (!is_array($validTimes) || !is_string($referenceTime)) {
+                    $metadataErrors[] = $metadataFile . ' is missing reference_time or valid_times';
+                    continue;
+                }
+
+                $timestamps = [];
+                foreach ($validTimes as $value) {
+                    if (!is_string($value) || ($parsed = strtotime($value)) === false) {
+                        continue;
+                    }
+                    $timestamps[] = $parsed * 1000;
+                }
+                sort($timestamps, SORT_NUMERIC);
+                $timestamps = array_values(array_unique($timestamps));
+
+                $pastIndex = -1;
+                $futureIndex = -1;
+                foreach ($timestamps as $index => $timestamp) {
+                    if ($timestamp <= $now) $pastIndex = $index;
+                    if ($futureIndex === -1 && $timestamp > $now) $futureIndex = $index;
+                }
+                if ($futureIndex < 0 || $futureIndex + self::FRAME_COUNT > count($timestamps)) {
+                    $metadataErrors[] = $metadataFile . ' has fewer than three future timestamps';
+                    continue;
+                }
+
+                $referenceTimestamp = strtotime($referenceTime);
+                if ($referenceTimestamp === false) {
+                    $metadataErrors[] = $metadataFile . ' has an unreadable reference_time';
+                    continue;
+                }
+                $candidates[] = [
+                    'metadata' => $metadata,
+                    'timestamps' => $timestamps,
+                    'past_index' => $pastIndex,
+                    'future_index' => $futureIndex,
+                    'reference_timestamp' => $referenceTimestamp,
+                    'future_count' => count($timestamps) - $futureIndex,
+                ];
+            } catch (Throwable $error) {
+                $metadataErrors[] = $metadataFile . ': ' . $error->getMessage();
+            }
         }
 
-        $runDate = new DateTimeImmutable((string)($metadata['reference_time'] ?? ''), new DateTimeZone('UTC'));
+        if ($candidates === []) {
+            throw new RuntimeException(
+                'Neither latest nor in-progress ECMWF IFS 0.25° metadata has three future timestamps. ' .
+                implode('; ', $metadataErrors)
+            );
+        }
+
+        // Prefer the newest run. If both files describe the same run, prefer
+        // the metadata snapshot containing the greatest forecast horizon.
+        usort($candidates, static function (array $a, array $b): int {
+            $runOrder = $b['reference_timestamp'] <=> $a['reference_timestamp'];
+            return $runOrder !== 0 ? $runOrder : ($b['future_count'] <=> $a['future_count']);
+        });
+        $selected = $candidates[0];
+        $metadata = $selected['metadata'];
+        $timestamps = $selected['timestamps'];
+        $pastIndex = $selected['past_index'];
+        $futureIndex = $selected['future_index'];
+
+        $runDate = new DateTimeImmutable((string)$metadata['reference_time'], new DateTimeZone('UTC'));
         $futureRunFolder = $runDate->format('Y/m/d/H') . '00Z';
 
-        // IFS 0.25° is a regular 0.25° grid with native 3-hourly steps,
-        // changing to 6-hourly steps after forecast hour 144. Preserve the
-        // actual metadata timestamps rather than assuming an hourly cadence.
-        $pastTimes = array_slice($timestamps, max(0, $pastIndex - self::FRAME_COUNT + 1), $pastIndex + 1);
+        // Keep actual model timestamps. If the current run has fewer than
+        // three elapsed steps (common shortly after initialisation), fill the
+        // remaining historical display slots by the native 3-hour cadence;
+        // those files are resolved against their own archived source runs.
+        $pastTimes = $pastIndex >= 0
+            ? array_slice($timestamps, max(0, $pastIndex - self::FRAME_COUNT + 1), $pastIndex + 1)
+            : [];
         while (count($pastTimes) < self::FRAME_COUNT) {
-            array_unshift($pastTimes, $pastTimes[0] - (3 * self::HOUR_MS));
+            $anchor = $pastTimes[0] ?? ($timestamps[0] ?? $now);
+            array_unshift($pastTimes, $anchor - (3 * self::HOUR_MS));
         }
         $futureTimes = array_slice($timestamps, $futureIndex, self::FRAME_COUNT);
-        if (count($pastTimes) !== self::FRAME_COUNT || count($futureTimes) !== self::FRAME_COUNT) {
-            throw new RuntimeException('The latest ECMWF IFS 0.25° run does not contain enough forecast timestamps.');
+        if (count($futureTimes) !== self::FRAME_COUNT) {
+            throw new RuntimeException('Selected ECMWF IFS 0.25° metadata does not contain three future timestamps.');
         }
 
         $frames = [];
@@ -265,13 +313,14 @@ final class WeatherMapCacheService
         return $stmt->fetchColumn() !== false;
     }
 
-    private function fetchMetadata(): array
+    private function fetchMetadata(string $metadataFile = 'latest.json'): array
     {
         if (!function_exists('curl_init')) {
             throw new RuntimeException('The PHP cURL extension is required for the weather-map schedule.');
         }
 
-        $curl = curl_init(self::METADATA_URL);
+        $metadataUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/' . $metadataFile;
+        $curl = curl_init($metadataUrl);
         if ($curl === false) {
             throw new RuntimeException('Unable to initialise the ECMWF IFS 0.25° metadata request.');
         }
