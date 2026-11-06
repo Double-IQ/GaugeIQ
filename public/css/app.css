@@ -7163,12 +7163,11 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.weather-map-credits-chevron{transition:none}}
 
 
-/* Remove only the inner Wind speed-history panel border; retain the Wind card frame. */
-.wind-hud-speed-history{
+/* Keep the Wind speed-history content flush with the outer Wind card. */
+.wind-gauge-card.wind-hud-card .wind-hud-speed-history,
+:root[data-theme="light"] .wind-gauge-card.wind-hud-card .wind-hud-speed-history{
   border:0!important;
   outline:0!important;
-}
-:root[data-theme="light"] .wind-hud-speed-history{
-  border:0!important;
-  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
 }
