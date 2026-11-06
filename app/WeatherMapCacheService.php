@@ -397,6 +397,7 @@ final class WeatherMapCacheService
         if ($curl === false) {
             return false;
         }
+        $contentRange = '';
         curl_setopt_array($curl, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
@@ -405,10 +406,15 @@ final class WeatherMapCacheService
             CURLOPT_USERAGENT => 'GaugeIQ-WeatherMap/1.0',
             CURLOPT_HTTPHEADER => ['Accept: application/octet-stream'],
             CURLOPT_RANGE => '0-0',
+            CURLOPT_HEADERFUNCTION => static function ($handle, string $header) use (&$contentRange): int {
+                if (stripos($header, 'Content-Range:') === 0) {
+                    $contentRange = trim(substr($header, strlen('Content-Range:')));
+                }
+                return strlen($header);
+            },
         ]);
         $body = curl_exec($curl);
         $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-        $contentRange = (string)curl_getinfo($curl, CURLINFO_CONTENT_RANGE);
         curl_close($curl);
 
         return $status === 206 && is_string($body) && strlen($body) === 1 &&
