@@ -7062,3 +7062,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#657487;
 }
 
+/* Wind HUD outer card: let the dashboard surface flow without a second frame. */
+.wind-gauge-card.wind-hud-card{
+  border:0;
+}
