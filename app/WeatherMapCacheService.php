@@ -199,9 +199,13 @@ final class WeatherMapCacheService
         $this->pdo->beginTransaction();
         try {
             $this->pdo->exec('DELETE FROM gaugeiq_weather_map_frames');
-            $insert = $this->pdo->prepare(
-                'INSERT INTO gaugeiq_weather_map_frames (slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at) VALUES (?, ?, ?, ?, ?, ?)'
-            );
+            $driver = (string)$this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+            if ($driver === 'mysql') {
+                $insertSql = 'INSERT INTO gaugeiq_weather_map_frames (slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE frame_type = VALUES(frame_type), frame_time = VALUES(frame_time), file_url = VALUES(file_url), model_run_time = VALUES(model_run_time), refreshed_at = VALUES(refreshed_at)';
+            } else {
+                $insertSql = 'INSERT INTO gaugeiq_weather_map_frames (slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(slot_id) DO UPDATE SET frame_type = excluded.frame_type, frame_time = excluded.frame_time, file_url = excluded.file_url, model_run_time = excluded.model_run_time, refreshed_at = excluded.refreshed_at';
+            }
+            $insert = $this->pdo->prepare($insertSql);
             foreach ($frames as $frame) {
                 $insert->execute([
                     $frame['slot_id'],
