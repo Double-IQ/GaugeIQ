@@ -30,7 +30,7 @@ try {
         if (!is_array($parts) ||
             ($parts['scheme'] ?? '') !== 'https' ||
             ($parts['host'] ?? '') !== 'openmeteo.s3.amazonaws.com' ||
-            !preg_match('#^/data_spatial/ecmwf_ifs/.+\\.om$#', (string)($parts['path'] ?? ''))) {
+            !preg_match('#^/data_spatial/ecmwf_ifs025/.+\\.om$#', (string)($parts['path'] ?? ''))) {
             continue;
         }
 
