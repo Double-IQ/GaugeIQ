@@ -694,6 +694,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
-<script src="js/alerts.js?v=20261101-wvi-decimal-thresholds" defer></script>
+<script src="js/alerts.js?v=20261106-pressure-drop-condition" defer></script>
 </body>
 </html>
