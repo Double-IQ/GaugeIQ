@@ -256,7 +256,7 @@ if (!$hasWrappedLongitude) {
     throw new RuntimeException('ECMWF regular-grid neighbourhood did not wrap longitude across the antimeridian.');
 }
 echo "PASS ECMWF regular-grid antimeridian neighbourhood wrapping\\n";
-$regularChunkBytes = str_repeat("\\0", 3) . "\\0\\0" . str_repeat("\\0", 22);
+$regularChunkBytes = str_repeat("\0", 3) . "\0\0" . str_repeat("\0", 22);
 $regularChunkReader = new WeatherMapOmReader(
     static fn(int $offset, int $length): string => substr($regularChunkBytes, $offset, $length),
     strlen($regularChunkBytes)
