@@ -276,6 +276,29 @@ if ($decodedRegularCells !== [0 => 0.0, 3 => 0.0]) {
 }
 echo "PASS ECMWF regular-grid two-dimensional chunk decoding\\n";
 
+$nanChunkBytes = str_repeat("\\0", 3) . "\\0\\0";
+$nanChunkReader = new WeatherMapOmReader(
+    static fn(int $offset, int $length): string => substr($nanChunkBytes, $offset, $length),
+    strlen($nanChunkBytes)
+);
+$nanChunkInfo = [
+    'data_type' => 20,
+    'compression_type' => 0,
+    'scale_factor' => 1.0,
+    'add_offset' => 0.0,
+    'dimensions' => [1, 3],
+    'chunks' => [1, 1],
+    'lut' => [3, 4, 4, 5],
+];
+$decodedNanChunkCells = $nanChunkReader->decodeFloatArrayGridIndices($nanChunkInfo, [0, 1, 2]);
+if (($decodedNanChunkCells[0] ?? null) !== 0.0 ||
+    !is_nan($decodedNanChunkCells[1] ?? 0.0) ||
+    ($decodedNanChunkCells[2] ?? null) !== 0.0) {
+    throw new RuntimeException('OM v3 zero-byte all-NaN chunk decoding failed.');
+}
+echo "PASS OM v3 zero-byte all-NaN chunk decoding\\n";
+
+
 
 
 $scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
