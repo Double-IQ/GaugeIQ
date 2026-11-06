@@ -39,13 +39,16 @@ const appearanceDefaults = {
             }
         });
 
-        function hexToRgba(hex, alpha = 1) {
+        // Keep the palette's RGB channels untouched. Per-colour opacity is
+        // represented exclusively by the fourth (alpha) channel.
+        function hexToRgba(hex, opacityPercent = 100) {
             const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+            const opacity = Math.max(0, Math.min(100, Number(opacityPercent)));
             return [
                 parseInt(value.slice(0, 2), 16),
                 parseInt(value.slice(2, 4), 16),
                 parseInt(value.slice(4, 6), 16),
-                alpha
+                (Number.isFinite(opacity) ? opacity : 100) / 100
             ];
         }
 
@@ -130,7 +133,7 @@ protocolOptions.fileReaderConfig = {
                 breakpoints: [0, 0.2, 1, 5, 20],
                 colors: [
                     [0, 0, 0, 0],
-                    ...appearance.precipitationColors.map((color, index) => hexToRgba(color, Math.max(0, Math.min(100, Number(appearance.precipitationColorOpacities?.[index] ?? 100))) / 100))
+                    ...appearance.precipitationColors.map((color, index) => hexToRgba(color, appearance.precipitationColorOpacities?.[index] ?? 100))
                 ]
             },
             cloud_cover: {
@@ -139,7 +142,7 @@ protocolOptions.fileReaderConfig = {
                 breakpoints: [0, 25, 50, 75, 100],
                 colors: [
                     [0, 0, 0, 0],
-                    ...appearance.cloudColors.map((color, index) => hexToRgba(color, Math.max(0, Math.min(100, Number(appearance.cloudColorOpacities?.[index] ?? 100))) / 100))
+                    ...appearance.cloudColors.map((color, index) => hexToRgba(color, appearance.cloudColorOpacities?.[index] ?? 100))
                 ]
             }
         };
