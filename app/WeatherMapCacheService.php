@@ -89,7 +89,7 @@ final class WeatherMapCacheService
                     continue;
                 }
                 $candidates[] = [
-                    'metadata' => $metadata,
+                    'metadata' => array_merge($metadata, ['_source' => $metadataFile]),
                     'timestamps' => $timestamps,
                     'past_index' => $pastIndex,
                     'future_index' => $futureIndex,
@@ -114,19 +114,66 @@ final class WeatherMapCacheService
             $runOrder = $b['reference_timestamp'] <=> $a['reference_timestamp'];
             return $runOrder !== 0 ? $runOrder : ($b['future_count'] <=> $a['future_count']);
         });
-        $selected = $candidates[0];
+        // Metadata can advertise a timestamp before its .om object has been
+        // finished uploading. Validate the actual S3 range object before
+        // publishing any frame URL to the browser.
+        $selected = null;
+        $futureRunFolder = '';
+        $futureFrames = [];
+        foreach ($candidates as $candidate) {
+            $candidateRunDate = new DateTimeImmutable(
+                (string)$candidate['metadata']['reference_time'],
+                new DateTimeZone('UTC')
+            );
+            $candidateRunFolder = $candidateRunDate->format('Y/m/d/H') . '00Z';
+            $availableFutureFrames = [];
+            $checkedFutureTimes = 0;
+
+            foreach (array_slice($candidate['timestamps'], $candidate['future_index'], 12) as $timestamp) {
+                $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))
+                    ->setTimezone(new DateTimeZone('UTC'));
+                $fileName = $validDate->format('Y-m-d\\THi') . '.om';
+                $fileUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH .
+                    '/' . $candidateRunFolder . '/' . $fileName;
+                $checkedFutureTimes++;
+                if (!$this->upstreamObjectHasRange($fileUrl)) {
+                    continue;
+                }
+                $availableFutureFrames[] = [
+                    'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
+                    'file_url' => $fileUrl,
+                    'model_run_time' => $candidateRunDate->format('Y-m-d\\TH:i:s\\Z'),
+                ];
+                if (count($availableFutureFrames) === self::FRAME_COUNT) {
+                    break;
+                }
+            }
+
+            if (count($availableFutureFrames) === self::FRAME_COUNT) {
+                $selected = $candidate;
+                $futureRunFolder = $candidateRunFolder;
+                $futureFrames = $availableFutureFrames;
+                break;
+            }
+            $metadataErrors[] = basename((string)($candidate['metadata']['_source'] ?? 'ECMWF metadata')) .
+                ' did not have three published forecast objects in its first ' . $checkedFutureTimes . ' future timestamps';
+        }
+
+        if ($selected === null) {
+            throw new RuntimeException(
+                'ECMWF IFS 0.25° metadata is available, but three forecast .om objects are not yet published. ' .
+                implode('; ', $metadataErrors)
+            );
+        }
+
         $metadata = $selected['metadata'];
         $timestamps = $selected['timestamps'];
         $pastIndex = $selected['past_index'];
-        $futureIndex = $selected['future_index'];
-
-        $runDate = new DateTimeImmutable((string)$metadata['reference_time'], new DateTimeZone('UTC'));
-        $futureRunFolder = $runDate->format('Y/m/d/H') . '00Z';
 
         // Keep actual model timestamps. If the current run has fewer than
-        // three elapsed steps (common shortly after initialisation), fill the
-        // remaining historical display slots by the native 3-hour cadence;
-        // those files are resolved against their own archived source runs.
+        // three elapsed steps, fill the remaining historical display slots
+        // by the native 3-hour cadence. For each timestamp, walk backwards
+        // through six-hourly source runs until S3 confirms the object exists.
         $pastTimes = $pastIndex >= 0
             ? array_slice($timestamps, max(0, $pastIndex - self::FRAME_COUNT + 1), $pastIndex + 1)
             : [];
@@ -134,43 +181,62 @@ final class WeatherMapCacheService
             $anchor = $pastTimes[0] ?? ($timestamps[0] ?? $now);
             array_unshift($pastTimes, $anchor - (3 * self::HOUR_MS));
         }
-        $futureTimes = array_slice($timestamps, $futureIndex, self::FRAME_COUNT);
-        if (count($futureTimes) !== self::FRAME_COUNT) {
-            throw new RuntimeException('Selected ECMWF IFS 0.25° metadata does not contain three future timestamps.');
-        }
 
-        $frames = [];
-        foreach ($pastTimes as $offset => $timestamp) {
-            $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))->setTimezone(new DateTimeZone('UTC'));
-
-            // Precipitation is accumulated backwards and is not present at a
-            // run's zero-hour step. Select the latest six-hourly run that puts
-            // this past valid time at least three hours into its forecast.
+        $pastFrames = [];
+        foreach ($pastTimes as $timestamp) {
+            $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))
+                ->setTimezone(new DateTimeZone('UTC'));
             $validTimestamp = (int)floor($timestamp / 1000);
             $runIntervalSeconds = (int)(self::SIX_HOURS_MS / 1000);
             $sourceRunTimestamp = (int)(floor(($validTimestamp - 10800) / $runIntervalSeconds) * $runIntervalSeconds);
-            $sourceRunDate = (new DateTimeImmutable('@' . $sourceRunTimestamp))->setTimezone(new DateTimeZone('UTC'));
-            $sourceRunFolder = $sourceRunDate->format('Y/m/d/H') . '00Z';
-            $fileName = $validDate->format('Y-m-d\\THi') . '.om';
+            $availablePastFrame = null;
 
+            // Try the latest eligible run first, then older archived runs.
+            for ($attempt = 0; $attempt < 8; $attempt++) {
+                $sourceRunDate = (new DateTimeImmutable('@' . $sourceRunTimestamp))
+                    ->setTimezone(new DateTimeZone('UTC'));
+                $sourceRunFolder = $sourceRunDate->format('Y/m/d/H') . '00Z';
+                $fileName = $validDate->format('Y-m-d\\THi') . '.om';
+                $fileUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH .
+                    '/' . $sourceRunFolder . '/' . $fileName;
+
+                if ($this->upstreamObjectHasRange($fileUrl)) {
+                    $availablePastFrame = [
+                        'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
+                        'file_url' => $fileUrl,
+                        'model_run_time' => $sourceRunDate->format('Y-m-d\\TH:i:s\\Z'),
+                    ];
+                    break;
+                }
+                $sourceRunTimestamp -= $runIntervalSeconds;
+            }
+
+            if ($availablePastFrame === null) {
+                throw new RuntimeException(
+                    'No published ECMWF IFS 0.25° source object was found for past frame ' .
+                    $validDate->format('Y-m-d\\TH:i:s\\Z') . '.'
+                );
+            }
+            $pastFrames[] = $availablePastFrame;
+        }
+
+        $frames = [];
+        foreach ($pastFrames as $offset => $frame) {
             $frames[] = [
                 'slot_id' => $offset,
                 'frame_type' => 'past',
-                'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
-                'file_url' => 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/' . $sourceRunFolder . '/' . $fileName,
-                'model_run_time' => $sourceRunDate->format('Y-m-d\\TH:i:s\\Z'),
+                'frame_time' => $frame['frame_time'],
+                'file_url' => $frame['file_url'],
+                'model_run_time' => $frame['model_run_time'],
             ];
         }
-
-        foreach ($futureTimes as $offset => $timestamp) {
-            $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))->setTimezone(new DateTimeZone('UTC'));
-            $fileName = $validDate->format('Y-m-d\\THi') . '.om';
+        foreach ($futureFrames as $offset => $frame) {
             $frames[] = [
                 'slot_id' => self::FRAME_COUNT + $offset,
                 'frame_type' => 'future',
-                'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
-                'file_url' => 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/' . $futureRunFolder . '/' . $fileName,
-                'model_run_time' => $runDate->format('Y-m-d\\TH:i:s\\Z'),
+                'frame_time' => $frame['frame_time'],
+                'file_url' => $frame['file_url'],
+                'model_run_time' => $frame['model_run_time'],
             ];
         }
 
@@ -315,6 +381,38 @@ final class WeatherMapCacheService
         $stmt = $this->pdo->prepare('SELECT 1 FROM gaugeiq_weather_map_frames WHERE file_url = ? LIMIT 1');
         $stmt->execute([$canonical]);
         return $stmt->fetchColumn() !== false;
+    }
+
+    /**
+     * Confirm that the upstream object is published and supports the exact
+     * one-byte range request used by the browser proxy's metadata probe.
+     */
+    private function upstreamObjectHasRange(string $url): bool
+    {
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('The PHP cURL extension is required to validate ECMWF map-frame objects.');
+        }
+
+        $curl = curl_init($url);
+        if ($curl === false) {
+            return false;
+        }
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_USERAGENT => 'GaugeIQ-WeatherMap/1.0',
+            CURLOPT_HTTPHEADER => ['Accept: application/octet-stream'],
+            CURLOPT_RANGE => '0-0',
+        ]);
+        $body = curl_exec($curl);
+        $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $contentRange = (string)curl_getinfo($curl, CURLINFO_CONTENT_RANGE);
+        curl_close($curl);
+
+        return $status === 206 && is_string($body) && strlen($body) === 1 &&
+            preg_match('/^bytes\\s+0-0\\/\\d+$/i', $contentRange) === 1;
     }
 
     private function fetchMetadata(string $metadataFile = 'latest.json'): array
