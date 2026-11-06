@@ -299,24 +299,37 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             });
             regionMap.fitBounds([[regionBounds[0], regionBounds[1]], [regionBounds[2], regionBounds[3]]], { padding: 35, maxZoom: 7, duration: 0 });
         });
-        regionMap.on('mousedown', event => {
-            if (!drawingRegion) return;
-            regionStart = regionMap.unproject(event.point);
-            regionMap.dragPan.disable();
-            regionMap.getCanvas().style.cursor = 'crosshair';
+        // Handle drawing on the canvas with Pointer Events so mouse, pen and
+        // touch all work consistently. Pointer capture keeps the drag alive
+        // even if the pointer briefly leaves the map canvas.
+        const mapCanvas = regionMap.getCanvas();
+        mapCanvas.style.touchAction = 'none';
+        const pointerLngLat = event => {
+            const rect = mapCanvas.getBoundingClientRect();
+            return regionMap.unproject([
+                event.clientX - rect.left,
+                event.clientY - rect.top
+            ]);
+        };
+        mapCanvas.addEventListener('pointerdown', event => {
+            if (!drawingRegion || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            event.preventDefault();
+            regionStart = pointerLngLat(event);
+            mapCanvas.setPointerCapture(event.pointerId);
+            mapCanvas.style.cursor = 'crosshair';
         });
-        regionMap.on('mousemove', event => {
+        mapCanvas.addEventListener('pointermove', event => {
             if (!drawingRegion || !regionStart) return;
-            const end = regionMap.unproject(event.point);
+            const end = pointerLngLat(event);
             const bounds = [
                 Math.min(regionStart.lng, end.lng), Math.min(regionStart.lat, end.lat),
                 Math.max(regionStart.lng, end.lng), Math.max(regionStart.lat, end.lat)
             ];
             if (bounds[0] !== bounds[2] && bounds[1] !== bounds[3]) showRegionBounds(bounds);
         });
-        regionMap.on('mouseup', event => {
-            if (!drawingRegion || !regionStart) return;
-            const end = regionMap.unproject(event.point);
+        const finishRegionPointer = event => {
+            if (!regionStart) return;
+            const end = pointerLngLat(event);
             const bounds = [
                 Math.max(-180, Math.min(regionStart.lng, end.lng)),
                 Math.max(-85, Math.min(regionStart.lat, end.lat)),
@@ -324,14 +337,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 Math.min(85, Math.max(regionStart.lat, end.lat))
             ];
             regionStart = null;
-            regionMap.dragPan.enable();
-            regionMap.getCanvas().style.cursor = '';
             if (bounds[0] < bounds[2] && bounds[1] < bounds[3]) showRegionBounds(bounds);
-        });
+        };
+        mapCanvas.addEventListener('pointerup', finishRegionPointer);
+        mapCanvas.addEventListener('pointercancel', () => { regionStart = null; });
         document.getElementById('region-draw').addEventListener('click', () => {
             drawingRegion = !drawingRegion;
             regionStart = null;
-            regionMap.dragPan.enable();
+            if (drawingRegion) regionMap.dragPan.disable();
+            else regionMap.dragPan.enable();
             document.getElementById('region-draw').classList.toggle('active', drawingRegion);
             document.getElementById('region-draw').textContent = drawingRegion ? 'Finish drawing' : 'Draw rectangle';
             regionMap.getCanvas().style.cursor = drawingRegion ? 'crosshair' : '';
@@ -341,6 +355,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             document.getElementById('region-draw').classList.remove('active');
             document.getElementById('region-draw').textContent = 'Draw rectangle';
             regionMap.dragPan.enable();
+            regionMap.getCanvas().style.cursor = '';
             const bounds = makeDefaultBounds();
             showRegionBounds(bounds);
             regionMap.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], { padding: 35, maxZoom: 7 });
