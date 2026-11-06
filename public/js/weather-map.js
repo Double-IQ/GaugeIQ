@@ -259,6 +259,16 @@ protocolOptions.fileReaderConfig = {
             style: appearance.mapStyle === 'light'
                 ? 'https://tiles.openfreemap.org/styles/positron'
                 : 'https://tiles.openfreemap.org/styles/dark',
+            // Keep the base-map vector tile grid at 256 px rather than MapLibre's
+            // 512 px default. Weather overlays are independent raster sources.
+            transformStyle: (_previousStyle, nextStyle) => {
+                if (nextStyle?.sources && typeof nextStyle.sources === 'object') {
+                    Object.values(nextStyle.sources).forEach(source => {
+                        if (source && source.type === 'vector') source.tileSize = 256;
+                    });
+                }
+                return nextStyle;
+            },
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
@@ -568,6 +578,8 @@ protocolOptions.fileReaderConfig = {
                         const dataUrl = new URL(frame.url);
                         dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                         dataUrl.searchParams.set('variable', item.variable);
+                        dataUrl.searchParams.set('interpolation', 'cubic');
+                        dataUrl.searchParams.set('color_blend', 'true');
 
                         map.addSource(sourceId, {
                             type: 'raster',
@@ -743,8 +755,8 @@ protocolOptions.fileReaderConfig = {
                 const url = new URL(currentFrame.url);
                 url.searchParams.set('delta_time_hours', String(deltaTimeHours));
                 url.searchParams.set('variable', item.variable);
-                // The library defaults to hard colour bands. Enable interpolation
-                // so per-stop alpha is blended across the same ranges as the preview.
+                url.searchParams.set('interpolation', 'cubic');
+                // Blend colour stops and their alpha channels for smooth transitions.
                 url.searchParams.set('color_blend', 'true');
                 return url.href;
             });
