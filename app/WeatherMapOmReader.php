@@ -133,6 +133,58 @@ final class WeatherMapOmReader
         return $ranges;
     }
 
+    /**
+     * Select compressed chunks intersecting the GaugeIQ South Africa region
+     * on the native ECMWF IFS 0.25° regular latitude/longitude grid.
+     * Spatial arrays use [ny, nx] = [721, 1440] and [lat, lon] ordering.
+     */
+    public static function selectRegularGridChunkRanges(
+        array $arrayInfo,
+        float $west = -25.0,
+        float $south = -45.0,
+        float $east = 60.0,
+        float $north = 5.0
+    ): array {
+        [$height, $width] = $arrayInfo['dimensions'];
+        [$chunkHeight, $chunkWidth] = $arrayInfo['chunks'];
+        if ($height !== 721 || $width !== 1440 || $chunkHeight < 1 || $chunkWidth < 1 ||
+            $west < -180 || $east > 180 || $south < -90 || $north > 90 ||
+            $west >= $east || $south >= $north) {
+            throw new RuntimeException('The ECMWF IFS 0.25° field does not match the expected 1440 × 721 regular grid.');
+        }
+
+        // Include a two-cell margin around the map viewport for cubic
+        // interpolation and edge sampling by the browser renderer.
+        $xStart = max(0, (int)floor(($west + 180.0) / 0.25) - 2);
+        $xEnd = min($width, (int)ceil(($east + 180.0) / 0.25) + 3);
+        $yStart = max(0, (int)floor(($south + 90.0) / 0.25) - 2);
+        $yEnd = min($height, (int)ceil(($north + 90.0) / 0.25) + 3);
+
+        $chunksAcross = intdiv($width + $chunkWidth - 1, $chunkWidth);
+        $firstChunkX = intdiv($xStart, $chunkWidth);
+        $lastChunkX = intdiv($xEnd - 1, $chunkWidth);
+        $firstChunkY = intdiv($yStart, $chunkHeight);
+        $lastChunkY = intdiv($yEnd - 1, $chunkHeight);
+        $ranges = [];
+
+        // OM v3 stores multidimensional chunks in row-major order.
+        for ($chunkY = $firstChunkY; $chunkY <= $lastChunkY; $chunkY++) {
+            for ($chunkX = $firstChunkX; $chunkX <= $lastChunkX; $chunkX++) {
+                $chunkIndex = ($chunkY * $chunksAcross) + $chunkX;
+                if (!isset($arrayInfo['lut'][$chunkIndex + 1])) {
+                    throw new RuntimeException('The .om lookup table is missing a regular-grid regional chunk.');
+                }
+                $start = $arrayInfo['lut'][$chunkIndex];
+                $end = $arrayInfo['lut'][$chunkIndex + 1];
+                if ($end < $start) {
+                    throw new RuntimeException('The .om regular-grid chunk has an invalid byte range.');
+                }
+                if ($end > $start) $ranges[] = [$start, $end];
+            }
+        }
+        return $ranges;
+    }
+
     /** Reads aligned cache blocks, matching the map reader's 64 KiB block size. */
     public function readAt(int $offset, int $length): string
     {
