@@ -15,9 +15,18 @@ if (!is_file($configPath)) {
 try {
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
+    require_once __DIR__ . '/../../app/WeatherMapCacheService.php';
 
     $pdo = (new Database($config))->pdo();
-    
+
+    // Heal a stale schedule during a normal map request. This is especially
+    // important when a deployment changes the ECMWF model path: the old rows
+    // must be replaced before the strict public response validation runs.
+    // The cache service skips the metadata request when all six current-model
+    // rows were refreshed within the configured interval.
+    $weatherMapCache = new WeatherMapCacheService($pdo, $config);
+    $weatherMapCache->refreshScheduleIfDue(3600);
+
     $stmt = $pdo->query(
         'SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
          FROM gaugeiq_weather_map_frames
