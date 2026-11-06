@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=20261106-frame-one-preload-all" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261106-radar-border-visibility">
+<link rel="stylesheet" href="css/app.css?v=20261106-expandable-credits">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=20261106-frame-one-preload-all"></script>
 <title>GaugeIQ</title>
@@ -1169,39 +1169,44 @@ if ($current && !empty($current['observed_at'])) {
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
     </section>
-    <section class="weather-map-credits-card" aria-labelledby="weatherMapCreditsTitle">
-        <div class="weather-map-credits-heading">
-            <span class="weather-map-credits-kicker">TRANSPARENCY &amp; SOURCES</span>
-            <h2 id="weatherMapCreditsTitle">Credits &amp; Data Sources</h2>
-            <p>Map imagery and forecast layers, with source information and licensing.</p>
+    <details class="weather-map-credits-card">
+        <summary class="weather-map-credits-toggle">
+            <span class="weather-map-credits-heading">
+                <span class="weather-map-credits-kicker">TRANSPARENCY &amp; SOURCES</span>
+                <span class="weather-map-credits-title" id="weatherMapCreditsTitle">Credits &amp; Data Sources</span>
+                <span class="weather-map-credits-intro">Map imagery and forecast layers, with source information and licensing.</span>
+            </span>
+            <span class="weather-map-credits-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="weather-map-credits-content">
+            <div class="weather-map-credit-grid">
+                <article class="weather-map-credit-source map-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">⌖</span>
+                    <div>
+                        <span class="weather-map-credit-label">MAP &amp; GEOGRAPHIC DATA</span>
+                        <p><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
+                    </div>
+                </article>
+                <article class="weather-map-credit-source meteo-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">☁</span>
+                    <div>
+                        <span class="weather-map-credit-label">WEATHER DATA</span>
+                        <p><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a>.</p>
+                        <small>Weather data is processed and visually styled by GaugeIQ.</small>
+                    </div>
+                </article>
+                <article class="weather-map-credit-source ecmwf-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">◉</span>
+                    <div>
+                        <span class="weather-map-credit-label">WEATHER MODEL &amp; LICENCE</span>
+                        <p class="ecmwf-required-credit">This service is based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF).</p>
+                        <small>Source: <a href="https://www.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF</a>. Data is made available under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution 4.0 International (CC BY 4.0) licence</a>.</small>
+                    </div>
+                </article>
+            </div>
+            <p class="weather-map-credit-disclaimer">ECMWF does not accept any liability whatsoever for any error or omission in the data, their availability, or for any loss or damage arising from their use.</p>
         </div>
-        <div class="weather-map-credit-grid">
-            <article class="weather-map-credit-source map-source">
-                <span class="weather-map-credit-icon" aria-hidden="true">⌖</span>
-                <div>
-                    <span class="weather-map-credit-label">MAP &amp; GEOGRAPHIC DATA</span>
-                    <p><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
-                </div>
-            </article>
-            <article class="weather-map-credit-source meteo-source">
-                <span class="weather-map-credit-icon" aria-hidden="true">☁</span>
-                <div>
-                    <span class="weather-map-credit-label">WEATHER DATA</span>
-                    <p><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a>.</p>
-                    <small>Weather data is processed and visually styled by GaugeIQ.</small>
-                </div>
-            </article>
-            <article class="weather-map-credit-source ecmwf-source">
-                <span class="weather-map-credit-icon" aria-hidden="true">◉</span>
-                <div>
-                    <span class="weather-map-credit-label">WEATHER MODEL &amp; LICENCE</span>
-                    <p class="ecmwf-required-credit">This service is based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF).</p>
-                    <small>Source: <a href="https://www.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF</a>. Data is made available under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution 4.0 International (CC BY 4.0) licence</a>.</small>
-                </div>
-            </article>
-        </div>
-        <p class="weather-map-credit-disclaimer">ECMWF does not accept any liability whatsoever for any error or omission in the data, their availability, or for any loss or damage arising from their use.</p>
-    </section>
+    </details>
     </section>
     <dialog id="notificationRepairDialog" class="notification-repair-dialog" aria-labelledby="notificationRepairTitle">
         <div class="notification-repair-content">
