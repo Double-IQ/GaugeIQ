@@ -200,7 +200,7 @@ if ($current && !empty($current['observed_at'])) {
 <script type="module" src="js/weather-map.js?v=20261106-fixed-palette-opacity"></script>
 <title>GaugeIQ</title>
 </head>
-<body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>">
+<body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
 <div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
     <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
     <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
@@ -1256,6 +1256,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261103-notification-repair-action"></script>
+<script src="js/app.js?v=20261106-cron-aware-resume"></script>
 </body>
 </html>
