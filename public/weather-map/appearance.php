@@ -257,14 +257,14 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 sources: {
                     'gaugeiq-base-tiles': {
                         type: 'raster',
-                        // Use one tile host. Some networks fail on individual CARTO
-                        // subdomains; rotating across a/b/c/d can make otherwise valid
-                        // maps fail intermittently.
+                        // CARTO tile requests are failing from some deployments.
+                        // Use the OpenStreetMap standard raster endpoint for this small
+                        // interactive selector map instead.
                         tiles: [
-                            'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
                         ],
                         tileSize: 256,
-                        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
                     }
                 },
                 layers: [{
