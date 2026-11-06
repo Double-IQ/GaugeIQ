@@ -992,6 +992,10 @@ if ($current && !empty($current['observed_at'])) {
                         <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
                     </g>
                     <g class="wind-hud-vector-arrow" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windToDegrees, 2, '.', '') ?> 170 90)">
+                        <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-dot" cx="170" cy="120" r="5"></circle>
+                        <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-dot wind-hud-radar-pulse-delayed" cx="170" cy="120" r="5"></circle>
+                        <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-arrow" cx="170" cy="57" r="6"></circle>
+                        <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-arrow wind-hud-radar-pulse-delayed" cx="170" cy="57" r="6"></circle>
                         <path d="M170 120V61" stroke="url(#windHudVectorLine)" stroke-width="3.5" stroke-linecap="round"></path>
                         <circle cx="170" cy="120" r="10" fill="#ffad55" opacity=".12"></circle>
                         <circle cx="170" cy="120" r="4.5" fill="#ffad55" stroke="#ffe1ba" stroke-width="1"></circle>
