@@ -125,7 +125,7 @@ try {
             <button type="button" id="region-draw">Draw rectangle</button>
             <button type="button" class="reset" id="region-centre">Reset around selected location</button>
         </div>
-        <p class="region-help">Select Draw rectangle, then click and drag on the map from one corner to the opposite corner. Pan and zoom normally when drawing is off.</p>
+        <p class="region-help">Select Draw rectangle, then drag from one corner to the opposite corner. When drawing is off, double-tap and hold the second tap, then drag one finger to pan the map.</p>
         <div id="region-readout" aria-live="polite">Loading coverage area…</div>
     </section>
 
@@ -335,6 +335,53 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         };
         mapCanvas.addEventListener('pointerup', finishRegionPointer);
         mapCanvas.addEventListener('pointercancel', () => { regionStart = null; });
+
+        // Mobile map navigation: double-tap, keep the second tap held, then
+        // drag with one finger to pan. A normal one-finger gesture remains
+        // available for MapLibre controls; rectangle drawing keeps its own
+        // single-finger drag behaviour below.
+        let lastTap = null;
+        let touchPanActive = false;
+        let lastPanPoint = null;
+        const touchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
+        mapCanvas.addEventListener('touchstart', event => {
+            if (drawingRegion || event.touches.length !== 1 || !event.changedTouches.length) return;
+            const point = touchPoint(event.changedTouches[0]);
+            const now = Date.now();
+            const isSecondTap = lastTap && now - lastTap.time < 350 &&
+                Math.hypot(point.x - lastTap.x, point.y - lastTap.y) < 28;
+            if (isSecondTap) {
+                touchPanActive = true;
+                lastPanPoint = point;
+                lastTap = null;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            } else {
+                lastTap = { ...point, time: now };
+            }
+        }, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchmove', event => {
+            if (!touchPanActive || drawingRegion || !event.touches.length) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const point = touchPoint(event.touches[0]);
+            if (lastPanPoint) {
+                regionMap.panBy([
+                    point.x - lastPanPoint.x,
+                    point.y - lastPanPoint.y
+                ], { animate: false });
+            }
+            lastPanPoint = point;
+        }, { capture: true, passive: false });
+        const finishTouchPan = event => {
+            if (!touchPanActive) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            touchPanActive = false;
+            lastPanPoint = null;
+        };
+        mapCanvas.addEventListener('touchend', finishTouchPan, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchcancel', finishTouchPan, { capture: true, passive: false });
 
         // Mobile Safari and some embedded browsers still route touch gestures
         // through MapLibre's own touch handlers before pointer capture settles.
