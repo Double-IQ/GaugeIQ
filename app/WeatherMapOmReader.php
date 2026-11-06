@@ -396,6 +396,137 @@ final class WeatherMapOmReader
         return $decoded;
     }
 
+    /**
+     * Decode selected flattened indices from a two-dimensional row-major grid.
+     * OM chunks are stored row-major; indices exposed to callers are y * width + x.
+     */
+    public function decodeFloatArrayGridIndices(array $arrayInfo, array $indices): array
+    {
+        if (($arrayInfo['data_type'] ?? null) !== 20 || ($arrayInfo['compression_type'] ?? null) !== 0) {
+            throw new RuntimeException('The ECMWF field does not use the supported Float32/PFor-int16 encoding.');
+        }
+        [$height, $width] = $arrayInfo['dimensions'];
+        [$chunkHeight, $chunkWidth] = $arrayInfo['chunks'];
+        if ($height < 1 || $width < 1 || $chunkHeight < 1 || $chunkWidth < 1 ||
+            $chunkHeight > $height || $chunkWidth > $width) {
+            throw new RuntimeException('The ECMWF field has invalid regular-grid dimensions or chunk dimensions.');
+        }
+
+        $requested = [];
+        foreach ($indices as $index) {
+            $index = (int)$index;
+            if ($index < 0 || $index >= $height * $width) {
+                throw new RuntimeException('A requested ECMWF regular-grid index is outside the array.');
+            }
+            $requested[$index] = true;
+        }
+        if ($requested === []) return [];
+
+        $chunksAcross = intdiv($width + $chunkWidth - 1, $chunkWidth);
+        $byChunk = [];
+        foreach (array_keys($requested) as $index) {
+            $y = intdiv($index, $width);
+            $x = $index % $width;
+            $chunkY = intdiv($y, $chunkHeight);
+            $chunkX = intdiv($x, $chunkWidth);
+            $chunkIndex = $chunkY * $chunksAcross + $chunkX;
+            $byChunk[$chunkIndex][] = [$index, $y, $x];
+        }
+        ksort($byChunk, SORT_NUMERIC);
+
+        $decoded = [];
+        foreach ($byChunk as $chunkIndex => $chunkCells) {
+            if (!isset($arrayInfo['lut'][$chunkIndex + 1])) {
+                throw new RuntimeException('The ECMWF field lookup table is missing a requested regular-grid chunk.');
+            }
+            $chunkY = intdiv($chunkIndex, $chunksAcross);
+            $chunkX = $chunkIndex % $chunksAcross;
+            $chunkStartY = $chunkY * $chunkHeight;
+            $chunkStartX = $chunkX * $chunkWidth;
+            $actualChunkHeight = min($chunkHeight, $height - $chunkStartY);
+            $actualChunkWidth = min($chunkWidth, $width - $chunkStartX);
+            $chunkCount = $actualChunkHeight * $actualChunkWidth;
+            $byteStart = $arrayInfo['lut'][$chunkIndex];
+            $byteEnd = $arrayInfo['lut'][$chunkIndex + 1];
+            if ($byteEnd <= $byteStart) {
+                throw new RuntimeException('An ECMWF regular-grid data chunk has no compressed payload.');
+            }
+            $integers = self::decodePforDelta16(
+                $this->readAt($byteStart, $byteEnd - $byteStart),
+                $chunkCount
+            );
+            if (count($integers) !== $chunkCount) {
+                throw new RuntimeException('An ECMWF regular-grid chunk decoded to an unexpected number of values.');
+            }
+            foreach ($chunkCells as [$index, $y, $x]) {
+                $localIndex = ($y - $chunkStartY) * $actualChunkWidth + ($x - $chunkStartX);
+                $decoded[$index] = self::decodeScaledPfor16Value(
+                    $integers[$localIndex],
+                    (float)$arrayInfo['scale_factor'],
+                    (float)$arrayInfo['add_offset']
+                );
+            }
+        }
+        return $decoded;
+    }
+
+    /**
+     * Return regular 0.25-degree latitude/longitude grid cells within a
+     * great-circle radius. The grid is [721, 1440], south-to-north and
+     * west-to-east, with longitude wrapping at the antimeridian.
+     */
+    public static function regularGridNeighborhood(
+        float $latitude,
+        float $longitude,
+        float $radiusKm,
+        int $height = 721,
+        int $width = 1440,
+        float $stepDegrees = 0.25
+    ): array {
+        if ($height !== 721 || $width !== 1440 || $stepDegrees !== 0.25 ||
+            $latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180 ||
+            !is_finite($radiusKm) || $radiusKm <= 0 || $radiusKm > 1000) {
+            throw new InvalidArgumentException('Invalid ECMWF regular-grid dimensions, coordinates or radius.');
+        }
+
+        $latMargin = $radiusKm / 110.5 + $stepDegrees;
+        $cosLat = abs(cos(deg2rad($latitude)));
+        $lonMargin = $cosLat < 0.01 ? 180.0 : min(180.0, $radiusKm / (111.0 * $cosLat) + $stepDegrees);
+        $firstY = max(0, (int)floor((($latitude - $latMargin) + 90.0) / $stepDegrees));
+        $lastY = min($height - 1, (int)ceil((($latitude + $latMargin) + 90.0) / $stepDegrees));
+        $cells = [];
+        $lat1 = deg2rad($latitude);
+        $normalisedLongitude = fmod($longitude + 180.0, 360.0);
+        if ($normalisedLongitude < 0) $normalisedLongitude += 360.0;
+        $centreX = (int)round($normalisedLongitude / $stepDegrees, 0, PHP_ROUND_HALF_EVEN) % $width;
+        $columnRadius = min((int)ceil($lonMargin / $stepDegrees) + 1, intdiv($width, 2));
+
+        for ($y = $firstY; $y <= $lastY; $y++) {
+            $cellLatitude = -90.0 + ($y * $stepDegrees);
+            $lat2 = deg2rad($cellLatitude);
+            for ($dx = -$columnRadius; $dx <= $columnRadius; $dx++) {
+                $x = (($centreX + $dx) % $width + $width) % $width;
+                $cellLongitude = -180.0 + ($x * $stepDegrees);
+                $deltaLat = $lat2 - $lat1;
+                $deltaLon = deg2rad($cellLongitude - $longitude);
+                $a = sin($deltaLat / 2) ** 2
+                    + cos($lat1) * cos($lat2) * sin($deltaLon / 2) ** 2;
+                $distance = 6371.0 * 2.0 * asin(min(1.0, sqrt($a)));
+                if ($distance <= $radiusKm) {
+                    $index = ($y * $width) + $x;
+                    $cells[$index] = [
+                        'index' => $index,
+                        'latitude' => $cellLatitude,
+                        'longitude' => $cellLongitude,
+                        'distance_km' => $distance,
+                    ];
+                }
+            }
+        }
+        ksort($cells, SORT_NUMERIC);
+        return array_values($cells);
+    }
+
     /** Return real Gaussian-grid cells within a great-circle radius of a point. */
     public static function gaussianNeighborhood(int $pointCount, float $latitude, float $longitude, float $radiusKm): array
     {
