@@ -235,6 +235,28 @@ if ($regularGridRanges !== $expectedRegularGridRanges) {
     throw new RuntimeException('ECMWF IFS 0.25° row-major regular-grid regional chunk selection failed.');
 }
 echo "PASS ECMWF IFS 0.25° regular-grid regional chunk selection\n";
+$nearbyRegular = WeatherMapOmReader::regularGridNeighborhood(-32.986992, 27.932365, 100.0);
+if ($nearbyRegular === [] || count($nearbyRegular) < 10) {
+    throw new RuntimeException('ECMWF 0.25-degree regular-grid neighbourhood sampling returned too few cells.');
+}
+foreach ($nearbyRegular as $cell) {
+    if ($cell['index'] < 0 || $cell['index'] >= 721 * 1440 ||
+        $cell['distance_km'] > 100.0 || $cell['index'] !== ((int)round(($cell['latitude'] + 90.0) / 0.25) * 1440 + (int)round(($cell['longitude'] + 180.0) / 0.25))) {
+        throw new RuntimeException('ECMWF regular-grid neighbourhood contains an invalid cell or index.');
+    }
+}
+echo "PASS ECMWF IFS 0.25-degree regular-grid neighbourhood sampling (" . count($nearbyRegular) . " cells)\\n";
+
+$antimeridianCells = WeatherMapOmReader::regularGridNeighborhood(0.0, 179.9, 100.0);
+$hasWrappedLongitude = false;
+foreach ($antimeridianCells as $cell) {
+    if ($cell['longitude'] < -170.0) $hasWrappedLongitude = true;
+}
+if (!$hasWrappedLongitude) {
+    throw new RuntimeException('ECMWF regular-grid neighbourhood did not wrap longitude across the antimeridian.');
+}
+echo "PASS ECMWF regular-grid antimeridian neighbourhood wrapping\\n";
+
 
 $scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
 if (abs($scaledPrecipitation - 2.8) > 0.000001) {
