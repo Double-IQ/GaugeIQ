@@ -1068,6 +1068,72 @@ if ($current && !empty($current['observed_at'])) {
         </article>
 
 
+    <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
+        <header class="gaugeiq-weather-map-toolbar">
+            <div class="gaugeiq-weather-map-heading">
+                <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
+            </div>
+            <div class="gaugeiq-weather-map-controls">
+                <select id="layer-select" aria-label="Weather layer">
+                    <option value="temperature_2m">Temperature</option>
+                    <option value="precipitation_cloud_cover" selected>Combined</option>
+                    <option value="precipitation">Precipitation only</option>
+                    <option value="cloud_cover">Cloud cover only</option>
+                </select>
+                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
+            </div>
+        </header>
+        <div class="gaugeiq-weather-map-timeline">
+            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
+            <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
+        </div>
+</div>
+        <div id="map" class="gaugeiq-weather-map-canvas"
+             data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
+             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
+            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
+        </div>
+    </section>
+    <details class="weather-map-credits-card">
+        <summary class="weather-map-credits-toggle">
+            <span class="weather-map-credits-heading">
+                <span class="weather-map-credits-kicker">TRANSPARENCY &amp; SOURCES</span>
+                <span class="weather-map-credits-title" id="weatherMapCreditsTitle">Credits &amp; Data Sources</span>
+                <span class="weather-map-credits-intro">Map imagery and forecast layers, with source information and licensing.</span>
+            </span>
+            <span class="weather-map-credits-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="weather-map-credits-content">
+            <div class="weather-map-credit-grid">
+                <article class="weather-map-credit-source map-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">⌖</span>
+                    <div>
+                        <span class="weather-map-credit-label">MAP &amp; GEOGRAPHIC DATA</span>
+                        <p><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
+                    </div>
+                </article>
+                <article class="weather-map-credit-source meteo-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">☁</span>
+                    <div>
+                        <span class="weather-map-credit-label">WEATHER DATA</span>
+                        <p><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a>.</p>
+                        <small>Weather data is processed and visually styled by GaugeIQ.</small>
+                    </div>
+                </article>
+                <article class="weather-map-credit-source ecmwf-source">
+                    <span class="weather-map-credit-icon" aria-hidden="true">◉</span>
+                    <div>
+                        <span class="weather-map-credit-label">WEATHER MODEL &amp; LICENCE</span>
+                        <p class="ecmwf-required-credit">This service is based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF).</p>
+                        <small>Source: <a href="https://www.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF</a>. Data is made available under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution 4.0 International (CC BY 4.0) licence</a>.</small>
+                    </div>
+                </article>
+            </div>
+            <p class="weather-map-credit-disclaimer">ECMWF does not accept any liability whatsoever for any error or omission in the data, their availability, or for any loss or damage arising from their use.</p>
+        </div>
+    </details>
+
+
 
 
     <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
@@ -1153,70 +1219,6 @@ if ($current && !empty($current['observed_at'])) {
         </div>
     </section>
 
-    <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
-        <header class="gaugeiq-weather-map-toolbar">
-            <div class="gaugeiq-weather-map-heading">
-                <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
-            </div>
-            <div class="gaugeiq-weather-map-controls">
-                <select id="layer-select" aria-label="Weather layer">
-                    <option value="temperature_2m">Temperature</option>
-                    <option value="precipitation_cloud_cover" selected>Combined</option>
-                    <option value="precipitation">Precipitation only</option>
-                    <option value="cloud_cover">Cloud cover only</option>
-                </select>
-                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
-            </div>
-        </header>
-        <div class="gaugeiq-weather-map-timeline">
-            <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
-            <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
-        </div>
-</div>
-        <div id="map" class="gaugeiq-weather-map-canvas"
-             data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
-             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
-            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
-        </div>
-    </section>
-    <details class="weather-map-credits-card">
-        <summary class="weather-map-credits-toggle">
-            <span class="weather-map-credits-heading">
-                <span class="weather-map-credits-kicker">TRANSPARENCY &amp; SOURCES</span>
-                <span class="weather-map-credits-title" id="weatherMapCreditsTitle">Credits &amp; Data Sources</span>
-                <span class="weather-map-credits-intro">Map imagery and forecast layers, with source information and licensing.</span>
-            </span>
-            <span class="weather-map-credits-chevron" aria-hidden="true"></span>
-        </summary>
-        <div class="weather-map-credits-content">
-            <div class="weather-map-credit-grid">
-                <article class="weather-map-credit-source map-source">
-                    <span class="weather-map-credit-icon" aria-hidden="true">⌖</span>
-                    <div>
-                        <span class="weather-map-credit-label">MAP &amp; GEOGRAPHIC DATA</span>
-                        <p><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>, <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</p>
-                    </div>
-                </article>
-                <article class="weather-map-credit-source meteo-source">
-                    <span class="weather-map-credit-icon" aria-hidden="true">☁</span>
-                    <div>
-                        <span class="weather-map-credit-label">WEATHER DATA</span>
-                        <p><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Weather data by Open-Meteo.com</a>.</p>
-                        <small>Weather data is processed and visually styled by GaugeIQ.</small>
-                    </div>
-                </article>
-                <article class="weather-map-credit-source ecmwf-source">
-                    <span class="weather-map-credit-icon" aria-hidden="true">◉</span>
-                    <div>
-                        <span class="weather-map-credit-label">WEATHER MODEL &amp; LICENCE</span>
-                        <p class="ecmwf-required-credit">This service is based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF).</p>
-                        <small>Source: <a href="https://www.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF</a>. Data is made available under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution 4.0 International (CC BY 4.0) licence</a>.</small>
-                    </div>
-                </article>
-            </div>
-            <p class="weather-map-credit-disclaimer">ECMWF does not accept any liability whatsoever for any error or omission in the data, their availability, or for any loss or damage arising from their use.</p>
-        </div>
-    </details>
     </section>
     <dialog id="notificationRepairDialog" class="notification-repair-dialog" aria-labelledby="notificationRepairTitle">
         <div class="notification-repair-content">
