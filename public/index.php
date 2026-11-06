@@ -489,11 +489,19 @@ if ($current && !empty($current['observed_at'])) {
                         $nearestDistance = is_numeric($nowcastFrame['nearest_rain_km'] ?? null)
                             ? number_format((float)$nowcastFrame['nearest_rain_km'], 0) . ' km away'
                             : 'No rain within 100 km';
+                        $nearestRainAmount = is_numeric($nowcastFrame['nearest_rain_precipitation_mm'] ?? null)
+                            ? number_format((float)$nowcastFrame['nearest_rain_precipitation_mm'], 2) . ' mm'
+                            : null;
                     ?>
                         <div class="rainfall-nowcast-frame">
                             <span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span>
-                            <strong><?= number_format($localAmount, 1) ?> mm</strong>
-                            <small><?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                            <strong><?= number_format($localAmount, 2) ?> mm</strong>
+                            <small>At your location</small>
+                            <?php if ($nearestRainAmount !== null): ?>
+                                <small>Rain cell: <?= htmlspecialchars($nearestRainAmount, ENT_QUOTES) ?> · <?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                            <?php else: ?>
+                                <small><?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
