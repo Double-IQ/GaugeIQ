@@ -544,6 +544,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <label for="condition_type">Condition</label>
                 <select id="condition_type" name="condition_type">
                     <option value="change">Changes by</option>
+                    <option value="drop">Drops by (air pressure only)</option>
                     <option value="above">Rises above</option>
                     <option value="below">Falls below</option>
                     <option value="specific">Specific direction</option>
@@ -649,7 +650,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 <span class="daily-forecast-chevron" aria-hidden="true">⌄</span>
             </summary>
             <div class="alert-config readable">
-                <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
+                <?php if ($rule['metric'] === 'pressure'): ?>Air pressure <?= $rule['condition_type'] === 'drop' ? 'drops by' : h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?> hPa
                 <?php elseif ($rule['metric'] === 'humidity'): ?>Humidity <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 0)) ?>%
                 <?php elseif ($rule['metric'] === 'dew_point'): ?>Dew point <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
                 <?php elseif ($rule['metric'] === 'dew_point_gap'): ?>Dew point gap <?= h(ucwords(str_replace('_', ' ', $rule['condition_type']))) ?> <?= h(number_format((float)($ruleConfig['value'] ?? 0), 1)) ?>°C
@@ -673,7 +674,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                         <?php foreach (['pressure'=>'Air pressure','humidity'=>'Humidity','dew_point'=>'Dew point','dew_point_gap'=>'Dew point gap','wind_speed'=>'Wind speed','weather_stability'=>'Weather Volatility Index (WVI)','wind_direction'=>'Wind direction','wind'=>'Wind speed + direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['metric']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div><label>Condition</label><select name="condition_type" data-edit-condition>
-                        <?php foreach (['change'=>'Changes by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
+                        <?php foreach (['change'=>'Changes by','drop'=>'Drops by','above'=>'Rises above','below'=>'Falls below','specific'=>'Specific direction','speed_and_direction'=>'Speed AND direction'] as $v=>$label): ?><option value="<?= $v ?>" <?= $rule['condition_type']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?>
                     </select></div>
                     <div data-edit-value-field><label>Value</label><input name="value" type="number" step="0.1" value="<?= h((string)($ruleConfig['value'] ?? 3)) ?>"></div>
                     <div data-edit-degrees-field hidden><label>Direction (degrees)</label><input name="degrees" type="number" min="0" max="359" step="1" value="<?= h((string)($ruleConfig['degrees'] ?? 0)) ?>"></div>
