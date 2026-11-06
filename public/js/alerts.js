@@ -64,7 +64,9 @@ function refreshFields() {
                     ? !['change', 'specific'].includes(option.value)
                     : m === 'wind'
                         ? option.value !== 'speed_and_direction'
-                        : ['specific', 'speed_and_direction'].includes(option.value);
+                        : m === 'pressure'
+                            ? ['specific', 'speed_and_direction'].includes(option.value)
+                            : ['drop', 'specific', 'speed_and_direction'].includes(option.value);
     });
 
     if (m === 'wind') {
@@ -192,7 +194,9 @@ function setupAlertEditing() {
                         ? !['change', 'specific'].includes(option.value)
                         : isWind
                             ? option.value !== 'speed_and_direction'
-                            : ['specific', 'speed_and_direction'].includes(option.value);
+                            : metric.value === 'pressure'
+                                ? ['specific', 'speed_and_direction'].includes(option.value)
+                                : ['drop', 'specific', 'speed_and_direction'].includes(option.value);
             });
 
             if (isWeatherStability) {
