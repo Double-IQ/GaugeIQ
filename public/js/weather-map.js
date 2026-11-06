@@ -596,10 +596,12 @@ protocolOptions.fileReaderConfig = {
                         dataUrl.searchParams.set('variable', item.variable);
                         dataUrl.searchParams.set('interpolation', 'cubic');
                         dataUrl.searchParams.set('color_blend', 'true');
+                        dataUrl.searchParams.set('tile_size', '256');
 
                         map.addSource(sourceId, {
                             type: 'raster',
                             url: 'om://' + dataUrl.href,
+                            tileSize: 256,
                             maxzoom: 12
                         });
                         map.addLayer({
@@ -774,6 +776,7 @@ protocolOptions.fileReaderConfig = {
                 url.searchParams.set('interpolation', 'cubic');
                 // Blend colour stops and their alpha channels for smooth transitions.
                 url.searchParams.set('color_blend', 'true');
+                url.searchParams.set('tile_size', '256');
                 return url.href;
             });
         }
@@ -787,6 +790,7 @@ protocolOptions.fileReaderConfig = {
                 map.addSource(sourceId, {
                     type: 'raster',
                     url: 'om://' + urls[index],
+                    tileSize: 256,
                     maxzoom: 12
                 });
                 map.addLayer({
