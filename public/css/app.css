@@ -7120,3 +7120,36 @@ body.gaugeiq-menu-open{overflow:hidden}
   }
 }
 
+
+
+/* Visibility fixes: keep the Wind card borderless in both themes and
+   render radar rings in front of the marker's stacking context. */
+.wind-gauge-card.wind-hud-card{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+:root[data-theme="light"] .wind-gauge-card.wind-hud-card{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.gaugeiq-map-location-marker{
+  z-index:0;
+  isolation:auto;
+}
+.gaugeiq-map-location-marker::before,
+.gaugeiq-map-location-marker::after{
+  z-index:2;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-canvas .maplibregl-ctrl-group{
+  overflow:visible!important;
+}
+.weather-map-dashboard-card .maplibregl-ctrl-compass{
+  z-index:2;
+}
+.weather-map-dashboard-card .maplibregl-ctrl-compass::after{
+  inset:2px;
+  z-index:3;
+  transform-origin:center;
+}
