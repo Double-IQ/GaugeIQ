@@ -847,19 +847,12 @@ protocolOptions.fileReaderConfig = {
                 }
             }
 
-            if (savedSnapshot) {
-                const cached = addWeatherSources(savedSnapshot.urls, variables, 'cached-' + token, 1);
-                activeSources = cached.sourceIds;
-                activeLayers = cached.layerIds;
-                activeLayerOpacities = variables.map(item => item.opacity);
-                const ageHours = Math.max(0, Math.floor((Date.now() - savedSnapshot.savedAt) / 3600000));
-                const ageLabel = ageHours < 1 ? 'less than an hour old'
-                    : ageHours < 24 ? ageHours + ' hours old'
-                    : Math.floor(ageHours / 24) + ' days old';
-                setStatus('Showing saved Combined map · ' + ageLabel + ' · updating…');
-            } else {
-                setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
-            }
+            // A saved Combined snapshot may contain frame URLs from an older
+            // model run. Do not instantiate its sources until they have been
+            // compared with the current server schedule below.
+            setStatus(savedSnapshot
+                ? 'Checking saved Combined map against the current frame…'
+                : 'Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
             frameTimeLabel.textContent = 'Six weather frames';
 
@@ -868,8 +861,26 @@ protocolOptions.fileReaderConfig = {
                     const latestUrls = await resolveCurrentOmUrls(variables);
                     if (token !== weatherLayerToken) return;
 
-                    const latest = addWeatherSources(latestUrls, variables, 'latest-' + token, savedSnapshot ? 0.001 : 1);
-                    if (!savedSnapshot) {
+                    const snapshotMatchesLatest = Boolean(savedSnapshot &&
+                        savedSnapshot.urls.length === latestUrls.length &&
+                        savedSnapshot.urls.every((url, index) => url === latestUrls[index]));
+
+                    if (snapshotMatchesLatest) {
+                        const cached = addWeatherSources(savedSnapshot.urls, variables, 'cached-' + token, 1);
+                        activeSources = cached.sourceIds;
+                        activeLayers = cached.layerIds;
+                        activeLayerOpacities = variables.map(item => item.opacity);
+                        const ageHours = Math.max(0, Math.floor((Date.now() - savedSnapshot.savedAt) / 3600000));
+                        const ageLabel = ageHours < 1 ? 'less than an hour old'
+                            : ageHours < 24 ? ageHours + ' hours old'
+                            : Math.floor(ageHours / 24) + ' days old';
+                        setStatus('Showing saved Combined map · ' + ageLabel + ' · updating…');
+                    }
+
+                    // If the saved snapshot belongs to an older run, skip it
+                    // entirely so it cannot trigger requests for obsolete .om files.
+                    const latest = addWeatherSources(latestUrls, variables, 'latest-' + token, snapshotMatchesLatest ? 0.001 : 1);
+                    if (!snapshotMatchesLatest) {
                         activeSources = latest.sourceIds;
                         activeLayers = latest.layerIds;
                         activeLayerOpacities = variables.map(item => item.opacity);
@@ -904,7 +915,7 @@ protocolOptions.fileReaderConfig = {
                         }
                         setStatus('Weather layer loaded · ' + layerSelect.selectedOptions[0].textContent);
                     }, () => {
-                        if (savedSnapshot) {
+                        if (snapshotMatchesLatest) {
                             latest.layerIds.forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
                             latest.sourceIds.forEach(id => { if (map.getSource(id)) map.removeSource(id); });
                             setStatus('Showing saved Combined map · latest update is taking longer than expected.');
@@ -914,7 +925,7 @@ protocolOptions.fileReaderConfig = {
                     });
                 } catch (error) {
                     if (token !== weatherLayerToken) return;
-                    setStatus(savedSnapshot
+                    setStatus(snapshotMatchesLatest
                         ? 'Showing saved Combined map · latest update unavailable.'
                         : (error?.message || 'Weather map could not be loaded.'));
                 }
