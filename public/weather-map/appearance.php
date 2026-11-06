@@ -257,11 +257,11 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 sources: {
                     'gaugeiq-base-tiles': {
                         type: 'raster',
+                        // Use one tile host. Some networks fail on individual CARTO
+                        // subdomains; rotating across a/b/c/d can make otherwise valid
+                        // maps fail intermittently.
                         tiles: [
-                            'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                            'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                            'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                            'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                            'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
                         ],
                         tileSize: 256,
                         attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
