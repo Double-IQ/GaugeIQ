@@ -256,6 +256,26 @@ if (!$hasWrappedLongitude) {
     throw new RuntimeException('ECMWF regular-grid neighbourhood did not wrap longitude across the antimeridian.');
 }
 echo "PASS ECMWF regular-grid antimeridian neighbourhood wrapping\\n";
+$regularChunkBytes = str_repeat("\\0", 3) . "\\0\\0" . str_repeat("\\0", 22);
+$regularChunkReader = new WeatherMapOmReader(
+    static fn(int $offset, int $length): string => substr($regularChunkBytes, $offset, $length),
+    strlen($regularChunkBytes)
+);
+$regularChunkInfo = [
+    'data_type' => 20,
+    'compression_type' => 0,
+    'scale_factor' => 1.0,
+    'add_offset' => 0.0,
+    'dimensions' => [2, 2],
+    'chunks' => [2, 2],
+    'lut' => [3, 5],
+];
+$decodedRegularCells = $regularChunkReader->decodeFloatArrayGridIndices($regularChunkInfo, [0, 3]);
+if ($decodedRegularCells !== [0 => 0.0, 3 => 0.0]) {
+    throw new RuntimeException('ECMWF regular-grid two-dimensional chunk decoding failed.');
+}
+echo "PASS ECMWF regular-grid two-dimensional chunk decoding\\n";
+
 
 
 $scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
