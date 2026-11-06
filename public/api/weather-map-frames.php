@@ -6,6 +6,9 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
 header('X-Content-Type-Options: nosniff');
 
+$diagnosticRequested = isset($_GET['diagnostic']) && $_GET['diagnostic'] === '1';
+$diagnosticAuthorized = false;
+
 if (!is_file($configPath)) {
     http_response_code(503);
     echo json_encode(['error' => 'GaugeIQ is not installed.']);
@@ -14,6 +17,17 @@ if (!is_file($configPath)) {
 
 try {
     $config = require $configPath;
+    if ($diagnosticRequested) {
+        require_once __DIR__ . '/../../app/AdminAuth.php';
+        AdminAuth::startSession();
+        if (!AdminAuth::check()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Sign in to GaugeIQ Admin to view weather-map diagnostics.']);
+            exit;
+        }
+        $diagnosticAuthorized = true;
+    }
+
     require_once __DIR__ . '/../../app/Database.php';
     require_once __DIR__ . '/../../app/WeatherMapCacheService.php';
 
@@ -64,5 +78,13 @@ try {
 } catch (Throwable $error) {
     error_log('GaugeIQ weather-map frames API failed: ' . $error->getMessage());
     http_response_code(503);
-    echo json_encode(['error' => 'The scheduled weather-map frames are not available yet.']);
+    if ($diagnosticRequested && $diagnosticAuthorized) {
+        echo json_encode([
+            'error' => 'Weather-map frame loading failed.',
+            'diagnostic' => $error->getMessage(),
+            'exception' => get_class($error),
+        ], JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    } else {
+        echo json_encode(['error' => 'The scheduled weather-map frames are not available yet.']);
+    }
 }
