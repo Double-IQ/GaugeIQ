@@ -304,6 +304,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         // even if the pointer briefly leaves the map canvas.
         const mapCanvas = regionMap.getCanvas();
         mapCanvas.style.touchAction = 'none';
+        document.getElementById('region-map').style.touchAction = 'none';
         const pointerLngLat = event => {
             const rect = mapCanvas.getBoundingClientRect();
             return regionMap.unproject([
@@ -312,7 +313,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             ]);
         };
         mapCanvas.addEventListener('pointerdown', event => {
-            if (!drawingRegion || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (!drawingRegion || event.pointerType === 'touch' || (event.pointerType === 'mouse' && event.button !== 0)) return;
             event.preventDefault();
             regionStart = pointerLngLat(event);
             mapCanvas.setPointerCapture(event.pointerId);
@@ -341,6 +342,45 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         };
         mapCanvas.addEventListener('pointerup', finishRegionPointer);
         mapCanvas.addEventListener('pointercancel', () => { regionStart = null; });
+
+        // Mobile Safari and some embedded browsers still route touch gestures
+        // through MapLibre's own touch handlers before pointer capture settles.
+        // In drawing mode, take ownership of the touch sequence in capture phase.
+        const touchLngLat = touch => {
+            const rect = mapCanvas.getBoundingClientRect();
+            return regionMap.unproject([
+                touch.clientX - rect.left,
+                touch.clientY - rect.top
+            ]);
+        };
+        mapCanvas.addEventListener('touchstart', event => {
+            if (!drawingRegion || !event.changedTouches.length) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            regionStart = touchLngLat(event.changedTouches[0]);
+            mapCanvas.style.cursor = 'crosshair';
+        }, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchmove', event => {
+            if (!drawingRegion || !regionStart || !event.changedTouches.length) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const end = touchLngLat(event.changedTouches[0]);
+            const bounds = [
+                Math.min(regionStart.lng, end.lng), Math.min(regionStart.lat, end.lat),
+                Math.max(regionStart.lng, end.lng), Math.max(regionStart.lat, end.lat)
+            ];
+            if (bounds[0] !== bounds[2] && bounds[1] !== bounds[3]) showRegionBounds(bounds);
+        }, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchend', event => {
+            if (!drawingRegion || !regionStart || !event.changedTouches.length) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            finishRegionPointer({
+                clientX: event.changedTouches[0].clientX,
+                clientY: event.changedTouches[0].clientY
+            });
+        }, { capture: true, passive: false });
+        mapCanvas.addEventListener('touchcancel', () => { regionStart = null; }, { capture: true, passive: false });
         document.getElementById('region-draw').addEventListener('click', () => {
             drawingRegion = !drawingRegion;
             regionStart = null;
