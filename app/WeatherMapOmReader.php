@@ -448,8 +448,15 @@ final class WeatherMapOmReader
             $chunkCount = $actualChunkHeight * $actualChunkWidth;
             $byteStart = $arrayInfo['lut'][$chunkIndex];
             $byteEnd = $arrayInfo['lut'][$chunkIndex + 1];
-            if ($byteEnd <= $byteStart) {
-                throw new RuntimeException('An ECMWF regular-grid data chunk has no compressed payload.');
+            if ($byteEnd < $byteStart) {
+                throw new RuntimeException('An ECMWF regular-grid data chunk has an invalid byte range.');
+            }
+            // OM v3 represents an all-NaN floating-point chunk with equal
+            // adjacent lookup-table offsets. Match the official reader rather
+            // than treating this valid sparse chunk as corrupt.
+            if ($byteEnd === $byteStart) {
+                foreach ($chunkCells as [$index]) $decoded[$index] = NAN;
+                continue;
             }
             $integers = self::decodePforDelta16(
                 $this->readAt($byteStart, $byteEnd - $byteStart),
