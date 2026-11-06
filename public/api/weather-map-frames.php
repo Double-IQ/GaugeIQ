@@ -15,12 +15,9 @@ if (!is_file($configPath)) {
 try {
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
-    require_once __DIR__ . '/../../app/Schema.php';
 
     $pdo = (new Database($config))->pdo();
-    migrateDatabase($pdo);
-
-
+    
     $stmt = $pdo->query(
         'SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
          FROM gaugeiq_weather_map_frames
