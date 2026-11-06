@@ -495,11 +495,13 @@ if ($current && !empty($current['observed_at'])) {
                     ?>
                         <div class="rainfall-nowcast-frame">
                             <span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span>
-                            <strong><?= number_format($localAmount, 2) ?> mm</strong>
-                            <small>At your location</small>
                             <?php if ($nearestRainAmount !== null): ?>
-                                <small>Rain cell: <?= htmlspecialchars($nearestRainAmount, ENT_QUOTES) ?> · <?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                                <strong><?= htmlspecialchars($nearestRainAmount, ENT_QUOTES) ?></strong>
+                                <small>At rain cell · <?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
+                                <small>At your location: <?= number_format($localAmount, 2) ?> mm</small>
                             <?php else: ?>
+                                <strong><?= number_format($localAmount, 2) ?> mm</strong>
+                                <small>At your location</small>
                                 <small><?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
                             <?php endif; ?>
                         </div>
