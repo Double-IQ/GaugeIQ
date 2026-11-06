@@ -468,14 +468,13 @@ protocolOptions.fileReaderConfig = {
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[animationCurrentFrame];
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
-                // Load every scheduled frame before enabling playback. This avoids
-                // network/source creation during animation and guarantees the
-                // six-frame sequence is ready before the first transition.
-                selectedAnimationFrames().forEach(addFrameSources);
+                // Keep the six-frame guarantee, but stagger source creation.
+                // In Combined mode each frame creates two raster sources, so
+                // loading two frames at a time caps the initial burst at four.
+                const requiredFrames = selectedAnimationFrames();
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const requiredFrames = selectedAnimationFrames();
                     const pendingSources = requiredFrames.flatMap(frame =>
                         frame ? frame.sourceIds.filter(id => !map.getSource(id) || !map.isSourceLoaded(id)) : []
                     );
@@ -484,12 +483,11 @@ protocolOptions.fileReaderConfig = {
                         pendingSources.length ? 'Still loading: ' + pendingSources.join(', ') : ''
                     ].filter(Boolean).join(' | ');
                     clearAnimation();
-                    setStatus('The first hourly weather frame could not be loaded.' + (detail ? ' ' + detail : ''));
+                    setStatus('The hourly weather frames could not all be loaded.' + (detail ? ' ' + detail : ''));
                 }, 120000);
 
-                const waitForInitialFrame = () => {
+                const finishPreparation = () => {
                     if (token !== animationToken) return;
-                    if (!selectedAnimationFrames().every(isFrameLoaded)) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
@@ -504,11 +502,33 @@ protocolOptions.fileReaderConfig = {
                     animationToggle.disabled = false;
                     setStatus('');
                     showFrame(animationCurrentFrame);
-                    // Keep the visible frame and the next frame loaded.
                     if (autoStart) runAnimation();
                 };
-                waitForInitialFrame();
-                animationLoadPoll = setInterval(waitForInitialFrame, 500);
+
+                const loadBatch = startIndex => {
+                    if (token !== animationToken) return;
+                    if (startIndex >= requiredFrames.length) {
+                        finishPreparation();
+                        return;
+                    }
+
+                    const batch = requiredFrames.slice(startIndex, startIndex + 2);
+                    batch.forEach(addFrameSources);
+                    const poll = setInterval(() => {
+                        if (token !== animationToken) {
+                            clearInterval(poll);
+                            if (animationLoadPoll === poll) animationLoadPoll = null;
+                            return;
+                        }
+                        if (!batch.every(isFrameLoaded)) return;
+                        clearInterval(poll);
+                        if (animationLoadPoll === poll) animationLoadPoll = null;
+                        loadBatch(startIndex + batch.length);
+                    }, 300);
+                    animationLoadPoll = poll;
+                };
+
+                loadBatch(0);
             } catch (error) {
                 if (token !== animationToken) return;
                 animationPreparing = false;
