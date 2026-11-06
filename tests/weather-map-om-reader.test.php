@@ -217,6 +217,25 @@ if ($selected !== [[110, 120], [120, 130]]) {
     throw new RuntimeException('v3 regional chunk-range selection failed.');
 }
 echo "PASS v3 metadata tree, array layout and regional chunk selection\n";
+
+$regularGridLut = [];
+for ($index = 0; $index <= 48; $index++) $regularGridLut[] = 100 + ($index * 10);
+$regularGridInfo = [
+    'dimensions' => [721, 1440],
+    'chunks' => [100, 256],
+    'lut' => $regularGridLut,
+];
+$regularGridRanges = WeatherMapOmReader::selectRegularGridChunkRanges($regularGridInfo);
+$expectedRegularGridRanges = [
+    [180, 190], [190, 200],
+    [240, 250], [250, 260],
+    [300, 310], [310, 320],
+];
+if ($regularGridRanges !== $expectedRegularGridRanges) {
+    throw new RuntimeException('ECMWF IFS 0.25° row-major regular-grid regional chunk selection failed.');
+}
+echo "PASS ECMWF IFS 0.25° regular-grid regional chunk selection\n";
+
 $scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
 if (abs($scaledPrecipitation - 2.8) > 0.000001) {
     throw new RuntimeException('ECMWF PFor scale factor must divide the stored integer value.');
