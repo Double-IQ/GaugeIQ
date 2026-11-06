@@ -16,13 +16,10 @@ try {
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
     require_once __DIR__ . '/../../app/Schema.php';
-    require_once __DIR__ . '/../../app/WeatherMapCacheService.php';
 
     $pdo = (new Database($config))->pdo();
     migrateDatabase($pdo);
 
-    $cache = new WeatherMapCacheService($pdo, $config);
-    $cache->refreshScheduleIfDue(3600);
 
     $stmt = $pdo->query(
         'SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
