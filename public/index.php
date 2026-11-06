@@ -195,7 +195,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=20261106-weather-frame-crossfade" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261106-wind-compass-radar-pulses">
+<link rel="stylesheet" href="css/app.css?v=20261106-wind-compass-pulsing-halos">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=20261106-frame-one-preload-all"></script>
 <title>GaugeIQ</title>
@@ -1002,6 +1002,8 @@ if ($current && !empty($current['observed_at'])) {
                         <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
                     </g>
                     <g class="wind-hud-vector-arrow" data-wind-to-degrees="<?= number_format($windToDegrees, 2, '.', '') ?>" transform="rotate(<?= number_format($windToDegrees, 2, '.', '') ?> 170 90)">
+                        <circle class="wind-hud-radar-halo wind-hud-radar-halo-dot" cx="170" cy="120" r="8"></circle>
+                        <circle class="wind-hud-radar-halo wind-hud-radar-halo-arrow" cx="170" cy="53" r="9"></circle>
                         <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-dot" cx="170" cy="120" r="5"></circle>
                         <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-dot wind-hud-radar-pulse-delayed" cx="170" cy="120" r="5"></circle>
                         <circle class="wind-hud-radar-pulse wind-hud-radar-pulse-arrow" cx="170" cy="57" r="6"></circle>
