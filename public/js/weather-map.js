@@ -8,7 +8,8 @@ const appearanceDefaults = {
             precipitationOpacity: 78,
             cloudOpacity: 34,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
-            cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569']
+            cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
+            weatherRegionBounds: null
         };
         let appearance = { ...appearanceDefaults };
         try {
@@ -239,11 +240,42 @@ protocolOptions.fileReaderConfig = {
             throw new Error('GaugeIQ weather map configuration is missing or invalid.');
         }
 
-        const weatherRegionClip = createWeatherRegionClip(
-            config.latitude,
-            config.longitude,
-            WEATHER_REGION_RADIUS_KM
+        const defaultRegionHalfLatitude = 2.25;
+        const defaultRegionHalfLongitude = Math.min(
+            25,
+            defaultRegionHalfLatitude / Math.max(0.15, Math.cos(config.latitude * Math.PI / 180))
         );
+        const defaultRegionBounds = [
+            Math.max(-180, config.longitude - defaultRegionHalfLongitude),
+            Math.max(-85, config.latitude - defaultRegionHalfLatitude),
+            Math.min(180, config.longitude + defaultRegionHalfLongitude),
+            Math.min(85, config.latitude + defaultRegionHalfLatitude)
+        ];
+        const savedRegionBounds = appearance.weatherRegionBounds;
+        const validRegionBounds = Array.isArray(savedRegionBounds) && savedRegionBounds.length === 4 &&
+            savedRegionBounds.every(Number.isFinite) && savedRegionBounds[0] >= -180 &&
+            savedRegionBounds[2] <= 180 && savedRegionBounds[1] >= -85 &&
+            savedRegionBounds[3] <= 85 && savedRegionBounds[0] < savedRegionBounds[2] &&
+            savedRegionBounds[1] < savedRegionBounds[3];
+        const weatherRegionBounds = validRegionBounds ? savedRegionBounds : defaultRegionBounds;
+        const [regionWest, regionSouth, regionEast, regionNorth] = weatherRegionBounds;
+        const weatherRegionClip = {
+            geojson: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [regionWest, regionSouth],
+                        [regionEast, regionSouth],
+                        [regionEast, regionNorth],
+                        [regionWest, regionNorth],
+                        [regionWest, regionSouth]
+                    ]]
+                }
+            },
+            bounds: weatherRegionBounds
+        };
         protocolOptions.clippingOptions = {
             geojson: weatherRegionClip.geojson,
             bounds: weatherRegionClip.bounds
