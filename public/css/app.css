@@ -7127,12 +7127,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-gauge-card.wind-hud-card{
   border:0!important;
   outline:0!important;
-  box-shadow:none!important;
 }
 :root[data-theme="light"] .wind-gauge-card.wind-hud-card{
   border:0!important;
   outline:0!important;
-  box-shadow:none!important;
 }
 .gaugeiq-map-location-marker{
   z-index:0;
