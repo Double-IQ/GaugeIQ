@@ -1,15 +1,41 @@
-// Show the branded screen on every fresh page load, then dismiss it as soon as
-// the dashboard has initialised; do not wait for charts, video, or optional checks.
+// Only reload a resumed dashboard when the hourly cron has stored a newer
+// observation since this browser last loaded the dashboard. Reopening the app
+// must never initiate a weather-provider refresh.
 (() => {
     const screen = document.getElementById('gaugeiqLoadingScreen');
     const message = document.getElementById('gaugeiqLoadingMessage');
     if (!screen) return;
 
     const minimumVisibleMs = 2000;
+    const lastSeenKey = 'gaugeiq-last-seen-monitor-success';
+    const monitorTimestamp = document.body?.dataset.monitorLastSuccessAt || '';
+    const monitorTime = Date.parse(monitorTimestamp);
     let dismissed = false;
     let reloadStarted = false;
     let hiddenAt = 0;
     let loadingStartedAt = Date.now();
+
+    function rememberCurrentMonitorTime() {
+        if (!Number.isFinite(monitorTime)) return;
+        try {
+            localStorage.setItem(lastSeenKey, monitorTimestamp);
+        } catch {
+            // Dashboard remains usable when browser storage is unavailable.
+        }
+    }
+
+    function hasNewCronData() {
+        if (!Number.isFinite(monitorTime)) return false;
+        try {
+            const lastSeen = Date.parse(localStorage.getItem(lastSeenKey) || '');
+            return Number.isFinite(lastSeen) && monitorTime > lastSeen;
+        } catch {
+            return false;
+        }
+    }
+
+    // Record the cron timestamp represented by this freshly rendered page.
+    rememberCurrentMonitorTime();
 
     function showLoading(text) {
         if (message && text) message.textContent = text;
@@ -35,22 +61,20 @@
         }, 180);
     }
 
-    // DOM readiness is sufficient; optional requests and external media can finish later.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => window.setTimeout(dismissLoading, 160), { once: true });
     } else {
         window.setTimeout(dismissLoading, 160);
     }
 
-    // A bfcache-restored page may contain stale suspended dashboard data.
-    // Show the screen and request a fresh server-rendered dashboard instead.
-    function refreshOnResume() {
-        if (reloadStarted) return;
+    function refreshOnResumeIfCronAdvanced() {
+        if (reloadStarted || !hasNewCronData()) return;
         reloadStarted = true;
-        showLoading('Refreshing data…');
+        showLoading('New scheduled weather data found…');
         window.setTimeout(() => window.location.reload(), minimumVisibleMs);
 
-        // If the reload stalls or fails on a mobile connection, release the overlay.
+        // If the reload stalls, release the overlay. The newer timestamp is
+        // deliberately not recorded until the new dashboard has loaded.
         window.setTimeout(() => {
             if (document.visibilityState === 'visible' && !screen.hidden && reloadStarted) {
                 reloadStarted = false;
@@ -60,7 +84,7 @@
     }
 
     window.addEventListener('pageshow', event => {
-        if (event.persisted) refreshOnResume();
+        if (event.persisted) refreshOnResumeIfCronAdvanced();
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -69,11 +93,10 @@
             return;
         }
         if (document.visibilityState === 'visible' && hiddenAt && Date.now() - hiddenAt >= 30000) {
-            refreshOnResume();
+            refreshOnResumeIfCronAdvanced();
         }
     });
 
-    // Never leave the screen covering the dashboard if readiness events misbehave.
     window.setTimeout(dismissLoading, 4500);
 })();
 
