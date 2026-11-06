@@ -57,7 +57,7 @@ const appearanceDefaults = {
 const { BrowserBlockCache } = await import('https://unpkg.com/@openmeteo/file-reader@0.0.21/dist/esm/index.browser.js');
 
 const persistentMapCache = new BrowserBlockCache({
-    cacheName: 'om-gaugeiq-weather-map-blocks-v1',
+    cacheName: 'om-gaugeiq-weather-map-blocks-v2',
     blockSize: 64 * 1024,
     maxBytes: 192 * 1024 * 1024,
     evictionFraction: 0.15
@@ -119,7 +119,7 @@ window.fetch = (input, init) => {
 
     if (parsedUrl.protocol !== 'https:' ||
         parsedUrl.hostname !== 'openmeteo.s3.amazonaws.com' ||
-        !parsedUrl.pathname.startsWith('/data_spatial/ecmwf_ifs/') ||
+        !parsedUrl.pathname.startsWith('/data_spatial/ecmwf_ifs025/') ||
         !parsedUrl.pathname.endsWith('.om')) {
         return gaugeIqOriginalFetch(input, init);
     }
@@ -512,7 +512,7 @@ protocolOptions.fileReaderConfig = {
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
-            setStatus('Preparing 6 hourly weather frames (3 past + 3 forecast)…');
+            setStatus('Preparing six weather frames (3 past + 3 forecast)…');
 
             try {
                 const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
@@ -649,7 +649,7 @@ protocolOptions.fileReaderConfig = {
                         pendingSources.length ? 'Still loading: ' + pendingSources.join(', ') : ''
                     ].filter(Boolean).join(' | ');
                     clearAnimation();
-                    setStatus('The hourly weather frames could not all be loaded.' + (detail ? ' ' + detail : ''));
+                    setStatus('The weather frames could not all be loaded.' + (detail ? ' ' + detail : ''));
                 }, 180000);
 
                 const finishPreparation = () => {
@@ -854,7 +854,7 @@ protocolOptions.fileReaderConfig = {
                 setStatus('Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
             }
 
-            frameTimeLabel.textContent = 'Six hourly frames';
+            frameTimeLabel.textContent = 'Six weather frames';
 
             (async () => {
                 try {
