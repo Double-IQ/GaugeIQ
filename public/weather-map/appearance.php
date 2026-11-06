@@ -70,7 +70,7 @@ try {
         #region-readout { color:#dbeafe; font-size:12px; line-height:1.5; }
         .region-help { margin:0 0 12px; color:#b9c9e8; font-size:12px; line-height:1.5; }
         @media(max-width:480px){ #region-map{height:280px;} }
-        @media (max-width: 480px) { .page { padding-left: 13px; padding-right: 13px; } .panel { padding: 14px; } .colors { gap: 7px; } .color-stop label { font-size: 10px; } input[type="color"] { height: 38px; } .opacity-row { align-items: flex-start; flex-direction: column; gap: 8px; } .opacity-control { width: 100%; } }
+        @media (max-width: 480px) { .page { padding-left: 13px; padding-right: 13px; } .panel { padding: 14px; } .colors { gap: 7px; } .color-stop label { font-size: 10px; } input[type="color"] { height: 38px; } }
     </style>
 </head>
 <body>
@@ -121,13 +121,7 @@ try {
     <section class="panel" aria-labelledby="precip-heading">
         <h2 id="precip-heading">Precipitation</h2>
         <p class="description">Colour scale from light to very heavy rainfall. The zero-rain value remains transparent.</p>
-        <div class="opacity-row">
-            <label for="precip-opacity">Layer opacity</label>
-            <div class="opacity-control">
-                <input id="precip-opacity" type="range" min="0" max="100" step="1">
-                <output id="precip-opacity-value" for="precip-opacity">78%</output>
-            </div>
-        </div>
+        <p class="description">Adjust each colour and its opacity independently. The preview below reflects the weather overlay on the map.</p>
         <div class="colors">
             <div class="color-stop"><label for="precip-c1">Light<br>0.2 mm/h</label><input id="precip-c1" type="color">
                 <input id="precip-c1-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Light colour opacity">
@@ -148,13 +142,7 @@ try {
     <section class="panel" aria-labelledby="cloud-heading">
         <h2 id="cloud-heading">Cloud cover</h2>
         <p class="description">Colour scale from low to complete cloud cover. Clear sky remains transparent.</p>
-        <div class="opacity-row">
-            <label for="cloud-opacity">Layer opacity</label>
-            <div class="opacity-control">
-                <input id="cloud-opacity" type="range" min="0" max="100" step="1">
-                <output id="cloud-opacity-value" for="cloud-opacity">34%</output>
-            </div>
-        </div>
+        <p class="description">Adjust each colour and its opacity independently. The preview below reflects the weather overlay on the map.</p>
         <div class="colors">
             <div class="color-stop"><label for="cloud-c1">Low<br>25%</label><input id="cloud-c1" type="color">
                 <input id="cloud-c1-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Low colour opacity">
@@ -191,17 +179,11 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     const defaults = {
         mapStyle: 'dark',
         mapProjection: 'mercator',
-        precipitationOpacity: 78,
-        cloudOpacity: 34,
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
         cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
         precipitationColorOpacities: [100, 100, 100, 100],
         cloudColorOpacities: [100, 100, 100, 100],
         weatherRegionBounds: null
-    };
-    const ids = {
-        precipitationOpacity: 'precip-opacity',
-        cloudOpacity: 'cloud-opacity'
     };
     let settings = { ...defaults };
     const makeDefaultBounds = () => {
@@ -428,21 +410,16 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             const alpha = Math.max(0, Math.min(100, Number(opacity ?? 100))) / 100;
             return 'rgba(' + red + ', ' + green + ', ' + blue + ', ' + alpha + ')';
         };
+        const positions = type === 'precipitation' ? [1, 5, 25, 100] : [25, 50, 75, 100];
         const stops = colors.map((color, index) =>
-            rgba(color, settings[opacityKey]?.[index]) + ' ' + ((index + 1) * 25) + '%'
+            rgba(color, settings[opacityKey]?.[index]) + ' ' + positions[index] + '%'
         );
-        target.style.background = 'linear-gradient(90deg, transparent 0%, ' + stops.join(', ') + ')';
+        target.style.background = 'linear-gradient(90deg, ' + rgba('#000000', 0) + ' 0%, ' + stops.join(', ') + ')';
     }
 
     function render() {
         document.getElementById('map-style').value = settings.mapStyle === 'light' ? 'light' : 'dark';
         document.getElementById('map-projection').value = settings.mapProjection === 'globe' ? 'globe' : 'mercator';
-        for (const [key, id] of Object.entries(ids)) {
-            const input = document.getElementById(id);
-            const value = Math.max(0, Math.min(100, Number(settings[key]) || 0));
-            input.value = value;
-            document.getElementById(id + '-value').textContent = value + '%';
-        }
         ['precipitation', 'cloud'].forEach((type) => {
             const key = type === 'precipitation' ? 'precipitationColors' : 'cloudColors';
             settings[key].forEach((color, index) => {
@@ -463,15 +440,6 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     });
     document.getElementById('map-projection').addEventListener('change', event => {
         settings.mapProjection = event.target.value === 'globe' ? 'globe' : 'mercator';
-    });
-
-    document.getElementById('precip-opacity').addEventListener('input', event => {
-        settings.precipitationOpacity = Number(event.target.value);
-        document.getElementById('precip-opacity-value').textContent = event.target.value + '%';
-    });
-    document.getElementById('cloud-opacity').addEventListener('input', event => {
-        settings.cloudOpacity = Number(event.target.value);
-        document.getElementById('cloud-opacity-value').textContent = event.target.value + '%';
     });
 
     ['precipitation', 'cloud'].forEach(type => {
