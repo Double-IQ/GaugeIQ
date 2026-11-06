@@ -358,12 +358,22 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-                // Keep the outgoing frame alive until MapLibre has rendered the
-                // newly selected frame. Removing it immediately can expose a
-                // blank raster tile pass and cause a visible flash between frames.
-                map.once('idle', () => {
+                // Keep the outgoing frame alive for one completed render of
+                // the newly selected frame. Waiting for "idle" is unreliable here:
+                // the rolling preload window starts another raster request straight
+                // after this transition, so the map can remain non-idle and retain
+                // every old frame's sources until the browser runs out of memory.
+                const cleanupToken = animationToken;
+                let previousFrameCleaned = false;
+                const cleanupPreviousFrame = () => {
+                    if (previousFrameCleaned) return;
+                    previousFrameCleaned = true;
+                    if (cleanupToken !== animationToken) return;
                     removeAnimationFrameSources(previousFrame);
-                    });
+                };
+                map.once('render', cleanupPreviousFrame);
+                // Do not let a missed render event retain old frame sources forever.
+                setTimeout(cleanupPreviousFrame, 3000);
 
                 const upcomingFrame = frames[(nextIndex + 2) % frames.length];
                 if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
