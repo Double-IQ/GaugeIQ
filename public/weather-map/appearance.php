@@ -481,7 +481,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                     parseInt(value.slice(0, 2), 16),
                     parseInt(value.slice(2, 4), 16),
                     parseInt(value.slice(4, 6), 16),
-                    Math.max(0, Math.min(100, Number(settings[opacityKey]?.[index] ?? 100))) / 100
+                    (Math.max(0, Math.min(100, Number(settings[opacityKey]?.[index] ?? 100))) / 100) *
+                    (Math.max(0, Math.min(100, Number(settings[type === 'precipitation' ? 'precipitationOpacity' : 'cloudOpacity'] ?? 100))) / 100)
                 ];
             })
         ];
