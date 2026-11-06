@@ -60,17 +60,16 @@ try {
         /* Checkerboard makes transparency visible instead of blending every
            preview against the same solid dark panel colour. */
         .gradient {
+            display: block;
+            width: 100%;
             height: 28px;
             margin-top: 14px;
             border: 1px solid rgba(148,163,184,.45);
             border-radius: 5px;
             background-color: #fff;
-            background-image:
-                linear-gradient(90deg, transparent, transparent),
-                conic-gradient(#cbd5e1 25%, #fff 0 50%, #cbd5e1 0 75%, #fff 0);
-            background-size: 100% 100%, 12px 12px;
+            background-image: conic-gradient(#cbd5e1 25%, #fff 0 50%, #cbd5e1 0 75%, #fff 0);
+            background-size: 12px 12px;
         }
-        .gradient.cloud { }
         .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .save { background: #1d4ed8; border-color: #3b82f6; }
         .reset { background: transparent; }
@@ -148,7 +147,7 @@ try {
                 <input id="precip-c4-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Very heavy colour opacity">
                 <output id="precip-c4-opacity-value" for="precip-c4-opacity">100%</output></div>
         </div>
-        <div class="gradient" id="precip-gradient"></div>
+        <canvas class="gradient" id="precip-gradient" width="512" height="28" aria-label="Precipitation colour and transparency preview"></canvas>
     </section>
 
     <section class="panel" aria-labelledby="cloud-heading">
@@ -169,7 +168,7 @@ try {
                 <input id="cloud-c4-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Overcast colour opacity">
                 <output id="cloud-c4-opacity-value" for="cloud-c4-opacity">100%</output></div>
         </div>
-        <div class="gradient cloud" id="cloud-gradient"></div>
+        <canvas class="gradient cloud" id="cloud-gradient" width="512" height="28" aria-label="Cloud cover colour and transparency preview"></canvas>
     </section>
 
     <div class="actions">
@@ -414,25 +413,54 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         const colors = settings[type + 'Colors'];
         const opacityKey = type === 'precipitation' ? 'precipitationColorOpacities' : 'cloudColorOpacities';
         const target = document.getElementById(type === 'precipitation' ? 'precip-gradient' : 'cloud-gradient');
-        const rgba = (hex, opacity) => {
-            const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
-            const red = parseInt(value.slice(0, 2), 16);
-            const green = parseInt(value.slice(2, 4), 16);
-            const blue = parseInt(value.slice(4, 6), 16);
-            const alpha = Math.max(0, Math.min(100, Number(opacity ?? 100))) / 100;
-            return 'rgba(' + red + ', ' + green + ', ' + blue + ', ' + alpha + ')';
-        };
-        const positions = type === 'precipitation' ? [1, 5, 25, 100] : [25, 50, 75, 100];
-        const stops = colors.map((color, index) =>
-            rgba(color, settings[opacityKey]?.[index]) + ' ' + positions[index] + '%'
-        );
-        // Keep the checkerboard underneath the colour ramp: changing alpha
-        // must visibly reveal the background pattern, not look like a colour edit.
-        target.style.backgroundImage =
-            'linear-gradient(90deg, ' + rgba('#000000', 0) + ' 0%, ' + stops.join(', ') + '), ' +
-            'conic-gradient(#cbd5e1 25%, #fff 0 50%, #cbd5e1 0 75%, #fff 0)';
-        target.style.backgroundSize = '100% 100%, 12px 12px';
-        target.style.backgroundColor = '#fff';
+        const breakpoints = type === 'precipitation' ? [0, 0.2, 1, 5, 20] : [0, 25, 50, 75, 100];
+        const rgbaStops = [
+            [0, 0, 0, 0],
+            ...colors.map((hex, index) => {
+                const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+                return [
+                    parseInt(value.slice(0, 2), 16),
+                    parseInt(value.slice(2, 4), 16),
+                    parseInt(value.slice(4, 6), 16),
+                    Math.max(0, Math.min(100, Number(settings[opacityKey]?.[index] ?? 100))) / 100
+                ];
+            })
+        ];
+
+        // Mirror Open-Meteo's breakpoint sampler: interpolate RGB and alpha
+        // independently, then let the checkerboard show the resulting alpha.
+        const width = target.width;
+        const height = target.height;
+        const context = target.getContext('2d');
+        if (!context) return;
+        const image = context.createImageData(width, height);
+        for (let x = 0; x < width; x++) {
+            const value = (x / Math.max(1, width - 1)) * breakpoints[breakpoints.length - 1];
+            let index = 0;
+            for (let stop = 1; stop < breakpoints.length; stop++) {
+                if (breakpoints[stop] <= value) index = stop;
+                else break;
+            }
+            const next = Math.min(rgbaStops.length - 1, index + 1);
+            const span = breakpoints[next] - breakpoints[index];
+            const t = span > 0 ? Math.max(0, Math.min(1, (value - breakpoints[index]) / span)) : 0;
+            const a = rgbaStops[index];
+            const b = rgbaStops[next];
+            const channels = [
+                a[0] + (b[0] - a[0]) * t,
+                a[1] + (b[1] - a[1]) * t,
+                a[2] + (b[2] - a[2]) * t,
+                a[3] + (b[3] - a[3]) * t
+            ];
+            for (let y = 0; y < height; y++) {
+                const offset = (y * width + x) * 4;
+                image.data[offset] = channels[0];
+                image.data[offset + 1] = channels[1];
+                image.data[offset + 2] = channels[2];
+                image.data[offset + 3] = 255 * channels[3];
+            }
+        }
+        context.putImageData(image, 0, 0);
     }
 
     function render() {
