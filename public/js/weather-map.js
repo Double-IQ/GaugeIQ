@@ -526,9 +526,12 @@ protocolOptions.fileReaderConfig = {
                     } else {
                         phase = 'connecting / reading cached data';
                     }
+                    const activity = ' · connect ' + network.metadataCompleted + '/' + network.metadataStarted
+                        + ' · download ' + network.rangeCompleted + '/' + network.rangeStarted + ' ranges'
+                        + ' · sources ' + loadedSources + '/' + totalSources;
                     const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
                     const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
-                    setStatus('Loading weather frame ' + (index + 1) + '/6 · ' + phase + transfer + failed);
+                    setStatus('Loading weather frame ' + (index + 1) + '/6 · ' + phase + activity + transfer + failed);
                 };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
