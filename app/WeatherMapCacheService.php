@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Maintains six concrete ECMWF IFS 0.25° map frames used by GaugeIQ:
  * three past and three forecast timestamps. Binary map data is deliberately kept
- * of SQL; the public proxy stores requested HTTP range blocks on disk.
+ * out of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
 {
