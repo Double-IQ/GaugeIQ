@@ -7171,3 +7171,25 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:transparent!important;
   box-shadow:none!important;
 }
+
+
+/* Subtle outward radar waves from the wind-origin dot and direction arrow. */
+.wind-hud-vector .wind-hud-radar-pulse{
+  fill:none;
+  stroke-width:1.5;
+  opacity:0;
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:wind-hud-radar-wave 2.4s ease-out infinite;
+  pointer-events:none;
+}
+.wind-hud-vector .wind-hud-radar-pulse-dot{stroke:#ffad55}
+.wind-hud-vector .wind-hud-radar-pulse-arrow{stroke:#68d2ff}
+.wind-hud-vector .wind-hud-radar-pulse-delayed{animation-delay:1.2s}
+@keyframes wind-hud-radar-wave{
+  0%{transform:scale(.65);opacity:.78}
+  100%{transform:scale(3.4);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .wind-hud-vector .wind-hud-radar-pulse{animation:none;opacity:.2;transform:scale(1.35)}
+}
