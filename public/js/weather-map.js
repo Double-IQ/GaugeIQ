@@ -5,8 +5,6 @@ const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map
 const appearanceDefaults = {
             mapStyle: 'dark',
             mapProjection: 'mercator',
-            precipitationOpacity: 78,
-            cloudOpacity: 34,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
             cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
             weatherRegionBounds: null
@@ -298,14 +296,12 @@ protocolOptions.fileReaderConfig = {
         function weatherVariables(selection) {
             return selection === 'precipitation_cloud_cover'
                 ? [
-                    { variable: 'cloud_cover', opacity: Number(appearance.cloudOpacity) / 100 },
-                    { variable: 'precipitation', opacity: Number(appearance.precipitationOpacity) / 100 }
+                    { variable: 'cloud_cover', opacity: 1 },
+                    { variable: 'precipitation', opacity: 1 }
                 ]
                 : [{
                     variable: selection,
-                    opacity: selection === 'cloud_cover'
-                        ? Number(appearance.cloudOpacity) / 100
-                        : Number(appearance.precipitationOpacity) / 100
+                    opacity: 1
                 }];
         }
 
