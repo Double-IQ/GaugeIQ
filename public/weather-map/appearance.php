@@ -132,7 +132,11 @@ try {
     <section class="panel" aria-labelledby="precip-heading">
         <h2 id="precip-heading">Precipitation</h2>
         <p class="description">Colour scale from light to very heavy rainfall. The zero-rain value remains transparent.</p>
-        <p class="description">Adjust each colour and its opacity independently. The preview below reflects the weather overlay on the map.</p>
+        <p class="description">Overall opacity controls the whole precipitation layer. Each colour opacity below controls that colour independently.</p>
+        <div class="opacity-row">
+            <label for="precip-overall-opacity">Overall precipitation opacity</label>
+            <div class="opacity-control"><input id="precip-overall-opacity" type="range" min="0" max="100" step="1"><output id="precip-overall-opacity-value" for="precip-overall-opacity">100%</output></div>
+        </div>
         <div class="colors">
             <div class="color-stop"><label for="precip-c1">Light<br>0.2 mm/h</label><input id="precip-c1" type="color">
                 <input id="precip-c1-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Light colour opacity">
@@ -153,7 +157,11 @@ try {
     <section class="panel" aria-labelledby="cloud-heading">
         <h2 id="cloud-heading">Cloud cover</h2>
         <p class="description">Colour scale from low to complete cloud cover. Clear sky remains transparent.</p>
-        <p class="description">Adjust each colour and its opacity independently. The preview below reflects the weather overlay on the map.</p>
+        <p class="description">Overall opacity controls the whole cloud layer. Each colour opacity below controls that colour independently.</p>
+        <div class="opacity-row">
+            <label for="cloud-overall-opacity">Overall cloud opacity</label>
+            <div class="opacity-control"><input id="cloud-overall-opacity" type="range" min="0" max="100" step="1"><output id="cloud-overall-opacity-value" for="cloud-overall-opacity">100%</output></div>
+        </div>
         <div class="colors">
             <div class="color-stop"><label for="cloud-c1">Low<br>25%</label><input id="cloud-c1" type="color">
                 <input id="cloud-c1-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Low colour opacity">
@@ -190,6 +198,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     const defaults = {
         mapStyle: 'dark',
         mapProjection: 'mercator',
+        precipitationOpacity: 100,
+        cloudOpacity: 100,
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
         cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
         precipitationColorOpacities: [100, 100, 100, 100],
@@ -446,6 +456,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     try {
         const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
         if (saved && typeof saved === 'object') settings = { ...defaults, ...saved };
+        settings.precipitationOpacity = Math.max(0, Math.min(100, Number(settings.precipitationOpacity ?? 100)));
+        settings.cloudOpacity = Math.max(0, Math.min(100, Number(settings.cloudOpacity ?? 100)));
         settings.precipitationColorOpacities = Array.isArray(settings.precipitationColorOpacities) ? settings.precipitationColorOpacities : [...defaults.precipitationColorOpacities];
         settings.cloudColorOpacities = Array.isArray(settings.cloudColorOpacities) ? settings.cloudColorOpacities : [...defaults.cloudColorOpacities];
     } catch (error) {
@@ -513,6 +525,13 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     function render() {
         document.getElementById('map-style').value = settings.mapStyle === 'light' ? 'light' : 'dark';
         document.getElementById('map-projection').value = settings.mapProjection === 'globe' ? 'globe' : 'mercator';
+        ['precipitation', 'cloud'].forEach(type => {
+            const key = type === 'precipitation' ? 'precipitationOpacity' : 'cloudOpacity';
+            const prefix = type === 'precipitation' ? 'precip' : 'cloud';
+            const value = Math.max(0, Math.min(100, Number(settings[key] ?? 100)));
+            document.getElementById(prefix + '-overall-opacity').value = value;
+            document.getElementById(prefix + '-overall-opacity-value').textContent = value + '%';
+        });
         ['precipitation', 'cloud'].forEach((type) => {
             const key = type === 'precipitation' ? 'precipitationColors' : 'cloudColors';
             settings[key].forEach((color, index) => {
@@ -533,6 +552,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     });
     document.getElementById('map-projection').addEventListener('change', event => {
         settings.mapProjection = event.target.value === 'globe' ? 'globe' : 'mercator';
+    });
+
+    ['precipitation', 'cloud'].forEach(type => {
+        const prefix = type === 'precipitation' ? 'precip' : 'cloud';
+        const key = type === 'precipitation' ? 'precipitationOpacity' : 'cloudOpacity';
+        document.getElementById(prefix + '-overall-opacity').addEventListener('input', event => {
+            settings[key] = Number(event.target.value);
+            document.getElementById(prefix + '-overall-opacity-value').textContent = event.target.value + '%';
+        });
     });
 
     ['precipitation', 'cloud'].forEach(type => {
