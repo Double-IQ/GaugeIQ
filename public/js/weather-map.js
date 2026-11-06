@@ -85,7 +85,7 @@ function trackWeatherProxyRequest(proxyUrl, sendRequest) {
         else {
             progress.rangeCompleted++;
             const contentRange = response.headers.get('Content-Range') || '';
-            const rangeMatch = contentRange.match(/bytes\\s+(\\d+)-(\\d+)\\/\\d+/i);
+            const rangeMatch = contentRange.match(/bytes\s+(\d+)-(\d+)\/\d+/i);
             const contentLength = Number(response.headers.get('Content-Length') || 0);
             progress.bytes += rangeMatch ? Number(rangeMatch[2]) - Number(rangeMatch[1]) + 1 : (Number.isFinite(contentLength) ? contentLength : 0);
         }
