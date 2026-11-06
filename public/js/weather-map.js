@@ -856,12 +856,13 @@ protocolOptions.fileReaderConfig = {
 
             frameTimeLabel.textContent = 'Six weather frames';
 
+            let snapshotMatchesLatest = false;
             (async () => {
                 try {
                     const latestUrls = await resolveCurrentOmUrls(variables);
                     if (token !== weatherLayerToken) return;
 
-                    const snapshotMatchesLatest = Boolean(savedSnapshot &&
+                    snapshotMatchesLatest = Boolean(savedSnapshot &&
                         savedSnapshot.urls.length === latestUrls.length &&
                         savedSnapshot.urls.every((url, index) => url === latestUrls[index]));
 
@@ -891,7 +892,7 @@ protocolOptions.fileReaderConfig = {
                             if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', variables[index].opacity);
                         });
 
-                        if (savedSnapshot) {
+                        if (snapshotMatchesLatest) {
                             activeLayers.forEach(id => {
                                 if (map.getLayer(id)) map.removeLayer(id);
                             });
