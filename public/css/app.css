@@ -7161,3 +7161,14 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .weather-map-credits-intro{color:#53677d}
 :root[data-theme="light"] .weather-map-credits-chevron{border-color:#326c9d}
 @media(prefers-reduced-motion:reduce){.weather-map-credits-chevron{transition:none}}
+
+
+/* Remove only the inner Wind speed-history panel border; retain the Wind card frame. */
+.wind-hud-speed-history{
+  border:0!important;
+  outline:0!important;
+}
+:root[data-theme="light"] .wind-hud-speed-history{
+  border:0!important;
+  outline:0!important;
+}
