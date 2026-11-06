@@ -257,6 +257,9 @@ final class AlertRuleService
         $old = (float)$p['pressure_hpa'];
         $threshold = (float)($c['value'] ?? 0);
 
+        if ($type === 'drop' && ($old - $value) >= $threshold) {
+            return sprintf('Pressure dropped by %.1f hPa to %.1f hPa.', $old - $value, $value);
+        }
         if ($type === 'change' && abs($value - $old) >= $threshold) {
             return sprintf('Pressure changed by %.1f hPa to %.1f hPa.', abs($value - $old), $value);
         }
@@ -708,10 +711,14 @@ final class AlertRuleService
     private function validate(string $metric, string $type, array $configuration): void
     {
         $allowedMetrics = ['pressure', 'humidity', 'dew_point', 'dew_point_gap', 'wind_speed', 'wind_direction', 'wind', 'weather_stability'];
-        $allowedTypes = ['change', 'above', 'below', 'specific', 'speed_and_direction'];
+        $allowedTypes = ['change', 'drop', 'above', 'below', 'specific', 'speed_and_direction'];
 
         if (!in_array($metric, $allowedMetrics, true) || !in_array($type, $allowedTypes, true)) {
             throw new InvalidArgumentException('Unsupported GaugeIQ alert rule.');
+        }
+
+        if ($type === 'drop' && $metric !== 'pressure') {
+            throw new InvalidArgumentException('The Drops by condition is only available for air pressure alerts.');
         }
 
         if ($configuration === []) {
