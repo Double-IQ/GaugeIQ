@@ -257,7 +257,13 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             attributionControl: false
         });
         regionMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        regionMap.on('error', event => {
+            const message = event?.error?.message || 'The map tiles could not be loaded.';
+            document.getElementById('region-readout').textContent = 'Map loading issue: ' + message;
+            console.error('GaugeIQ coverage map error:', event?.error || event);
+        });
         regionMap.on('load', () => {
+            regionMap.resize();
             regionMap.addSource(regionSourceId, { type: 'geojson', data: rectangleFeature(regionBounds) });
             regionMap.addLayer({
                 id: 'gaugeiq-region-fill', type: 'fill', source: regionSourceId,
@@ -326,6 +332,10 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     } catch (error) {
         console.warn('Could not load saved appearance settings.', error);
     }
+    // Load the saved rectangle before initialising the map; otherwise the map
+    // starts with the default bounds even though the settings are saved.
+    if (!validBounds(settings.weatherRegionBounds)) settings.weatherRegionBounds = makeDefaultBounds();
+    regionBounds = [...settings.weatherRegionBounds];
 
     function paintGradient(type) {
         const colors = settings[type + 'Colors'];
@@ -428,7 +438,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     });
 
     render();
-    initRegionMap();
+    try {
+        initRegionMap();
+        // Ensure MapLibre measures the final visible panel dimensions.
+        requestAnimationFrame(() => regionMap?.resize());
+    } catch (error) {
+        console.error('Could not initialise the GaugeIQ coverage map.', error);
+        document.getElementById('region-readout').textContent =
+            'The map could not be started: ' + (error?.message || 'Map initialisation failed.');
+    }
 })();
 </script>
 </body>
