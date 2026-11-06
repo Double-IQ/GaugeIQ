@@ -395,7 +395,8 @@ $locationChangedAt = $locationChangedAtQuery->fetchColumn();
 $targetTimestamp = strtotime((string)$current['observed_at']);
 if ($targetTimestamp !== false) {
     $targetTimestamp -= $lookbackHours * 3600;
-    $baselineSql = "SELECT pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, observed_at
+    $baselineSql = "SELECT pressure_hpa, humidity_percent, dew_point_c, temperature_c,
+                           wind_speed_kmh, wind_direction_degrees, observed_at
                     FROM gaugeiq_pressure_readings
                     WHERE observed_at <= ? AND observed_at < ?
                       AND (source IS NULL OR source = 'Open-Meteo')";
