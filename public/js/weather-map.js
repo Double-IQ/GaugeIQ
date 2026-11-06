@@ -197,16 +197,7 @@ function createWeatherRegionClip(latitude, longitude, radiusKm) {
     };
 }
 
-const weatherRegionClip = createWeatherRegionClip(
-    Number(mapElement?.dataset.latitude),
-    Number(mapElement?.dataset.longitude),
-    WEATHER_REGION_RADIUS_KM
-);
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
-protocolOptions.clippingOptions = {
-    geojson: weatherRegionClip.geojson,
-    bounds: weatherRegionClip.bounds
-};
 protocolOptions.fileReaderConfig = {
     ...protocolOptions.fileReaderConfig,
     cache: persistentMapCache
@@ -232,9 +223,7 @@ protocolOptions.fileReaderConfig = {
                 ]
             }
         };
-        maplibregl.addProtocol('om', (params, abortController) =>
-            OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
-        );
+
 
         const mapElement = document.getElementById('map');
         const status = document.getElementById('map-status');
@@ -249,6 +238,19 @@ protocolOptions.fileReaderConfig = {
             status.textContent = 'Map unavailable: location coordinates are missing.';
             throw new Error('GaugeIQ weather map configuration is missing or invalid.');
         }
+
+        const weatherRegionClip = createWeatherRegionClip(
+            config.latitude,
+            config.longitude,
+            WEATHER_REGION_RADIUS_KM
+        );
+        protocolOptions.clippingOptions = {
+            geojson: weatherRegionClip.geojson,
+            bounds: weatherRegionClip.bounds
+        };
+        maplibregl.addProtocol('om', (params, abortController) =>
+            OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
+        );
 
         const savedMapZoom = (() => {
             try {
