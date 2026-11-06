@@ -5,6 +5,25 @@ if (!is_file($configPath)) {
     http_response_code(503);
     exit('GaugeIQ must be installed before the weather-map test can run.');
 }
+$config = require $configPath;
+require dirname(__DIR__, 2) . '/app/Database.php';
+$selectedLatitude = (float)($config['pressure']['latitude'] ?? 0);
+$selectedLongitude = (float)($config['pressure']['longitude'] ?? 0);
+try {
+    $database = new Database($config);
+    $coordinateQuery = $database->pdo()->prepare(
+        "SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'location_latitude', 'location_longitude')"
+    );
+    $coordinateQuery->execute();
+    $coordinates = [];
+    foreach ($coordinateQuery->fetchAll() as $coordinate) {
+        $coordinates[(string)$coordinate['key']] = (float)$coordinate['value'];
+    }
+    $selectedLatitude = $coordinates['active_location_latitude'] ?? $coordinates['location_latitude'] ?? $selectedLatitude;
+    $selectedLongitude = $coordinates['active_location_longitude'] ?? $coordinates['location_longitude'] ?? $selectedLongitude;
+} catch (Throwable $error) {
+    // Fall back to the installation's configured location.
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -44,6 +63,12 @@ if (!is_file($configPath)) {
         .reset { background: transparent; }
         #status { min-height: 18px; color: #86efac; font-size: 12px; }
         .note { margin: 17px 2px 0; color: #9fb2d4; font-size: 11px; line-height: 1.5; }
+        #region-map { width: 100%; height: 320px; overflow: hidden; border: 1px solid rgba(148,163,184,.35); border-radius: 11px; }
+        .region-tools { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin: 12px 0 8px; }
+        .region-tools button.active { background:#1d4ed8; border-color:#60a5fa; }
+        #region-readout { color:#dbeafe; font-size:12px; line-height:1.5; }
+        .region-help { margin:0 0 12px; color:#b9c9e8; font-size:12px; line-height:1.5; }
+        @media(max-width:480px){ #region-map{height:280px;} }
         @media (max-width: 480px) { .page { padding-left: 13px; padding-right: 13px; } .panel { padding: 14px; } .colors { gap: 7px; } .color-stop label { font-size: 10px; } input[type="color"] { height: 38px; } .opacity-row { align-items: flex-start; flex-direction: column; gap: 8px; } .opacity-control { width: 100%; } }
     </style>
 </head>
@@ -78,6 +103,18 @@ if (!is_file($configPath)) {
                 </select>
             </div>
         </div>
+    </section>
+
+    <section class="panel" aria-labelledby="region-heading">
+        <h2 id="region-heading">Weather coverage area</h2>
+        <p class="description">Choose the rectangular area used to generate precipitation and cloud-cover overlays. The initial area is centred on your selected GaugeIQ location.</p>
+        <div id="region-map" role="application" aria-label="Map for selecting the weather coverage rectangle"></div>
+        <div class="region-tools">
+            <button type="button" id="region-draw">Draw rectangle</button>
+            <button type="button" class="reset" id="region-centre">Reset around selected location</button>
+        </div>
+        <p class="region-help">Select Draw rectangle, then click and drag on the map from one corner to the opposite corner. Pan and zoom normally when drawing is off.</p>
+        <div id="region-readout" aria-live="polite">Loading coverage area…</div>
     </section>
 
     <section class="panel" aria-labelledby="precip-heading">
@@ -141,9 +178,15 @@ if (!is_file($configPath)) {
     </div>
     <p class="note">Settings are saved in this browser on this device. Return to the map after saving; reload the map to apply your changes.</p>
 </main>
-<script>
+<script type="module">
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs';
+
 (() => {
     const KEY = 'gaugeiqWeatherMapAppearance';
+    const selectedLocation = {
+        latitude: <?= json_encode($selectedLatitude) ?>,
+        longitude: <?= json_encode($selectedLongitude) ?>
+    };
     const defaults = {
         mapStyle: 'dark',
         mapProjection: 'mercator',
@@ -152,13 +195,127 @@ if (!is_file($configPath)) {
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
         cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
         precipitationColorOpacities: [100, 100, 100, 100],
-        cloudColorOpacities: [100, 100, 100, 100]
+        cloudColorOpacities: [100, 100, 100, 100],
+        weatherRegionBounds: null
     };
     const ids = {
         precipitationOpacity: 'precip-opacity',
         cloudOpacity: 'cloud-opacity'
     };
     let settings = { ...defaults };
+    const makeDefaultBounds = () => {
+        const latitude = Math.max(-85, Math.min(85, Number(selectedLocation.latitude) || 0));
+        const longitude = Number(selectedLocation.longitude) || 0;
+        const halfLatitude = 2.25;
+        const halfLongitude = Math.min(25, 2.25 / Math.max(0.15, Math.cos(latitude * Math.PI / 180)));
+        return [
+            Math.max(-180, longitude - halfLongitude),
+            Math.max(-85, latitude - halfLatitude),
+            Math.min(180, longitude + halfLongitude),
+            Math.min(85, latitude + halfLatitude)
+        ];
+    };
+    const validBounds = value => Array.isArray(value) && value.length === 4 &&
+        value.every(Number.isFinite) && value[0] < value[2] && value[1] < value[3] &&
+        value[0] >= -180 && value[2] <= 180 && value[1] >= -85 && value[3] <= 85;
+    if (!validBounds(settings.weatherRegionBounds)) settings.weatherRegionBounds = makeDefaultBounds();
+
+    let regionMap = null;
+    let drawingRegion = false;
+    let regionStart = null;
+    let regionBounds = [...settings.weatherRegionBounds];
+    const regionSourceId = 'gaugeiq-region-selection';
+    function rectangleFeature(bounds) {
+        const [west, south, east, north] = bounds;
+        return {
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'Polygon', coordinates: [[
+                [west, south], [east, south], [east, north],
+                [west, north], [west, south]
+            ]] }
+        };
+    }
+    function showRegionBounds(bounds) {
+        regionBounds = [...bounds];
+        const readout = document.getElementById('region-readout');
+        readout.textContent = 'West ' + bounds[0].toFixed(3) + '° · South ' + bounds[1].toFixed(3) +
+            '° · East ' + bounds[2].toFixed(3) + '° · North ' + bounds[3].toFixed(3) + '°';
+        if (regionMap?.getSource(regionSourceId)) {
+            regionMap.getSource(regionSourceId).setData(rectangleFeature(bounds));
+        }
+    }
+    function initRegionMap() {
+        regionMap = new maplibregl.Map({
+            container: 'region-map',
+            style: 'https://tiles.openfreemap.org/styles/dark',
+            center: [selectedLocation.longitude || 0, selectedLocation.latitude || 0],
+            zoom: 4,
+            minZoom: 1,
+            maxZoom: 12,
+            attributionControl: false
+        });
+        regionMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        regionMap.on('load', () => {
+            regionMap.addSource(regionSourceId, { type: 'geojson', data: rectangleFeature(regionBounds) });
+            regionMap.addLayer({
+                id: 'gaugeiq-region-fill', type: 'fill', source: regionSourceId,
+                paint: { 'fill-color': '#38bdf8', 'fill-opacity': 0.16 }
+            });
+            regionMap.addLayer({
+                id: 'gaugeiq-region-outline', type: 'line', source: regionSourceId,
+                paint: { 'line-color': '#38bdf8', 'line-width': 2.5, 'line-dasharray': [2, 1] }
+            });
+            regionMap.fitBounds([[regionBounds[0], regionBounds[1]], [regionBounds[2], regionBounds[3]]], { padding: 35, maxZoom: 7, duration: 0 });
+        });
+        regionMap.on('mousedown', event => {
+            if (!drawingRegion) return;
+            regionStart = regionMap.unproject(event.point);
+            regionMap.dragPan.disable();
+            regionMap.getCanvas().style.cursor = 'crosshair';
+        });
+        regionMap.on('mousemove', event => {
+            if (!drawingRegion || !regionStart) return;
+            const end = regionMap.unproject(event.point);
+            const bounds = [
+                Math.min(regionStart.lng, end.lng), Math.min(regionStart.lat, end.lat),
+                Math.max(regionStart.lng, end.lng), Math.max(regionStart.lat, end.lat)
+            ];
+            if (bounds[0] !== bounds[2] && bounds[1] !== bounds[3]) showRegionBounds(bounds);
+        });
+        regionMap.on('mouseup', event => {
+            if (!drawingRegion || !regionStart) return;
+            const end = regionMap.unproject(event.point);
+            const bounds = [
+                Math.max(-180, Math.min(regionStart.lng, end.lng)),
+                Math.max(-85, Math.min(regionStart.lat, end.lat)),
+                Math.min(180, Math.max(regionStart.lng, end.lng)),
+                Math.min(85, Math.max(regionStart.lat, end.lat))
+            ];
+            regionStart = null;
+            regionMap.dragPan.enable();
+            regionMap.getCanvas().style.cursor = '';
+            if (bounds[0] < bounds[2] && bounds[1] < bounds[3]) showRegionBounds(bounds);
+        });
+        document.getElementById('region-draw').addEventListener('click', () => {
+            drawingRegion = !drawingRegion;
+            regionStart = null;
+            regionMap.dragPan.enable();
+            document.getElementById('region-draw').classList.toggle('active', drawingRegion);
+            document.getElementById('region-draw').textContent = drawingRegion ? 'Finish drawing' : 'Draw rectangle';
+            regionMap.getCanvas().style.cursor = drawingRegion ? 'crosshair' : '';
+        });
+        document.getElementById('region-centre').addEventListener('click', () => {
+            drawingRegion = false;
+            document.getElementById('region-draw').classList.remove('active');
+            document.getElementById('region-draw').textContent = 'Draw rectangle';
+            regionMap.dragPan.enable();
+            const bounds = makeDefaultBounds();
+            showRegionBounds(bounds);
+            regionMap.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], { padding: 35, maxZoom: 7 });
+        });
+        showRegionBounds(regionBounds);
+    }
 
     try {
         const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -253,6 +410,7 @@ if (!is_file($configPath)) {
 
     document.getElementById('save').addEventListener('click', () => {
         try {
+            settings.weatherRegionBounds = [...regionBounds];
             localStorage.setItem(KEY, JSON.stringify(settings));
             document.getElementById('status').textContent = 'Appearance saved.';
         } catch (error) {
@@ -262,11 +420,14 @@ if (!is_file($configPath)) {
 
     document.getElementById('reset').addEventListener('click', () => {
         settings = JSON.parse(JSON.stringify(defaults));
+        settings.weatherRegionBounds = makeDefaultBounds();
+        showRegionBounds(settings.weatherRegionBounds);
         render();
         document.getElementById('status').textContent = 'Defaults restored. Save to keep them.';
     });
 
     render();
+    initRegionMap();
 })();
 </script>
 </body>
