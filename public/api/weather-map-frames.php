@@ -39,7 +39,10 @@ try {
     // The cache service skips the metadata request when all six current-model
     // rows were refreshed within the configured interval.
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
-    $weatherMapCache->refreshScheduleIfDue(3600);
+    // An authenticated diagnostic request explicitly bypasses the normal
+    // hourly schedule cache so operators can verify newly deployed scheduler
+    // logic immediately. Public map requests retain the hourly refresh limit.
+    $weatherMapCache->refreshScheduleIfDue($diagnosticAuthorized ? 0 : 3600);
 
     $stmt = $pdo->query(
         'SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
