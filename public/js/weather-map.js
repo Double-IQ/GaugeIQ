@@ -254,34 +254,21 @@ protocolOptions.fileReaderConfig = {
         let mapInstance = null;
         function createMap() {
         if (mapInstance) { mapInstance.resize(); return; }
-        const baseMapTileUrl = appearance.mapStyle === 'light'
-            ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            : 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
-        const baseMapAttribution = appearance.mapStyle === 'light'
-            ? '© OpenStreetMap contributors'
-            : '© OpenStreetMap contributors © CARTO';
-        const baseMapStyle = {
-            version: 8,
-            sources: {
-                'gaugeiq-base-map': {
-                    type: 'raster',
-                    tiles: [baseMapTileUrl],
-                    tileSize: 256,
-                    maxzoom: 19,
-                    attribution: baseMapAttribution
-                }
-            },
-            layers: [{
-                id: 'gaugeiq-base-map',
-                type: 'raster',
-                source: 'gaugeiq-base-map'
-            }]
-        };
         const map = new maplibregl.Map({
             container: 'map',
-            // Raster basemaps use their native 256 × 256 pixel tiles. The
-            // weather overlay remains a separate Open-Meteo raster protocol.
-            style: baseMapStyle,
+            style: appearance.mapStyle === 'light'
+                ? 'https://tiles.openfreemap.org/styles/positron'
+                : 'https://tiles.openfreemap.org/styles/dark',
+            // Keep the base-map vector tile grid at 256 px rather than MapLibre's
+            // 512 px default. Weather overlays are independent raster sources.
+            transformStyle: (_previousStyle, nextStyle) => {
+                if (nextStyle?.sources && typeof nextStyle.sources === 'object') {
+                    Object.values(nextStyle.sources).forEach(source => {
+                        if (source && source.type === 'vector') source.tileSize = 256;
+                    });
+                }
+                return nextStyle;
+            },
             center: [config.longitude, config.latitude],
             zoom: savedMapZoom,
             maxZoom: 12,
