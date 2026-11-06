@@ -24,11 +24,12 @@
         }
     }
 
-    function hasNewCronData() {
-        if (!Number.isFinite(monitorTime)) return false;
+    function hasNewCronData(timestamp) {
+        const candidateTime = Date.parse(timestamp || '');
+        if (!Number.isFinite(candidateTime)) return false;
         try {
             const lastSeen = Date.parse(localStorage.getItem(lastSeenKey) || '');
-            return Number.isFinite(lastSeen) && monitorTime > lastSeen;
+            return Number.isFinite(lastSeen) && candidateTime > lastSeen;
         } catch {
             return false;
         }
@@ -67,20 +68,31 @@
         window.setTimeout(dismissLoading, 160);
     }
 
-    function refreshOnResumeIfCronAdvanced() {
-        if (reloadStarted || !hasNewCronData()) return;
-        reloadStarted = true;
-        showLoading('New scheduled weather data found…');
-        window.setTimeout(() => window.location.reload(), minimumVisibleMs);
+    async function refreshOnResumeIfCronAdvanced() {
+        if (reloadStarted) return;
+        try {
+            // Read only the cron's last-success timestamp. This endpoint does
+            // not contact Open-Meteo or trigger any weather-data collection.
+            const response = await fetch('/api/monitor-status.php', { cache: 'no-store' });
+            if (!response.ok) return;
+            const status = await response.json();
+            if (!hasNewCronData(status.last_success_at)) return;
 
-        // If the reload stalls, release the overlay. The newer timestamp is
-        // deliberately not recorded until the new dashboard has loaded.
-        window.setTimeout(() => {
-            if (document.visibilityState === 'visible' && !screen.hidden && reloadStarted) {
-                reloadStarted = false;
-                dismissLoading();
-            }
-        }, minimumVisibleMs + 6000);
+            reloadStarted = true;
+            showLoading('New scheduled weather data found…');
+            window.setTimeout(() => window.location.reload(), minimumVisibleMs);
+
+            // If the reload stalls, release the overlay. The newer timestamp is
+            // deliberately not recorded until the new dashboard has loaded.
+            window.setTimeout(() => {
+                if (document.visibilityState === 'visible' && !screen.hidden && reloadStarted) {
+                    reloadStarted = false;
+                    dismissLoading();
+                }
+            }, minimumVisibleMs + 6000);
+        } catch {
+            // If the status check is unavailable, keep the currently loaded data.
+        }
     }
 
     window.addEventListener('pageshow', event => {
