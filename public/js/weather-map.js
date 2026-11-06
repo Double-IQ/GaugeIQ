@@ -544,21 +544,24 @@ protocolOptions.fileReaderConfig = {
                 }
 
                 // Open-Meteo requires delta_time_hours for accumulated variables
-                // such as precipitation. Derive it from each run's actual valid-time
-                // spacing; the first frame uses the interval to the following frame.
-                const frameGroups = [futureFrames, pastFrames];
-                frameGroups.forEach(group => {
-                    group.sort((a, b) => a.time - b.time);
-                    group.forEach((frame, index) => {
-                        const neighbour = index === 0 ? group[1] : group[index - 1];
-                        const deltaHours = neighbour
-                            ? Math.abs(frame.time - neighbour.time) / 3600000
-                            : 1;
-                        if (!Number.isFinite(deltaHours) || deltaHours <= 0) {
-                            throw new Error('The scheduled weather-map frame interval is invalid.');
-                        }
-                        frame.deltaTimeHours = deltaHours;
-                    });
+                // such as precipitation. Derive it from the preceding valid time
+                // across the past/forecast boundary; native IFS 0.25° steps change
+                // from 3-hourly to 6-hourly after forecast hour 144.
+                pastFrames.sort((a, b) => a.time - b.time);
+                futureFrames.sort((a, b) => a.time - b.time);
+                const chronologicalFrames = [...pastFrames, ...futureFrames]
+                    .sort((a, b) => a.time - b.time);
+                chronologicalFrames.forEach((frame, index) => {
+                    const neighbour = index === 0
+                        ? chronologicalFrames[1]
+                        : chronologicalFrames[index - 1];
+                    const deltaHours = neighbour
+                        ? Math.abs(frame.time - neighbour.time) / 3600000
+                        : 3;
+                    if (!Number.isFinite(deltaHours) || deltaHours <= 0) {
+                        throw new Error('The scheduled weather-map frame interval is invalid.');
+                    }
+                    frame.deltaTimeHours = deltaHours;
                 });
 
                 const variables = weatherVariables(layerSelect.value);
@@ -735,18 +738,18 @@ protocolOptions.fileReaderConfig = {
                 .sort((a, b) => Math.abs(Date.parse(a.time) - now) - Math.abs(Date.parse(b.time) - now))[0];
             if (!currentFrame) throw new Error('No usable current weather-map frame was found.');
 
-            const frameGroup = frames
-                .filter(frame => frame.type === currentFrame.type && Number.isFinite(Date.parse(frame.time)))
+            const chronologicalFrames = frames
+                .filter(frame => Number.isFinite(Date.parse(frame.time)))
                 .sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
-            const currentIndex = frameGroup.findIndex(frame =>
+            const currentIndex = chronologicalFrames.findIndex(frame =>
                 frame.slot === currentFrame.slot && frame.time === currentFrame.time
             );
             const neighbour = currentIndex === 0
-                ? frameGroup[1]
-                : frameGroup[currentIndex - 1];
+                ? chronologicalFrames[1]
+                : chronologicalFrames[currentIndex - 1];
             const deltaTimeHours = neighbour
                 ? Math.abs(Date.parse(currentFrame.time) - Date.parse(neighbour.time)) / 3600000
-                : 1;
+                : 3;
             if (!Number.isFinite(deltaTimeHours) || deltaTimeHours <= 0) {
                 throw new Error('The current weather-map frame interval is invalid.');
             }
