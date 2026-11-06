@@ -36,5 +36,8 @@ jobs:
       - name: Check Admin JavaScript syntax
         run: node --check public/js/admin.js
 
+      - name: Check weather-map module syntax
+        run: node --input-type=module --check < public/js/weather-map.js
+
       - name: Validate web manifest JSON
         run: php -r '$manifest = json_decode(file_get_contents("public/manifest.json"), true, 512, JSON_THROW_ON_ERROR); if (!is_array($manifest)) { exit(1); }'
