@@ -50,11 +50,11 @@ final class WeatherMapRainfallNowcastService
         $futureFrames = [];
         foreach ($frames as $frame) {
             $timestamp = strtotime((string)($frame['frame_time'] ?? ''));
-            if ($timestamp === false || $timestamp < $now || $timestamp > $now + 2 * 3600) continue;
+            if (($frame['frame_type'] ?? '') !== 'future' || $timestamp === false || $timestamp < $now) continue;
             $futureFrames[] = $frame + ['timestamp' => $timestamp];
         }
         if ($futureFrames === []) {
-            throw new RuntimeException('No ECMWF precipitation frames cover the next two hours yet.');
+            throw new RuntimeException('No future ECMWF precipitation frames are scheduled yet.');
         }
 
         $baseUrl = rtrim((string)($this->config['app']['base_url'] ?? ''), '/');
@@ -74,10 +74,14 @@ final class WeatherMapRainfallNowcastService
                 fn(int $offset, int $length): string => $this->fetchRange($baseUrl, $url, $offset, $length),
                 $fileSize
             );
-            if (!str_contains($reader->getString('crs_wkt'), 'Gaussian Grid')) {
-                throw new RuntimeException('The ECMWF precipitation frame does not use a Gaussian grid.');
+            $crs = $reader->getString('crs_wkt');
+            if (str_contains($crs, 'Gaussian Grid')) {
+                throw new RuntimeException('The ECMWF precipitation frame unexpectedly uses a Gaussian grid.');
             }
             $field = $reader->getArrayInfo('precipitation');
+            if ($field['dimensions'] !== [721, 1440]) {
+                throw new RuntimeException('The ECMWF precipitation field is not the expected 0.25-degree [721, 1440] regular grid.');
+            }
             $currentEncoding = [
                 'data_type' => (int)$field['data_type'],
                 'compression_type' => (int)$field['compression_type'],
@@ -94,20 +98,20 @@ final class WeatherMapRainfallNowcastService
                 $encodingInfo['chunks'] !== $currentEncoding['chunks']) {
                 throw new RuntimeException('The ECMWF precipitation frame layout changed within the two-hour outlook window.');
             }
-            $pointCount = (int)($field['dimensions'][1] ?? 0);
-            $samples = WeatherMapOmReader::gaussianNeighborhood(
-                $pointCount,
+            $samples = WeatherMapOmReader::regularGridNeighborhood(
                 (float)$latitudeValue,
                 (float)$longitudeValue,
-                self::SEARCH_RADIUS_KM
+                self::SEARCH_RADIUS_KM,
+                (int)$field['dimensions'][0],
+                (int)$field['dimensions'][1]
             );
             $indices = array_column($samples, 'index');
-            $values = $reader->decodeFloatArrayIndices($field, $indices);
+            $values = $reader->decodeFloatArrayGridIndices($field, $indices);
             $nearestCell = null;
             foreach ($samples as $cell) {
                 if ($nearestCell === null || $cell['distance_km'] < $nearestCell['distance_km']) $nearestCell = $cell;
             }
-            if ($nearestCell === null) throw new RuntimeException('The ECMWF Gaussian grid has no cells around the configured location.');
+            if ($nearestCell === null) throw new RuntimeException('The ECMWF regular grid has no cells around the configured location.');
 
             $localValue = (float)($values[$nearestCell['index']] ?? 0.0);
             $localAmount = is_finite($localValue) ? max(0.0, $localValue) : 0.0;
@@ -164,7 +168,7 @@ final class WeatherMapRainfallNowcastService
             }
         }
         $status = 'clear';
-        $summary = 'No ECMWF precipitation signal is forecast within 100 km over the next two hours.';
+        $summary = 'No ECMWF precipitation signal is forecast within 100 km across the available forecast steps.';
         $firstRain = null;
         $statusPriority = ['clear' => 0, 'rain_in_area' => 1, 'rain_nearby' => 2, 'rain_near_location' => 3];
         foreach ($frameResults as $result) {
@@ -207,9 +211,9 @@ final class WeatherMapRainfallNowcastService
                 );
             }
             if ($movementTrend === 'closing') {
-                $summary .= ' The forecast rain footprint moves closer over the next two hours.';
+                $summary .= ' The forecast rain footprint moves closer across the available forecast steps.';
             } elseif ($movementTrend === 'receding') {
-                $summary .= ' The forecast rain footprint moves farther away.';
+                $summary .= ' The forecast rain footprint moves farther away across the available forecast steps.';
             }
         }
 
