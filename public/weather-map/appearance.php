@@ -247,14 +247,38 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         }
     }
     function initRegionMap() {
+        // Use an inline raster style instead of fetching a remote style JSON.
+        // This avoids a hard dependency on the OpenFreeMap style endpoint, which
+        // can fail on some hosting networks while leaving the map completely blank.
         regionMap = new maplibregl.Map({
             container: 'region-map',
-            style: 'https://tiles.openfreemap.org/styles/dark',
+            style: {
+                version: 8,
+                sources: {
+                    'gaugeiq-base-tiles': {
+                        type: 'raster',
+                        tiles: [
+                            'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                            'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                            'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                            'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                        ],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                    }
+                },
+                layers: [{
+                    id: 'gaugeiq-base-layer',
+                    type: 'raster',
+                    source: 'gaugeiq-base-tiles',
+                    paint: { 'raster-fade-duration': 0 }
+                }]
+            },
             center: [selectedLocation.longitude || 0, selectedLocation.latitude || 0],
             zoom: 4,
             minZoom: 1,
             maxZoom: 12,
-            attributionControl: false
+            attributionControl: true
         });
         regionMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
         regionMap.on('error', event => {
