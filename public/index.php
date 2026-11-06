@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261106-alpha-blending" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=20261106-ifs025-cubic-blend" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261106-wind-compass-original-markers">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261106-alpha-blending"></script>
+<script type="module" src="js/weather-map.js?v=20261106-ifs025-cubic-blend"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -1085,7 +1085,7 @@ if ($current && !empty($current['observed_at'])) {
         </header>
         <div class="gaugeiq-weather-map-timeline">
             <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
-            <span id="map-frame-time" aria-live="polite">Preparing six-hour sequence…</span>
+            <span id="map-frame-time" aria-live="polite">Preparing six weather frames…</span>
         </div>
 </div>
         <div id="map" class="gaugeiq-weather-map-canvas"
