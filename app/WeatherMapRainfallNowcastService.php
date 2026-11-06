@@ -96,7 +96,7 @@ final class WeatherMapRainfallNowcastService
                 $encodingInfo['compression_type'] !== $currentEncoding['compression_type'] ||
                 $encodingInfo['dimensions'] !== $currentEncoding['dimensions'] ||
                 $encodingInfo['chunks'] !== $currentEncoding['chunks']) {
-                throw new RuntimeException('The ECMWF precipitation frame layout changed within the two-hour outlook window.');
+                throw new RuntimeException('The ECMWF precipitation frame layout changed within the scheduled forecast steps.');
             }
             $samples = WeatherMapOmReader::regularGridNeighborhood(
                 (float)$latitudeValue,
