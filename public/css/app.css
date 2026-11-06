@@ -7173,7 +7173,25 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 
-/* Subtle outward radar waves from the wind-origin dot and direction arrow. */
+/* Pulsing soft halos behind the wind-origin dot and direction arrow. */
+.wind-hud-vector .wind-hud-radar-halo{
+  fill:#ffad55;
+  opacity:.08;
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:wind-hud-radar-halo 2.4s ease-in-out infinite;
+  pointer-events:none;
+}
+.wind-hud-vector .wind-hud-radar-halo-arrow{
+  fill:#68cfff;
+  animation-delay:1.2s;
+}
+@keyframes wind-hud-radar-halo{
+  0%,100%{transform:scale(.8);opacity:.08}
+  50%{transform:scale(1.9);opacity:.34}
+}
+
+/* Outward radar waves from the wind-origin dot and direction arrow. */
 .wind-hud-vector .wind-hud-radar-pulse{
   fill:none;
   stroke-width:1.5;
@@ -7191,5 +7209,6 @@ body.gaugeiq-menu-open{overflow:hidden}
   100%{transform:scale(3.4);opacity:0}
 }
 @media(prefers-reduced-motion:reduce){
-  .wind-hud-vector .wind-hud-radar-pulse{animation:none;opacity:.2;transform:scale(1.35)}
+  .wind-hud-vector .wind-hud-radar-pulse,
+  .wind-hud-vector .wind-hud-radar-halo{animation:none;opacity:.2;transform:scale(1.2)}
 }
