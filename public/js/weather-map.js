@@ -355,27 +355,12 @@ protocolOptions.fileReaderConfig = {
                     return;
                 }
 
-                const previousFrame = frames[animationCurrentFrame];
+                // Cross-fade between already-loaded raster layers. Keep all six
+                // frame sources alive throughout playback so the outgoing image
+                // remains underneath until the incoming frame is fully visible.
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
                 setStatus('');
-
-                // Keep the outgoing frame alive for one completed render of
-                // the newly selected frame. Waiting for "idle" is unreliable here:
-                // the rolling preload window starts another raster request straight
-                // after this transition, so the map can remain non-idle and retain
-                // every old frame's sources until the browser runs out of memory.
-                const cleanupToken = animationToken;
-                let previousFrameCleaned = false;
-                const cleanupPreviousFrame = () => {
-                    if (previousFrameCleaned) return;
-                    previousFrameCleaned = true;
-                    if (cleanupToken !== animationToken) return;
-                    removeAnimationFrameSources(previousFrame);
-                };
-                map.once('render', cleanupPreviousFrame);
-                // Do not let a missed render event retain old frame sources forever.
-                setTimeout(cleanupPreviousFrame, 3000);
 
             }, 1200);
         }
@@ -461,7 +446,10 @@ protocolOptions.fileReaderConfig = {
                             id: layerId,
                             type: 'raster',
                             source: sourceId,
-                            paint: { 'raster-opacity': 0.001 }
+                            paint: {
+                                'raster-opacity': 0.001,
+                                'raster-opacity-transition': { duration: 500, delay: 0 }
+                            }
                         });
 
                         animationSources.push(sourceId);
@@ -742,7 +730,7 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
             // Prepare one chronological sequence: three actual past frames followed
-            // by three forecast frames. Keep a three-frame rolling load window.
+            // by three forecast frames. All six frames are loaded before playback.
             // Playback remains under the user's control.
             prepareAnimation(false);
         });
