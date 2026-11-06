@@ -155,7 +155,58 @@ window.fetch = (input, init) => {
     return trackWeatherProxyRequest(proxyUrl, () => gaugeIqOriginalFetch(new Request(proxyUrl.href, request)));
 };
 
+// Keep weather raster generation local to the selected GaugeIQ location.
+// The Open-Meteo protocol uses both the polygon and its bounding box to avoid
+// generating tiles outside this regional coverage area.
+const WEATHER_REGION_RADIUS_KM = 250;
+function createWeatherRegionClip(latitude, longitude, radiusKm) {
+    const earthRadiusKm = 6371.0088;
+    const angularDistance = radiusKm / earthRadiusKm;
+    const lat1 = latitude * Math.PI / 180;
+    const lon1 = longitude * Math.PI / 180;
+    const ring = [];
+
+    for (let step = 0; step <= 72; step++) {
+        const bearing = (step % 72) * 2 * Math.PI / 72;
+        const lat2 = Math.asin(
+            Math.sin(lat1) * Math.cos(angularDistance) +
+            Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearing)
+        );
+        const lon2 = lon1 + Math.atan2(
+            Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(lat1),
+            Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2)
+        );
+        const longitudeDegrees = ((lon2 * 180 / Math.PI + 540) % 360) - 180;
+        ring.push([longitudeDegrees, lat2 * 180 / Math.PI]);
+    }
+
+    const longitudes = ring.slice(0, -1).map(point => point[0]);
+    const latitudes = ring.slice(0, -1).map(point => point[1]);
+    return {
+        geojson: {
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'Polygon', coordinates: [ring] }
+        },
+        bounds: [
+            Math.min(...longitudes),
+            Math.min(...latitudes),
+            Math.max(...longitudes),
+            Math.max(...latitudes)
+        ]
+    };
+}
+
+const weatherRegionClip = createWeatherRegionClip(
+    Number(mapElement?.dataset.latitude),
+    Number(mapElement?.dataset.longitude),
+    WEATHER_REGION_RADIUS_KM
+);
 const protocolOptions = OMWeatherMapLayer.defaultOmProtocolSettings;
+protocolOptions.clippingOptions = {
+    geojson: weatherRegionClip.geojson,
+    bounds: weatherRegionClip.bounds
+};
 protocolOptions.fileReaderConfig = {
     ...protocolOptions.fileReaderConfig,
     cache: persistentMapCache
