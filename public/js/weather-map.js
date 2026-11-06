@@ -5,6 +5,8 @@ const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map
 const appearanceDefaults = {
             mapStyle: 'dark',
             mapProjection: 'mercator',
+            precipitationOpacity: 100,
+            cloudOpacity: 100,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
             cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
             weatherRegionBounds: null
@@ -345,12 +347,16 @@ protocolOptions.fileReaderConfig = {
         function weatherVariables(selection) {
             return selection === 'precipitation_cloud_cover'
                 ? [
-                    { variable: 'cloud_cover', opacity: 1 },
-                    { variable: 'precipitation', opacity: 1 }
+                    { variable: 'cloud_cover', opacity: Math.max(0, Math.min(100, Number(appearance.cloudOpacity ?? 100))) / 100 },
+                    { variable: 'precipitation', opacity: Math.max(0, Math.min(100, Number(appearance.precipitationOpacity ?? 100))) / 100 }
                 ]
                 : [{
                     variable: selection,
-                    opacity: 1
+                    opacity: selection === 'precipitation'
+                        ? Math.max(0, Math.min(100, Number(appearance.precipitationOpacity ?? 100))) / 100
+                        : selection === 'cloud_cover'
+                            ? Math.max(0, Math.min(100, Number(appearance.cloudOpacity ?? 100))) / 100
+                            : 1
                 }];
         }
 
@@ -737,6 +743,9 @@ protocolOptions.fileReaderConfig = {
                 const url = new URL(currentFrame.url);
                 url.searchParams.set('delta_time_hours', String(deltaTimeHours));
                 url.searchParams.set('variable', item.variable);
+                // The library defaults to hard colour bands. Enable interpolation
+                // so per-stop alpha is blended across the same ranges as the preview.
+                url.searchParams.set('color_blend', 'true');
                 return url.href;
             });
         }
