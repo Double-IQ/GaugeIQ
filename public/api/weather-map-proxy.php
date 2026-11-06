@@ -104,7 +104,7 @@ try {
     if (!is_array($parts) ||
         ($parts['scheme'] ?? '') !== 'https' ||
         ($parts['host'] ?? '') !== 'openmeteo.s3.amazonaws.com' ||
-        !preg_match('#^/data_spatial/ecmwf_ifs/.+\\.om$#', (string)($parts['path'] ?? '')) ||
+        !preg_match('#^/data_spatial/ecmwf_ifs025/.+\\.om$#', (string)($parts['path'] ?? '')) ||
         isset($parts['user']) || isset($parts['pass']) || isset($parts['port'])) {
         weatherMapProxyFail(400, 'Invalid weather-map file URL.');
     }
