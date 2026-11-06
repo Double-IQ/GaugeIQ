@@ -35,7 +35,7 @@ try {
 require_once __DIR__ . '/../app/WeatherMapRainfallNowcastService.php';
 try {
     $rainfallNowcast = new WeatherMapRainfallNowcastService($pdo, $config);
-    $nowcastResult = $rainfallNowcast->refreshIfDue(1800);
+    $nowcastResult = $rainfallNowcast->refreshIfDue(3600);
     if (!$nowcastResult['skipped']) {
         $nowcastPayload = $nowcastResult['payload'] ?? [];
         $encoding = is_array($nowcastPayload['encoding'] ?? null) ? $nowcastPayload['encoding'] : [];
