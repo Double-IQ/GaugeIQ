@@ -31,6 +31,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="theme-color" content="#061648">
+    <link href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css" rel="stylesheet">
     <title>Weather Map Appearance · GaugeIQ</title>
     <style>
         :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif; background: #061648; color: #f8fafc; }
