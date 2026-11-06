@@ -115,6 +115,7 @@ final class WeatherMapRainfallNowcastService
             $wet50 = 0;
             $wet100 = 0;
             $nearestWetDistance = null;
+            $nearestWetAmount = null;
             $maximum = 0.0;
             $wetCount = 0;
             foreach ($samples as $cell) {
@@ -129,6 +130,7 @@ final class WeatherMapRainfallNowcastService
                 if ($cell['distance_km'] <= 100) $wet100++;
                 if ($nearestWetDistance === null || $cell['distance_km'] < $nearestWetDistance) {
                     $nearestWetDistance = (float)$cell['distance_km'];
+                    $nearestWetAmount = $amount;
                 }
             }
 
@@ -140,6 +142,7 @@ final class WeatherMapRainfallNowcastService
                 'wet_cells_within_50km' => $wet50,
                 'wet_cells_within_100km' => $wet100,
                 'nearest_rain_km' => $nearestWetDistance === null ? null : round($nearestWetDistance, 1),
+                'nearest_rain_precipitation_mm' => $nearestWetAmount === null ? null : round($nearestWetAmount, 2),
                 'wet_cells' => $wetCount,
             ];
         }
