@@ -115,10 +115,9 @@ try {
     $schedule = new WeatherMapCacheService($pdo, $config);
     $canonicalUrl = 'https://openmeteo.s3.amazonaws.com' . $parts['path'];
     if (!$schedule->isScheduledFile($upstreamUrl)) {
-        // Refresh a stale schedule first. If the browser's current valid frame
-        // still falls just outside the rolling window, verify the allowlisted
-        // upstream object directly instead of incorrectly rejecting it.
-        $schedule->refreshScheduleIfDue(60);
+        // Do not refresh the frame schedule from a browser request. The hourly
+        // cron owns schedule updates; verify an older allowlisted ECMWF object
+        // directly when a browser still has a valid cached frame URL.
         if (!$schedule->isScheduledFile($upstreamUrl)) {
             $head = weatherMapProxyCurl($canonicalUrl, true);
             if ($head['status'] !== 200) {
