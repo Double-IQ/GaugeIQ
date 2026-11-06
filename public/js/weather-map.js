@@ -328,9 +328,6 @@ protocolOptions.fileReaderConfig = {
                 const nextFrame = frames[nextIndex];
                 if (!nextFrame) return;
 
-                if (!nextFrame.sourceIds.length && animationFrameSourceAdder) {
-                    animationFrameSourceAdder(nextFrame);
-                }
                 if (!isAnimationFrameLoaded(nextFrame)) {
                     const age = Date.now() - (nextFrame.loadStartedAt || Date.now());
                     if (nextFrame.loadError || age > 45000) {
@@ -375,10 +372,6 @@ protocolOptions.fileReaderConfig = {
                 // Do not let a missed render event retain old frame sources forever.
                 setTimeout(cleanupPreviousFrame, 3000);
 
-                const upcomingFrame = frames[(nextIndex + 1) % frames.length];
-                if (upcomingFrame && upcomingFrame !== previousFrame && animationFrameSourceAdder) {
-                    animationFrameSourceAdder(upcomingFrame);
-                }
             }, 1200);
         }
 
@@ -479,12 +472,14 @@ protocolOptions.fileReaderConfig = {
                 animationLoadError = null;
                 const initialFrame = () => selectedAnimationFrames()[animationCurrentFrame];
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
-                addFrameSources(initialFrame());
-                addFrameSources(initialNextFrame());
+                // Load every scheduled frame before enabling playback. This avoids
+                // network/source creation during animation and guarantees the
+                // six-frame sequence is ready before the first transition.
+                selectedAnimationFrames().forEach(addFrameSources);
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
-                    const requiredFrames = [initialFrame(), initialNextFrame()];
+                    const requiredFrames = selectedAnimationFrames();
                     const pendingSources = requiredFrames.flatMap(frame =>
                         frame ? frame.sourceIds.filter(id => !map.getSource(id) || !map.isSourceLoaded(id)) : []
                     );
@@ -498,7 +493,7 @@ protocolOptions.fileReaderConfig = {
 
                 const waitForInitialFrame = () => {
                     if (token !== animationToken) return;
-                    if (!isFrameLoaded(initialFrame()) || !isFrameLoaded(initialNextFrame())) return;
+                    if (!selectedAnimationFrames().every(isFrameLoaded)) return;
                     if (animationLoadTimeout !== null) {
                         clearTimeout(animationLoadTimeout);
                         animationLoadTimeout = null;
