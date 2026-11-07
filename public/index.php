@@ -194,10 +194,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261107-smooth-weather-frame-crossfade" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=20261107-five-frame-weather-timeline" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261107-square-weather-map">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261107-smooth-weather-frame-crossfade"></script>
+<script type="module" src="js/weather-map.js?v=20261107-five-frame-weather-timeline"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
@@ -1085,7 +1085,12 @@ if ($current && !empty($current['observed_at'])) {
         </header>
         <div class="gaugeiq-weather-map-timeline">
             <button id="map-animation-toggle" class="gaugeiq-weather-map-action" type="button" aria-pressed="false" disabled>Play</button>
-            <span id="map-frame-time" aria-live="polite">Preparing six weather frames…</span>
+            <div class="gaugeiq-weather-map-progress-wrap">
+                <span id="map-frame-time" aria-live="polite">Preparing five weather frames…</span>
+                <div id="map-frame-progress" class="gaugeiq-weather-map-progress" role="progressbar" aria-label="Weather animation progress" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1" aria-valuetext="Frame 1 of 5">
+                    <span class="is-current"></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
         </div>
 </div>
         <div id="map" class="gaugeiq-weather-map-canvas"
