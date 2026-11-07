@@ -131,7 +131,7 @@ try {
 
     <section class="panel" aria-labelledby="precip-heading">
         <h2 id="precip-heading">Precipitation</h2>
-        <p class="description">Colour scale from light to very heavy rainfall. The zero-rain value remains transparent.</p>
+        <p class="description">Five rainfall-rate colour bands in mm/h: 0–1, 1.1–2, 2.1–5, 5.1–10 and 10+. Zero rainfall remains transparent.</p>
         <p class="description">Overall opacity controls the whole precipitation layer. Each colour opacity below controls that colour independently.</p>
         <div class="opacity-row">
             <label for="precip-overall-opacity">Overall precipitation opacity</label>
