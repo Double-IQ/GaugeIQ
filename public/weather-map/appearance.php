@@ -461,8 +461,10 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         if (saved && typeof saved === 'object') settings = { ...defaults, ...saved };
         settings.precipitationOpacity = Math.max(0, Math.min(100, Number(settings.precipitationOpacity ?? 100)));
         settings.cloudOpacity = Math.max(0, Math.min(100, Number(settings.cloudOpacity ?? 100)));
-        settings.precipitationColors = [...defaults.precipitationColors, ...(Array.isArray(settings.precipitationColors) ? settings.precipitationColors.slice(4, 5) : [])].slice(0, 5);
-        settings.precipitationColorOpacities = [...defaults.precipitationColorOpacities, ...(Array.isArray(settings.precipitationColorOpacities) ? settings.precipitationColorOpacities.slice(4, 5) : [])].slice(0, 5);
+        const savedPrecipitationColors = Array.isArray(settings.precipitationColors) ? settings.precipitationColors : defaults.precipitationColors;
+        const savedPrecipitationOpacities = Array.isArray(settings.precipitationColorOpacities) ? settings.precipitationColorOpacities : defaults.precipitationColorOpacities;
+        settings.precipitationColors = [...savedPrecipitationColors.slice(0, 4), savedPrecipitationColors[4] ?? defaults.precipitationColors[4]];
+        settings.precipitationColorOpacities = [...savedPrecipitationOpacities.slice(0, 4), savedPrecipitationOpacities[4] ?? defaults.precipitationColorOpacities[4]];
         settings.cloudColorOpacities = Array.isArray(settings.cloudColorOpacities) ? settings.cloudColorOpacities : [...defaults.cloudColorOpacities];
     } catch (error) {
         console.warn('Could not load saved appearance settings.', error);
