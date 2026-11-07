@@ -7,7 +7,8 @@ const appearanceDefaults = {
             mapProjection: 'mercator',
             precipitationOpacity: 100,
             cloudOpacity: 100,
-            precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
+            precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899', '#be123c'],
+            precipitationColorOpacities: [100, 100, 100, 100, 100],
             cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
             weatherRegionBounds: null
         };
@@ -161,15 +162,27 @@ protocolOptions.fileReaderConfig = {
     ...protocolOptions.fileReaderConfig,
     cache: persistentMapCache
 };
+        const precipitationColors = appearance.precipitationColors.length >= 5
+            ? appearance.precipitationColors.slice(0, 5)
+            : [...appearance.precipitationColors, ...appearanceDefaults.precipitationColors.slice(appearance.precipitationColors.length)];
+        const precipitationColorOpacities = Array.isArray(appearance.precipitationColorOpacities)
+            ? [...appearance.precipitationColorOpacities, ...[100, 100, 100, 100, 100].slice(appearance.precipitationColorOpacities.length)].slice(0, 5)
+            : [100, 100, 100, 100, 100];
         protocolOptions.colorScales = {
             ...protocolOptions.colorScales,
             precipitation: {
                 type: 'breakpoint',
                 unit: 'mm/h',
-                breakpoints: [0, 0.2, 1, 5, 20],
+                breakpoints: [0, 1, 1.1, 2, 2.1, 5, 5.1, 10],
                 colors: [
                     [0, 0, 0, 0],
-                    ...appearance.precipitationColors.map((color, index) => hexToRgba(color, appearance.precipitationColorOpacities?.[index] ?? 100))
+                    hexToRgba(precipitationColors[0], precipitationColorOpacities[0]),
+                    hexToRgba(precipitationColors[1], precipitationColorOpacities[1]),
+                    hexToRgba(precipitationColors[1], precipitationColorOpacities[1]),
+                    hexToRgba(precipitationColors[2], precipitationColorOpacities[2]),
+                    hexToRgba(precipitationColors[2], precipitationColorOpacities[2]),
+                    hexToRgba(precipitationColors[3], precipitationColorOpacities[3]),
+                    hexToRgba(precipitationColors[4], precipitationColorOpacities[4])
                 ]
             },
             cloud_cover: {
