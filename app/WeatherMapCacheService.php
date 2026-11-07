@@ -2,15 +2,16 @@
 declare(strict_types=1);
 
 /**
- * Maintains six concrete ECMWF IFS 0.25° map frames used by GaugeIQ:
- * three past and three forecast timestamps. Binary map data is deliberately kept
+ * Maintains five concrete ECMWF IFS 0.25° map frames used by GaugeIQ:
+ * three past and two forecast timestamps. Binary map data is deliberately kept
  * out of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
 {
     private const MODEL_PATH = 'ecmwf_ifs025';
     private const METADATA_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/latest.json';
-    private const FRAME_COUNT = 3;
+    private const PAST_FRAME_COUNT = 3;
+    private const FUTURE_FRAME_COUNT = 2;
     private const HOUR_MS = 3600000;
     private const SIX_HOURS_MS = 21600000;
 
@@ -40,8 +41,8 @@ final class WeatherMapCacheService
             $existingModelFrameCount = 0;
         }
         if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds &&
-            $existingCounts['past'] === self::FRAME_COUNT && $existingCounts['future'] === self::FRAME_COUNT &&
-            $existingModelFrameCount === self::FRAME_COUNT * 2) {
+            $existingCounts['past'] === self::PAST_FRAME_COUNT && $existingCounts['future'] === self::FUTURE_FRAME_COUNT &&
+            $existingModelFrameCount === self::PAST_FRAME_COUNT + self::FUTURE_FRAME_COUNT) {
             return false;
         }
 
@@ -78,8 +79,8 @@ final class WeatherMapCacheService
                     if ($timestamp <= $now) $pastIndex = $index;
                     if ($futureIndex === -1 && $timestamp > $now) $futureIndex = $index;
                 }
-                if ($futureIndex < 0 || $futureIndex + self::FRAME_COUNT > count($timestamps)) {
-                    $metadataErrors[] = $metadataFile . ' has fewer than three future timestamps';
+                if ($futureIndex < 0 || $futureIndex + self::FUTURE_FRAME_COUNT > count($timestamps)) {
+                    $metadataErrors[] = $metadataFile . ' has fewer than two future timestamps';
                     continue;
                 }
 
@@ -103,7 +104,7 @@ final class WeatherMapCacheService
 
         if ($candidates === []) {
             throw new RuntimeException(
-                'Neither latest nor in-progress ECMWF IFS 0.25° metadata has three future timestamps. ' .
+                'Neither latest nor in-progress ECMWF IFS 0.25° metadata has two future timestamps. ' .
                 implode('; ', $metadataErrors)
             );
         }
@@ -144,7 +145,7 @@ final class WeatherMapCacheService
                     'file_url' => $fileUrl,
                     'model_run_time' => $candidateRunDate->format('Y-m-d\\TH:i:s\\Z'),
                 ];
-                if (count($availableFutureFrames) === self::FRAME_COUNT) {
+                if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT) {
                     break;
                 }
             }
@@ -161,7 +162,7 @@ final class WeatherMapCacheService
 
         if ($selected === null) {
             throw new RuntimeException(
-                'ECMWF IFS 0.25° metadata is available, but three forecast .om objects are not yet published. ' .
+                'ECMWF IFS 0.25° metadata is available, but two forecast .om objects are not yet published. ' .
                 implode('; ', $metadataErrors)
             );
         }
@@ -175,9 +176,9 @@ final class WeatherMapCacheService
         // by the native 3-hour cadence. For each timestamp, walk backwards
         // through six-hourly source runs until S3 confirms the object exists.
         $pastTimes = $pastIndex >= 0
-            ? array_slice($timestamps, max(0, $pastIndex - self::FRAME_COUNT + 1), $pastIndex + 1)
+            ? array_slice($timestamps, max(0, $pastIndex - self::PAST_FRAME_COUNT + 1), $pastIndex + 1)
             : [];
-        while (count($pastTimes) < self::FRAME_COUNT) {
+        while (count($pastTimes) < self::PAST_FRAME_COUNT) {
             $anchor = $pastTimes[0] ?? ($timestamps[0] ?? $now);
             array_unshift($pastTimes, $anchor - (3 * self::HOUR_MS));
         }
@@ -232,7 +233,7 @@ final class WeatherMapCacheService
         }
         foreach ($futureFrames as $offset => $frame) {
             $frames[] = [
-                'slot_id' => self::FRAME_COUNT + $offset,
+                'slot_id' => self::PAST_FRAME_COUNT + $offset,
                 'frame_type' => 'future',
                 'frame_time' => $frame['frame_time'],
                 'file_url' => $frame['file_url'],
