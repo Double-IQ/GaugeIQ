@@ -129,8 +129,19 @@ final class WeatherMapCacheService
             $candidateRunFolder = $candidateRunDate->format('Y/m/d/H') . '00Z';
             $availableFutureFrames = [];
             $checkedFutureTimes = 0;
+            $futureCadenceValid = true;
+            $previousFutureTimestamp = null;
 
-            foreach (array_slice($candidate['timestamps'], $candidate['future_index'], 12) as $timestamp) {
+            // Keep the forecast horizon strictly to the next two 3-hourly
+            // timestamps (+3h and +6h). Do not skip a missing object and pull
+            // in a later frame, which would silently extend the forecast window.
+            foreach (array_slice($candidate['timestamps'], $candidate['future_index'], self::FUTURE_FRAME_COUNT) as $timestamp) {
+                if ($previousFutureTimestamp !== null &&
+                    $timestamp - $previousFutureTimestamp !== 3 * self::HOUR_MS) {
+                    $futureCadenceValid = false;
+                    break;
+                }
+                $previousFutureTimestamp = $timestamp;
                 $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))
                     ->setTimezone(new DateTimeZone('UTC'));
                 $fileName = $validDate->format('Y-m-d\\THi') . '.om';
@@ -138,26 +149,24 @@ final class WeatherMapCacheService
                     '/' . $candidateRunFolder . '/' . $fileName;
                 $checkedFutureTimes++;
                 if (!$this->upstreamObjectHasRange($fileUrl)) {
-                    continue;
+                    $futureCadenceValid = false;
+                    break;
                 }
                 $availableFutureFrames[] = [
                     'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
                     'file_url' => $fileUrl,
                     'model_run_time' => $candidateRunDate->format('Y-m-d\\TH:i:s\\Z'),
                 ];
-                if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT) {
-                    break;
-                }
             }
 
-            if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT) {
+            if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT && $futureCadenceValid) {
                 $selected = $candidate;
                 $futureRunFolder = $candidateRunFolder;
                 $futureFrames = $availableFutureFrames;
                 break;
             }
             $metadataErrors[] = basename((string)($candidate['metadata']['_source'] ?? 'ECMWF metadata')) .
-                ' did not have three published forecast objects in its first ' . $checkedFutureTimes . ' future timestamps';
+                ' did not have both immediate 3-hourly forecast objects published within the +6h window';
         }
 
         if ($selected === null) {
