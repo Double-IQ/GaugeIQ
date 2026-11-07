@@ -3341,7 +3341,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#b9c9e8;font-size:12px;font-variant-numeric:tabular-nums;
 }
 .gaugeiq-weather-map-canvas{
-  position:relative;flex:0 0 auto;min-width:0;width:100%;height:clamp(340px,52vh,560px);
+  position:relative;flex:0 0 auto;min-width:0;width:min(100%,680px);height:auto;aspect-ratio:1 / 1;margin-inline:auto;
   background:#0b1b3b;
 }
 .gaugeiq-weather-map-canvas .maplibregl-map{position:absolute;inset:0;width:100%;height:100%}
@@ -6709,7 +6709,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#b9c9e8;font-size:12px;font-variant-numeric:tabular-nums;
 }
 .gaugeiq-weather-map-canvas{
-  position:relative;flex:0 0 auto;min-width:0;width:100%;height:clamp(340px,52vh,560px);
+  position:relative;flex:0 0 auto;min-width:0;width:min(100%,680px);height:auto;aspect-ratio:1 / 1;margin-inline:auto;
   background:#0b1b3b;
 }
 .gaugeiq-weather-map-canvas .maplibregl-map{position:absolute;inset:0;width:100%;height:100%}
