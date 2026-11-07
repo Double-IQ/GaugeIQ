@@ -150,7 +150,7 @@ final class WeatherMapCacheService
                 }
             }
 
-            if (count($availableFutureFrames) === self::FRAME_COUNT) {
+            if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT) {
                 $selected = $candidate;
                 $futureRunFolder = $candidateRunFolder;
                 $futureFrames = $availableFutureFrames;
