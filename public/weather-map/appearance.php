@@ -51,7 +51,7 @@ try {
         .opacity-control { display: flex; align-items: center; gap: 10px; width: min(310px, 58%); }
         input[type="range"] { width: 100%; accent-color: #60a5fa; }
         output { min-width: 42px; color: #dbeafe; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
-        .colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+        .colors { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
         .color-stop { min-width: 0; }
         .color-stop .color-opacity { display: block; width: 100%; margin: 7px 0 2px; }
         .color-stop output { display: block; min-width: 0; color: #dbeafe; font-size: 10px; text-align: center; }
@@ -147,9 +147,12 @@ try {
             <div class="color-stop"><label for="precip-c3">Heavy<br>5 mm/h</label><input id="precip-c3" type="color">
                 <input id="precip-c3-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Heavy colour opacity">
                 <output id="precip-c3-opacity-value" for="precip-c3-opacity">100%</output></div>
-            <div class="color-stop"><label for="precip-c4">Very heavy<br>20 mm/h</label><input id="precip-c4" type="color">
+            <div class="color-stop"><label for="precip-c4">Very heavy<br>5.1–10 mm/h</label><input id="precip-c4" type="color">
                 <input id="precip-c4-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Very heavy colour opacity">
                 <output id="precip-c4-opacity-value" for="precip-c4-opacity">100%</output></div>
+            <div class="color-stop"><label for="precip-c5">Extreme<br>10+ mm/h</label><input id="precip-c5" type="color">
+                <input id="precip-c5-opacity" class="color-opacity" type="range" min="0" max="100" step="1" aria-label="Extreme colour opacity">
+                <output id="precip-c5-opacity-value" for="precip-c5-opacity">100%</output></div>
         </div>
         <canvas class="gradient" id="precip-gradient" width="512" height="28" aria-label="Precipitation colour and transparency preview"></canvas>
     </section>
@@ -200,9 +203,9 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         mapProjection: 'mercator',
         precipitationOpacity: 100,
         cloudOpacity: 100,
-        precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899'],
+        precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899', '#be123c'],
         cloudColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
-        precipitationColorOpacities: [100, 100, 100, 100],
+        precipitationColorOpacities: [100, 100, 100, 100, 100],
         cloudColorOpacities: [100, 100, 100, 100],
         weatherRegionBounds: null
     };
@@ -458,7 +461,8 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         if (saved && typeof saved === 'object') settings = { ...defaults, ...saved };
         settings.precipitationOpacity = Math.max(0, Math.min(100, Number(settings.precipitationOpacity ?? 100)));
         settings.cloudOpacity = Math.max(0, Math.min(100, Number(settings.cloudOpacity ?? 100)));
-        settings.precipitationColorOpacities = Array.isArray(settings.precipitationColorOpacities) ? settings.precipitationColorOpacities : [...defaults.precipitationColorOpacities];
+        settings.precipitationColors = [...defaults.precipitationColors, ...(Array.isArray(settings.precipitationColors) ? settings.precipitationColors.slice(4, 5) : [])].slice(0, 5);
+        settings.precipitationColorOpacities = [...defaults.precipitationColorOpacities, ...(Array.isArray(settings.precipitationColorOpacities) ? settings.precipitationColorOpacities.slice(4, 5) : [])].slice(0, 5);
         settings.cloudColorOpacities = Array.isArray(settings.cloudColorOpacities) ? settings.cloudColorOpacities : [...defaults.cloudColorOpacities];
     } catch (error) {
         console.warn('Could not load saved appearance settings.', error);
@@ -472,20 +476,23 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         const colors = settings[type + 'Colors'];
         const opacityKey = type === 'precipitation' ? 'precipitationColorOpacities' : 'cloudColorOpacities';
         const target = document.getElementById(type === 'precipitation' ? 'precip-gradient' : 'cloud-gradient');
-        const breakpoints = type === 'precipitation' ? [0, 0.2, 1, 5, 20] : [0, 25, 50, 75, 100];
-        const rgbaStops = [
-            [0, 0, 0, 0],
-            ...colors.map((hex, index) => {
-                const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
-                return [
-                    parseInt(value.slice(0, 2), 16),
-                    parseInt(value.slice(2, 4), 16),
-                    parseInt(value.slice(4, 6), 16),
-                    (Math.max(0, Math.min(100, Number(settings[opacityKey]?.[index] ?? 100))) / 100) *
-                    (Math.max(0, Math.min(100, Number(settings[type === 'precipitation' ? 'precipitationOpacity' : 'cloudOpacity'] ?? 100))) / 100)
-                ];
-            })
-        ];
+        const precipitationScale = type === 'precipitation';
+        const breakpoints = precipitationScale ? [0, 1, 1.1, 2, 2.1, 5, 5.1, 10] : [0, 25, 50, 75, 100];
+        const scaleColors = precipitationScale
+            ? [null, colors[0], colors[1], colors[1], colors[2], colors[2], colors[3], colors[4]]
+            : [null, ...colors];
+        const overallOpacity = Math.max(0, Math.min(100, Number(settings[precipitationScale ? 'precipitationOpacity' : 'cloudOpacity'] ?? 100))) / 100;
+        const rgbaStops = scaleColors.map((hex, index) => {
+            if (index === 0 || !hex) return [0, 0, 0, 0];
+            const colorIndex = precipitationScale ? [0, 1, 1, 2, 2, 3, 4][index - 1] : index - 1;
+            const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '000000';
+            return [
+                parseInt(value.slice(0, 2), 16),
+                parseInt(value.slice(2, 4), 16),
+                parseInt(value.slice(4, 6), 16),
+                (Math.max(0, Math.min(100, Number(settings[opacityKey]?.[colorIndex] ?? 100))) / 100) * overallOpacity
+            ];
+        });
 
         // Mirror Open-Meteo's breakpoint sampler: interpolate RGB and alpha
         // independently, then let the checkerboard show the resulting alpha.
@@ -567,7 +574,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     ['precipitation', 'cloud'].forEach(type => {
         const prefix = type === 'precipitation' ? 'precip' : 'cloud';
         const key = type === 'precipitation' ? 'precipitationColors' : 'cloudColors';
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < (type === 'precipitation' ? 5 : 4); i++) {
             document.getElementById(prefix + '-c' + (i + 1)).addEventListener('input', event => {
                 settings[key][i] = event.target.value;
                 paintGradient(type);
@@ -578,7 +585,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     ['precipitation', 'cloud'].forEach(type => {
         const prefix = type === 'precipitation' ? 'precip' : 'cloud';
         const opacityKey = type === 'precipitation' ? 'precipitationColorOpacities' : 'cloudColorOpacities';
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < (type === 'precipitation' ? 5 : 4); i++) {
             const id = prefix + '-c' + (i + 1) + '-opacity';
             document.getElementById(id).addEventListener('input', event => {
                 settings[opacityKey][i] = Number(event.target.value);
