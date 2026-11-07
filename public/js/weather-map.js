@@ -202,6 +202,7 @@ protocolOptions.fileReaderConfig = {
         const layerSelect = document.getElementById('layer-select');
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
+        const frameProgressBar = document.getElementById('map-frame-progress');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -441,7 +442,15 @@ protocolOptions.fileReaderConfig = {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            frameTimeLabel.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · Frame ' + (index + 1) + '/6 · ' + label;
+            frameTimeLabel.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + label;
+            if (frameProgressBar) {
+                frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
+                frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 5 · ' + label);
+                Array.from(frameProgressBar.children).forEach((step, stepIndex) => {
+                    step.classList.toggle('is-complete', stepIndex < index);
+                    step.classList.toggle('is-current', stepIndex === index);
+                });
+            }
         }
 
         function removeAnimationFrameSources(frame) {
@@ -512,7 +521,7 @@ protocolOptions.fileReaderConfig = {
 
                 // Cross-fade between already-loaded raster layers. Both opacity changes
                 // are applied in the same render turn: the outgoing frame fades
-                // down while the incoming frame fades up. Keep all six sources
+                // down while the incoming frame fades up. Keep all five sources
                 // alive so the outgoing image remains underneath during the fade.
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
@@ -526,7 +535,7 @@ protocolOptions.fileReaderConfig = {
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
-            setStatus('Preparing six weather frames (3 past + 3 forecast)…');
+            setStatus('Preparing five weather frames (3 past + 2 forecast)…');
 
             try {
                 const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
@@ -534,8 +543,8 @@ protocolOptions.fileReaderConfig = {
                 const schedule = await scheduleResponse.json();
                 if (token !== animationToken) return;
 
-                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 6) {
-                    throw new Error('The server has not supplied all 6 scheduled weather frames.');
+                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 5) {
+                    throw new Error('The server has not supplied all 5 scheduled weather frames.');
                 }
 
                 const scheduledFrames = schedule.frames.map(item => ({
@@ -553,8 +562,8 @@ protocolOptions.fileReaderConfig = {
 
                 const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
                 const futureFrames = scheduledFrames.filter(frame => frame.type === 'future');
-                if (pastFrames.length !== 3 || futureFrames.length !== 3) {
-                    throw new Error('The server schedule must contain three past and three forecast frames.');
+                if (pastFrames.length !== 3 || futureFrames.length !== 2) {
+                    throw new Error('The server schedule must contain three past and two forecast frames.');
                 }
 
                 // Open-Meteo requires delta_time_hours for accumulated variables
@@ -630,7 +639,7 @@ protocolOptions.fileReaderConfig = {
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
                 // Load one frame at a time. In Combined mode that means only
                 // two new raster sources are introduced per step. This limits
-                // cold-cache network/decode bursts while still having all six
+                // cold-cache network/decode bursts while still having all five
                 // frames ready before playback begins.
                 const requiredFrames = selectedAnimationFrames();
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
@@ -656,7 +665,7 @@ protocolOptions.fileReaderConfig = {
                         + ' · sources ' + loadedSources + '/' + totalSources;
                     const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
                     const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
-                    setStatus('Loading weather frame ' + (index + 1) + '/6 · ' + phase + activity + transfer + failed);
+                    setStatus('Loading weather frame ' + (index + 1) + '/5 · ' + phase + activity + transfer + failed);
                 };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
@@ -721,7 +730,7 @@ protocolOptions.fileReaderConfig = {
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
-                        setStatus('Weather frame ' + (index + 1) + '/6 ready · waiting for map render…');
+                        setStatus('Weather frame ' + (index + 1) + '/5 ready · waiting for map render…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
                         });
@@ -746,7 +755,7 @@ protocolOptions.fileReaderConfig = {
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 6) throw new Error('The server has not supplied all 6 scheduled weather frames.');
+            if (frames.length !== 5) throw new Error('The server has not supplied all 6 scheduled weather frames.');
 
             const now = Date.now();
             const currentFrame = frames
@@ -868,7 +877,7 @@ protocolOptions.fileReaderConfig = {
                 ? 'Checking saved Combined map against the current frame…'
                 : 'Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
-            frameTimeLabel.textContent = 'Six weather frames';
+            frameTimeLabel.textContent = 'Five weather frames';
 
             let snapshotMatchesLatest = false;
             (async () => {
@@ -972,7 +981,7 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
 
-            // Show the latest single weather layer first. Do not download all six
+            // Show the latest single weather layer first. Do not download all five
             // animation frames during dashboard startup; that creates up to twelve
             // raster sources at once in Combined mode and can overwhelm mobile browsers.
             animationToggle.disabled = false;
