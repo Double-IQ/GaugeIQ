@@ -755,7 +755,7 @@ protocolOptions.fileReaderConfig = {
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 5) throw new Error('The server has not supplied all 6 scheduled weather frames.');
+            if (frames.length !== 5) throw new Error('The server has not supplied all 5 scheduled weather frames.');
 
             const now = Date.now();
             const currentFrame = frames
