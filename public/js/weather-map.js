@@ -510,14 +510,15 @@ protocolOptions.fileReaderConfig = {
                     return;
                 }
 
-                // Cross-fade between already-loaded raster layers. Keep all six
-                // frame sources alive throughout playback so the outgoing image
-                // remains underneath until the incoming frame is fully visible.
+                // Cross-fade between already-loaded raster layers. Both opacity changes
+                // are applied in the same render turn: the outgoing frame fades
+                // down while the incoming frame fades up. Keep all six sources
+                // alive so the outgoing image remains underneath during the fade.
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 1200);
+            }, 2400);
         }
 
         async function prepareAnimation(autoStart = true) {
@@ -610,7 +611,7 @@ protocolOptions.fileReaderConfig = {
                             source: sourceId,
                             paint: {
                                 'raster-opacity': 0.001,
-                                'raster-opacity-transition': { duration: 500, delay: 0 }
+                                'raster-opacity-transition': { duration: 1000, delay: 0 }
                             }
                         });
 
