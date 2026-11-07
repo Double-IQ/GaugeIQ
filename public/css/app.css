@@ -6738,7 +6738,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   .gaugeiq-weather-map-timeline{padding:8px 10px;gap:6px}
   .gaugeiq-weather-map-timeline select,.gaugeiq-weather-map-timeline button{padding:0 8px;font-size:11px}
   .gaugeiq-weather-map-timeline span{font-size:11px}
-  .gaugeiq-weather-map-canvas{height:clamp(340px,58vh,500px)}
+  .gaugeiq-weather-map-canvas{height:auto;aspect-ratio:1 / 1}
 }
 @media(max-width:380px){
   .gaugeiq-weather-map-heading strong{font-size:15px}
