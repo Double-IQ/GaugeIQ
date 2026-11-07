@@ -527,7 +527,7 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 2400);
+            }, 1900);
         }
 
         async function prepareAnimation(autoStart = true) {
