@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// HTML must be revalidated so installed PWAs receive current asset references.
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
+
 $config = $configPath = __DIR__ . '/../config/local.php';
 if (!is_file($configPath)) {
     header('Location: install/');
@@ -173,6 +177,8 @@ $monitorHealthy = $monitorAge !== null && $monitorAge <= ($monitorCronMinutes * 
 $cronScript = realpath(__DIR__ . '/../cron/check-pressure.php') ?: (__DIR__ . '/../cron/check-pressure.php');
 $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
+$weatherMapJsVersion = (string) (filemtime(__DIR__ . '/js/weather-map.js') ?: time());
+
 $lastRefreshedLabel = 'Last updated — waiting for the first scheduled server check';
 if ($current && !empty($current['observed_at'])) {
     $lastRefreshedTimestamp = strtotime((string)$current['observed_at']);
@@ -194,10 +200,10 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="preconnect" href="https://openmeteo.s3.amazonaws.com">
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
-<link rel="modulepreload" href="js/weather-map.js?v=20261107-five-frame-19s-timeline" crossorigin>
+<link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
 <link rel="stylesheet" href="css/app.css?v=20261107-square-weather-map">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
-<script type="module" src="js/weather-map.js?v=20261107-five-frame-19s-timeline"></script>
+<script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
 </head>
 <body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
