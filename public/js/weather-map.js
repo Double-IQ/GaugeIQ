@@ -725,7 +725,7 @@ protocolOptions.fileReaderConfig = {
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
-                        setStatus('Weather frame ' + (index + 1) + '/5 ready · waiting for map render…');
+                        setStatus('Weather frame ' + (index + 1) + '/5 ready…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
                         });
