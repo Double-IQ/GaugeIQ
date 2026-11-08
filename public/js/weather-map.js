@@ -650,22 +650,17 @@ protocolOptions.fileReaderConfig = {
                     const loadedSources = frame.sourceIds.filter(id => map.getSource(id) && map.isSourceLoaded(id)).length;
                     const totalSources = frame.sourceIds.length;
                     const network = frame.networkProgress || { started: 0, completed: 0, active: 0, bytes: 0, failed: 0 };
-                    let phase;
-                    if (loadedSources === totalSources && totalSources > 0) {
-                        phase = 'tiles decoded · waiting for map render';
-                    } else if (network.active > 0) {
-                        phase = 'downloading · ' + network.active + ' active, ' + network.rangeCompleted + ' range requests complete';
-                    } else if (network.started > 0) {
-                        phase = 'decoding/rendering · ' + loadedSources + '/' + totalSources + ' sources ready';
-                    } else {
-                        phase = 'connecting / reading cached data';
-                    }
-                    const activity = ' · connect ' + network.metadataCompleted + '/' + network.metadataStarted
-                        + ' · download ' + network.rangeCompleted + '/' + network.rangeStarted + ' ranges'
-                        + ' · sources ' + loadedSources + '/' + totalSources;
+                    // Show exactly one active phase at a time. While requests are
+                    // starting or transferring, report Download; once transfer
+                    // activity has begun and no requests remain active, report Decoding.
+                    const isDownloading = network.active > 0 || network.started === 0;
+                    const phase = isDownloading ? 'Download' : 'Decoding';
+                    const phaseDetail = isDownloading
+                        ? network.active + ' active, ' + network.rangeCompleted + ' range requests complete'
+                        : loadedSources + '/' + totalSources + ' sources ready';
                     const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
                     const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
-                    setStatus('Loading weather frame ' + (index + 1) + '/5 · ' + phase + activity + transfer + failed);
+                    setStatus('Loading frame ' + (index + 1) + '/5 · ' + phase + ' · ' + phaseDetail + transfer + failed);
                 };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
