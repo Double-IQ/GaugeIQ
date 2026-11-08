@@ -563,9 +563,11 @@ async function enablePushNotifications() {
 }
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {
-        status.textContent = 'PWA service worker could not be registered.';
-    });
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
+        .then(registration => registration.update())
+        .catch(() => {
+            status.textContent = 'PWA service worker could not be updated.';
+        });
 }
 
 function isSamsungInternet() {
