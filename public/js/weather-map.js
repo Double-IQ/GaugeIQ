@@ -877,7 +877,7 @@ protocolOptions.fileReaderConfig = {
                 ? 'Checking saved Combined map against the current frame…'
                 : 'Loading ' + layerSelect.selectedOptions[0].textContent.toLowerCase() + '…');
 
-            frameTimeLabel.textContent = 'Five weather frames';
+            frameTimeLabel.textContent = 'Weather frames';
 
             let snapshotMatchesLatest = false;
             (async () => {
