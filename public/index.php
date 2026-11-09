@@ -588,17 +588,6 @@ if ($current && !empty($current['observed_at'])) {
             </p>
         </article>
     <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-            <p class="rainfall-nowcast-footnote">
-                <?= $nowcastUpdatedAt !== false ? 'Updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
-                Forecast model, not live radar
-            </p>
-        </article>
-    <?php endif; ?>
-
     <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
         <div class="section-heading forecast-preview-heading" style="text-align: left; justify-content: flex-start;">
             <div>
