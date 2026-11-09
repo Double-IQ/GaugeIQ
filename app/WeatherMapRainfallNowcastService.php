@@ -122,6 +122,7 @@ final class WeatherMapRainfallNowcastService
             $nearestWetAmount = null;
             $maximum = 0.0;
             $wetCount = 0;
+            $radarCells = [];
             foreach ($samples as $cell) {
                 $rawAmount = (float)($values[$cell['index']] ?? 0.0);
                 if (!is_finite($rawAmount)) continue;
@@ -136,6 +137,19 @@ final class WeatherMapRainfallNowcastService
                     $nearestWetDistance = (float)$cell['distance_km'];
                     $nearestWetAmount = $amount;
                 }
+                $latitude1 = deg2rad((float)$latitudeValue);
+                $latitude2 = deg2rad((float)$cell['latitude']);
+                $longitudeDelta = deg2rad((float)$cell['longitude'] - (float)$longitudeValue);
+                $bearing = rad2deg(atan2(
+                    sin($longitudeDelta) * cos($latitude2),
+                    cos($latitude1) * sin($latitude2) -
+                        sin($latitude1) * cos($latitude2) * cos($longitudeDelta)
+                ));
+                $radarCells[] = [
+                    'distance_km' => round((float)$cell['distance_km'], 1),
+                    'bearing_degrees' => round(fmod($bearing + 360.0, 360.0), 1),
+                    'precipitation_mm' => round($amount, 2),
+                ];
             }
 
             $frameResults[] = [
@@ -148,6 +162,7 @@ final class WeatherMapRainfallNowcastService
                 'nearest_rain_km' => $nearestWetDistance === null ? null : round($nearestWetDistance, 1),
                 'nearest_rain_precipitation_mm' => $nearestWetAmount === null ? null : round($nearestWetAmount, 2),
                 'wet_cells' => $wetCount,
+                'rain_cells' => $radarCells,
             ];
         }
 
@@ -217,9 +232,23 @@ final class WeatherMapRainfallNowcastService
             }
         }
 
+        $forecastConsistency = 'no_signal';
+        if (count($frameResults) >= 2) {
+            $firstWet = (int)($frameResults[0]['wet_cells'] ?? 0);
+            $secondWet = (int)($frameResults[1]['wet_cells'] ?? 0);
+            if ($firstWet > 0 && $secondWet > 0) {
+                $forecastConsistency = 'persistent';
+            } elseif ($firstWet === 0 && $secondWet > 0) {
+                $forecastConsistency = 'developing';
+            } elseif ($firstWet > 0 && $secondWet === 0) {
+                $forecastConsistency = 'fading';
+            }
+        }
+
         $payload = [
             'source' => 'ECMWF IFS',
             'status' => $status,
+            'forecast_consistency' => $forecastConsistency,
             'summary' => $summary,
             'location' => ['latitude' => (float)$latitudeValue, 'longitude' => (float)$longitudeValue],
             'search_radius_km' => self::SEARCH_RADIUS_KM,
