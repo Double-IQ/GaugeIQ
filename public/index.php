@@ -201,7 +201,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261107-square-weather-map">
+<link rel="stylesheet" href="css/app.css?v=20261109-atc-radar">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
@@ -471,45 +471,123 @@ if ($current && !empty($current['observed_at'])) {
     <?php if (is_array($rainfallNowcast)): ?>
         <?php
         $nowcastStatus = (string)($rainfallNowcast['status'] ?? 'clear');
-        $nowcastSummary = (string)($rainfallNowcast['summary'] ?? 'ECMWF rainfall outlook is unavailable.');
-        $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? $rainfallNowcast['frames'] : [];
+        $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? array_values(array_filter($rainfallNowcast['frames'], 'is_array')) : [];
         $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
+        $radarFrame = $nowcastFrames[0] ?? [];
+        $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
+        $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
+        $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)$radarFrame['nearest_rain_precipitation_mm'] : null;
+        $radarLocalAmount = is_numeric($radarFrame['local_precipitation_mm'] ?? null) ? (float)$radarFrame['local_precipitation_mm'] : 0.0;
+        $radarTrend = (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed');
+        $radarTrendLabel = match ($radarTrend) {
+            'closing' => 'Moving closer',
+            'receding' => 'Moving away',
+            'steady' => 'Staying roughly the same',
+            default => 'Movement unavailable',
+        };
+        $consistency = (string)($rainfallNowcast['forecast_consistency'] ?? 'no_signal');
+        $consistencyLabel = match ($consistency) {
+            'persistent' => 'Persistent',
+            'developing' => 'Developing',
+            'fading' => 'Fading',
+            default => 'No consistent rain signal',
+        };
+        $radarCellMarkup = '';
+        foreach ($radarCells as $radarCell) {
+            if (!is_array($radarCell) || !is_numeric($radarCell['distance_km'] ?? null) || !is_numeric($radarCell['bearing_degrees'] ?? null)) continue;
+            $distanceRatio = max(0.0, min(1.0, (float)$radarCell['distance_km'] / 100.0));
+            $bearingRadians = deg2rad((float)$radarCell['bearing_degrees']);
+            $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
+            $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
+            $amount = is_numeric($radarCell['precipitation_mm'] ?? null) ? (float)$radarCell['precipitation_mm'] : 0.1;
+            $cellRadius = max(3.0, min(7.0, 3.0 + log10(1.0 + max(0.0, $amount)) * 3.0));
+            $cellColour = $amount >= 5.0 ? '#E7C84B' : ($amount >= 1.0 ? '#45D69D' : '#36B9D6');
+            $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . number_format($amount, 2) . ' mm at ' . number_format((float)$radarCell['distance_km'], 1) . ' km</title></circle>';
+        }
+        $frameLeadLabels = ['+3h', '+6h'];
         ?>
-        <article class="card wind-hud-card rainfall-nowcast-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
+        <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
             <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
-                    <p class="label">ECMWF IFS · Next two hours</p>
+                    <p class="label">ECMWF IFS · Next 6 hours</p>
                     <h2>Rainfall outlook</h2>
                 </div>
-                <span class="rainfall-nowcast-source">Model data</span>
+                <span class="rainfall-nowcast-source">Model forecast</span>
             </div>
-            <p class="rainfall-nowcast-summary"><?= htmlspecialchars($nowcastSummary, ENT_QUOTES) ?></p>
-            <?php if ($nowcastFrames !== []): ?>
-                <div class="rainfall-nowcast-frames">
-                    <?php foreach ($nowcastFrames as $nowcastFrame):
-                        if (!is_array($nowcastFrame)) continue;
-                        $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
-                        if ($frameTimestamp === false) continue;
-                        $localAmount = is_numeric($nowcastFrame['local_precipitation_mm'] ?? null)
-                            ? (float)$nowcastFrame['local_precipitation_mm'] : 0.0;
-                        $nearestDistance = is_numeric($nowcastFrame['nearest_rain_km'] ?? null)
-                            ? number_format((float)$nowcastFrame['nearest_rain_km'], 0) . ' km away'
-                            : 'No rain within 100 km';
-                        $nearestRainAmount = is_numeric($nowcastFrame['nearest_rain_precipitation_mm'] ?? null)
-                            ? number_format((float)$nowcastFrame['nearest_rain_precipitation_mm'], 2) . ' mm'
-                            : null;
-                    ?>
-                        <div class="rainfall-nowcast-frame">
-                            <span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span>
-                            <?php if ($nearestRainAmount !== null): ?>
-                                <strong><?= htmlspecialchars($nearestRainAmount, ENT_QUOTES) ?></strong>
-                                <small>At rain cell · <?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
-                                <small>At your location: <?= number_format($localAmount, 2) ?> mm</small>
-                            <?php else: ?>
-                                <strong><?= number_format($localAmount, 2) ?> mm</strong>
-                                <small>At your location</small>
-                                <small><?= htmlspecialchars($nearestDistance, ENT_QUOTES) ?></small>
-                            <?php endif; ?>
+            <div class="rainfall-radar-layout">
+                <div class="rainfall-radar-scope-wrap">
+                    <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
+                    <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
+                        <defs>
+                            <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
+                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
+                            <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
+                            <filter id="rainfallRadarGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
+                        <circle cx="160" cy="160" r="143" fill="#0A202B" stroke="#315263" stroke-width="1.5"/>
+                        <g clip-path="url(#rainfallRadarClip)">
+                            <circle cx="160" cy="160" r="140" fill="url(#rainfallRadarBackground)"/>
+                            <circle cx="160" cy="160" r="21" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <circle cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <circle cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
+                            <g class="rainfall-radar-cells"><?= $radarCellMarkup ?></g>
+                            <g class="rainfall-radar-sweep">
+                                <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
+                                <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
+                            </g>
+                            <circle cx="160" cy="160" r="5" fill="#F4FBFF" stroke="#47D9B0" stroke-width="3" filter="url(#rainfallRadarGlow)"/>
+                            <circle cx="160" cy="160" r="12" fill="none" stroke="#47D9B0" stroke-width="1"/>
+                        </g>
+                        <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
+                            <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
+                            <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
+                        </g>
+                    </svg>
+                    <div class="rainfall-radar-legend">
+                        <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
+                    </div>
+                    <?php if ($radarCells === []): ?>
+                        <p class="rainfall-radar-empty"><?= !empty($radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : 'Waiting for the next scheduled ECMWF forecast scan.' ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="rainfall-radar-readouts">
+                    <div class="rainfall-radar-readout-primary">
+                        <span>AT YOUR LOCATION</span>
+                        <strong><?= number_format($radarLocalAmount, 1) ?> <small>mm</small></strong>
+                    </div>
+                    <div class="rainfall-radar-readout-grid">
+                        <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> mm at cell</small><?php endif; ?></div>
+                        <div><span>RAIN MOVEMENT</span><strong><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
+                    </div>
+                </div>
+            </div>
+            <div class="rainfall-radar-timeline">
+                <div class="rainfall-radar-section-label"><strong>FORECAST SCAN</strong><span>LOCAL TIME</span></div>
+                <?php foreach ($nowcastFrames as $frameIndex => $nowcastFrame):
+                    $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
+                    if ($frameTimestamp === false) continue;
+                    $localAmount = is_numeric($nowcastFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)$nowcastFrame['local_precipitation_mm']) : 0.0;
+                    $barWidth = min(100.0, ($localAmount / 10.0) * 100.0);
+                    $leadLabel = $frameLeadLabels[$frameIndex] ?? ('+' . (3 * ($frameIndex + 1)) . 'h');
+                ?>
+                    <div class="rainfall-radar-time-step">
+                        <div class="rainfall-radar-time-heading"><strong><?= htmlspecialchars($leadLabel, ENT_QUOTES) ?></strong><span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span></div>
+                        <div class="rainfall-radar-bar"><span style="width:<?= number_format($barWidth, 1, '.', '') ?>%"></span></div>
+                        <div class="rainfall-radar-amount"><strong><?= number_format($localAmount, 2) ?> mm</strong><small>At your location</small></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="rainfall-radar-consistency">
+                <span class="rainfall-radar-consistency-dot" data-consistency="<?= htmlspecialchars($consistency, ENT_QUOTES) ?>"></span>
+                <div><strong>Forecast consistency · <?= htmlspecialchars($consistencyLabel, ENT_QUOTES) ?></strong><small>How the rain signal changes between the two model steps — not a probability.</small></div>
+            </div>
+            <p class="rainfall-nowcast-footnote">
+                <?= $nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
+                ECMWF model forecast, not live radar · 25 km grid
+            </p>
+        </article>
+    <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
