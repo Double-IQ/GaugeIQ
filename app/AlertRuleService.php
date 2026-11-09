@@ -725,6 +725,22 @@ final class AlertRuleService
             throw new InvalidArgumentException('Alert rule configuration cannot be empty.');
         }
 
+        if (in_array($metric, ['dew_point', 'dew_point_gap'], true)) {
+            if (!in_array($type, ['change', 'above', 'below'], true)) {
+                throw new InvalidArgumentException('Dew point and dew point gap alerts support only Changes by, Rises above, or Falls below conditions.');
+            }
+            if (!isset($configuration['value']) || !is_numeric($configuration['value']) || !is_finite((float)$configuration['value'])) {
+                throw new InvalidArgumentException('Dew point alert thresholds must be valid numeric values.');
+            }
+            $threshold = (float)$configuration['value'];
+            if ($metric === 'dew_point' && ($threshold < -100 || $threshold > 60)) {
+                throw new InvalidArgumentException('Dew point thresholds must be between -100°C and 60°C.');
+            }
+            if ($metric === 'dew_point_gap' && $threshold < 0) {
+                throw new InvalidArgumentException('Dew point gap thresholds cannot be negative.');
+            }
+        }
+
         if ($metric === 'weather_stability' && ($type !== 'above' || !isset($configuration['value']) || !is_numeric($configuration['value']) || (float)$configuration['value'] < 0 || (float)$configuration['value'] > 10)) {
             throw new InvalidArgumentException('Weather Volatility Index (WVI) alerts require a threshold from 0 to 10 and the Rises to or above condition.');
         }
