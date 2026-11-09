@@ -548,7 +548,7 @@ if ($current && !empty($current['observed_at'])) {
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
                     <?php if ($radarCells === []): ?>
-                        <p class="rainfall-radar-empty"><?= !empty($radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : 'Waiting for the next scheduled ECMWF forecast scan.' ?></p>
+                        <p class="rainfall-radar-empty"><?= !empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.') ?></p>
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
