@@ -61,3 +61,7 @@ jobs:
             --target main \
             --title "GaugeIQ $RELEASE_TAG" \
             --notes "Automated production release built from the main branch."
+
+          # GITHUB_TOKEN-created releases do not trigger tag-push workflows.
+          # Dispatch the existing package builder explicitly after the release exists.
+          gh workflow run release.yml --ref main -f tag="$RELEASE_TAG"
