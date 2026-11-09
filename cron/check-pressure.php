@@ -449,30 +449,6 @@ $alerts = array_map(
     $ruleMatches
 );
 
-// Keep the original pressure configuration working for installations that have
-// not yet created any alert rules in the Settings screen.
-if ($ruleMatches === [] && $baseline !== null && $service->pressureThresholdExceeded($baseline, $current['pressure_hpa'])) {
-    $baseline = $pdo->prepare(
-        "SELECT value FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
-    );
-    $baseline->execute();
-    $baselineValue = $baseline->fetchColumn();
-    $baselinePressure = $baselineValue === false ? null : (float)$baselineValue;
-    $notificationChange = $baselinePressure === null
-        ? $pressureChange
-        : $current['pressure_hpa'] - $baselinePressure;
-
-    if ($baselinePressure === null ||
-        abs($notificationChange) >= (float)$config['pressure']['threshold_hpa']) {
-        $direction = $pressureChange >= 0 ? 'rising' : 'falling';
-        $alerts[] = sprintf(
-            'Pressure is %s by %.1f hPa to %.1f hPa.',
-            $direction,
-            abs($pressureChange),
-            $current['pressure_hpa']
-        );
-    }
-}
 if ($alerts === []) {
     exit;
 }
@@ -494,26 +470,6 @@ try {
         implode(' ', $alerts)
     );
 
-    if ($sent > 0) {
-        if ($ruleMatches === [] && $baseline !== null && $service->pressureThresholdExceeded($baseline, $current['pressure_hpa'])) {
-            $value = (string)$current['pressure_hpa'];
-            $exists = $pdo->query(
-                "SELECT 1 FROM gaugeiq_settings WHERE key = 'last_notified_pressure_hpa'"
-            )->fetchColumn();
-
-            if ($exists === false) {
-                $stmt = $pdo->prepare(
-                    "INSERT INTO gaugeiq_settings (key, value) VALUES ('last_notified_pressure_hpa', ?)"
-                );
-                $stmt->execute([$value]);
-            } else {
-                $stmt = $pdo->prepare(
-                    "UPDATE gaugeiq_settings SET value = ? WHERE key = 'last_notified_pressure_hpa'"
-                );
-                $stmt->execute([$value]);
-            }
-        }
-    }
 
     printf("Weather alert sent to %d device(s).\n", $sent);
 } catch (Throwable $e) {
