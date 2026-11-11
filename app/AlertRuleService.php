@@ -27,12 +27,15 @@ final class AlertRuleService
      */
     private function migrateLegacyWeatherChangeRules(): void
     {
-        $rows = $this->db->query(
+        $rowsQuery = $this->db->prepare(
             "SELECT id, metric, condition_type, configuration_json
              FROM gaugeiq_alert_rules
-             WHERE metric = 'weather_change'
-                OR (metric = 'weather_stability' AND condition_type = 'below')"
-        )->fetchAll(PDO::FETCH_ASSOC);
+             WHERE location_id = ?
+               AND (metric = 'weather_change'
+                    OR (metric = 'weather_stability' AND condition_type = 'below'))"
+        );
+        $rowsQuery->execute([$this->locationId]);
+        $rows = $rowsQuery->fetchAll(PDO::FETCH_ASSOC);
 
         if ($rows === []) {
             return;
@@ -41,7 +44,7 @@ final class AlertRuleService
         $update = $this->db->prepare(
             'UPDATE gaugeiq_alert_rules
              SET metric = ?, condition_type = ?, configuration_json = ?, updated_at = ?
-             WHERE id = ?'
+             WHERE id = ? AND location_id = ?'
         );
 
         foreach ($rows as $row) {
@@ -61,6 +64,7 @@ final class AlertRuleService
                 json_encode(['value' => $threshold], JSON_THROW_ON_ERROR),
                 gmdate('c'),
                 (int)$row['id'],
+                $this->locationId,
             ]);
         }
     }
@@ -218,9 +222,9 @@ final class AlertRuleService
         $now = gmdate('c');
 
         $stmt = $this->db->prepare(
-            'UPDATE gaugeiq_alert_rules SET last_triggered_at = ?, updated_at = ? WHERE id = ?'
+            'UPDATE gaugeiq_alert_rules SET last_triggered_at = ?, updated_at = ? WHERE id = ? AND location_id = ?'
         );
-        $stmt->execute([$now, $now, $ruleId]);
+        $stmt->execute([$now, $now, $ruleId, $this->locationId]);
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_alert_events (rule_id, observed_at, message, created_at)
