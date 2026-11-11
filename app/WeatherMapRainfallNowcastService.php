@@ -186,6 +186,8 @@ final class WeatherMapRainfallNowcastService
                         sin($latitude1) * cos($latitude2) * cos($longitudeDelta)
                 ));
                 $radarCells[] = [
+                    'latitude' => round((float)$cell['latitude'], 4),
+                    'longitude' => round((float)$cell['longitude'], 4),
                     'distance_km' => round((float)$cell['distance_km'], 1),
                     'bearing_degrees' => round(fmod($bearing + 360.0, 360.0), 1),
                     'precipitation_mm_per_hour' => round($amount, 2),
