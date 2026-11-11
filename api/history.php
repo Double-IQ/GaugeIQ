@@ -24,8 +24,9 @@ try {
     try { $historyTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 
     $hours = min(720, max(1, (int)($_GET['hours'] ?? 24)));
-    $since = (new DateTimeImmutable('now', $historyTimezone))->modify('-' . $hours . ' hours')->format('Y-m-d H:i:s');
-    $sinceDay = substr($since, 0, 10);
+    $now = new DateTimeImmutable('now', $historyTimezone);
+    $from = $now->modify('-' . $hours . ' hours');
+    $sinceDay = $from->format('Y-m-d');
 
     // Filter by observation time, not ingestion time, so historical imports appear
     // in the correct graph range. Date-prefix matching handles legacy ISO timestamps
@@ -48,10 +49,26 @@ try {
     $stmt = $pdo->prepare($historySql);
     $stmt->execute($historyParams);
 
+    $readings = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $observedAt = trim((string)($row['observed_at'] ?? ''));
+        if ($observedAt === '') continue;
+        try {
+            $observedDate = new DateTimeImmutable($observedAt, $historyTimezone);
+        } catch (Throwable) {
+            continue;
+        }
+        $row['timestamp'] = $observedDate->format(DateTimeInterface::ATOM);
+        $readings[] = $row;
+    }
+
     echo json_encode([
         'hours' => $hours,
-        'readings' => $stmt->fetchAll(),
-    ], JSON_UNESCAPED_SLASHES);
+        'from' => $from->format(DateTimeInterface::ATOM),
+        'to' => $now->format(DateTimeInterface::ATOM),
+        'count' => count($readings),
+        'readings' => $readings,
+    ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 } catch (Throwable $e) {
     error_log('GaugeIQ history API failed: ' . $e->getMessage());
     http_response_code(500);
