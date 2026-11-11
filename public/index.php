@@ -22,9 +22,25 @@ date_default_timezone_set($config['app']['timezone']);
 $db = new Database($config);
 AdminAuth::startSession();
 $csrfToken = AdminAuth::csrfToken();
-$service = new PressureService($config, $db->pdo());
 $pdo = $db->pdo();
 migrateDatabase($pdo);
+$secondLocationEnabled = false;
+$secondLocationFlag = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'second_location_enabled' LIMIT 1");
+$secondLocationFlag->execute();
+$secondLocationEnabled = $secondLocationFlag->fetchColumn() === '1';
+$locationId = (int)($_GET['location'] ?? 1);
+if (!in_array($locationId, [1, 2], true) || ($locationId === 2 && !$secondLocationEnabled)) {
+    $locationId = 1;
+}
+$locationStatusSuffix = $locationId === 2 ? '_location_2' : '';
+$service = new PressureService($config, $pdo, $locationId);
+function gaugeIqDashboardSetting(PDO $pdo, string $key): ?string {
+    $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value === false ? null : (string)$value;
+}
+
 $weatherFormulaValues = weatherFormulaValues($pdo);
 $weatherFormulaJson = json_encode($weatherFormulaValues, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
 
@@ -32,42 +48,48 @@ $locationName = (string)$config['pressure']['location_name'];
 $dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
 $dashboardLongitude = (string)($config['pressure']['longitude'] ?? '');
 $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC');
-$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'active_location_name', 'active_location_timezone', 'location_latitude', 'location_longitude', 'location_name')");
+$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'active_location_name', 'active_location_timezone', 'location_latitude', 'location_longitude', 'location_name', 'second_location_latitude', 'second_location_longitude', 'second_location_name')");
 $coordinateSettings->execute();
 $storedCoordinates = [];
 foreach ($coordinateSettings->fetchAll() as $coordinateSetting) {
     $storedCoordinates[(string)$coordinateSetting['key']] = (string)$coordinateSetting['value'];
 }
-$dashboardLatitude = $storedCoordinates['active_location_latitude']
-    ?? $storedCoordinates['location_latitude']
-    ?? $dashboardLatitude;
-$dashboardLongitude = $storedCoordinates['active_location_longitude']
-    ?? $storedCoordinates['location_longitude']
-    ?? $dashboardLongitude;
-$locationName = $storedCoordinates['active_location_name']
-    ?? $storedCoordinates['location_name']
-    ?? $locationName;
-$dashboardTimezone = $storedCoordinates['active_location_timezone'] ?? $dashboardTimezone;
+if ($locationId === 2) {
+    $dashboardLatitude = $storedCoordinates['second_location_latitude'] ?? '';
+    $dashboardLongitude = $storedCoordinates['second_location_longitude'] ?? '';
+    $locationName = $storedCoordinates['second_location_name'] ?? 'Location 2';
+} else {
+    $dashboardLatitude = $storedCoordinates['active_location_latitude']
+        ?? $storedCoordinates['location_latitude']
+        ?? $dashboardLatitude;
+    $dashboardLongitude = $storedCoordinates['active_location_longitude']
+        ?? $storedCoordinates['location_longitude']
+        ?? $dashboardLongitude;
+    $locationName = $storedCoordinates['active_location_name']
+        ?? $storedCoordinates['location_name']
+        ?? $locationName;
+    $dashboardTimezone = $storedCoordinates['active_location_timezone'] ?? $dashboardTimezone;
+}
 
 try {
-    $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
-    $changedAtStmt->execute();
-    $activeLocationChangedAt = $changedAtStmt->fetchColumn();
-    if (is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
-        $latestStmt = $pdo->prepare(
-            "SELECT * FROM gaugeiq_pressure_readings
-             WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo')
-             ORDER BY id DESC LIMIT 1"
-        );
-        $latestStmt->execute([$activeLocationChangedAt]);
-        $latest = $latestStmt->fetch() ?: null;
-    } else {
-        $latest = $pdo->query(
-            "SELECT * FROM gaugeiq_pressure_readings
-             WHERE source IS NULL OR source = 'Open-Meteo'
-             ORDER BY id DESC LIMIT 1"
-        )->fetch() ?: null;
+    $activeLocationChangedAt = '';
+    if ($locationId === 1) {
+        $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
+        $changedAtStmt->execute();
+        $changedAtValue = $changedAtStmt->fetchColumn();
+        $activeLocationChangedAt = is_string($changedAtValue) ? $changedAtValue : '';
     }
+    $latestSql = "SELECT * FROM gaugeiq_pressure_readings
+                  WHERE location_id = ? AND (source IS NULL OR source = 'Open-Meteo')";
+    $latestParams = [$locationId];
+    if ($locationId === 1 && $activeLocationChangedAt !== '') {
+        $latestSql .= ' AND created_at >= ?';
+        $latestParams[] = $activeLocationChangedAt;
+    }
+    $latestSql .= ' ORDER BY id DESC LIMIT 1';
+    $latestStmt = $pdo->prepare($latestSql);
+    $latestStmt->execute($latestParams);
+    $latest = $latestStmt->fetch() ?: null;
 
     // Use recorded pressure extrema from the latest 30 days, anchored to the
     // newest observation and scoped to the active location.
@@ -81,10 +103,10 @@ try {
     $pressureRangeEndText = date('Y-m-d\\TH:i:s', $pressureRangeEnd);
     $pressureRangeSql = "SELECT MIN(pressure_hpa) AS pressure_low, MAX(pressure_hpa) AS pressure_high
                          FROM gaugeiq_pressure_readings
-                         WHERE observed_at >= ? AND observed_at <= ?
+                         WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                            AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))";
-    $pressureRangeParams = [$pressureRangeStartText, $pressureRangeEndText];
-    if (isset($activeLocationChangedAt) && is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+    $pressureRangeParams = [$locationId, $pressureRangeStartText, $pressureRangeEndText];
+    if ($locationId === 1 && $activeLocationChangedAt !== '') {
         $pressureRangeSql .= ' AND created_at >= ?';
         $pressureRangeParams[] = $activeLocationChangedAt;
     }
@@ -112,10 +134,10 @@ try {
             $windowEnd = date('Y-m-d\\TH:i:s', $targetTimestamp + 1800);
             $pressurePriorSql = "SELECT pressure_hpa, observed_at
                                  FROM gaugeiq_pressure_readings
-                                 WHERE observed_at >= ? AND observed_at <= ?
+                                 WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                                    AND (source IS NULL OR source = 'Open-Meteo')";
-            $pressurePriorParams = [$windowStart, $windowEnd];
-            if (isset($activeLocationChangedAt) && is_string($activeLocationChangedAt) && $activeLocationChangedAt !== '') {
+            $pressurePriorParams = [$locationId, $windowStart, $windowEnd];
+            if ($locationId === 1 && $activeLocationChangedAt !== '') {
                 $pressurePriorSql .= ' AND created_at >= ?';
                 $pressurePriorParams[] = $activeLocationChangedAt;
             }
@@ -143,13 +165,14 @@ try {
     }
 
     $settings = [];
-    foreach ($pdo->query("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('monitor_last_success_at', 'monitor_last_error')") as $setting) {
-        $settings[(string)$setting['key']] = (string)$setting['value'];
-    }
-    $lastMonitorAt = $settings['monitor_last_success_at'] ?? null;
-    $monitorError = $settings['monitor_last_error'] ?? '';
+    $monitorSuccessKey = 'monitor_last_success_at' . $locationStatusSuffix;
+    $monitorErrorKey = 'monitor_last_error' . $locationStatusSuffix;
+    $lastMonitorAt = gaugeIqDashboardSetting($pdo, $monitorSuccessKey);
+    $monitorError = gaugeIqDashboardSetting($pdo, $monitorErrorKey);
     $subscriptionCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_push_subscriptions')->fetchColumn();
-    $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
+    $enabledRuleStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE location_id = ? AND enabled = 1');
+    $enabledRuleStmt->execute([$locationId]);
+    $enabledRuleCount = (int)$enabledRuleStmt->fetchColumn();
     $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'stability_alert_threshold' LIMIT 1");
     $stabilityThresholdStmt->execute();
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
@@ -225,6 +248,12 @@ if ($current && !empty($current['observed_at'])) {
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
+    <?php if ($secondLocationEnabled): ?>
+    <nav class="location-switcher" aria-label="Monitoring location">
+        <a class="secondary button-link<?= $locationId === 1 ? ' active' : '' ?>" href="?location=1" <?= $locationId === 1 ? 'aria-current="page"' : '' ?>><?= h($storedCoordinates['location_name'] ?? $config['pressure']['location_name'] ?? 'Location 1') ?></a>
+        <a class="secondary button-link<?= $locationId === 2 ? ' active' : '' ?>" href="?location=2" <?= $locationId === 2 ? 'aria-current="page"' : '' ?>><?= h($storedCoordinates['second_location_name'] ?? 'Location 2') ?></a>
+    </nav>
+    <?php endif; ?>
 
     <?php
     $temperatureC = $current ? (float)($current['temperature_c'] ?? 0.0) : 0.0;
@@ -254,11 +283,11 @@ if ($current && !empty($current['observed_at'])) {
                 $rainfall24hStmt = $pdo->prepare(
                     "SELECT rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
-                     WHERE observed_at > ? AND observed_at <= ?
+                     WHERE location_id = ? AND observed_at > ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
                      ORDER BY observed_at ASC, id ASC"
                 );
-                $rainfall24hStmt->execute([$rainfallWindowStart, $rainfallWindowEnd]);
+                $rainfall24hStmt->execute([$locationId, $rainfallWindowStart, $rainfallWindowEnd]);
                 $hourlyRainfall = [];
                 foreach ($rainfall24hStmt->fetchAll() as $rainfallRow) {
                     $rainTimestamp = strtotime((string)($rainfallRow['observed_at'] ?? ''));
@@ -323,7 +352,7 @@ if ($current && !empty($current['observed_at'])) {
     $rainfallNowcast = null;
     try {
         $nowcastStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
-        $nowcastStmt->execute(['weather_map_rainfall_nowcast']);
+        $nowcastStmt->execute([$locationId === 2 ? 'weather_map_rainfall_nowcast_location_2' : 'weather_map_rainfall_nowcast']);
         $nowcastJson = $nowcastStmt->fetchColumn();
         if (is_string($nowcastJson) && $nowcastJson !== '') {
             $decodedNowcast = json_decode($nowcastJson, true);
@@ -643,11 +672,11 @@ if ($current && !empty($current['observed_at'])) {
                 $climatePriorStmt = $pdo->prepare(
                     "SELECT temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
-                     WHERE observed_at >= ? AND observed_at <= ?
+                     WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
                      ORDER BY observed_at ASC, id ASC"
                 );
-                $climatePriorStmt->execute([$windowStart, $windowEnd]);
+                $climatePriorStmt->execute([$locationId, $windowStart, $windowEnd]);
                 $climateCandidates = $climatePriorStmt->fetchAll();
                 $closestDistance = PHP_INT_MAX;
                 foreach ($climateCandidates as $candidate) {
@@ -730,11 +759,11 @@ if ($current && !empty($current['observed_at'])) {
                 $climateHistoryStmt = $pdo->prepare(
                     "SELECT pressure_hpa, temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
                      FROM gaugeiq_pressure_readings
-                     WHERE observed_at >= ? AND observed_at <= ?
+                     WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                        AND (source IS NULL OR source = 'Open-Meteo')
                      ORDER BY observed_at ASC, id ASC"
                 );
-                $climateHistoryStmt->execute([$climateHistoryStart, $climateHistoryEndText]);
+                $climateHistoryStmt->execute([$locationId, $climateHistoryStart, $climateHistoryEndText]);
                 $climateHistory = $climateHistoryStmt->fetchAll();
             }
         }
@@ -972,7 +1001,7 @@ if ($current && !empty($current['observed_at'])) {
         $windObservedAt = new DateTimeImmutable((string)$current['observed_at']);
         $windPreviousStmt = $pdo->prepare(
             "SELECT wind_speed_kmh FROM gaugeiq_pressure_readings
-             WHERE observed_at <= ? AND observed_at >= ?
+             WHERE location_id = ? AND observed_at <= ? AND observed_at >= ?
                AND (source IS NULL OR source = 'Open-Meteo')
                AND wind_speed_kmh IS NOT NULL
              ORDER BY observed_at DESC LIMIT 1"
@@ -980,6 +1009,7 @@ if ($current && !empty($current['observed_at'])) {
         // Stored Open-Meteo timestamps use an ISO 'T' separator. Match that
         // format in the bounds so string comparisons find the prior reading.
         $windPreviousStmt->execute([
+            $locationId,
             $windObservedAt->modify('-45 minutes')->format('Y-m-d\\TH:i:s'),
             $windObservedAt->modify('-90 minutes')->format('Y-m-d\\TH:i:s')
         ]);
@@ -1315,11 +1345,11 @@ if ($current && !empty($current['observed_at'])) {
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
 $historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
-$historyWeatherCountStmt->execute(['Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
+$historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?");
+$historyWeatherCountStmt->execute([$locationId, 'Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
 $historyWeatherCount = (int)$historyWeatherCountStmt->fetchColumn();
-$historyWeatherLatestStmt = $pdo->prepare("SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE source = ?");
-$historyWeatherLatestStmt->execute(['Open-Meteo Historical Weather']);
+$historyWeatherLatestStmt = $pdo->prepare("SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ?");
+$historyWeatherLatestStmt->execute([$locationId, 'Open-Meteo Historical Weather']);
 $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '');
 ?>
 <div id="historicalDatasetStatus"
