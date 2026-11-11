@@ -1363,8 +1363,8 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
      data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>"
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
-<script src="js/openmeteo-history.js?v=20261011-history-backfill-3"></script>
+<script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261106-cron-aware-resume"></script>
+<script src="js/app.js?v=20261111-independent-locations"></script>
 </body>
 </html>
