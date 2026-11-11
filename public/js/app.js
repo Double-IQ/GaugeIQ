@@ -202,6 +202,9 @@ const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
 const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
+// Keep the iOS permission grant separate from the user's on/off preference.
+// Disabling the compass must not make the next Enable action request permission again.
+const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
@@ -342,9 +345,23 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Compass permission was not granted.');
+            let permissionAlreadyGranted = false;
+            try {
+                permissionAlreadyGranted = localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true';
+            } catch {
+                // If storage is unavailable, request permission through the user gesture.
+            }
+
+            if (!permissionAlreadyGranted) {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    throw new Error('Compass permission was not granted.');
+                }
+                try {
+                    localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+                } catch {
+                    // Compass can still work for this session if storage is unavailable.
+                }
             }
         }
 
