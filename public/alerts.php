@@ -52,9 +52,9 @@ function notificationDeviceLabel(?string $userAgent): string {
     return $platform . ' · ' . $browser;
 }
 
-function alertLookback(PDO $pdo): int {
-    $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE key = 'alert_lookback_hours'");
-    $stmt->execute();
+function alertLookback(PDO $pdo, string $suffix = ''): int {
+    $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $stmt->execute(['alert_lookback_hours' . $suffix]);
     $value = $stmt->fetchColumn();
     return $value === false ? 3 : max(1, min(168, (int)$value));
 }
@@ -86,36 +86,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($action === 'save_lookback') {
                 $hours = max(1, min(168, (int)($_POST['lookback_hours'] ?? 3)));
-                if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
-                    $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (key, value) VALUES ('alert_lookback_hours', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
-                } else {
-                    $stmt = $pdo->prepare("INSERT INTO gaugeiq_settings (`key`, `value`) VALUES ('alert_lookback_hours', ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
-                }
-                $stmt->execute([(string)$hours]);
+                saveGaugeSetting($pdo, 'alert_lookback_hours' . $locationSuffix, (string)$hours);
                 $notice = 'Alert comparison window saved.';
             } elseif ($action === 'save_daily_forecast_alert') {
-                $time = trim((string)($_POST['daily_forecast_alert_time'] ?? '07:00'));
+                $time = trim((string)($_POST['daily_forecast_alert_time' . $locationSuffix] ?? '07:00'));
                 if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $time)) {
                     throw new InvalidArgumentException('Choose a valid daily forecast alert time.');
                 }
 
-                $enabled = isset($_POST['daily_forecast_alert_enabled']);
-                $rain = isset($_POST['daily_forecast_alert_rain']);
-                $wind = isset($_POST['daily_forecast_alert_wind']);
-                $severe = isset($_POST['daily_forecast_alert_severe']);
-                $alwaysNotify = isset($_POST['daily_forecast_alert_always']);
+                $enabled = isset($_POST['daily_forecast_alert_enabled' . $locationSuffix]);
+                $rain = isset($_POST['daily_forecast_alert_rain' . $locationSuffix]);
+                $wind = isset($_POST['daily_forecast_alert_wind' . $locationSuffix]);
+                $severe = isset($_POST['daily_forecast_alert_severe' . $locationSuffix]);
+                $alwaysNotify = isset($_POST['daily_forecast_alert_always' . $locationSuffix]);
                 if ($enabled && !$rain && !$wind && !$severe && !$alwaysNotify) {
                     throw new InvalidArgumentException('Select at least one forecast condition or enable the all-clear notification option.');
                 }
 
                 $pdo->beginTransaction();
                 try {
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_enabled', $enabled ? '1' : '0');
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_time', $time);
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_rain', $rain ? '1' : '0');
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_wind', $wind ? '1' : '0');
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_severe', $severe ? '1' : '0');
-                    saveGaugeSetting($pdo, 'daily_forecast_alert_always', $alwaysNotify ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_enabled' . $locationSuffix, $enabled ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_time' . $locationSuffix, $time);
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_rain' . $locationSuffix, $rain ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_wind' . $locationSuffix, $wind ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_severe' . $locationSuffix, $severe ? '1' : '0');
+                    saveGaugeSetting($pdo, 'daily_forecast_alert_always' . $locationSuffix, $alwaysNotify ? '1' : '0');
                     $pdo->commit();
                 } catch (Throwable $saveError) {
                     if ($pdo->inTransaction()) {
@@ -125,25 +120,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $notice = $enabled ? 'Daily forecast notification settings saved.' : 'Daily forecast notification disabled.';
             } elseif ($action === 'save_ecmwf_rainfall_alert') {
-                $enabled = isset($_POST['ecmwf_rainfall_alert_enabled']);
+                $enabled = isset($_POST['ecmwf_rainfall_alert_enabled' . $locationSuffix]);
                 $radius = (int)($_POST['ecmwf_rainfall_alert_radius'] ?? 50);
                 if (!in_array($radius, [15, 50, 100], true)) {
                     throw new InvalidArgumentException('Choose a rainfall alert radius of 15, 50 or 100 km.');
                 }
-                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled', $enabled ? '1' : '0');
-                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km', (string)$radius);
+                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled' . $locationSuffix, $enabled ? '1' : '0');
+                saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km' . $locationSuffix, (string)$radius);
                 $notice = $enabled ? 'ECMWF rainfall outlook alert enabled.' : 'ECMWF rainfall outlook alert disabled.';
             } elseif ($action === 'save_stability_threshold') {
-                $thresholdInput = trim((string)($_POST['stability_alert_threshold'] ?? ''));
+                $thresholdInput = trim((string)($_POST['stability_alert_threshold' . $locationSuffix] ?? ''));
                 if ($thresholdInput === '') {
-                    saveGaugeSetting($pdo, 'stability_alert_threshold', '');
+                    saveGaugeSetting($pdo, 'stability_alert_threshold' . $locationSuffix, '');
                     $notice = 'Stability bar alert threshold disabled.';
                 } else {
                     if (!is_numeric($thresholdInput) || (float)$thresholdInput < 0 || (float)$thresholdInput > 10) {
                         throw new InvalidArgumentException('The WVI alert threshold must be between 0 and 10, or left disabled.');
                     }
                     $threshold = (float)$thresholdInput;
-                    saveGaugeSetting($pdo, 'stability_alert_threshold', (string)(10.0 - $threshold));
+                    saveGaugeSetting($pdo, 'stability_alert_threshold' . $locationSuffix, (string)(10.0 - $threshold));
                     $notice = 'Stability bar alert threshold saved.';
                 }
             } elseif ($action === 'test_device_notification') {
@@ -252,25 +247,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$lookbackHours = alertLookback($pdo);
-$dailyForecastAlertEnabled = gaugeSetting($pdo, 'daily_forecast_alert_enabled', '0') === '1';
-$dailyForecastAlertTime = gaugeSetting($pdo, 'daily_forecast_alert_time', '07:00') ?? '07:00';
+$lookbackHours = alertLookback($pdo, $locationSuffix);
+$dailyForecastAlertEnabled = gaugeSetting($pdo, 'daily_forecast_alert_enabled' . $locationSuffix, '0') === '1';
+$dailyForecastAlertTime = gaugeSetting($pdo, 'daily_forecast_alert_time' . $locationSuffix, '07:00') ?? '07:00';
 if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $dailyForecastAlertTime)) {
     $dailyForecastAlertTime = '07:00';
 }
-$dailyForecastAlertRain = gaugeSetting($pdo, 'daily_forecast_alert_rain', '1') === '1';
-$dailyForecastAlertWind = gaugeSetting($pdo, 'daily_forecast_alert_wind', '1') === '1';
-$dailyForecastAlertSevere = gaugeSetting($pdo, 'daily_forecast_alert_severe', '1') === '1';
-$dailyForecastAlertAlways = gaugeSetting($pdo, 'daily_forecast_alert_always', '0') === '1';
+$dailyForecastAlertRain = gaugeSetting($pdo, 'daily_forecast_alert_rain' . $locationSuffix, '1') === '1';
+$dailyForecastAlertWind = gaugeSetting($pdo, 'daily_forecast_alert_wind' . $locationSuffix, '1') === '1';
+$dailyForecastAlertSevere = gaugeSetting($pdo, 'daily_forecast_alert_severe' . $locationSuffix, '1') === '1';
+$dailyForecastAlertAlways = gaugeSetting($pdo, 'daily_forecast_alert_always' . $locationSuffix, '0') === '1';
 $dailyForecastAlertLastDate = gaugeSetting($pdo, 'daily_forecast_alert_last_evaluated_date' . $locationSuffix, '') ?? '';
 $dailyForecastAlertLastStatus = gaugeSetting($pdo, 'daily_forecast_alert_last_status' . $locationSuffix, '') ?? '';
 $dailyForecastAlertLastError = gaugeSetting($pdo, 'daily_forecast_alert_last_error' . $locationSuffix, '') ?? '';
-$ecmwfRainfallAlertEnabled = gaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled', '0') === '1';
-$ecmwfRainfallAlertRadius = (int)(gaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km', '50') ?? '50');
+$ecmwfRainfallAlertEnabled = gaugeSetting($pdo, 'ecmwf_rainfall_alert_enabled' . $locationSuffix, '0') === '1';
+$ecmwfRainfallAlertRadius = (int)(gaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km' . $locationSuffix, '50') ?? '50');
 if (!in_array($ecmwfRainfallAlertRadius, [15, 50, 100], true)) $ecmwfRainfallAlertRadius = 50;
 $ecmwfRainfallAlertLastStatus = gaugeSetting($pdo, 'ecmwf_rainfall_alert_last_status' . $locationSuffix, '') ?? '';
 $ecmwfRainfallAlertLastError = gaugeSetting($pdo, 'ecmwf_rainfall_alert_last_error' . $locationSuffix, '') ?? '';
-$stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold', '') ?? '';
+$stabilityAlertThresholdValue = gaugeSetting($pdo, 'stability_alert_threshold' . $locationSuffix, '') ?? '';
 $stabilityAlertThreshold = $stabilityAlertThresholdValue !== '' && is_numeric($stabilityAlertThresholdValue) ? 10.0 - (float)$stabilityAlertThresholdValue : null;
 $notificationDevices = $pdo->query('SELECT id, created_at, updated_at, user_agent, last_seen_at, last_push_at, last_push_status, last_push_error FROM gaugeiq_push_subscriptions ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
 $recentAlertsStmt = $pdo->prepare(
