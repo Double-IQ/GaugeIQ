@@ -474,7 +474,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     try {
         const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
         if (saved && typeof saved === 'object') settings = { ...defaults, ...saved };
-        const savedLocationBounds = settings.weatherRegionBoundsByLocation?.[String(LOCATION_ID)];
+        settings.weatherRegionBoundsByLocation = settings.weatherRegionBoundsByLocation &&
+            typeof settings.weatherRegionBoundsByLocation === 'object'
+            ? { ...settings.weatherRegionBoundsByLocation } : {};
+        // Migrate the former single rectangle to Location 1 without losing it
+        // when Location 2 is edited on this device.
+        if (!validBounds(settings.weatherRegionBoundsByLocation['1']) && validBounds(settings.weatherRegionBounds)) {
+            settings.weatherRegionBoundsByLocation['1'] = [...settings.weatherRegionBounds];
+        }
+        const savedLocationBounds = settings.weatherRegionBoundsByLocation[String(LOCATION_ID)];
         if (validBounds(savedLocationBounds)) {
             settings.weatherRegionBounds = [...savedLocationBounds];
         } else if (LOCATION_ID === 2 || !validBounds(settings.weatherRegionBounds)) {
