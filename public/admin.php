@@ -55,7 +55,27 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
     $stmt->execute([$key, $value]);
 }
 
-$enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE enabled = 1')->fetchColumn();
+$enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE location_id = 1 AND enabled = 1')->fetchColumn();
+$secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
+$secondLocationName = gaugeSetting($pdo, 'second_location_name', 'Location 2') ?? 'Location 2';
+$secondTimezoneName = gaugeSetting($pdo, 'location_timezone_location_2', (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC';
+try { $secondTimezone = new DateTimeZone($secondTimezoneName); } catch (Throwable) { $secondTimezone = new DateTimeZone('UTC'); }
+$secondMonitorSuccess = null;
+$secondMonitorError = '';
+$secondEnabledRuleCount = 0;
+if ($secondLocationEnabled) {
+    $secondMonitorStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $secondMonitorStmt->execute(['monitor_last_success_at_location_2']);
+    $secondMonitorValue = $secondMonitorStmt->fetchColumn();
+    $secondMonitorSuccess = is_string($secondMonitorValue) && $secondMonitorValue !== '' ? $secondMonitorValue : null;
+    $secondErrorStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $secondErrorStmt->execute(['monitor_last_error_location_2']);
+    $secondErrorValue = $secondErrorStmt->fetchColumn();
+    $secondMonitorError = $secondErrorValue === false ? '' : (string)$secondErrorValue;
+    $secondRulesStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE location_id = 2 AND enabled = 1');
+    $secondRulesStmt->execute();
+    $secondEnabledRuleCount = (int)$secondRulesStmt->fetchColumn();
+}
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
 $monitorCronMinutes = 60;
@@ -112,7 +132,20 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <div><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('d M, H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
         <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
     </div>
-    <?php if ($monitorError): ?><p class="monitor-warning">The last scheduled check reported an error. <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
+    <?php if ($monitorError): ?><p class="monitor-warning">Location 1: <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
+    <?php if ($secondLocationEnabled):
+        $secondMonitorAge = $secondMonitorSuccess ? time() - (int)strtotime($secondMonitorSuccess) : null;
+        $secondMonitorHealthy = $secondMonitorAge !== null && $secondMonitorAge <= ($monitorCronMinutes * 60 * 1.5);
+        $secondNextMonitorAt = $secondMonitorSuccess ? strtotime($secondMonitorSuccess) + ($monitorCronMinutes * 60) : null;
+    ?>
+    <div class="section-heading" style="margin-top:18px"><div><h3><?= h($secondLocationName) ?></h3><p class="muted">Independent scheduled monitoring status.</p></div><span class="status-pill <?= $secondMonitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $secondMonitorHealthy ? '● Monitoring active' : '● Check required' ?></span></div>
+    <div class="status-grid">
+        <div><span>Last successful check</span><strong><?= $secondMonitorSuccess ? (new DateTimeImmutable('@' . (int)strtotime($secondMonitorSuccess)))->setTimezone($secondTimezone)->format('d M, H:i') : 'Not yet' ?></strong></div>
+        <div><span>Next expected check</span><strong><?= $secondNextMonitorAt ? (new DateTimeImmutable('@' . $secondNextMonitorAt))->setTimezone($secondTimezone)->format('d M, H:i') : 'Waiting for cron' ?></strong></div>
+        <div><span>Active alert rules</span><strong><?= $secondEnabledRuleCount ?></strong></div>
+    </div>
+    <?php if ($secondMonitorError): ?><p class="monitor-warning"><?= htmlspecialchars($secondMonitorError, ENT_QUOTES) ?></p><?php endif; ?>
+    <?php endif; ?>
 </section>
 
 <section class="admin-hero card weather-alerts-link">
@@ -120,7 +153,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="eyebrow">WEATHER ALERTS</p>
         <h2>Alerts</h2>
         <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
-        <a class="secondary button-link" href="alerts.php">Manage Alerts</a>
+        <a class="secondary button-link" href="alerts.php?location=1">Manage Location 1 Alerts</a>
+        <?php if ($secondLocationEnabled): ?><a class="secondary button-link" href="alerts.php?location=2">Manage <?= h($secondLocationName) ?> Alerts</a><?php endif; ?>
     </div>
     
 </section>

@@ -337,6 +337,86 @@ SQL);
         $version = 11;
     }
 
+    if ($version === 11) {
+        // Location 1 is the legacy/default dataset. Adding location_id with a
+        // default of 1 preserves every existing reading and alert rule.
+        $integerType = $driver === 'mysql' ? 'INT NOT NULL DEFAULT 1' : 'INTEGER NOT NULL DEFAULT 1';
+        gaugeIqEnsureColumn($db, 'gaugeiq_pressure_readings', 'location_id', $integerType);
+        gaugeIqEnsureColumn($db, 'gaugeiq_alert_rules', 'location_id', $integerType);
+
+        if ($driver === 'mysql') {
+            gaugeIqEnsureColumn($db, 'gaugeiq_rain_forecasts', 'location_id', $integerType);
+            $indexExists = static function (string $table, string $index) use ($db): bool {
+                $stmt = $db->prepare(
+                    'SELECT 1 FROM information_schema.statistics
+                     WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ? LIMIT 1'
+                );
+                $stmt->execute([$table, $index]);
+                return $stmt->fetchColumn() !== false;
+            };
+            if ($indexExists('gaugeiq_rain_forecasts', 'uq_gaugeiq_rain_forecast_time')) {
+                $db->exec('ALTER TABLE gaugeiq_rain_forecasts DROP INDEX uq_gaugeiq_rain_forecast_time');
+            }
+            if (!$indexExists('gaugeiq_rain_forecasts', 'uq_gaugeiq_rain_location_time')) {
+                $db->exec('ALTER TABLE gaugeiq_rain_forecasts ADD UNIQUE KEY uq_gaugeiq_rain_location_time (location_id, forecast_at)');
+            }
+            if (!$indexExists('gaugeiq_pressure_readings', 'idx_gaugeiq_pressure_location_observed')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings (location_id, observed_at)');
+            }
+            if (!$indexExists('gaugeiq_alert_rules', 'idx_gaugeiq_alert_rules_location')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules (location_id, enabled)');
+            }
+            if (!$indexExists('gaugeiq_rain_forecasts', 'idx_gaugeiq_rain_location_time')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts (location_id, forecast_at)');
+            }
+        } else {
+            // SQLite cannot drop the table-level UNIQUE(forecast_at) constraint.
+            // Rebuild this small forecast table so the same forecast hour can
+            // safely exist once for each location. The old rows remain Location 1.
+            $db->beginTransaction();
+            try {
+                $db->exec('DROP TABLE IF EXISTS gaugeiq_rain_forecasts_location_migration');
+                $db->exec(<<<'SQL'
+CREATE TABLE gaugeiq_rain_forecasts_location_migration (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    location_id INTEGER NOT NULL DEFAULT 1,
+    forecast_at TEXT NOT NULL,
+    precipitation_probability_percent REAL NOT NULL,
+    precipitation_mm REAL NULL,
+    rain_mm REAL NULL,
+    temperature_c REAL NULL,
+    source TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE (location_id, forecast_at)
+);
+SQL);
+                $db->exec(
+                    'INSERT INTO gaugeiq_rain_forecasts_location_migration
+                     (id, location_id, forecast_at, precipitation_probability_percent,
+                      precipitation_mm, rain_mm, temperature_c, source, created_at)
+                     SELECT id, 1, forecast_at, precipitation_probability_percent,
+                            precipitation_mm, rain_mm, temperature_c, source, created_at
+                     FROM gaugeiq_rain_forecasts'
+                );
+                $db->exec('DROP TABLE gaugeiq_rain_forecasts');
+                $db->exec('ALTER TABLE gaugeiq_rain_forecasts_location_migration RENAME TO gaugeiq_rain_forecasts');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_rain_forecast_source ON gaugeiq_rain_forecasts(source)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts(location_id, forecast_at)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings(location_id, observed_at)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules(location_id, enabled)');
+                $db->commit();
+            } catch (Throwable $e) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
+                throw $e;
+            }
+        }
+
+        $db->exec("UPDATE gaugeiq_schema SET version = 12");
+        $version = 12;
+    }
+
     // The old display called this a change-score threshold, while the card now
     // shows the inverse Weather Stability score. Convert the saved threshold
     // once so it continues to represent the same alert point after inversion.

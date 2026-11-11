@@ -13,8 +13,14 @@ final class WeatherMapRainfallNowcastService
     private const SEARCH_RADIUS_KM = 100.0;
     private const WET_THRESHOLD_MM = 0.1;
 
-    public function __construct(private readonly PDO $pdo, private readonly array $config)
-    {
+    public function __construct(
+        private readonly PDO $pdo,
+        private readonly array $config,
+        private readonly int $locationId = 1
+    ) {
+        if (!in_array($this->locationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Unsupported GaugeIQ location.');
+        }
         if (!function_exists('curl_init')) {
             throw new RuntimeException('PHP cURL is required for the ECMWF rainfall outlook.');
         }
@@ -22,7 +28,7 @@ final class WeatherMapRainfallNowcastService
 
     public function refreshIfDue(int $intervalSeconds = 1800, bool $force = false, ?array $locationOverride = null, bool $persist = true): array
     {
-        $last = $this->setting('weather_map_rainfall_nowcast_updated_at');
+        $last = $this->setting($this->locationSettingKey('weather_map_rainfall_nowcast_updated_at'));
         $lastTimestamp = $last !== '' ? strtotime($last) : false;
         if (!$force && $lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds) {
             return ['skipped' => true, 'message' => 'ECMWF rainfall outlook is still current.'];
@@ -205,7 +211,7 @@ final class WeatherMapRainfallNowcastService
 
         if ($firstRain !== null) {
             $localTime = (new DateTimeImmutable($firstRain['time']))->setTimezone(
-                new DateTimeZone((string)($this->config['app']['timezone'] ?? 'UTC'))
+                $this->locationTimezone()
             )->format('H:i');
             if ($status === 'rain_near_location') {
                 $summary = sprintf(
@@ -262,16 +268,53 @@ final class WeatherMapRainfallNowcastService
             'note' => 'Model forecast derived from decoded ECMWF precipitation grid values; not live radar.',
         ];
         if ($persist) {
-            $this->saveSetting('weather_map_rainfall_nowcast', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
-            $this->saveSetting('weather_map_rainfall_nowcast_updated_at', gmdate('c'));
-            $this->saveSetting('weather_map_rainfall_nowcast_error', '');
+            $this->saveSetting($this->locationSettingKey('weather_map_rainfall_nowcast'), json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->saveSetting($this->locationSettingKey('weather_map_rainfall_nowcast_updated_at'), gmdate('c'));
+            $this->saveSetting($this->locationSettingKey('weather_map_rainfall_nowcast_error'), '');
         }
 
         return ['skipped' => false, 'payload' => $payload, 'message' => $summary];
     }
 
+    private function locationSettingKey(string $key): string
+    {
+        return $this->locationId === 2 ? $key . '_location_2' : $key;
+    }
+
+    private function locationTimezone(): DateTimeZone
+    {
+        $key = $this->locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+        $fallback = (string)($this->config['app']['timezone'] ?? 'UTC');
+        $stmt = $this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $stmt->execute([$key]);
+        $stored = $stmt->fetchColumn();
+        $timezone = is_string($stored) && $stored !== '' ? $stored : $fallback;
+        try {
+            return new DateTimeZone($timezone);
+        } catch (Throwable) {
+            return new DateTimeZone($fallback);
+        }
+    }
+
     private function locationCoordinates(): array
     {
+        if ($this->locationId === 2) {
+            $stmt = $this->pdo->prepare(
+                "SELECT `key`, `value` FROM gaugeiq_settings
+                 WHERE `key` IN ('second_location_latitude', 'second_location_longitude')"
+            );
+            $stmt->execute();
+            $settings = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $settings[(string)$row['key']] = trim((string)$row['value']);
+            }
+            if (($settings['second_location_latitude'] ?? '') === '' ||
+                ($settings['second_location_longitude'] ?? '') === '') {
+                throw new RuntimeException('Location 2 is enabled but its coordinates are incomplete.');
+            }
+            return [$settings['second_location_latitude'], $settings['second_location_longitude']];
+        }
+
         $stmt = $this->pdo->prepare(
             "SELECT `key`, `value` FROM gaugeiq_settings
              WHERE `key` IN ('active_location_latitude', 'active_location_longitude',

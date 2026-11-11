@@ -3,12 +3,36 @@ declare(strict_types=1);
 
 final class PressureService
 {
-    public function __construct(private array $config, private PDO $db)
-    {
+    public function __construct(
+        private array $config,
+        private PDO $db,
+        private int $locationId = 1
+    ) {
+        if (!in_array($this->locationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Unsupported GaugeIQ location.');
+        }
     }
 
     private function locationCoordinates(): array
     {
+        if ($this->locationId === 2) {
+            $stmt = $this->db->prepare(
+                "SELECT `key`, `value` FROM gaugeiq_settings
+                 WHERE `key` IN ('second_location_latitude', 'second_location_longitude')"
+            );
+            $stmt->execute();
+            $settings = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $setting) {
+                $settings[(string)$setting['key']] = trim((string)$setting['value']);
+            }
+            $latitude = $settings['second_location_latitude'] ?? '';
+            $longitude = $settings['second_location_longitude'] ?? '';
+            if ($latitude === '' || $longitude === '') {
+                throw new RuntimeException('Location 2 is enabled but its coordinates are incomplete.');
+            }
+            return [$latitude, $longitude];
+        }
+
         $settings = [];
         $stmt = $this->db->prepare(
             "SELECT `key`, `value` FROM gaugeiq_settings
@@ -183,6 +207,7 @@ final class PressureService
             'weather_code' => (int)$current['weather_code'],
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
+            'timezone' => (string)($data['timezone'] ?? 'UTC'),
             'observed_at' => (string)($current['time'] ?? gmdate('c')),
             'forecast' => $forecast,
         ];
@@ -193,17 +218,12 @@ final class PressureService
      * temporary fallback when live monitoring has too few recent readings.
      * These rows are deliberately kept under their own source label.
      */
-    public function refreshRecentBackfill(int $pastHours = 24): int
+    public function refreshRecentBackfill(int $pastHours = 24, ?string $locationTimezone = null): int
     {
         $pastHours = max(6, min(24, $pastHours));
         [$latitude, $longitude] = $this->locationCoordinates();
 
-        $timezoneName = (string)($this->config['app']['timezone'] ?? 'UTC');
-        try {
-            $timezone = new DateTimeZone($timezoneName);
-        } catch (Throwable) {
-            $timezone = new DateTimeZone('UTC');
-        }
+        $requestedTimezone = $locationTimezone ?: 'auto';
 
         $url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query([
             'latitude' => $latitude,
@@ -215,7 +235,7 @@ final class PressureService
             'temperature_unit' => 'celsius',
             'wind_speed_unit' => 'kmh',
             'precipitation_unit' => 'mm',
-            'timezone' => $timezone->getName(),
+            'timezone' => $requestedTimezone,
         ]);
 
         if (!function_exists('curl_init')) {
@@ -251,6 +271,14 @@ final class PressureService
         }
 
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        $timezoneName = $requestedTimezone === 'auto'
+            ? (string)($data['timezone'] ?? ($this->config['app']['timezone'] ?? 'UTC'))
+            : $requestedTimezone;
+        try {
+            $timezone = new DateTimeZone($timezoneName);
+        } catch (Throwable) {
+            $timezone = new DateTimeZone('UTC');
+        }
         $hourly = $data['hourly'] ?? null;
         $times = is_array($hourly) ? ($hourly['time'] ?? []) : [];
         if (!is_array($hourly) || !is_array($times) || $times === []) {
@@ -267,7 +295,7 @@ final class PressureService
         };
 
         $findExisting = $this->db->prepare(
-            'SELECT id FROM gaugeiq_pressure_readings WHERE observed_at = ? AND source = ? LIMIT 1'
+            'SELECT id FROM gaugeiq_pressure_readings WHERE location_id = ? AND observed_at = ? AND source = ? LIMIT 1'
         );
         $update = $this->db->prepare(
             'UPDATE gaugeiq_pressure_readings
@@ -275,14 +303,14 @@ final class PressureService
                  humidity_percent = ?, wind_speed_kmh = ?, wind_direction_degrees = ?,
                  rainfall_mm = ?, cloud_cover_percent = ?, weather_code = ?, forecast_json = NULL,
                  created_at = ?
-             WHERE id = ?'
+             WHERE id = ? AND location_id = ?'
         );
         $insert = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
-             (temperature_c, feels_like_c, dew_point_c, pressure_hpa, humidity_percent,
+             (location_id, temperature_c, feels_like_c, dew_point_c, pressure_hpa, humidity_percent,
               wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent,
               weather_code, forecast_json, observed_at, created_at, source)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)'
         );
 
         $written = 0;
@@ -324,12 +352,12 @@ final class PressureService
                     $weatherCode === null ? null : (int)$weatherCode,
                 ];
 
-                $findExisting->execute([$observedAt, $source]);
+                $findExisting->execute([$this->locationId, $observedAt, $source]);
                 $existingId = $findExisting->fetchColumn();
                 if ($existingId !== false) {
-                    $update->execute([...$values, $createdAt, (int)$existingId]);
+                    $update->execute([...$values, $createdAt, (int)$existingId, $this->locationId]);
                 } else {
-                    $insert->execute([...$values, $observedAt, $createdAt, $source]);
+                    $insert->execute([$this->locationId, ...$values, $observedAt, $createdAt, $source]);
                 }
                 $written++;
             }
@@ -342,9 +370,9 @@ final class PressureService
             // not a second long-term historical archive.
             $pruneBefore = $now->modify('-30 hours')->format('Y-m-d\\TH:i:s');
             $prune = $this->db->prepare(
-                'DELETE FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at < ?'
+                'DELETE FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at < ?'
             );
-            $prune->execute([$source, $pruneBefore]);
+            $prune->execute([$this->locationId, $source, $pruneBefore]);
 
             $this->db->commit();
         } catch (Throwable $e) {
@@ -402,38 +430,40 @@ final class PressureService
 
     public function record(array $current): ?array
     {
+        $changedAtKey = $this->locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
         $changedAtQuery = $this->db->prepare(
-            "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
+            "SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1"
         );
-        $changedAtQuery->execute();
+        $changedAtQuery->execute([$changedAtKey]);
         $changedAt = $changedAtQuery->fetchColumn();
         if (is_string($changedAt) && $changedAt !== '') {
             $previousQuery = $this->db->prepare(
                 "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
                  FROM gaugeiq_pressure_readings
-                 WHERE created_at >= ? AND observed_at < ?
+                 WHERE location_id = ? AND created_at >= ? AND observed_at < ?
                    AND (source IS NULL OR source = 'Open-Meteo')
                  ORDER BY observed_at DESC, id DESC LIMIT 1"
             );
-            $previousQuery->execute([$changedAt, (string)$current['observed_at']]);
+            $previousQuery->execute([$this->locationId, $changedAt, (string)$current['observed_at']]);
             $previous = $previousQuery->fetch();
         } else {
             $previousQuery = $this->db->prepare(
                 "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
                  FROM gaugeiq_pressure_readings
-                 WHERE observed_at < ? AND (source IS NULL OR source = 'Open-Meteo')
+                 WHERE location_id = ? AND observed_at < ? AND (source IS NULL OR source = 'Open-Meteo')
                  ORDER BY observed_at DESC, id DESC LIMIT 1"
             );
-            $previousQuery->execute([(string)$current['observed_at']]);
+            $previousQuery->execute([$this->locationId, (string)$current['observed_at']]);
             $previous = $previousQuery->fetch();
         }
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_pressure_readings
-             (temperature_c, feels_like_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, forecast_json, observed_at, created_at, source)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+             (location_id, temperature_c, feels_like_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, forecast_json, observed_at, created_at, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
+            $this->locationId,
             $current['temperature_c'],
             $current['feels_like_c'] ?? null,
             $current['dew_point_c'],

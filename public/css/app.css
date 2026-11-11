@@ -7256,3 +7256,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){.rainfall-radar-sweep{animation:none}}
 :root[data-theme="light"] .rainfall-radar-card{color:#eaf5ff;background:linear-gradient(145deg,#0b1b29 0%,#07131e 100%)!important;border:1px solid rgba(91,153,178,.3)!important}
+
+
+/* Compact selector for switching between independently monitored locations. */
+.location-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 16px;
+}
+.location-switcher .active {
+    font-weight: 700;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}

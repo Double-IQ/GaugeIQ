@@ -7,22 +7,36 @@ if (!is_file($configPath)) {
 }
 $config = require $configPath;
 require dirname(__DIR__, 2) . '/app/Database.php';
+$locationId = (int)($_GET['location'] ?? 1);
+if (!in_array($locationId, [1, 2], true)) $locationId = 1;
 $selectedLatitude = (float)($config['pressure']['latitude'] ?? 0);
 $selectedLongitude = (float)($config['pressure']['longitude'] ?? 0);
 try {
     $database = new Database($config);
     $coordinateQuery = $database->pdo()->prepare(
-        "SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'location_latitude', 'location_longitude')"
+        "SELECT `key`, `value` FROM gaugeiq_settings
+         WHERE `key` IN (
+             'active_location_latitude', 'active_location_longitude',
+             'location_latitude', 'location_longitude',
+             'second_location_enabled', 'second_location_latitude', 'second_location_longitude'
+         )"
     );
     $coordinateQuery->execute();
     $coordinates = [];
     foreach ($coordinateQuery->fetchAll() as $coordinate) {
-        $coordinates[(string)$coordinate['key']] = (float)$coordinate['value'];
+        $coordinates[(string)$coordinate['key']] = (string)$coordinate['value'];
     }
-    $selectedLatitude = $coordinates['active_location_latitude'] ?? $coordinates['location_latitude'] ?? $selectedLatitude;
-    $selectedLongitude = $coordinates['active_location_longitude'] ?? $coordinates['location_longitude'] ?? $selectedLongitude;
+    if ($locationId === 2 && ($coordinates['second_location_enabled'] ?? '0') === '1') {
+        $selectedLatitude = (float)($coordinates['second_location_latitude'] ?? $selectedLatitude);
+        $selectedLongitude = (float)($coordinates['second_location_longitude'] ?? $selectedLongitude);
+    } else {
+        $locationId = 1;
+        $selectedLatitude = (float)($coordinates['active_location_latitude'] ?? $coordinates['location_latitude'] ?? $selectedLatitude);
+        $selectedLongitude = (float)($coordinates['active_location_longitude'] ?? $coordinates['location_longitude'] ?? $selectedLongitude);
+    }
 } catch (Throwable $error) {
-    // Fall back to the installation's configured location.
+    // Fall back to the installation's configured primary location.
+    $locationId = 1;
 }
 ?>
 <!doctype html>
@@ -91,7 +105,7 @@ try {
             <h1>Weather Map Appearance</h1>
             <div class="subtitle">Adjust the weather overlay colours and transparency.</div>
         </div>
-        <a class="back" href="./">Back to map</a>
+        <a class="back" href="../index.php?location=<?= $locationId ?>">Back to map</a>
     </header>
 
     <section class="panel" aria-labelledby="basemap-heading">
@@ -194,6 +208,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
 
 (() => {
     const KEY = 'gaugeiqWeatherMapAppearance';
+    const LOCATION_ID = <?= json_encode($locationId) ?>;
     const selectedLocation = {
         latitude: <?= json_encode($selectedLatitude) ?>,
         longitude: <?= json_encode($selectedLongitude) ?>
@@ -459,6 +474,20 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     try {
         const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
         if (saved && typeof saved === 'object') settings = { ...defaults, ...saved };
+        settings.weatherRegionBoundsByLocation = settings.weatherRegionBoundsByLocation &&
+            typeof settings.weatherRegionBoundsByLocation === 'object'
+            ? { ...settings.weatherRegionBoundsByLocation } : {};
+        // Migrate the former single rectangle to Location 1 without losing it
+        // when Location 2 is edited on this device.
+        if (!validBounds(settings.weatherRegionBoundsByLocation['1']) && validBounds(settings.weatherRegionBounds)) {
+            settings.weatherRegionBoundsByLocation['1'] = [...settings.weatherRegionBounds];
+        }
+        const savedLocationBounds = settings.weatherRegionBoundsByLocation[String(LOCATION_ID)];
+        if (validBounds(savedLocationBounds)) {
+            settings.weatherRegionBounds = [...savedLocationBounds];
+        } else if (LOCATION_ID === 2 || !validBounds(settings.weatherRegionBounds)) {
+            settings.weatherRegionBounds = makeDefaultBounds();
+        }
         settings.precipitationOpacity = Math.max(0, Math.min(100, Number(settings.precipitationOpacity ?? 100)));
         settings.cloudOpacity = Math.max(0, Math.min(100, Number(settings.cloudOpacity ?? 100)));
         const savedPrecipitationColors = Array.isArray(settings.precipitationColors) ? settings.precipitationColors : defaults.precipitationColors;
@@ -599,7 +628,12 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
 
     document.getElementById('save').addEventListener('click', () => {
         try {
-            settings.weatherRegionBounds = [...regionBounds];
+            settings.weatherRegionBoundsByLocation = {
+                ...(settings.weatherRegionBoundsByLocation && typeof settings.weatherRegionBoundsByLocation === 'object'
+                    ? settings.weatherRegionBoundsByLocation : {}),
+                [String(LOCATION_ID)]: [...regionBounds]
+            };
+            if (LOCATION_ID === 1) settings.weatherRegionBounds = [...regionBounds];
             localStorage.setItem(KEY, JSON.stringify(settings));
             document.getElementById('status').textContent = 'Appearance saved.';
         } catch (error) {
@@ -608,8 +642,12 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     });
 
     document.getElementById('reset').addEventListener('click', () => {
+        const existingLocationBounds = settings.weatherRegionBoundsByLocation && typeof settings.weatherRegionBoundsByLocation === 'object'
+            ? settings.weatherRegionBoundsByLocation : {};
         settings = JSON.parse(JSON.stringify(defaults));
+        settings.weatherRegionBoundsByLocation = { ...existingLocationBounds };
         settings.weatherRegionBounds = makeDefaultBounds();
+        settings.weatherRegionBoundsByLocation[String(LOCATION_ID)] = [...settings.weatherRegionBounds];
         showRegionBounds(settings.weatherRegionBounds);
         render();
         document.getElementById('status').textContent = 'Defaults restored. Save to keep them.';

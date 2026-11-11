@@ -25,9 +25,13 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
     $stmt->execute([$key, $value]);
 }
 $locationName = gaugeSetting($pdo, 'location_name', (string)$config['pressure']['location_name']) ?? '';
+$secondLocationName = gaugeSetting($pdo, 'second_location_name', '') ?? '';
+$secondLocationLatitude = gaugeSetting($pdo, 'second_location_latitude', '') ?? '';
+$secondLocationLongitude = gaugeSetting($pdo, 'second_location_longitude', '') ?? '';
+$secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
-$notice = isset($_GET['saved']) ? 'Current location saved.' : '';
+$notice = isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : '');
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
@@ -44,10 +48,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $longitude = (float)$longitudeInput;
             if ($latitude < -90 || $latitude > 90) throw new InvalidArgumentException('Latitude must be between -90 and 90.');
             if ($longitude < -180 || $longitude > 180) throw new InvalidArgumentException('Longitude must be between -180 and 180.');
-            saveGaugeSetting($pdo, 'location_name', $name);
-            saveGaugeSetting($pdo, 'location_latitude', number_format($latitude, 6, '.', ''));
-            saveGaugeSetting($pdo, 'location_longitude', number_format($longitude, 6, '.', ''));
-            header('Location: location-history.php?saved=1');
+            if ((string)($_POST['action'] ?? '') === 'save_second_location') {
+                $newLatitude = number_format($latitude, 6, '.', '');
+                $newLongitude = number_format($longitude, 6, '.', '');
+                $secondCoordinatesChanged = $secondLocationLatitude !== '' && $secondLocationLongitude !== ''
+                    && (abs((float)$secondLocationLatitude - $latitude) > 0.000001
+                        || abs((float)$secondLocationLongitude - $longitude) > 0.000001);
+                if ($secondCoordinatesChanged) {
+                    saveGaugeSetting($pdo, 'second_location_changed_at', gmdate('c'));
+                    foreach ([
+                        'location_timezone_location_2',
+                        'recent_backfill_last_success_at_location_2',
+                        'monitor_last_success_at_location_2',
+                        'monitor_last_error_location_2',
+                        'daily_forecast_alert_last_evaluated_date_location_2',
+                        'daily_forecast_alert_last_status_location_2',
+                        'daily_forecast_alert_last_error_location_2',
+                        'recent_backfill_last_error_location_2',
+                        'weather_map_rainfall_nowcast_error_location_2',
+                        'ecmwf_rainfall_alert_last_status_location_2',
+                        'ecmwf_rainfall_alert_last_error_location_2',
+                        'weather_map_rainfall_nowcast_location_2',
+                        'weather_map_rainfall_nowcast_updated_at_location_2',
+                        'ecmwf_rainfall_alert_last_sent_at_location_2',
+                    ] as $resetKey) {
+                        saveGaugeSetting($pdo, $resetKey, '');
+                    }
+                    $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 2')->execute();
+                }
+                saveGaugeSetting($pdo, 'second_location_name', $name);
+                saveGaugeSetting($pdo, 'second_location_latitude', $newLatitude);
+                saveGaugeSetting($pdo, 'second_location_longitude', $newLongitude);
+                saveGaugeSetting($pdo, 'second_location_enabled', '1');
+                header('Location: location-history.php?second_saved=1');
+            } else {
+                $newLatitude = number_format($latitude, 6, '.', '');
+                $newLongitude = number_format($longitude, 6, '.', '');
+                $primaryCoordinatesChanged = $locationLatitude !== '' && $locationLongitude !== ''
+                    && (abs((float)$locationLatitude - $latitude) > 0.000001
+                        || abs((float)$locationLongitude - $longitude) > 0.000001);
+                if ($primaryCoordinatesChanged) {
+                    saveGaugeSetting($pdo, 'active_location_changed_at', gmdate('c'));
+                    foreach ([
+                        'location_timezone',
+                        'recent_backfill_last_success_at',
+                        'monitor_last_success_at',
+                        'monitor_last_error',
+                        'daily_forecast_alert_last_evaluated_date',
+                        'daily_forecast_alert_last_status',
+                        'daily_forecast_alert_last_error',
+                        'recent_backfill_last_error',
+                        'weather_map_rainfall_nowcast_error',
+                        'ecmwf_rainfall_alert_last_status',
+                        'ecmwf_rainfall_alert_last_error',
+                        'weather_map_rainfall_nowcast',
+                        'weather_map_rainfall_nowcast_updated_at',
+                        'ecmwf_rainfall_alert_last_sent_at',
+                    ] as $resetKey) {
+                        saveGaugeSetting($pdo, $resetKey, '');
+                    }
+                    $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 1')->execute();
+                }
+                saveGaugeSetting($pdo, 'location_name', $name);
+                saveGaugeSetting($pdo, 'location_latitude', $newLatitude);
+                saveGaugeSetting($pdo, 'location_longitude', $newLongitude);
+                header('Location: location-history.php?saved=1');
+            }
             exit;
         } catch (Throwable $e) {
             $errors[] = $e->getMessage();
@@ -57,11 +123,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $locationLatitude = trim((string)($_POST['location_latitude'] ?? $locationLatitude));
     $locationLongitude = trim((string)($_POST['location_longitude'] ?? $locationLongitude));
 }
-$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+$historyTimezoneName = gaugeSetting($pdo, 'location_timezone', '') ?? '';
+if ($historyTimezoneName === '') $historyTimezoneName = (string)($config['app']['timezone'] ?? 'UTC');
+try { $historyTimezone = new DateTimeZone($historyTimezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 $historicalStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
-$weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
+$primaryChangedAt = gaugeSetting($pdo, 'active_location_changed_at', '') ?? '';
+$historyCountSql = "SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = 1 AND source = ? AND observed_at >= ? AND observed_at <= ?";
+$historyCountParams = ['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59'];
+if ($primaryChangedAt !== '') {
+    $historyCountSql .= ' AND created_at >= ?';
+    $historyCountParams[] = $primaryChangedAt;
+}
+$weatherHistoryCountStmt = $pdo->prepare($historyCountSql);
+$weatherHistoryCountStmt->execute($historyCountParams);
 $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 ?>
 <!doctype html>
@@ -74,7 +149,7 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 </head><body>
 <main class="shell admin-shell">
 <header class="admin-header">
-<div><p class="eyebrow">GAUGЕIQ ADMIN</p><h1>Location &amp; historical data</h1><p class="muted">Configure the location used by GaugeIQ and check the imported historical datasets.</p></div>
+<div><p class="eyebrow">GAUGЕIQ ADMIN</p><h1>Location &amp; historical data</h1><p class="muted">Configure GaugeIQ's monitored locations and check historical weather data.</p></div>
 <a class="secondary button-link" href="admin.php">Back to Admin</a>
 </header>
 <?php if ($notice): ?><div class="notice" role="status"><?= h($notice) ?></div><?php endif; ?>
@@ -111,6 +186,21 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
     </form>
 </section>
 
+<section class="card location-card" aria-labelledby="secondLocationTitle">
+    <div class="section-heading"><div><h2 id="secondLocationTitle">Second monitoring location</h2><p class="muted">Add another place without replacing your current location. Each location keeps separate readings, history, rainfall outlooks and alert rules. Push notifications identify which location triggered them.</p></div></div>
+    <form method="post" class="location-form">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="save_second_location">
+        <div class="location-grid">
+            <div class="full"><label for="second_location_name">Location name</label><input id="second_location_name" name="location_name" type="text" maxlength="120" value="<?= h($secondLocationName) ?>" placeholder="Holiday home" required></div>
+            <div><label for="second_location_latitude">Latitude</label><input id="second_location_latitude" name="location_latitude" type="number" min="-90" max="90" step="0.000001" value="<?= h($secondLocationLatitude) ?>" required></div>
+            <div><label for="second_location_longitude">Longitude</label><input id="second_location_longitude" name="location_longitude" type="number" min="-180" max="180" step="0.000001" value="<?= h($secondLocationLongitude) ?>" required></div>
+        </div>
+        <div class="location-actions"><button type="button" class="secondary" id="useSecondDeviceLocation">Use device location</button><button type="submit">Save second location</button></div>
+        <p id="secondLocationHelp" class="alert-help muted"><?= $secondLocationEnabled ? 'Second location saved.' : 'No second location has been saved yet.' ?> Saving this location does not change your current location.</p>
+    </form>
+</section>
+
  <section class="card history-management-card" id="historicalDatasetStatus"
     data-weather-count="<?= $historicalWeatherCount ?>"
     aria-labelledby="openMeteoHistoryTitle">
@@ -128,26 +218,24 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
 <script>
-document.getElementById('useCurrentLocation')?.addEventListener('click', () => {
-    const help = document.getElementById('locationHelp');
-    if (!navigator.geolocation) {
-        if (help) help.textContent = 'This browser does not provide location services.';
-        return;
-    }
-    if (help) help.textContent = 'Requesting your device location…';
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            document.getElementById('location_latitude').value = position.coords.latitude.toFixed(6);
-            document.getElementById('location_longitude').value = position.coords.longitude.toFixed(6);
-            if (help) help.textContent = 'Device coordinates loaded. Enter the location name, then save.';
-        },
-        (error) => {
-            if (help) help.textContent = error.code === 1
-                ? 'Location access was denied. You can enter the coordinates manually.'
-                : 'Could not determine your device location. You can enter the coordinates manually.';
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    );
-});
+(() => {
+ const locate = (latId, lonId, helpId) => {
+  const lat=document.getElementById(latId), lon=document.getElementById(lonId), help=document.getElementById(helpId);
+  if(!lat||!lon||!help)return;
+  if(!navigator.geolocation){help.textContent='This browser does not support device location. Enter coordinates manually.';return;}
+  help.textContent='Requesting device coordinates… Please allow location access if prompted.';
+  navigator.geolocation.getCurrentPosition(position=>{
+   const a=position.coords.latitude,b=position.coords.longitude;
+   if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>90||Math.abs(b)>180){help.textContent='The device returned invalid coordinates. Enter them manually.';return;}
+   lat.value=a.toFixed(6);lon.value=b.toFixed(6);
+   help.textContent='Coordinates found (±'+Math.round(position.coords.accuracy)+' m accuracy). Check the location name, then save.';
+  },error=>{
+   const messages={1:'Location permission was denied. Allow location access for this site in browser settings, then try again.',2:'Your device could not determine its location. Check that Location Services are enabled, then try again.',3:'The location request timed out. Try again with a clearer GPS signal.'};
+   help.textContent=messages[error.code]||'Could not determine device location. Enter coordinates manually.';
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+ };
+ document.getElementById('useCurrentLocation')?.addEventListener('click',()=>locate('location_latitude','location_longitude','locationHelp'));
+ document.getElementById('useSecondDeviceLocation')?.addEventListener('click',()=>locate('second_location_latitude','second_location_longitude','secondLocationHelp'));
+})();
 </script>
 </body></html>

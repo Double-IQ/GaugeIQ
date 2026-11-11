@@ -14,8 +14,6 @@ date_default_timezone_set($config['app']['timezone']);
 $db = new Database($config);
 $pdo = $db->pdo();
 migrateDatabase($pdo);
-$service = new PressureService($config, $pdo);
-
 // Refresh the six rolling ECMWF map-frame references and prefetch their
 // regional data chunks hourly. Both operations are non-fatal to monitoring.
 try {
@@ -33,26 +31,31 @@ try {
 }
 
 require_once __DIR__ . '/../app/WeatherMapRainfallNowcastService.php';
-try {
-    $rainfallNowcast = new WeatherMapRainfallNowcastService($pdo, $config);
-    $nowcastResult = $rainfallNowcast->refreshIfDue(3600);
-    if (!$nowcastResult['skipped']) {
-        $nowcastPayload = $nowcastResult['payload'] ?? [];
-        $encoding = is_array($nowcastPayload['encoding'] ?? null) ? $nowcastPayload['encoding'] : [];
-        echo sprintf(
-            "ECMWF rainfall outlook: %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\n",
-            (string)$nowcastResult['message'],
-            count($nowcastPayload['frames'] ?? []),
-            (int)($nowcastPayload['grid_cells_sampled'] ?? 0),
-            (int)($encoding['data_type'] ?? -1),
-            (int)($encoding['compression_type'] ?? -1),
-            (string)($encoding['scale_factor'] ?? 'n/a'),
-            (string)($encoding['add_offset'] ?? 'n/a')
-        );
+$secondLocationEnabled = getGaugeIqSetting($pdo, 'second_location_enabled', '0') === '1';
+$monitorLocationIds = $secondLocationEnabled ? [1, 2] : [1];
+foreach ($monitorLocationIds as $nowcastLocationId) {
+    try {
+        $rainfallNowcast = new WeatherMapRainfallNowcastService($pdo, $config, $nowcastLocationId);
+        $nowcastResult = $rainfallNowcast->refreshIfDue(3600);
+        if (!$nowcastResult['skipped']) {
+            $nowcastPayload = $nowcastResult['payload'] ?? [];
+            $encoding = is_array($nowcastPayload['encoding'] ?? null) ? $nowcastPayload['encoding'] : [];
+            echo sprintf(
+                "ECMWF rainfall outlook (Location %d): %s [frames=%d, cells=%d, type=%d, compression=%d, scale=%s, offset=%s]\n",
+                $nowcastLocationId,
+                (string)$nowcastResult['message'],
+                count($nowcastPayload['frames'] ?? []),
+                (int)($nowcastPayload['grid_cells_sampled'] ?? 0),
+                (int)($encoding['data_type'] ?? -1),
+                (int)($encoding['compression_type'] ?? -1),
+                (string)($encoding['scale_factor'] ?? 'n/a'),
+                (string)($encoding['add_offset'] ?? 'n/a')
+            );
+        }
+    } catch (Throwable $nowcastError) {
+        error_log('GaugeIQ ECMWF rainfall outlook failed for Location ' . $nowcastLocationId . ': ' . $nowcastError->getMessage());
+        fwrite(STDERR, "ECMWF rainfall outlook unavailable for Location {$nowcastLocationId} (monitoring continues): " . $nowcastError->getMessage() . "\n");
     }
-} catch (Throwable $nowcastError) {
-    error_log('GaugeIQ ECMWF rainfall outlook failed: ' . $nowcastError->getMessage());
-    fwrite(STDERR, "ECMWF rainfall outlook unavailable (monitoring continues): " . $nowcastError->getMessage() . "\n");
 }
 function setGaugeIqStatus(PDO $pdo, string $key, string $value): void
 {
@@ -76,24 +79,30 @@ function getGaugeIqSetting(PDO $pdo, string $key, string $fallback = ''): string
     return $value === false ? $fallback : (string)$value;
 }
 
+function gaugeIqLocationSettingKey(string $key, int $locationId): string
+{
+    return $locationId === 2 ? $key . '_location_2' : $key;
+}
+
 /**
  * Evaluate the opt-in daily forecast notification once the user's local time is
  * reached. Uses the same current Open-Meteo forecast already fetched for the
  * regular monitor and never changes the ordinary alert rules.
  */
-function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): void
+function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int $locationId = 1): void
 {
-    if (getGaugeIqSetting($pdo, 'daily_forecast_alert_enabled', '0') !== '1') {
+    if (getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_enabled', $locationId), '0') !== '1') {
         return;
     }
 
-    $scheduledTime = getGaugeIqSetting($pdo, 'daily_forecast_alert_time', '07:00');
+    $scheduledTime = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_time', $locationId), '07:00');
     if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $scheduledTime)) {
         $scheduledTime = '07:00';
     }
 
     try {
-        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+        $timezoneName = (string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC');
+        $timezone = new DateTimeZone($timezoneName);
     } catch (Throwable) {
         $timezone = new DateTimeZone('UTC');
     }
@@ -104,25 +113,25 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
     if (!$scheduledDateTime || $now < $scheduledDateTime) {
         return;
     }
-    // Allow the next normal half-hour cron check to deliver the alert. If the
+    // Allow the next hourly cron check to deliver the alert. If the
     // chosen time was missed by more than an hour, skip the stale notification.
     $minutesLate = (int)floor(($now->getTimestamp() - $scheduledDateTime->getTimestamp()) / 60);
     if ($minutesLate > 59) {
         return;
     }
-    if (getGaugeIqSetting($pdo, 'daily_forecast_alert_last_evaluated_date') === $today) {
+    if (getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_evaluated_date', $locationId)) === $today) {
         return;
     }
 
     $selected = [
-        'rain' => getGaugeIqSetting($pdo, 'daily_forecast_alert_rain', '1') === '1',
-        'wind' => getGaugeIqSetting($pdo, 'daily_forecast_alert_wind', '1') === '1',
-        'severe' => getGaugeIqSetting($pdo, 'daily_forecast_alert_severe', '1') === '1',
+        'rain' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_rain', $locationId), '1') === '1',
+        'wind' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_wind', $locationId), '1') === '1',
+        'severe' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_severe', $locationId), '1') === '1',
     ];
-    $alwaysNotify = getGaugeIqSetting($pdo, 'daily_forecast_alert_always', '0') === '1';
+    $alwaysNotify = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_always', $locationId), '0') === '1';
     if (!in_array(true, $selected, true) && !$alwaysNotify) {
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No forecast conditions selected.');
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_evaluated_date', $locationId), $today);
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_status', $locationId), 'No forecast conditions selected.');
         return;
     }
 
@@ -141,7 +150,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         }
     }
     if ($forecast === null) {
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', 'No forecast values were available for the current local date.');
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_error', $locationId), 'No forecast values were available for the current local date.');
         error_log('GaugeIQ daily forecast alert skipped: no forecast values for ' . $today . '.');
         return;
     }
@@ -206,15 +215,13 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
         $matches[] = 'Severe weather risk (heavy precipitation, violent showers, heavy snow or thunderstorms)';
     }
 
-    $locationName = getGaugeIqSetting(
-        $pdo,
-        'location_name',
-        (string)($config['pressure']['location_name'] ?? 'your location')
-    );
+    $locationName = $locationId === 2
+        ? getGaugeIqSetting($pdo, 'second_location_name', 'Location 2')
+        : getGaugeIqSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'your location'));
     if ($matches === [] && !$alwaysNotify) {
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', 'No selected conditions met for ' . $today . '.');
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_evaluated_date', $locationId), $today);
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_status', $locationId), 'No selected conditions met for ' . $today . '.');
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_error', $locationId), '');
         printf("Daily forecast alert: no selected conditions met for %s.\n", $today);
         return;
     }
@@ -228,7 +235,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
 
     try {
         $push = new PushService($config, $pdo);
-        $forecastUrl = rtrim((string)$config['app']['base_url'], '/') . '/forecast.php?from=daily-alert&date=' . rawurlencode($today);
+        $forecastUrl = rtrim((string)$config['app']['base_url'], '/') . '/forecast.php?from=daily-alert&date=' . rawurlencode($today) . '&location=' . $locationId;
         $result = $push->sendDetailed('GaugeIQ daily forecast', $message, $forecastUrl);
         $sent = (int)($result['sent'] ?? 0);
         $subscriptions = (int)($result['subscriptions'] ?? 0);
@@ -240,27 +247,27 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current): vo
 
         // Mark the date once the scheduled evaluation/push attempt is complete.
         // This prevents the existing half-hour cron from generating duplicates.
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_evaluated_date', $today);
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_status', $status);
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', '');
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_evaluated_date', $locationId), $today);
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_status', $locationId), $status);
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_error', $locationId), '');
         printf("Daily forecast alert: %s\n", $status);
     } catch (Throwable $e) {
-        setGaugeIqStatus($pdo, 'daily_forecast_alert_last_error', $e->getMessage());
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_error', $locationId), $e->getMessage());
         error_log('GaugeIQ daily forecast alert failed: ' . $e->getMessage());
         // Leave the date unevaluated so the next scheduled cron may retry.
     }
 }
 
-function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config): void
+function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config, int $locationId = 1): void
 {
-    if (getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_enabled', '0') !== '1') {
+    if (getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_enabled', $locationId), '0') !== '1') {
         return;
     }
 
-    $radiusKm = (int)getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_radius_km', '50');
+    $radiusKm = (int)getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_radius_km', $locationId), '50');
     if (!in_array($radiusKm, [15, 50, 100], true)) $radiusKm = 50;
 
-    $json = getGaugeIqSetting($pdo, 'weather_map_rainfall_nowcast', '');
+    $json = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('weather_map_rainfall_nowcast', $locationId), '');
     $payload = is_string($json) && $json !== '' ? json_decode($json, true) : null;
     if (!is_array($payload)) return;
 
@@ -280,19 +287,18 @@ function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config): void
 
     usort($candidates, static fn(array $a, array $b): int => $a['time'] <=> $b['time']);
     $target = $candidates[0];
-    $lastSent = strtotime(getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at', ''));
+    $lastSent = strtotime(getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_sent_at', $locationId), ''));
     if ($lastSent !== false && $lastSent >= time() - 3 * 3600) return;
 
     try {
-        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+        $timezoneName = getGaugeIqSetting($pdo, 'location_timezone' . ($locationId === 2 ? '_location_2' : ''), (string)($config['app']['timezone'] ?? 'UTC'));
+        $timezone = new DateTimeZone($timezoneName);
     } catch (Throwable) {
         $timezone = new DateTimeZone('UTC');
     }
-    $locationName = getGaugeIqSetting(
-        $pdo,
-        'location_name',
-        (string)($config['pressure']['location_name'] ?? 'your location')
-    );
+    $locationName = $locationId === 2
+        ? getGaugeIqSetting($pdo, 'second_location_name', 'Location 2')
+        : getGaugeIqSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'your location'));
     $forecastTime = (new DateTimeImmutable('@' . $target['time']))->setTimezone($timezone)->format('H:i');
     $message = sprintf(
         'ECMWF IFS forecasts rain within %d km of %s around %s. The nearest forecast rain is approximately %.0f km away. This is model guidance, not live radar.',
@@ -307,172 +313,162 @@ function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config): void
         $result = $push->sendDetailed(
             'GaugeIQ rainfall outlook',
             $message,
-            rtrim((string)$config['app']['base_url'], '/') . '/'
+            rtrim((string)$config['app']['base_url'], '/') . '/?location=' . $locationId
         );
         $sent = (int)($result['sent'] ?? 0);
         $subscriptions = (int)($result['subscriptions'] ?? 0);
         if ($sent > 0) {
-            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_sent_at', gmdate('c'));
-            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_status', 'Sent to ' . $sent . ' device(s): rain forecast within ' . $radiusKm . ' km around ' . $forecastTime . '.');
-            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_error', '');
+            setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_sent_at', $locationId), gmdate('c'));
+            setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_status', $locationId), 'Sent to ' . $sent . ' device(s): rain forecast within ' . $radiusKm . ' km around ' . $forecastTime . '.');
+            setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_error', $locationId), '');
             printf("ECMWF rainfall alert: sent to %d device(s).\n", $sent);
         } else {
             $status = $subscriptions === 0
                 ? 'Rainfall condition matched, but no devices are subscribed.'
                 : 'Rainfall condition matched, but push delivery failed.';
-            setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_status', $status);
+            setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_status', $locationId), $status);
             printf("ECMWF rainfall alert: %s\n", $status);
         }
     } catch (Throwable $error) {
-        setGaugeIqStatus($pdo, 'ecmwf_rainfall_alert_last_error', $error->getMessage());
+        setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_last_error', $locationId), $error->getMessage());
         error_log('GaugeIQ ECMWF rainfall alert failed: ' . $error->getMessage());
     }
 }
 
-// Refresh the temporary, model-derived hourly backfill at most about once an hour.
-// This is deliberately non-fatal: an unavailable fallback must never stop normal
-// live monitoring or alert evaluation.
-try {
-    $backfillStatusQuery = $pdo->prepare(
-        "SELECT value FROM gaugeiq_settings WHERE `key` = 'recent_backfill_last_success_at' LIMIT 1"
-    );
-    $backfillStatusQuery->execute();
-    $lastBackfillValue = $backfillStatusQuery->fetchColumn();
-    $lastBackfillTime = is_string($lastBackfillValue) ? strtotime($lastBackfillValue) : false;
+// Each location has its own hourly observations, backfill status, baseline,
+// alert rules and notification state. A failure at one location must not stop
+// the other location from being checked.
+$successfulLocations = 0;
+$failedLocations = 0;
+foreach ($monitorLocationIds as $locationId) {
+    $statusSuffix = $locationId === 2 ? '_location_2' : '';
+    $service = new PressureService($config, $pdo, $locationId);
+    $locationName = $locationId === 2
+        ? getGaugeIqSetting($pdo, 'second_location_name', 'Location 2')
+        : getGaugeIqSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'Location 1'));
 
-    if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
-        $backfillCount = $service->refreshRecentBackfill(24);
-        setGaugeIqStatus($pdo, 'recent_backfill_last_success_at', gmdate('c'));
-        setGaugeIqStatus($pdo, 'recent_backfill_last_error', '');
-        printf("Recent hourly fallback refreshed: %d rows.\n", $backfillCount);
-    }
-} catch (Throwable $backfillError) {
     try {
-        setGaugeIqStatus($pdo, 'recent_backfill_last_error', $backfillError->getMessage());
-    } catch (Throwable) {
-        // A fallback-status failure must not interrupt the live monitor.
+        $backfillSuccessKey = 'recent_backfill_last_success_at' . $statusSuffix;
+        $backfillErrorKey = 'recent_backfill_last_error' . $statusSuffix;
+        $lastBackfillValue = getGaugeIqSetting($pdo, $backfillSuccessKey, '');
+        $lastBackfillTime = $lastBackfillValue !== '' ? strtotime($lastBackfillValue) : false;
+        if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
+            $backfillCount = $service->refreshRecentBackfill(24, 'auto');
+            setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
+            setGaugeIqStatus($pdo, $backfillErrorKey, '');
+            printf("Recent hourly fallback refreshed for %s: %d rows.\n", $locationName, $backfillCount);
+        }
+    } catch (Throwable $backfillError) {
+        try {
+            setGaugeIqStatus($pdo, $backfillErrorKey, $backfillError->getMessage());
+        } catch (Throwable) {
+            // Fallback status is non-fatal.
+        }
+        fwrite(STDERR, "Recent hourly fallback failed for {$locationName} (live monitoring continues): " . $backfillError->getMessage() . "\n");
     }
-    fwrite(STDERR, "Recent hourly fallback refresh failed (live monitoring continues): " . $backfillError->getMessage() . "\n");
-}
 
-try {
-    $current = $service->fetchCurrent();
-    $previous = $service->record($current);
-    setGaugeIqStatus($pdo, 'monitor_last_success_at', gmdate('c'));
-    setGaugeIqStatus($pdo, 'monitor_last_error', '');
-
-} catch (Throwable $e) {
     try {
-        setGaugeIqStatus($pdo, 'monitor_last_error', $e->getMessage());
-    } catch (Throwable) {
-        // Preserve the original monitoring error when status storage is unavailable.
-    }
-    fwrite(STDERR, "Weather monitoring failed: " . $e->getMessage() . "\n");
-    exit(1);
-}
+        $current = $service->fetchCurrent();
+        $locationTimezone = (string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC');
+        try {
+            $locationTimezoneObject = new DateTimeZone($locationTimezone);
+            setGaugeIqStatus($pdo, 'location_timezone' . $statusSuffix, $locationTimezone);
+        } catch (Throwable) {
+            $locationTimezone = (string)($config['app']['timezone'] ?? 'UTC');
+            $locationTimezoneObject = new DateTimeZone($locationTimezone);
+        }
+        $previous = $service->record($current);
+        setGaugeIqStatus($pdo, 'monitor_last_success_at' . $statusSuffix, gmdate('c'));
+        setGaugeIqStatus($pdo, 'monitor_last_error' . $statusSuffix, '');
 
-// Daily forecast notifications are independent of ordinary event-triggered alerts.
-// This call occurs before the normal alert code can exit early when no rule matches.
-evaluateDailyForecastAlert($pdo, $config, $current);
-evaluateEcmwfRainfallOutlookAlert($pdo, $config);
+        evaluateDailyForecastAlert($pdo, $config, $current, $locationId);
+        evaluateEcmwfRainfallOutlookAlert($pdo, $config, $locationId);
 
-$lookbackHours = 3;
-$lookbackSetting = $pdo->prepare(
-    "SELECT value FROM gaugeiq_settings WHERE key = 'alert_lookback_hours'"
-);
-$lookbackSetting->execute();
-$storedLookback = $lookbackSetting->fetchColumn();
-if ($storedLookback !== false) {
-    $lookbackHours = max(1, min(168, (int)$storedLookback));
-}
+        $lookbackHours = max(1, min(168, (int)getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('alert_lookback_hours', $locationId), '3')));
+        $baseline = null;
+        try {
+            $targetTimestamp = (new DateTimeImmutable((string)$current['observed_at'], $locationTimezoneObject))->getTimestamp()
+                - ($lookbackHours * 3600);
+        } catch (Throwable) {
+            $targetTimestamp = false;
+        }
+        if ($targetTimestamp !== false) {
+            $baselineSql = "SELECT pressure_hpa, humidity_percent, dew_point_c, temperature_c,
+                                   wind_speed_kmh, wind_direction_degrees, observed_at
+                            FROM gaugeiq_pressure_readings
+                            WHERE location_id = ? AND observed_at <= ? AND observed_at < ?
+                              AND (source IS NULL OR source = 'Open-Meteo')";
+            $baselineParams = [
+                $locationId,
+                (new DateTimeImmutable('@' . $targetTimestamp))->setTimezone($locationTimezoneObject)->format('Y-m-d\\TH:i:s'),
+                (string)$current['observed_at'],
+            ];
+            $locationChangedAtKey = $locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+            $locationChangedAt = getGaugeIqSetting($pdo, $locationChangedAtKey, '');
+            if ($locationChangedAt !== '') {
+                $baselineSql .= ' AND created_at >= ?';
+                $baselineParams[] = $locationChangedAt;
+            }
+            $baselineSql .= ' ORDER BY observed_at DESC, id DESC LIMIT 1';
+            $baselineQuery = $pdo->prepare($baselineSql);
+            $baselineQuery->execute($baselineParams);
+            $baseline = $baselineQuery->fetch() ?: null;
+        }
 
-$baseline = null;
-$locationChangedAtQuery = $pdo->prepare(
-    "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
-);
-$locationChangedAtQuery->execute();
-$locationChangedAt = $locationChangedAtQuery->fetchColumn();
-$targetTimestamp = strtotime((string)$current['observed_at']);
-if ($targetTimestamp !== false) {
-    $targetTimestamp -= $lookbackHours * 3600;
-    $baselineSql = "SELECT pressure_hpa, humidity_percent, dew_point_c, temperature_c,
-                           wind_speed_kmh, wind_direction_degrees, observed_at
-                    FROM gaugeiq_pressure_readings
-                    WHERE observed_at <= ? AND observed_at < ?
-                      AND (source IS NULL OR source = 'Open-Meteo')";
-    $baselineParams = [
-        date('Y-m-d\\TH:i:s', $targetTimestamp),
-        (string)$current['observed_at'],
-    ];
-    if ($locationChangedAt !== false && $locationChangedAt !== null && $locationChangedAt !== '') {
-        $baselineSql .= ' AND created_at >= ?';
-        $baselineParams[] = (string)$locationChangedAt;
-    }
-    $baselineSql .= ' ORDER BY observed_at DESC, id DESC LIMIT 1';
-    $baselineQuery = $pdo->prepare($baselineSql);
-    $baselineQuery->execute($baselineParams);
-    $baseline = $baselineQuery->fetch() ?: null;
-}
-
-$pressureChange = $baseline === null
-    ? 0.0
-    : $current['pressure_hpa'] - (float)$baseline['pressure_hpa'];
-
-printf(
-    "GaugeIQ: %.1f hPa | %.0f%% humidity | %.1f km/h %s (%s)%s\n",
-    $current['pressure_hpa'],
-    $current['humidity_percent'],
-    $current['wind_speed_kmh'],
-    PressureService::directionLabel($current['wind_direction_degrees']),
-    $current['wind_direction_degrees'],
-    $current['observed_at'],
-    $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
-);
-
-try {
-    $alertTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
-} catch (Throwable) {
-    $alertTimezone = new DateTimeZone('UTC');
-}
-
-$ruleService = new AlertRuleService($pdo, $alertTimezone);
-$ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
-$weatherStabilityMatches = $ruleService->evaluateWeatherStability();
-$existingRuleIds = array_map(static fn(array $match): int => (int)$match['id'], $ruleMatches);
-foreach ($weatherStabilityMatches as $match) {
-    if (!in_array((int)$match['id'], $existingRuleIds, true)) {
-        $ruleMatches[] = $match;
-    }
-}
-$alerts = array_map(
-    static fn(array $match): string => $match['message'],
-    $ruleMatches
-);
-
-if ($alerts === []) {
-    exit;
-}
-
-try {
-    // Record the alert event independently of push delivery. A triggered rule
-    // remains part of GaugeIQ history even when no device is subscribed.
-    foreach ($ruleMatches as $match) {
-        $ruleService->markTriggered(
-            (int)$match['id'],
-            (string)$match['message'],
-            (string)$current['observed_at']
+        $pressureChange = $baseline === null ? 0.0 : (float)$current['pressure_hpa'] - (float)$baseline['pressure_hpa'];
+        printf(
+            "GaugeIQ %s: %.1f hPa | %.0f%% humidity | %.1f km/h %s (%s)%s\n",
+            $locationName,
+            $current['pressure_hpa'],
+            $current['humidity_percent'],
+            $current['wind_speed_kmh'],
+            PressureService::directionLabel($current['wind_direction_degrees']),
+            $current['wind_direction_degrees'],
+            $current['observed_at'],
+            $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
         );
+
+        $alertTimezone = $locationTimezoneObject;
+        $ruleService = new AlertRuleService($pdo, $alertTimezone, $locationId);
+        $ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
+        $weatherStabilityMatches = $ruleService->evaluateWeatherStability();
+        $existingRuleIds = array_map(static fn(array $match): int => (int)$match['id'], $ruleMatches);
+        foreach ($weatherStabilityMatches as $match) {
+            if (!in_array((int)$match['id'], $existingRuleIds, true)) {
+                $ruleMatches[] = $match;
+            }
+        }
+
+        if ($ruleMatches !== []) {
+            foreach ($ruleMatches as $match) {
+                $ruleService->markTriggered(
+                    (int)$match['id'],
+                    '[' . $locationName . '] ' . (string)$match['message'],
+                    (string)$current['observed_at']
+                );
+            }
+            $messages = array_map(
+                static fn(array $match): string => '[' . $locationName . '] ' . (string)$match['message'],
+                $ruleMatches
+            );
+            $push = new PushService($config, $pdo);
+            $sent = $push->send('GaugeIQ weather alert', implode(' ', $messages));
+            printf("Weather alert for %s sent to %d device(s).\n", $locationName, $sent);
+        }
+
+        $successfulLocations++;
+    } catch (Throwable $e) {
+        $failedLocations++;
+        try {
+            setGaugeIqStatus($pdo, 'monitor_last_error' . $statusSuffix, $e->getMessage());
+        } catch (Throwable) {
+            // Preserve the original monitoring exception.
+        }
+        error_log('GaugeIQ monitoring failed for ' . $locationName . ': ' . $e->getMessage());
+        fwrite(STDERR, "Weather monitoring failed for {$locationName}: " . $e->getMessage() . "\n");
     }
+}
 
-    $push = new PushService($config, $pdo);
-    $sent = $push->send(
-        'GaugeIQ weather alert',
-        implode(' ', $alerts)
-    );
-
-
-    printf("Weather alert sent to %d device(s).\n", $sent);
-} catch (Throwable $e) {
-    fwrite(STDERR, "Push delivery failed: " . $e->getMessage() . "\n");
+if ($successfulLocations === 0 || $failedLocations > 0) {
     exit(1);
 }

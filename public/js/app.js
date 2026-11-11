@@ -1445,7 +1445,7 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=360&include_recent_backfill=1', { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=360&include_recent_backfill=1&location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
@@ -1773,7 +1773,7 @@ async function loadHistory(hours = 24) {
 
     try {
         const requestedHours = Math.min(720, Math.max(1, Number(hours) || 24));
-        const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours), { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=' + encodeURIComponent(requestedHours) + '&location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
         if (!response.ok) throw new Error('History unavailable.');
         const data = await response.json();
         const readings = Array.isArray(data.readings) ? data.readings : [];

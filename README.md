@@ -122,6 +122,23 @@ On installation, GaugeIQ makes a best-effort request for the most recent 24 hour
 
 Weather Volatility Index (WVI) and Conditions Trend first calculate from live monitor readings exactly as before. Only when a live-only calculation cannot produce a result may that meter temporarily retry with recent backfill values in the same six-hour window. Model values retain their actual hourly timestamps, duplicate times prefer live readings, and a visible note identifies when fallback estimates were used. As soon as the live-only calculation can produce a result again, the meter stops using the fallback. These estimates are kept out of ordinary history graphs and do not feed server-side alert baselines. Installation and cron treat this backfill as best-effort, so a provider failure does not interrupt normal live monitoring.
 
+## Independent monitoring locations
+
+GaugeIQ supports a second monitored place without replacing the primary location.
+
+1. Sign in to Admin and open **Location & historical data**.
+2. Enter a name and coordinates for **Second monitoring location**, or use **Use device location**.
+3. Save the second location. This enables its scheduled monitoring; Location 1 remains unchanged.
+4. Use the location selector near the top of the dashboard to switch between the two places. The Alerts page also has a location selector.
+
+Each location has its own current readings, historical weather imports, recent-reading backfill, forecast data, rainfall-outlook analysis, alert rules, comparison window, alert status and monitoring health. The hourly server monitor checks each enabled location independently. A failure at one place does not prevent the other place from being checked.
+
+Push subscriptions remain shared across the GaugeIQ installation, but notification messages identify the location that triggered the alert. The detailed forecast, history graphs, dashboard map centre, manually selected rectangular map coverage area and rainfall outlook follow the selected location. The map coverage rectangle can be configured separately for each location in Weather Map Appearance; colour palettes and other visual styling remain shared on the device. ECMWF map-frame scheduling remains shared; the rainfall analysis is calculated around each location's own coordinates.
+
+GaugeIQ detects when saved coordinates change. It keeps the old records in the database, but excludes them from the current location's readings and history, and resets the affected location's recent backfill and rainfall-outlook cache. Each location's timezone is detected from Open-Meteo and used for its forecasts, history and scheduled alerts.
+
+Opening the dashboard does not trigger a server-side weather refresh. Both locations are updated by the existing hourly cPanel monitoring job.
+
 ## Weather monitoring and dashboard insights
 
 GaugeIQ records:

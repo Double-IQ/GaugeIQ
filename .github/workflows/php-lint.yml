@@ -25,18 +25,24 @@ jobs:
           extensions: curl, mbstring, openssl, pdo_sqlite, pdo_mysql, zip
 
       - name: Lint PHP files
-        run: find app public cron bin database -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find app public cron bin database api -type f -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Run Open-Meteo weather-map reader tests
         run: php -l tests/weather-map-om-reader.test.php && php tests/weather-map-om-reader.test.php
       - name: Run dew point alert regression tests
         run: php -l tests/dew-point-alerts.test.php && php tests/dew-point-alerts.test.php
+      - name: Run independent location alert tests
+        run: php -l tests/independent-locations.test.php && php tests/independent-locations.test.php
+      - name: Run location schema migration tests
+        run: php -l tests/location-schema-migration.test.php && php tests/location-schema-migration.test.php
 
       - name: Check updater shell syntax
         run: bash -n cron/update-from-github.sh
 
       - name: Check Admin JavaScript syntax
         run: node --check public/js/admin.js
+      - name: Check dashboard JavaScript syntax
+        run: node --check public/js/app.js && node --check public/js/openmeteo-history.js
 
       - name: Check weather-map module syntax
         run: node --input-type=module --check < public/js/weather-map.js
