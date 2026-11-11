@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $config = require __DIR__ . '/../config/local.php';
 require __DIR__ . '/../app/Database.php';
+require __DIR__ . '/../app/Schema.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -10,6 +11,9 @@ header('Cache-Control: no-store');
 try {
     $db = new Database($config);
     $pdo = $db->pdo();
+    migrateDatabase($pdo);
+    $locationId = (int)($_GET['location'] ?? 1);
+    if (!in_array($locationId, [1, 2], true)) $locationId = 1;
     $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
     try { $historyTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 
@@ -24,10 +28,10 @@ try {
         'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh,
                 wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source
          FROM gaugeiq_pressure_readings
-         WHERE observed_at >= ?
+         WHERE location_id = ? AND observed_at >= ?
          ORDER BY observed_at ASC, id ASC'
     );
-    $stmt->execute([$sinceDay]);
+    $stmt->execute([$locationId, $sinceDay]);
 
     echo json_encode([
         'hours' => $hours,
