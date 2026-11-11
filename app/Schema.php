@@ -400,10 +400,10 @@ SQL);
                 );
                 $db->exec('DROP TABLE gaugeiq_rain_forecasts');
                 $db->exec('ALTER TABLE gaugeiq_rain_forecasts_location_migration RENAME TO gaugeiq_rain_forecasts');
-                $db->exec('CREATE INDEX idx_gaugeiq_rain_forecast_source ON gaugeiq_rain_forecasts(source)');
-                $db->exec('CREATE INDEX idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts(location_id, forecast_at)');
-                $db->exec('CREATE INDEX idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings(location_id, observed_at)');
-                $db->exec('CREATE INDEX idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules(location_id, enabled)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_rain_forecast_source ON gaugeiq_rain_forecasts(source)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts(location_id, forecast_at)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings(location_id, observed_at)');
+                $db->exec('CREATE INDEX IF NOT EXISTS idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules(location_id, enabled)');
                 $db->commit();
             } catch (Throwable $e) {
                 if ($db->inTransaction()) {
