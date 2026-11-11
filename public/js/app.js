@@ -208,11 +208,10 @@ const WIND_COMPASS_NORTH_BUFFER = 6;
 const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
 const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
-// A saved "on" preference cannot replace the fresh user gesture required
-// by iOS/Safari. Start off there so the permission button is always available.
-let windCompassEnabled = windCompassCanRequestPermission
-    ? false
-    : storedWindCompassState === 'true';
+// Remember a successful "Allow" choice. On iOS, requestPermission()
+// is only callable from a user gesture, so a previously granted choice is
+// restored by attaching listeners directly rather than prompting again.
+let windCompassEnabled = storedWindCompassState === 'true';
 let windCompassListening = false;
 // Once the browser supplies iOS's native compass heading, ignore fallback alpha
 // readings from the parallel absolute-orientation event stream.
@@ -427,10 +426,18 @@ if (windGauge) {
         updateWindCompassButton();
     }
 
-    if (windCompassEnabled &&
-        typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        enableWindCompass();
+    if (windCompassEnabled && typeof DeviceOrientationEvent !== 'undefined') {
+        // A prior successful permission is remembered locally. Do not call
+        // requestPermission() again on page load: iOS requires a user gesture.
+        if (!windCompassListening) {
+            window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
+            window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+            windCompassListening = true;
+        }
+        if (windCompassStatus) {
+            windCompassStatus.hidden = false;
+            windCompassStatus.textContent = 'Restoring compass…';
+        }
     }
 }
 
