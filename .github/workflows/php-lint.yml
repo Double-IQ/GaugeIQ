@@ -41,6 +41,8 @@ jobs:
 
       - name: Check Admin JavaScript syntax
         run: node --check public/js/admin.js
+      - name: Check dashboard JavaScript syntax
+        run: node --check public/js/app.js && node --check public/js/openmeteo-history.js
 
       - name: Check weather-map module syntax
         run: node --input-type=module --check < public/js/weather-map.js
