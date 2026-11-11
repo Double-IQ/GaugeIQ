@@ -19,6 +19,7 @@ CREATE TABLE gaugeiq_settings (
 );
 CREATE TABLE gaugeiq_alert_rules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    location_id INTEGER NOT NULL DEFAULT 1,
     name TEXT NOT NULL,
     metric TEXT NOT NULL,
     condition_type TEXT NOT NULL,
