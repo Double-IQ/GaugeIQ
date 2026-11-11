@@ -25,7 +25,13 @@ try {
     $locationId = (int)($_GET['location'] ?? 1);
     if (!in_array($locationId, [1, 2], true)) $locationId = 1;
 
-    $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
+    $timezoneKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+    $timezoneStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $timezoneStmt->execute([$timezoneKey]);
+    $storedTimezone = $timezoneStmt->fetchColumn();
+    $timezoneName = is_string($storedTimezone) && $storedTimezone !== ''
+        ? $storedTimezone
+        : (string)($config['app']['timezone'] ?? 'UTC');
     try {
         $historyTimezone = new DateTimeZone($timezoneName);
     } catch (Throwable) {
