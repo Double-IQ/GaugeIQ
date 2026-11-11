@@ -217,25 +217,5 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 </section>
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
-<script>
-(() => {
- const locate = (latId, lonId, helpId) => {
-  const lat=document.getElementById(latId), lon=document.getElementById(lonId), help=document.getElementById(helpId);
-  if(!lat||!lon||!help)return;
-  if(!navigator.geolocation){help.textContent='This browser does not support device location. Enter coordinates manually.';return;}
-  help.textContent='Requesting device coordinates… Please allow location access if prompted.';
-  navigator.geolocation.getCurrentPosition(position=>{
-   const a=position.coords.latitude,b=position.coords.longitude;
-   if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>90||Math.abs(b)>180){help.textContent='The device returned invalid coordinates. Enter them manually.';return;}
-   lat.value=a.toFixed(6);lon.value=b.toFixed(6);
-   help.textContent='Coordinates found (±'+Math.round(position.coords.accuracy)+' m accuracy). Check the location name, then save.';
-  },error=>{
-   const messages={1:'Location permission was denied. Allow location access for this site in browser settings, then try again.',2:'Your device could not determine its location. Check that Location Services are enabled, then try again.',3:'The location request timed out. Try again with a clearer GPS signal.'};
-   help.textContent=messages[error.code]||'Could not determine device location. Enter coordinates manually.';
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
- };
- document.getElementById('useCurrentLocation')?.addEventListener('click',()=>locate('location_latitude','location_longitude','locationHelp'));
- document.getElementById('useSecondDeviceLocation')?.addEventListener('click',()=>locate('second_location_latitude','second_location_longitude','secondLocationHelp'));
-})();
-</script>
+<script src="js/location-geolocation.js?v=20261111-location-fix" defer></script>
 </body></html>
