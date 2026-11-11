@@ -549,12 +549,17 @@ if ($current && !empty($current['observed_at'])) {
                     <p class="label">ECMWF IFS · Next 6 hours</p>
                     <h2>Rainfall outlook</h2>
                 </div>
+                <div class="rainfall-radar-compass-controls">
+                    <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
+                    <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
+                </div>
                 <span class="rainfall-nowcast-source">Model forecast</span>
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
                     <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
+                        <g id="rainfallRadarOrientation" transform="rotate(0 160 160)">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
                             <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
@@ -580,6 +585,7 @@ if ($current && !empty($current['observed_at'])) {
                             <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
                             <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
                         </g>
+                                            </g>
                     </svg>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
