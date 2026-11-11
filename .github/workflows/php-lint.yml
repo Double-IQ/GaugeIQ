@@ -33,6 +33,8 @@ jobs:
         run: php -l tests/dew-point-alerts.test.php && php tests/dew-point-alerts.test.php
       - name: Run independent location alert tests
         run: php -l tests/independent-locations.test.php && php tests/independent-locations.test.php
+      - name: Run location schema migration tests
+        run: php -l tests/location-schema-migration.test.php && php tests/location-schema-migration.test.php
 
       - name: Check updater shell syntax
         run: bash -n cron/update-from-github.sh
