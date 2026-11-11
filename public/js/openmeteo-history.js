@@ -45,7 +45,7 @@
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ csrf, source, start_date: from, end_date: to })
+                body: JSON.stringify({ csrf, source, start_date: from, end_date: to, location_id: Number(panel.dataset.locationId || 1) })
             });
             let result;
             try {
