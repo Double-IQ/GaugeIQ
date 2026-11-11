@@ -637,7 +637,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                     <div class="alert-history-content">
                         <strong><?= h((string)($alert['name'] ?: 'GaugeIQ alert')) ?></strong>
                         <p><?= h((string)$alert['message']) ?></p>
-                        <time datetime="<?= h((string)$alert['observed_at']) ?>"><?= h(date('d M, H:i', (int)strtotime((string)$alert['observed_at']))) ?></time>
+                        <time datetime="<?= h((string)$alert['observed_at']) ?>"><?= h((new DateTimeImmutable((string)$alert['observed_at']))->setTimezone($locationTimezone)->format('d M, H:i')) ?></time>
                         <form method="post" action="delete-alert-history.php?return_to=alerts&amp;location=<?= $locationId ?>" onsubmit="return confirm('Delete this alert history record?')">
                             <input type="hidden" name="csrf" value="<?= h($csrf) ?>"><input type="hidden" name="id" value="<?= (int)$alert['id'] ?>">
                             <button type="submit" class="alert-history-delete" aria-label="Delete record" title="Delete record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2-1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z"/></svg></button>
