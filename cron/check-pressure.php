@@ -312,7 +312,7 @@ function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config, int $locatio
         $result = $push->sendDetailed(
             'GaugeIQ rainfall outlook',
             $message,
-            rtrim((string)$config['app']['base_url'], '/') . '/'
+            rtrim((string)$config['app']['base_url'], '/') . '/?location=' . $locationId
         );
         $sent = (int)($result['sent'] ?? 0);
         $subscriptions = (int)($result['subscriptions'] ?? 0);
