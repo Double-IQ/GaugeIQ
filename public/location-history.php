@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
 $historicalStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE source = ? AND observed_at >= ? AND observed_at <= ?");
+$weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = 1 AND source = ? AND observed_at >= ? AND observed_at <= ?");
 $weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
 $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 ?>
