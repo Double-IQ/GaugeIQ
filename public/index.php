@@ -1195,6 +1195,7 @@ if ($current && !empty($current['observed_at'])) {
                 <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
             </div>
             <div class="gaugeiq-weather-map-controls">
+                <button id="weatherMapCompassButton" class="gaugeiq-weather-map-action" type="button" aria-pressed="false">Enable Compass</button>
                 <select id="layer-select" aria-label="Weather layer">
                     <option value="temperature_2m">Temperature</option>
                     <option value="precipitation_cloud_cover" selected>Combined</option>
@@ -1202,6 +1203,7 @@ if ($current && !empty($current['observed_at'])) {
                     <option value="cloud_cover">Cloud cover only</option>
                 </select>
                 <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php?location=<?= $locationId ?>">Appearance</a>
+            <span id="weatherMapCompassStatus" class="gaugeiq-weather-map-compass-status" role="status" aria-live="polite">North-up</span>
             </div>
         </header>
         <div class="gaugeiq-weather-map-timeline">
