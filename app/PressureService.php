@@ -427,14 +427,12 @@ final class PressureService
 
     public function record(array $current): ?array
     {
-        $changedAt = false;
-        if ($this->locationId === 1) {
-            $changedAtQuery = $this->db->prepare(
-                "SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1"
-            );
-            $changedAtQuery->execute();
-            $changedAt = $changedAtQuery->fetchColumn();
-        }
+        $changedAtKey = $this->locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+        $changedAtQuery = $this->db->prepare(
+            "SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1"
+        );
+        $changedAtQuery->execute([$changedAtKey]);
+        $changedAt = $changedAtQuery->fetchColumn();
         if (is_string($changedAt) && $changedAt !== '') {
             $previousQuery = $this->db->prepare(
                 "SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees
