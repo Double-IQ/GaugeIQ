@@ -30,7 +30,7 @@ $timezoneName = is_string($storedTimezone) && $storedTimezone !== ''
     : (string)($config['app']['timezone'] ?? 'UTC');
 try { new DateTimeZone($timezoneName); } catch (Throwable) { $timezoneName = (string)($config['app']['timezone'] ?? 'UTC'); }
 date_default_timezone_set($timezoneName);
-$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name', 'active_location_changed_at', 'second_location_name')");
+$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name', 'active_location_changed_at', 'second_location_name', 'second_location_changed_at')");
 $coordinateSettings->execute();
 $settings = [];
 foreach ($coordinateSettings->fetchAll() as $setting) {
@@ -45,7 +45,9 @@ if ($locationId === 2) {
 $latestSql = "SELECT forecast_json, observed_at FROM gaugeiq_pressure_readings
               WHERE location_id = ? AND (source IS NULL OR source = 'Open-Meteo')";
 $latestParams = [$locationId];
-$changedAt = $locationId === 1 ? ($settings['active_location_changed_at'] ?? '') : '';
+$changedAt = $locationId === 2
+    ? ($settings['second_location_changed_at'] ?? '')
+    : ($settings['active_location_changed_at'] ?? '');
 if ($changedAt !== '') {
     $latestSql .= ' AND created_at >= ?';
     $latestParams[] = $changedAt;
