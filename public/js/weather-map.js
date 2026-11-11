@@ -212,8 +212,6 @@ protocolOptions.fileReaderConfig = {
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
         const frameProgressBar = document.getElementById('map-frame-progress');
-        const weatherMapCompassButton = document.getElementById('weatherMapCompassButton');
-        const weatherMapCompassStatus = document.getElementById('weatherMapCompassStatus');
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -300,134 +298,6 @@ protocolOptions.fileReaderConfig = {
             cooperativeGestures: false,
             attributionControl: false
         });
-        // Device compass rotates the map so the direction the phone faces is at the top.
-        // Permission is requested only from the explicit button gesture (required on iOS).
-        let weatherMapCompassEnabled = false;
-        let weatherMapCompassListening = false;
-        let weatherMapCompassNativeHeadingSeen = false;
-        let weatherMapCompassTarget = null;
-        let weatherMapCompassCurrent = null;
-        let weatherMapCompassAnimation = null;
-        let weatherMapCompassLastStatus = 0;
-        let weatherMapCompassApplyingBearing = false;
-
-        function applyWeatherMapCompassBearing(heading) {
-            weatherMapCompassApplyingBearing = true;
-            try { map.setBearing(-heading); }
-            finally { weatherMapCompassApplyingBearing = false; }
-        }
-
-        function normalizeMapHeading(value) {
-            const heading = Number(value);
-            return Number.isFinite(heading) ? ((heading % 360) + 360) % 360 : null;
-        }
-
-        function mapHeadingDelta(from, to) {
-            return ((to - from + 540) % 360) - 180;
-        }
-
-        function updateWeatherMapCompassButton() {
-            if (!weatherMapCompassButton) return;
-            weatherMapCompassButton.textContent = weatherMapCompassEnabled ? 'Disable Compass' : 'Enable Compass';
-            weatherMapCompassButton.setAttribute('aria-pressed', weatherMapCompassEnabled ? 'true' : 'false');
-            weatherMapCompassButton.classList.toggle('is-enabled', weatherMapCompassEnabled);
-            weatherMapCompassButton.disabled = !('DeviceOrientationEvent' in window);
-        }
-
-        function handleWeatherMapOrientation(event) {
-            if (!weatherMapCompassEnabled) return;
-            let heading = null;
-            const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
-            if (Number.isFinite(event.webkitCompassHeading)) {
-                weatherMapCompassNativeHeadingSeen = true;
-                heading = event.webkitCompassHeading;
-            } else if (!weatherMapCompassNativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
-                heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
-            }
-            const normalized = normalizeMapHeading(heading);
-            if (normalized === null) return;
-            weatherMapCompassTarget = normalized;
-            if (weatherMapCompassCurrent === null) weatherMapCompassCurrent = normalized;
-            if (weatherMapCompassAnimation !== null) return;
-
-            const animateMapCompass = () => {
-                if (!weatherMapCompassEnabled || weatherMapCompassCurrent === null || weatherMapCompassTarget === null) {
-                    weatherMapCompassAnimation = null;
-                    return;
-                }
-                const delta = mapHeadingDelta(weatherMapCompassCurrent, weatherMapCompassTarget);
-                weatherMapCompassCurrent = normalizeMapHeading(weatherMapCompassCurrent + delta * 0.22);
-                // MapLibre's bearing is clockwise from north. A negative device
-                // heading keeps the phone's forward direction at the top of the map.
-                applyWeatherMapCompassBearing(weatherMapCompassCurrent);
-                const now = performance.now();
-                if (weatherMapCompassStatus && now - weatherMapCompassLastStatus > 250) {
-                    weatherMapCompassStatus.textContent = 'Heading ' + Math.round(weatherMapCompassCurrent) + '°';
-                    weatherMapCompassLastStatus = now;
-                }
-                if (Math.abs(delta) < 0.08) {
-                    weatherMapCompassCurrent = weatherMapCompassTarget;
-                    map.setBearing(-weatherMapCompassCurrent);
-                    weatherMapCompassAnimation = null;
-                    return;
-                }
-                weatherMapCompassAnimation = requestAnimationFrame(animateMapCompass);
-            };
-            weatherMapCompassAnimation = requestAnimationFrame(animateMapCompass);
-        }
-
-        async function enableWeatherMapCompass() {
-            if (!('DeviceOrientationEvent' in window)) {
-                if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = 'Compass unavailable on this device';
-                return;
-            }
-            try {
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission !== 'granted') throw new Error('Compass permission was not granted.');
-                }
-                weatherMapCompassEnabled = true;
-                weatherMapCompassNativeHeadingSeen = false;
-                weatherMapCompassTarget = null;
-                weatherMapCompassCurrent = null;
-                if (!weatherMapCompassListening) {
-                    window.addEventListener('deviceorientation', handleWeatherMapOrientation, true);
-                    window.addEventListener('deviceorientationabsolute', handleWeatherMapOrientation, true);
-                    weatherMapCompassListening = true;
-                }
-                updateWeatherMapCompassButton();
-                if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = 'Finding heading…';
-            } catch (error) {
-                if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = error?.message || 'Compass permission unavailable';
-            }
-        }
-
-        function disableWeatherMapCompass() {
-            weatherMapCompassEnabled = false;
-            if (weatherMapCompassListening) {
-                window.removeEventListener('deviceorientation', handleWeatherMapOrientation, true);
-                window.removeEventListener('deviceorientationabsolute', handleWeatherMapOrientation, true);
-                weatherMapCompassListening = false;
-            }
-            if (weatherMapCompassAnimation !== null) cancelAnimationFrame(weatherMapCompassAnimation);
-            weatherMapCompassAnimation = null;
-            weatherMapCompassNativeHeadingSeen = false;
-            weatherMapCompassTarget = null;
-            weatherMapCompassCurrent = null;
-            applyWeatherMapCompassBearing(0);
-            if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = 'North-up';
-            updateWeatherMapCompassButton();
-        }
-
-        if (weatherMapCompassButton) {
-            weatherMapCompassButton.addEventListener('click', () => {
-                if (weatherMapCompassEnabled) disableWeatherMapCompass();
-                else enableWeatherMapCompass();
-            });
-            updateWeatherMapCompassButton();
-        }
-        if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = 'North-up';
-
         // A double tap should begin a one-finger pan, not trigger MapLibre's
         // default double-tap zoom. Pinch-to-zoom remains enabled.
         map.doubleClickZoom.disable();
@@ -1125,13 +995,13 @@ protocolOptions.fileReaderConfig = {
         // during zoom, pan, pitch or rotation gestures. Resume only if playback
         // was active before the user interacted with the map.
         map.on('movestart', () => {
-            if (weatherMapCompassApplyingBearing || animationTimer === null) return;
+            if (animationTimer === null) return;
             clearInterval(animationTimer);
             animationTimer = null;
             animationPausedForMapInteraction = true;
         });
         map.on('moveend', () => {
-            if (weatherMapCompassApplyingBearing || !animationPausedForMapInteraction) return;
+            if (!animationPausedForMapInteraction) return;
             animationPausedForMapInteraction = false;
             runAnimation();
         });
