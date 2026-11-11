@@ -7212,7 +7212,11 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-topline,.rainfall-radar-section-label{width:100%;display:flex;justify-content:space-between;gap:8px;color:#83a8bd;font-size:9px;font-weight:800;letter-spacing:.1em}
 .rainfall-radar-scope{display:block;width:min(100%,350px);height:auto;overflow:visible;margin:4px auto 0}
 .rainfall-radar-sweep{transform-origin:160px 160px;animation:rainfall-radar-rotation 7s linear infinite}
-.rainfall-radar-cell{stroke:rgba(222,248,255,.5);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.88}
+.rainfall-radar-cell{stroke:rgba(222,248,255,.5);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.88;transform-box:fill-box;transform-origin:center;animation:rainfall-cell-pulse 2.8s ease-in-out infinite}
+.rainfall-radar-cell:nth-child(3n+2){animation-delay:.65s}
+.rainfall-radar-cell:nth-child(3n){animation-delay:1.3s}
+@keyframes rainfall-cell-pulse{0%,100%{opacity:.68;transform:scale(.88)}50%{opacity:1;transform:scale(1.16)}}
+@media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.9}}
 .rainfall-radar-legend{display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin-top:1px;color:#91a9c7;font-size:10px}
 .rainfall-radar-legend span{display:inline-flex;align-items:center;gap:5px}
 .rainfall-radar-legend i{display:inline-block;width:7px;height:7px;border-radius:50%}
