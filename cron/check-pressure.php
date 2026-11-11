@@ -355,7 +355,7 @@ foreach ($monitorLocationIds as $locationId) {
             setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
             setGaugeIqStatus($pdo, $backfillErrorKey, '');
             printf(
-                "Recent pressure gap recovery completed for %s: %d missing hourly reading(s) inserted.\\n",
+                "Recent pressure gap recovery completed for %s: %d missing hourly reading(s) inserted.\n",
                 $locationName,
                 $recoveredCount
             );
@@ -366,7 +366,7 @@ foreach ($monitorLocationIds as $locationId) {
         } catch (Throwable) {
             // Recovery status is non-fatal; normal live monitoring continues.
         }
-        fwrite(STDERR, "Recent pressure gap recovery failed for {$locationName} (live monitoring continues): " . $backfillError->getMessage() . "\\n");
+        fwrite(STDERR, "Recent pressure gap recovery failed for {$locationName} (live monitoring continues): " . $backfillError->getMessage() . "\n");
     }
 
     try {
