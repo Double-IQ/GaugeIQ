@@ -211,7 +211,7 @@ final class WeatherMapRainfallNowcastService
 
         if ($firstRain !== null) {
             $localTime = (new DateTimeImmutable($firstRain['time']))->setTimezone(
-                new DateTimeZone((string)($this->config['app']['timezone'] ?? 'UTC'))
+                $this->locationTimezone()
             )->format('H:i');
             if ($status === 'rain_near_location') {
                 $summary = sprintf(
@@ -279,6 +279,21 @@ final class WeatherMapRainfallNowcastService
     private function locationSettingKey(string $key): string
     {
         return $this->locationId === 2 ? $key . '_location_2' : $key;
+    }
+
+    private function locationTimezone(): DateTimeZone
+    {
+        $key = $this->locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+        $fallback = (string)($this->config['app']['timezone'] ?? 'UTC');
+        $stmt = $this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $stmt->execute([$key]);
+        $stored = $stmt->fetchColumn();
+        $timezone = is_string($stored) && $stored !== '' ? $stored : $fallback;
+        try {
+            return new DateTimeZone($timezone);
+        } catch (Throwable) {
+            return new DateTimeZone($fallback);
+        }
     }
 
     private function locationCoordinates(): array
