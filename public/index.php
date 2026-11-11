@@ -365,7 +365,9 @@ if ($current && !empty($current['observed_at'])) {
         if (is_string($nowcastJson) && $nowcastJson !== '') {
             $decodedNowcast = json_decode($nowcastJson, true);
             $updatedTimestamp = is_array($decodedNowcast) ? strtotime((string)($decodedNowcast['updated_at'] ?? '')) : false;
-            if (is_array($decodedNowcast) && (int)($decodedNowcast['schema_version'] ?? 0) >= 2 && $updatedTimestamp !== false && $updatedTimestamp >= time() - 3 * 3600) {
+            if (is_array($decodedNowcast) && $updatedTimestamp !== false && $updatedTimestamp >= time() - 3 * 3600) {
+                // Keep existing scheduled radar payloads visible while the next
+                // hourly refresh replaces legacy accumulated-mm fields with schema v2 rates.
                 $rainfallNowcast = $decodedNowcast;
             }
         }
@@ -513,8 +515,9 @@ if ($current && !empty($current['observed_at'])) {
         $radarFrame = $nowcastFrames[0] ?? [];
         $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
-        $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? null) ? (float)$radarFrame['nearest_rain_precipitation_mm_per_hour'] : null;
-        $radarLocalAmount = is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? null) ? (float)$radarFrame['local_precipitation_mm_per_hour'] : 0.0;
+        $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
+        $radarLocalAmount = is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm']) : 0.0;
+        $rainfallDisplayUnit = (int)($rainfallNowcast['schema_version'] ?? 1) >= 2 ? 'mm/h' : 'mm';
         $radarTrend = (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed');
         $radarTrendLabel = match ($radarTrend) {
             'closing' => 'Moving closer',
@@ -536,10 +539,10 @@ if ($current && !empty($current['observed_at'])) {
             $bearingRadians = deg2rad((float)$radarCell['bearing_degrees']);
             $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
             $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
-            $amount = is_numeric($radarCell['precipitation_mm_per_hour'] ?? null) ? (float)$radarCell['precipitation_mm_per_hour'] : 0.1;
+            $amount = is_numeric($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm'] ?? null) ? (float)($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm']) : 0.1;
             $cellRadius = max(3.0, min(7.0, 3.0 + log10(1.0 + max(0.0, $amount)) * 3.0));
             $cellColour = $amount >= 5.0 ? '#E7C84B' : ($amount >= 1.0 ? '#45D69D' : '#36B9D6');
-            $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . number_format($amount, 2) . ' mm/h at ' . number_format((float)$radarCell['distance_km'], 1) . ' km</title></circle>';
+            $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . number_format($amount, 2) . ' ' . $rainfallDisplayUnit . ' at ' . number_format((float)$radarCell['distance_km'], 1) . ' km</title></circle>';
         }
         $frameLeadLabels = ['+3h', '+6h'];
         ?>
@@ -597,10 +600,10 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="rainfall-radar-readouts">
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
-                        <strong><?= number_format($radarLocalAmount, 1) ?> <small>mm/h</small></strong>
+                        <strong><?= number_format($radarLocalAmount, 1) ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
                     </div>
                     <div class="rainfall-radar-readout-grid">
-                        <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> mm/h at cell</small><?php endif; ?></div>
+                        <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
                         <div><span>RAIN MOVEMENT</span><strong><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
                     </div>
                 </div>
@@ -610,14 +613,14 @@ if ($current && !empty($current['observed_at'])) {
                 <?php foreach ($nowcastFrames as $frameIndex => $nowcastFrame):
                     $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
                     if ($frameTimestamp === false) continue;
-                    $localAmount = is_numeric($nowcastFrame['local_precipitation_mm_per_hour'] ?? null) ? max(0.0, (float)$nowcastFrame['local_precipitation_mm_per_hour']) : 0.0;
+                    $localAmount = is_numeric($nowcastFrame['local_precipitation_mm_per_hour'] ?? $nowcastFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($nowcastFrame['local_precipitation_mm_per_hour'] ?? $nowcastFrame['local_precipitation_mm'])) : 0.0;
                     $barWidth = min(100.0, ($localAmount / 10.0) * 100.0);
                     $leadLabel = $frameLeadLabels[$frameIndex] ?? ('+' . (3 * ($frameIndex + 1)) . 'h');
                 ?>
                     <div class="rainfall-radar-time-step">
                         <div class="rainfall-radar-time-heading"><strong><?= htmlspecialchars($leadLabel, ENT_QUOTES) ?></strong><span><?= htmlspecialchars((new DateTimeImmutable('@' . $frameTimestamp))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) ?></span></div>
                         <div class="rainfall-radar-bar"><span style="width:<?= number_format($barWidth, 1, '.', '') ?>%"></span></div>
-                        <div class="rainfall-radar-amount"><strong><?= number_format($localAmount, 2) ?> mm/h</strong><small>At your location</small></div>
+                        <div class="rainfall-radar-amount"><strong><?= number_format($localAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></strong><small>At your location</small></div>
                     </div>
                 <?php endforeach; ?>
             </div>
