@@ -43,7 +43,7 @@ $locationOne = new AlertRuleService($pdo, new DateTimeZone('Africa/Johannesburg'
 $locationTwo = new AlertRuleService($pdo, new DateTimeZone('Africa/Johannesburg'), 2);
 
 $locationOne->create('Location 1 pressure drop', 'pressure', 'drop', ['value' => 3], 0);
-$locationTwo->create('Location 2 humidity rise', 'humidity', 'rise', ['value' => 10], 0);
+$locationTwo->create('Location 2 humidity rise', 'humidity', 'above', ['value' => 70], 0);
 
 $oneRules = $locationOne->all();
 $twoRules = $locationTwo->all();
