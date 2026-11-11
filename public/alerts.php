@@ -89,16 +89,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 saveGaugeSetting($pdo, 'alert_lookback_hours' . $locationSuffix, (string)$hours);
                 $notice = 'Alert comparison window saved.';
             } elseif ($action === 'save_daily_forecast_alert') {
-                $time = trim((string)($_POST['daily_forecast_alert_time' . $locationSuffix] ?? '07:00'));
+                $time = trim((string)($_POST['daily_forecast_alert_time'] ?? '07:00'));
                 if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $time)) {
                     throw new InvalidArgumentException('Choose a valid daily forecast alert time.');
                 }
 
-                $enabled = isset($_POST['daily_forecast_alert_enabled' . $locationSuffix]);
-                $rain = isset($_POST['daily_forecast_alert_rain' . $locationSuffix]);
-                $wind = isset($_POST['daily_forecast_alert_wind' . $locationSuffix]);
-                $severe = isset($_POST['daily_forecast_alert_severe' . $locationSuffix]);
-                $alwaysNotify = isset($_POST['daily_forecast_alert_always' . $locationSuffix]);
+                $enabled = isset($_POST['daily_forecast_alert_enabled']);
+                $rain = isset($_POST['daily_forecast_alert_rain']);
+                $wind = isset($_POST['daily_forecast_alert_wind']);
+                $severe = isset($_POST['daily_forecast_alert_severe']);
+                $alwaysNotify = isset($_POST['daily_forecast_alert_always']);
                 if ($enabled && !$rain && !$wind && !$severe && !$alwaysNotify) {
                     throw new InvalidArgumentException('Select at least one forecast condition or enable the all-clear notification option.');
                 }
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $notice = $enabled ? 'Daily forecast notification settings saved.' : 'Daily forecast notification disabled.';
             } elseif ($action === 'save_ecmwf_rainfall_alert') {
-                $enabled = isset($_POST['ecmwf_rainfall_alert_enabled' . $locationSuffix]);
+                $enabled = isset($_POST['ecmwf_rainfall_alert_enabled']);
                 $radius = (int)($_POST['ecmwf_rainfall_alert_radius'] ?? 50);
                 if (!in_array($radius, [15, 50, 100], true)) {
                     throw new InvalidArgumentException('Choose a rainfall alert radius of 15, 50 or 100 km.');
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_radius_km' . $locationSuffix, (string)$radius);
                 $notice = $enabled ? 'ECMWF rainfall outlook alert enabled.' : 'ECMWF rainfall outlook alert disabled.';
             } elseif ($action === 'save_stability_threshold') {
-                $thresholdInput = trim((string)($_POST['stability_alert_threshold' . $locationSuffix] ?? ''));
+                $thresholdInput = trim((string)($_POST['stability_alert_threshold'] ?? ''));
                 if ($thresholdInput === '') {
                     saveGaugeSetting($pdo, 'stability_alert_threshold' . $locationSuffix, '');
                     $notice = 'Stability bar alert threshold disabled.';
