@@ -29,6 +29,8 @@ jobs:
 
       - name: Run Open-Meteo weather-map reader tests
         run: php -l tests/weather-map-om-reader.test.php && php tests/weather-map-om-reader.test.php
+      - name: Run ECMWF rainfall-rate tests
+        run: php -l tests/weather-map-rainfall-rate.test.php && php tests/weather-map-rainfall-rate.test.php
       - name: Run dew point alert regression tests
         run: php -l tests/dew-point-alerts.test.php && php tests/dew-point-alerts.test.php
       - name: Run independent location alert tests
