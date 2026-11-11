@@ -74,6 +74,7 @@ try {
             $entry = [
                 'bearing_degrees' => round($bearing, 1),
                 'distance_km' => round((float)$cell['distance_km'], 1),
+                'raw_precipitation_mm' => is_numeric($cell['raw_precipitation_mm'] ?? null) ? round((float)$cell['raw_precipitation_mm'], 3) : null,
                 'precipitation' => round($amount, 2),
                 'latitude' => is_numeric($cell['latitude'] ?? null) ? round((float)$cell['latitude'], 4) : null,
                 'longitude' => is_numeric($cell['longitude'] ?? null) ? round((float)$cell['longitude'], 4) : null,
