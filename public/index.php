@@ -229,7 +229,7 @@ if ($current && !empty($current['observed_at'])) {
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
 </head>
-<body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+<body data-weather-formulas="<?= htmlspecialchars((string)$weatherFormulaJson, ENT_QUOTES, 'UTF-8') ?>" data-monitor-last-success-at="<?= htmlspecialchars((string)($lastMonitorAt ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-location-id="<?= $locationId ?>">
 <div id="gaugeiqLoadingScreen" class="gaugeiq-loading-screen" role="status" aria-live="polite" aria-label="Loading GaugeIQ">
     <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="300" height="120" fetchpriority="high">
     <p id="gaugeiqLoadingMessage">Loading your weather dashboard…</p>
@@ -1355,6 +1355,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <div id="historicalDatasetStatus"
      hidden
      data-csrf="<?= htmlspecialchars($csrfToken, ENT_QUOTES) ?>"
+     data-location-id="<?= $locationId ?>"
      data-start="<?= htmlspecialchars($historyAutoStart, ENT_QUOTES) ?>"
      data-end="<?= htmlspecialchars($historyAutoEnd, ENT_QUOTES) ?>"
      data-weather-count="<?= $historyWeatherCount ?>"
