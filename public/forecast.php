@@ -103,7 +103,7 @@ $formatHour = static function (?string $time): string {
 <link rel="stylesheet" href="css/app.css?v=20261019-seven-day-icons-double">
 <title>7-day forecast · GaugeIQ</title>
 </head>
-<body>
+<body data-location-id="<?= $locationId ?>">
 <main class="shell forecast-detail-shell">
     <header class="forecast-detail-header">
         <div>
