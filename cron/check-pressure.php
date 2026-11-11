@@ -91,11 +91,11 @@ function gaugeIqLocationSettingKey(string $key, int $locationId): string
  */
 function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int $locationId = 1): void
 {
-    if (getGaugeIqSetting($pdo, 'daily_forecast_alert_enabled', '0') !== '1') {
+    if (getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_enabled', $locationId), '0') !== '1') {
         return;
     }
 
-    $scheduledTime = getGaugeIqSetting($pdo, 'daily_forecast_alert_time', '07:00');
+    $scheduledTime = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_time', $locationId), '07:00');
     if (!preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $scheduledTime)) {
         $scheduledTime = '07:00';
     }
@@ -123,11 +123,11 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int
     }
 
     $selected = [
-        'rain' => getGaugeIqSetting($pdo, 'daily_forecast_alert_rain', '1') === '1',
-        'wind' => getGaugeIqSetting($pdo, 'daily_forecast_alert_wind', '1') === '1',
-        'severe' => getGaugeIqSetting($pdo, 'daily_forecast_alert_severe', '1') === '1',
+        'rain' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_rain', $locationId), '1') === '1',
+        'wind' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_wind', $locationId), '1') === '1',
+        'severe' => getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_severe', $locationId), '1') === '1',
     ];
-    $alwaysNotify = getGaugeIqSetting($pdo, 'daily_forecast_alert_always', '0') === '1';
+    $alwaysNotify = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_always', $locationId), '0') === '1';
     if (!in_array(true, $selected, true) && !$alwaysNotify) {
         setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_evaluated_date', $locationId), $today);
         setGaugeIqStatus($pdo, gaugeIqLocationSettingKey('daily_forecast_alert_last_status', $locationId), 'No forecast conditions selected.');
@@ -259,11 +259,11 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int
 
 function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config, int $locationId = 1): void
 {
-    if (getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_enabled', '0') !== '1') {
+    if (getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_enabled', $locationId), '0') !== '1') {
         return;
     }
 
-    $radiusKm = (int)getGaugeIqSetting($pdo, 'ecmwf_rainfall_alert_radius_km', '50');
+    $radiusKm = (int)getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('ecmwf_rainfall_alert_radius_km', $locationId), '50');
     if (!in_array($radiusKm, [15, 50, 100], true)) $radiusKm = 50;
 
     $json = getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('weather_map_rainfall_nowcast', $locationId), '');
@@ -374,7 +374,7 @@ foreach ($monitorLocationIds as $locationId) {
         evaluateDailyForecastAlert($pdo, $config, $current, $locationId);
         evaluateEcmwfRainfallOutlookAlert($pdo, $config, $locationId);
 
-        $lookbackHours = max(1, min(168, (int)getGaugeIqSetting($pdo, 'alert_lookback_hours', '3')));
+        $lookbackHours = max(1, min(168, (int)getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('alert_lookback_hours', $locationId), '3')));
         $baseline = null;
         $targetTimestamp = strtotime((string)$current['observed_at']);
         if ($targetTimestamp !== false) {
