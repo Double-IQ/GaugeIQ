@@ -3325,6 +3325,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;
 }
 .gaugeiq-weather-map-controls select{min-width:0}
+.gaugeiq-weather-map-controls .gaugeiq-weather-map-action.is-enabled{background:#174f78;border-color:rgba(96,205,255,.8)}
+.gaugeiq-weather-map-compass-status{color:#b9c9e8;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
 .gaugeiq-weather-map-timeline{
   display:flex;align-items:center;gap:8px;min-width:0;padding:9px 15px;
   border-bottom:1px solid rgba(148,163,184,.14);background:rgba(6,22,72,.18);
