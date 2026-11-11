@@ -38,10 +38,11 @@ try {
 
     foreach (($payload['frames'] ?? []) as $frame) {
         printf(
-            "Frame %s: local=%s mm, max=%s mm, wet_cells=%d, nearest_rain=%s km\n",
+            "Frame %s: step=%sh, local=%s mm/h, max=%s mm/h, wet_cells=%d, nearest_rain=%s km\n",
             (string)($frame['time'] ?? 'unknown'),
-            (string)($frame['local_precipitation_mm'] ?? 'n/a'),
-            (string)($frame['maximum_precipitation_mm'] ?? 'n/a'),
+            (string)($frame['step_duration_hours'] ?? 'n/a'),
+            (string)($frame['local_precipitation_mm_per_hour'] ?? 'n/a'),
+            (string)($frame['maximum_precipitation_mm_per_hour'] ?? 'n/a'),
             (int)($frame['wet_cells'] ?? 0),
             ($frame['nearest_rain_km'] ?? null) === null ? 'none' : (string)$frame['nearest_rain_km']
         );
