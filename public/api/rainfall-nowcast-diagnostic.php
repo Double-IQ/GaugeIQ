@@ -63,18 +63,20 @@ try {
             if (!is_array($cell) ||
                 !is_numeric($cell['bearing_degrees'] ?? null) ||
                 !is_numeric($cell['distance_km'] ?? null) ||
-                !is_numeric($cell['precipitation_mm'] ?? null)) {
+                !is_numeric($cell['precipitation_mm_per_hour'] ?? $cell['precipitation_mm'] ?? null)) {
                 continue;
             }
             $bearing = fmod((float)$cell['bearing_degrees'] + 360.0, 360.0);
             $quadrant = $bearing >= 315.0 || $bearing < 45.0 ? 'north'
                 : ($bearing < 135.0 ? 'east'
                 : ($bearing < 225.0 ? 'south' : 'west'));
-            $amount = (float)$cell['precipitation_mm'];
+            $amount = (float)($cell['precipitation_mm_per_hour'] ?? $cell['precipitation_mm']);
             $entry = [
                 'bearing_degrees' => round($bearing, 1),
                 'distance_km' => round((float)$cell['distance_km'], 1),
-                'precipitation_mm' => round($amount, 2),
+                'precipitation' => round($amount, 2),
+                'latitude' => is_numeric($cell['latitude'] ?? null) ? round((float)$cell['latitude'], 4) : null,
+                'longitude' => is_numeric($cell['longitude'] ?? null) ? round((float)$cell['longitude'], 4) : null,
                 'quadrant' => $quadrant,
             ];
             $quadrants[$quadrant]['count']++;
@@ -93,7 +95,8 @@ try {
         );
         $diagnosticFrames[] = [
             'time' => $frame['time'] ?? null,
-            'local_precipitation_mm' => $frame['local_precipitation_mm'] ?? null,
+            'step_duration_hours' => $frame['step_duration_hours'] ?? null,
+            'local_precipitation' => $frame['local_precipitation_mm_per_hour'] ?? $frame['local_precipitation_mm'] ?? null,
             'wet_cells' => $frame['wet_cells'] ?? count($normalisedCells),
             'cell_count_returned' => count($normalisedCells),
             'quadrants' => $quadrants,
@@ -109,7 +112,9 @@ try {
         'source' => $payload['source'] ?? null,
         'updated_at' => $payload['updated_at'] ?? null,
         'search_radius_km' => $payload['search_radius_km'] ?? null,
-        'wet_threshold_mm' => $payload['wet_threshold_mm'] ?? null,
+        'schema_version' => $payload['schema_version'] ?? 1,
+        'precipitation_unit' => (int)($payload['schema_version'] ?? 1) >= 2 ? 'mm/h' : 'mm',
+        'wet_threshold' => $payload['wet_threshold_mm_per_hour'] ?? $payload['wet_threshold_mm'] ?? null,
         'encoding' => $payload['encoding'] ?? null,
         'frames' => $diagnosticFrames,
         'note' => 'Read-only diagnostic of the already stored decoded forecast. This endpoint does not trigger a refresh or change stored data.',
