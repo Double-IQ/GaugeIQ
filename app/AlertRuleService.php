@@ -431,15 +431,24 @@ final class AlertRuleService
             ->setTimezone($this->timezone)
             ->format('Y-m-d');
 
-        $stmt = $this->db->prepare(
-            'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent,
-                    wind_speed_kmh, wind_direction_degrees, rainfall_mm,
-                    cloud_cover_percent, weather_code, observed_at, created_at, source
-             FROM gaugeiq_pressure_readings
-             WHERE location_id = ? AND observed_at >= ?
-             ORDER BY observed_at ASC, id ASC'
-        );
-        $stmt->execute([$this->locationId, $fromDay]);
+        $changedAtKey = $this->locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+        $changedAtStmt = $this->db->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+        $changedAtStmt->execute([$changedAtKey]);
+        $changedAtValue = $changedAtStmt->fetchColumn();
+        $changedAt = is_string($changedAtValue) ? $changedAtValue : '';
+        $sql = 'SELECT temperature_c, dew_point_c, pressure_hpa, humidity_percent,
+                       wind_speed_kmh, wind_direction_degrees, rainfall_mm,
+                       cloud_cover_percent, weather_code, observed_at, created_at, source
+                FROM gaugeiq_pressure_readings
+                WHERE location_id = ? AND observed_at >= ?';
+        $params = [$this->locationId, $fromDay];
+        if ($changedAt !== '') {
+            $sql .= ' AND created_at >= ?';
+            $params[] = $changedAt;
+        }
+        $sql .= ' ORDER BY observed_at ASC, id ASC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $liveReadings = [];
