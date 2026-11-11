@@ -7203,7 +7203,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* ATC-inspired ECMWF rainfall forecast scope */
-.rainfall-radar-card{margin-top:16px;color:#edf6ff;background:radial-gradient(ellipse at 50% 0%,rgba(29,75,92,.34),transparent 55%),linear-gradient(145deg,#0b1b29 0%,#07131e 100%);border:1px solid rgba(91,153,178,.3);box-shadow:0 12px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.045)}
+.rainfall-radar-card{margin-top:16px;color:#edf6ff;background:radial-gradient(ellipse at 50% 0%,rgba(45,91,150,.16),transparent 55%),linear-gradient(145deg,#0b1b29 0%,#07131e 100%);border:1px solid rgba(91,153,178,.3);box-shadow:0 12px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.045)}
 .rainfall-radar-card .rainfall-nowcast-heading{align-items:center}
 .rainfall-radar-card .rainfall-nowcast-heading h2,.rainfall-radar-card .rainfall-nowcast-heading .label{color:#edf6ff;font-size:22px;font-weight:750;letter-spacing:-.02em}
 .rainfall-radar-card .rainfall-nowcast-source{padding:6px 8px;border:1px solid rgba(104,210,255,.25);border-radius:6px;background:rgba(53,196,235,.08);color:#9bd0ff;font-size:9px;font-weight:800;letter-spacing:.1em}
