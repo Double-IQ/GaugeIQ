@@ -31,7 +31,7 @@ $secondLocationLongitude = gaugeSetting($pdo, 'second_location_longitude', '') ?
 $secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
-$notice = isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will be enabled by the monitoring upgrade.' : (isset($_GET['saved']) ? 'Current location saved.' : '');
+$notice = isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : '');
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
