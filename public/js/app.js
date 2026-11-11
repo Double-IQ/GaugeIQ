@@ -211,10 +211,12 @@ const WIND_COMPASS_NORTH_BUFFER = 6;
 const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
 const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
-// Remember a successful "Allow" choice. On iOS, requestPermission()
-// is only callable from a user gesture, so a previously granted choice is
-// restored by attaching listeners directly rather than prompting again.
-let windCompassEnabled = storedWindCompassState === 'true';
+// iOS requires requestPermission() to be called from a user gesture before
+// orientation events are delivered. Keep it off on startup there; the saved
+// permission grant is retained by iOS and the next Enable tap reuses it.
+let windCompassEnabled = windCompassCanRequestPermission
+    ? false
+    : storedWindCompassState === 'true';
 let windCompassListening = false;
 // Once the browser supplies iOS's native compass heading, ignore fallback alpha
 // readings from the parallel absolute-orientation event stream.
@@ -345,23 +347,17 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            let permissionAlreadyGranted = false;
-            try {
-                permissionAlreadyGranted = localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true';
-            } catch {
-                // If storage is unavailable, request permission through the user gesture.
+            // Call from this Enable-button gesture every time. Once iOS has
+            // granted access, it should return "granted" without showing the
+            // native prompt again, while still activating sensor delivery.
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Compass permission was not granted.');
             }
-
-            if (!permissionAlreadyGranted) {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission !== 'granted') {
-                    throw new Error('Compass permission was not granted.');
-                }
-                try {
-                    localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
-                } catch {
-                    // Compass can still work for this session if storage is unavailable.
-                }
+            try {
+                localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+            } catch {
+                // Compass can still work for this session if storage is unavailable.
             }
         }
 
