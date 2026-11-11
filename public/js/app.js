@@ -440,8 +440,8 @@ if (windGauge) {
     }
 
     if (windCompassEnabled && typeof DeviceOrientationEvent !== 'undefined') {
-        // A prior successful permission is remembered locally. Do not call
-        // requestPermission() again on page load: iOS requires a user gesture.
+        // Non-iOS browsers can restore the saved enabled state directly.
+        // iOS waits for an Enable-button gesture to activate sensor delivery.
         if (!windCompassListening) {
             window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
             window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
