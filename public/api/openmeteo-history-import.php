@@ -68,10 +68,21 @@ try {
     $db = new Database($config);
     $pdo = $db->pdo();
     migrateDatabase($pdo);
-    $settings = $pdo->query("SELECT gaugeiq_settings.key, gaugeiq_settings.value FROM gaugeiq_settings WHERE gaugeiq_settings.key IN ('location_latitude','location_longitude','location_name','active_location_latitude','active_location_longitude','active_location_name')")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $latitude = isset($settings['location_latitude']) ? (float)$settings['location_latitude'] : (isset($settings['active_location_latitude']) ? (float)$settings['active_location_latitude'] : (float)($config['pressure']['latitude'] ?? NAN));
-    $longitude = isset($settings['location_longitude']) ? (float)$settings['location_longitude'] : (isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN));
-    $locationName = (string)($settings['location_name'] ?? $settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
+    $locationId = (int)($input['location_id'] ?? 1);
+    if (!in_array($locationId, [1, 2], true)) $locationId = 1;
+    $settings = $pdo->query("SELECT gaugeiq_settings.key, gaugeiq_settings.value FROM gaugeiq_settings WHERE gaugeiq_settings.key IN ('location_latitude','location_longitude','location_name','active_location_latitude','active_location_longitude','active_location_name','second_location_latitude','second_location_longitude','second_location_name','second_location_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    if ($locationId === 2) {
+        if (($settings['second_location_enabled'] ?? '0') !== '1') {
+            openMeteoHistoryReply(422, ['error' => 'Save and enable Location 2 before importing its history.']);
+        }
+        $latitude = (float)($settings['second_location_latitude'] ?? NAN);
+        $longitude = (float)($settings['second_location_longitude'] ?? NAN);
+        $locationName = (string)($settings['second_location_name'] ?? 'Location 2');
+    } else {
+        $latitude = isset($settings['location_latitude']) ? (float)$settings['location_latitude'] : (isset($settings['active_location_latitude']) ? (float)$settings['active_location_latitude'] : (float)($config['pressure']['latitude'] ?? NAN));
+        $longitude = isset($settings['location_longitude']) ? (float)$settings['location_longitude'] : (isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN));
+        $locationName = (string)($settings['location_name'] ?? $settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
+    }
     $timezone = (string)($config['app']['timezone'] ?? 'UTC');
     if (!is_finite($latitude) || $latitude < -90 || $latitude > 90 || !is_finite($longitude) || $longitude < -180 || $longitude > 180) openMeteoHistoryReply(422, ['error' => 'Configure valid location coordinates in GaugeIQ before importing history.']);
     try { new DateTimeZone($timezone); } catch (Throwable) { $timezone = 'UTC'; }
@@ -94,25 +105,25 @@ try {
     $skipped = 0;
 
     if ($source === 'forecast') {
-        $insert = $pdo->prepare('INSERT INTO gaugeiq_rain_forecasts (forecast_at, precipitation_probability_percent, precipitation_mm, rain_mm, temperature_c, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $exists = $pdo->prepare('SELECT id FROM gaugeiq_rain_forecasts WHERE forecast_at = ? LIMIT 1');
+        $insert = $pdo->prepare('INSERT INTO gaugeiq_rain_forecasts (location_id, forecast_at, precipitation_probability_percent, precipitation_mm, rain_mm, temperature_c, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $exists = $pdo->prepare('SELECT id FROM gaugeiq_rain_forecasts WHERE location_id = ? AND forecast_at = ? LIMIT 1');
         $pdo->beginTransaction();
         foreach ($times as $i => $time) {
             if (!is_string($time) || $time === '') { $skipped++; continue; }
             $forecastAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
             $probability = $hourly['precipitation_probability'][$i] ?? null;
             if (!is_numeric($probability) || !is_finite((float)$probability) || (float)$probability < 0 || (float)$probability > 100) { $skipped++; continue; }
-            $exists->execute([$forecastAt]);
+            $exists->execute([$locationId, $forecastAt]);
             if ($exists->fetchColumn() !== false) { $skipped++; continue; }
             $num = static fn($value): ?float => is_numeric($value) && is_finite((float)$value) ? (float)$value : null;
-            $insert->execute([$forecastAt, (float)$probability, $num($hourly['precipitation'][$i] ?? null), $num($hourly['rain'][$i] ?? null), $num($hourly['temperature_2m'][$i] ?? null), $sourceLabel, $createdAt]);
+            $insert->execute([$locationId, $forecastAt, (float)$probability, $num($hourly['precipitation'][$i] ?? null), $num($hourly['rain'][$i] ?? null), $num($hourly['temperature_2m'][$i] ?? null), $sourceLabel, $createdAt]);
             $count++;
         }
     } else {
-        $insert = $pdo->prepare('INSERT INTO gaugeiq_pressure_readings (temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $insert = $pdo->prepare('INSERT INTO gaugeiq_pressure_readings (location_id, temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $exists = $pdo->prepare(
             "SELECT id FROM gaugeiq_pressure_readings
-             WHERE observed_at = ?
+             WHERE location_id = ? AND observed_at = ?
                AND (source IS NULL OR source <> 'Open-Meteo Recent Backfill')
              LIMIT 1"
         );
@@ -120,7 +131,7 @@ try {
         foreach ($times as $i => $time) {
             if (!is_string($time) || $time === '') { $skipped++; continue; }
             $observedAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
-            $exists->execute([$observedAt]);
+            $exists->execute([$locationId, $observedAt]);
             if ($exists->fetchColumn() !== false) { $skipped++; continue; }
             $val = static function (string $key) use ($hourly, $i): ?float {
                 $value = $hourly[$key][$i] ?? null;
@@ -129,16 +140,16 @@ try {
             $pressure = $val('surface_pressure');
             if ($pressure === null || $pressure <= 0 || $pressure > 1200) { $skipped++; continue; }
             $code = $val('weather_code');
-            $insert->execute([$val('temperature_2m'), $val('dew_point_2m'), $pressure, $val('relative_humidity_2m'), $val('wind_speed_10m'), $val('wind_direction_10m'), $val('precipitation'), $val('cloud_cover'), $code === null ? null : (int)$code, $observedAt, $createdAt, $sourceLabel]);
+            $insert->execute([$locationId, $val('temperature_2m'), $val('dew_point_2m'), $pressure, $val('relative_humidity_2m'), $val('wind_speed_10m'), $val('wind_direction_10m'), $val('precipitation'), $val('cloud_cover'), $code === null ? null : (int)$code, $observedAt, $createdAt, $sourceLabel]);
             $count++;
         }
     }
     $pdo->commit();
     $countStmt = $pdo->prepare($source === 'forecast'
-        ? 'SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at >= ? AND forecast_at <= ?'
-        : 'SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE observed_at >= ? AND observed_at <= ? AND source = ?');
-    if ($source === 'forecast') $countStmt->execute([$startText . 'T00:00', $endText . 'T23:59']);
-    else $countStmt->execute([$startText . 'T00:00', $endText . 'T23:59', $sourceLabel]);
+        ? 'SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE location_id = ? AND forecast_at >= ? AND forecast_at <= ?'
+        : 'SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND observed_at >= ? AND observed_at <= ? AND source = ?');
+    if ($source === 'forecast') $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59']);
+    else $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59', $sourceLabel]);
     openMeteoHistoryReply(200, [
         'success' => true, 'location' => $locationName, 'source' => $sourceLabel,
         'start_date' => $startText, 'end_date' => $endText, 'inserted' => $count, 'skipped' => $skipped,
