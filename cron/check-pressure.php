@@ -112,7 +112,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int
     if (!$scheduledDateTime || $now < $scheduledDateTime) {
         return;
     }
-    // Allow the next normal half-hour cron check to deliver the alert. If the
+    // Allow the next hourly cron check to deliver the alert. If the
     // chosen time was missed by more than an hour, skip the stale notification.
     $minutesLate = (int)floor(($now->getTimestamp() - $scheduledDateTime->getTimestamp()) / 60);
     if ($minutesLate > 59) {
