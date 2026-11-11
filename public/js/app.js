@@ -73,7 +73,7 @@
         try {
             // Read only the cron's last-success timestamp. This endpoint does
             // not contact Open-Meteo or trigger any weather-data collection.
-            const response = await fetch('/api/monitor-status.php', { cache: 'no-store' });
+            const response = await fetch('/api/monitor-status.php?location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
             if (!response.ok) return;
             const status = await response.json();
             if (!hasNewCronData(status.last_success_at)) return;
