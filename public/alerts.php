@@ -21,7 +21,8 @@ $locationName = $locationId === 2
     ? (gaugeSetting($pdo, 'second_location_name', 'Location 2') ?? 'Location 2')
     : (gaugeSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'Location 1')) ?? 'Location 1');
 $timezoneKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
-$locationTimezoneName = gaugeSetting($pdo, $timezoneKey, (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC';
+$locationTimezoneName = gaugeSetting($pdo, $timezoneKey, '') ?? '';
+if ($locationTimezoneName === '') $locationTimezoneName = (string)($config['app']['timezone'] ?? 'UTC');
 try { $locationTimezone = new DateTimeZone($locationTimezoneName); } catch (Throwable) { $locationTimezone = new DateTimeZone('UTC'); }
 $rules = new AlertRuleService($pdo, $locationTimezone, $locationId);
 
