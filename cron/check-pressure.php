@@ -347,24 +347,26 @@ foreach ($monitorLocationIds as $locationId) {
         ? getGaugeIqSetting($pdo, 'second_location_name', 'Location 2')
         : getGaugeIqSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'Location 1'));
 
+    $backfillSuccessKey = 'recent_backfill_last_success_at' . $statusSuffix;
+    $backfillErrorKey = 'recent_backfill_last_error' . $statusSuffix;
     try {
-        $backfillSuccessKey = 'recent_backfill_last_success_at' . $statusSuffix;
-        $backfillErrorKey = 'recent_backfill_last_error' . $statusSuffix;
-        $lastBackfillValue = getGaugeIqSetting($pdo, $backfillSuccessKey, '');
-        $lastBackfillTime = $lastBackfillValue !== '' ? strtotime($lastBackfillValue) : false;
-        if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
-            $backfillCount = $service->refreshRecentBackfill(24, 'auto');
+        $recoveredCount = $service->recoverRecentGap(3, 4);
+        if ($recoveredCount !== null) {
             setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
             setGaugeIqStatus($pdo, $backfillErrorKey, '');
-            printf("Recent hourly fallback refreshed for %s: %d rows.\n", $locationName, $backfillCount);
+            printf(
+                "Recent pressure gap recovery completed for %s: %d missing hourly reading(s) inserted.\\n",
+                $locationName,
+                $recoveredCount
+            );
         }
     } catch (Throwable $backfillError) {
         try {
             setGaugeIqStatus($pdo, $backfillErrorKey, $backfillError->getMessage());
         } catch (Throwable) {
-            // Fallback status is non-fatal.
+            // Recovery status is non-fatal; normal live monitoring continues.
         }
-        fwrite(STDERR, "Recent hourly fallback failed for {$locationName} (live monitoring continues): " . $backfillError->getMessage() . "\n");
+        fwrite(STDERR, "Recent pressure gap recovery failed for {$locationName} (live monitoring continues): " . $backfillError->getMessage() . "\\n");
     }
 
     try {
