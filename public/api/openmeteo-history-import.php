@@ -113,6 +113,11 @@ try {
         $saveTimezone = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
     }
     $saveTimezone->execute([$timezoneKey, $timezone]);
+    $changedAtKey = $locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+    $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $changedAtStmt->execute([$changedAtKey]);
+    $changedAtValue = $changedAtStmt->fetchColumn();
+    $locationChangedAt = is_string($changedAtValue) ? $changedAtValue : '';
     $hourly = $data['hourly'];
     $times = $hourly['time'];
     $sourceLabel = $source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather';
@@ -137,17 +142,19 @@ try {
         }
     } else {
         $insert = $pdo->prepare('INSERT INTO gaugeiq_pressure_readings (location_id, temperature_c, dew_point_c, pressure_hpa, humidity_percent, wind_speed_kmh, wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code, observed_at, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $exists = $pdo->prepare(
-            "SELECT id FROM gaugeiq_pressure_readings
-             WHERE location_id = ? AND observed_at = ?
-               AND (source IS NULL OR source <> 'Open-Meteo Recent Backfill')
-             LIMIT 1"
-        );
+        $existsSql = "SELECT id FROM gaugeiq_pressure_readings
+                      WHERE location_id = ? AND observed_at = ?
+                        AND (source IS NULL OR source <> 'Open-Meteo Recent Backfill')";
+        if ($locationChangedAt !== '') $existsSql .= ' AND created_at >= ?';
+        $existsSql .= ' LIMIT 1';
+        $exists = $pdo->prepare($existsSql);
         $pdo->beginTransaction();
         foreach ($times as $i => $time) {
             if (!is_string($time) || $time === '') { $skipped++; continue; }
             $observedAt = str_contains($time, 'T') ? $time : str_replace(' ', 'T', $time);
-            $exists->execute([$locationId, $observedAt]);
+            $existsParams = [$locationId, $observedAt];
+            if ($locationChangedAt !== '') $existsParams[] = $locationChangedAt;
+            $exists->execute($existsParams);
             if ($exists->fetchColumn() !== false) { $skipped++; continue; }
             $val = static function (string $key) use ($hourly, $i): ?float {
                 $value = $hourly[$key][$i] ?? null;
@@ -161,11 +168,19 @@ try {
         }
     }
     $pdo->commit();
-    $countStmt = $pdo->prepare($source === 'forecast'
-        ? 'SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE location_id = ? AND forecast_at >= ? AND forecast_at <= ?'
-        : 'SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND observed_at >= ? AND observed_at <= ? AND source = ?');
-    if ($source === 'forecast') $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59']);
-    else $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59', $sourceLabel]);
+    if ($source === 'forecast') {
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE location_id = ? AND forecast_at >= ? AND forecast_at <= ?');
+        $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59']);
+    } else {
+        $countSql = 'SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND observed_at >= ? AND observed_at <= ? AND source = ?';
+        $countParams = [$locationId, $startText . 'T00:00', $endText . 'T23:59', $sourceLabel];
+        if ($locationChangedAt !== '') {
+            $countSql .= ' AND created_at >= ?';
+            $countParams[] = $locationChangedAt;
+        }
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute($countParams);
+    }
     openMeteoHistoryReply(200, [
         'success' => true, 'location' => $locationName, 'source' => $sourceLabel,
         'start_date' => $startText, 'end_date' => $endText, 'inserted' => $count, 'skipped' => $skipped,
