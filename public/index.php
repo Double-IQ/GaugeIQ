@@ -1201,7 +1201,7 @@ if ($current && !empty($current['observed_at'])) {
                     <option value="precipitation">Precipitation only</option>
                     <option value="cloud_cover">Cloud cover only</option>
                 </select>
-                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php">Appearance</a>
+                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php?location=<?= $locationId ?>">Appearance</a>
             </div>
         </header>
         <div class="gaugeiq-weather-map-timeline">
@@ -1216,7 +1216,8 @@ if ($current && !empty($current['observed_at'])) {
 </div>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
-             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>">
+             data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
+             data-location-id="<?= $locationId ?>">
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
     </section>
