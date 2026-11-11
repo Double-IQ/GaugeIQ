@@ -537,9 +537,7 @@ if ($current && !empty($current['observed_at'])) {
             $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
             $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
             $amount = is_numeric($radarCell['precipitation_mm'] ?? null) ? (float)$radarCell['precipitation_mm'] : 0.1;
-            $cellRadius = $locationId === 2
-                ? max(14.0, min(22.0, 15.0 + log10(1.0 + max(0.0, $amount)) * 4.0))
-                : max(3.0, min(7.0, 3.0 + log10(1.0 + max(0.0, $amount)) * 3.0));
+            $cellRadius = max(3.0, min(7.0, 3.0 + log10(1.0 + max(0.0, $amount)) * 3.0));
             $cellColour = $amount >= 5.0 ? '#E7C84B' : ($amount >= 1.0 ? '#45D69D' : '#36B9D6');
             $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . number_format($amount, 2) . ' mm at ' . number_format((float)$radarCell['distance_km'], 1) . ' km</title></circle>';
         }
