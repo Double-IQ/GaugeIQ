@@ -49,15 +49,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($latitude < -90 || $latitude > 90) throw new InvalidArgumentException('Latitude must be between -90 and 90.');
             if ($longitude < -180 || $longitude > 180) throw new InvalidArgumentException('Longitude must be between -180 and 180.');
             if ((string)($_POST['action'] ?? '') === 'save_second_location') {
+                $newLatitude = number_format($latitude, 6, '.', '');
+                $newLongitude = number_format($longitude, 6, '.', '');
+                $secondCoordinatesChanged = $secondLocationLatitude !== '' && $secondLocationLongitude !== ''
+                    && (abs((float)$secondLocationLatitude - $latitude) > 0.000001
+                        || abs((float)$secondLocationLongitude - $longitude) > 0.000001);
+                if ($secondCoordinatesChanged) {
+                    saveGaugeSetting($pdo, 'second_location_changed_at', gmdate('c'));
+                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_location_2', '');
+                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_updated_at_location_2', '');
+                    saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at_location_2', '');
+                    $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 2')->execute();
+                }
                 saveGaugeSetting($pdo, 'second_location_name', $name);
-                saveGaugeSetting($pdo, 'second_location_latitude', number_format($latitude, 6, '.', ''));
-                saveGaugeSetting($pdo, 'second_location_longitude', number_format($longitude, 6, '.', ''));
+                saveGaugeSetting($pdo, 'second_location_latitude', $newLatitude);
+                saveGaugeSetting($pdo, 'second_location_longitude', $newLongitude);
                 saveGaugeSetting($pdo, 'second_location_enabled', '1');
                 header('Location: location-history.php?second_saved=1');
             } else {
+                $newLatitude = number_format($latitude, 6, '.', '');
+                $newLongitude = number_format($longitude, 6, '.', '');
+                $primaryCoordinatesChanged = $locationLatitude !== '' && $locationLongitude !== ''
+                    && (abs((float)$locationLatitude - $latitude) > 0.000001
+                        || abs((float)$locationLongitude - $longitude) > 0.000001);
+                if ($primaryCoordinatesChanged) {
+                    saveGaugeSetting($pdo, 'active_location_changed_at', gmdate('c'));
+                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast', '');
+                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_updated_at', '');
+                    saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at', '');
+                    $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 1')->execute();
+                }
                 saveGaugeSetting($pdo, 'location_name', $name);
-                saveGaugeSetting($pdo, 'location_latitude', number_format($latitude, 6, '.', ''));
-                saveGaugeSetting($pdo, 'location_longitude', number_format($longitude, 6, '.', ''));
+                saveGaugeSetting($pdo, 'location_latitude', $newLatitude);
+                saveGaugeSetting($pdo, 'location_longitude', $newLongitude);
                 header('Location: location-history.php?saved=1');
             }
             exit;
