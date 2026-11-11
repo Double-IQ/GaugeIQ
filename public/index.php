@@ -584,6 +584,7 @@ if ($current && !empty($current['observed_at'])) {
                             <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
                             <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
                         </g>
+                                            </g>
                     </svg>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
