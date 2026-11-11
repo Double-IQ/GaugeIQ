@@ -29,6 +29,7 @@ $timezoneName = is_string($storedTimezone) && $storedTimezone !== ''
     ? $storedTimezone
     : (string)($config['app']['timezone'] ?? 'UTC');
 try { new DateTimeZone($timezoneName); } catch (Throwable) { $timezoneName = (string)($config['app']['timezone'] ?? 'UTC'); }
+date_default_timezone_set($timezoneName);
 $coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name', 'active_location_changed_at', 'second_location_name')");
 $coordinateSettings->execute();
 $settings = [];
