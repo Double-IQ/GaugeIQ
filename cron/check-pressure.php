@@ -234,7 +234,7 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int
 
     try {
         $push = new PushService($config, $pdo);
-        $forecastUrl = rtrim((string)$config['app']['base_url'], '/') . '/forecast.php?from=daily-alert&date=' . rawurlencode($today);
+        $forecastUrl = rtrim((string)$config['app']['base_url'], '/') . '/forecast.php?from=daily-alert&date=' . rawurlencode($today) . '&location=' . $locationId;
         $result = $push->sendDetailed('GaugeIQ daily forecast', $message, $forecastUrl);
         $sent = (int)($result['sent'] ?? 0);
         $subscriptions = (int)($result['subscriptions'] ?? 0);
