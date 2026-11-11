@@ -83,10 +83,8 @@ try {
         $longitude = isset($settings['location_longitude']) ? (float)$settings['location_longitude'] : (isset($settings['active_location_longitude']) ? (float)$settings['active_location_longitude'] : (float)($config['pressure']['longitude'] ?? NAN));
         $locationName = (string)($settings['location_name'] ?? $settings['active_location_name'] ?? $config['pressure']['location_name'] ?? 'Configured GaugeIQ location');
     }
-    $timezone = (string)($config['app']['timezone'] ?? 'UTC');
+    $timezone = 'auto';
     if (!is_finite($latitude) || $latitude < -90 || $latitude > 90 || !is_finite($longitude) || $longitude < -180 || $longitude > 180) openMeteoHistoryReply(422, ['error' => 'Configure valid location coordinates in GaugeIQ before importing history.']);
-    try { new DateTimeZone($timezone); } catch (Throwable) { $timezone = 'UTC'; }
-
     $endpoint = $source === 'forecast' ? 'https://historical-forecast-api.open-meteo.com/v1/forecast' : 'https://archive-api.open-meteo.com/v1/archive';
     $hourlyFields = 'temperature_2m,dew_point_2m,surface_pressure,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,weather_code';
     if ($source === 'forecast') $hourlyFields .= ',precipitation_probability,rain';
@@ -97,6 +95,15 @@ try {
         'wind_speed_unit' => 'kmh', 'precipitation_unit' => 'mm', 'timezone' => $timezone,
     ]);
     $data = openMeteoFetch($endpoint . '?' . $params);
+    $timezone = (string)($data['timezone'] ?? 'UTC');
+    try { new DateTimeZone($timezone); } catch (Throwable) { $timezone = (string)($config['app']['timezone'] ?? 'UTC'); }
+    $timezoneKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+    if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        $saveTimezone = $pdo->prepare('INSERT INTO gaugeiq_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+    } else {
+        $saveTimezone = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+    }
+    $saveTimezone->execute([$timezoneKey, $timezone]);
     $hourly = $data['hourly'];
     $times = $hourly['time'];
     $sourceLabel = $source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather';
