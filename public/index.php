@@ -1348,7 +1348,7 @@ if ($current && !empty($current['observed_at'])) {
     <p id="status" class="status"></p>
 </main>
 <?php
-$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 $historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
 $historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?");
