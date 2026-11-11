@@ -174,7 +174,7 @@ try {
     $enabledRuleStmt->execute([$locationId]);
     $enabledRuleCount = (int)$enabledRuleStmt->fetchColumn();
     $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'stability_alert_threshold' LIMIT 1");
-    $stabilityThresholdStmt->execute();
+    $stabilityThresholdStmt->execute(['stability_alert_threshold' . $locationStatusSuffix]);
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
     $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
         && (float)$stabilityThresholdValue >= 0 && (float)$stabilityThresholdValue <= 10)
