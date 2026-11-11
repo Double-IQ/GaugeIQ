@@ -79,4 +79,8 @@ $insertSecondForecast->execute(['2026-11-11T03:00', 'Open-Meteo', '2026-11-11T00
 $count = (int)$pdo->query("SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE forecast_at = '2026-11-11T03:00'")->fetchColumn();
 assertSchemaMigration($count === 2, 'The same forecast hour cannot be stored for both locations.');
 
+migrateDatabase($pdo);
+$repeatVersion = (int)$pdo->query('SELECT version FROM gaugeiq_schema LIMIT 1')->fetchColumn();
+assertSchemaMigration($repeatVersion === 12, 'A repeated schema migration changed the schema version or failed.');
+
 echo "Location schema migration tests passed.\n";
