@@ -58,6 +58,8 @@ if ($locationId === 2) {
     $dashboardLatitude = $storedCoordinates['second_location_latitude'] ?? '';
     $dashboardLongitude = $storedCoordinates['second_location_longitude'] ?? '';
     $locationName = $storedCoordinates['second_location_name'] ?? 'Location 2';
+    $dashboardTimezone = gaugeIqDashboardSetting($pdo, 'location_timezone_location_2') ?? $dashboardTimezone;
+    try { new DateTimeZone($dashboardTimezone); } catch (Throwable) { $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC'); }
 } else {
     $dashboardLatitude = $storedCoordinates['active_location_latitude']
         ?? $storedCoordinates['location_latitude']
