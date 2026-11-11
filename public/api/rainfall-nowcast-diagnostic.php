@@ -53,10 +53,10 @@ try {
     foreach ($payload['frames'] as $frame) {
         $cells = is_array($frame['rain_cells'] ?? null) ? $frame['rain_cells'] : [];
         $quadrants = [
-            'north' => ['count' => 0, 'max_mm' => 0.0, 'examples' => []],
-            'east' => ['count' => 0, 'max_mm' => 0.0, 'examples' => []],
-            'south' => ['count' => 0, 'max_mm' => 0.0, 'examples' => []],
-            'west' => ['count' => 0, 'max_mm' => 0.0, 'examples' => []],
+            'north' => ['count' => 0, 'max_precipitation' => 0.0, 'examples' => []],
+            'east' => ['count' => 0, 'max_precipitation' => 0.0, 'examples' => []],
+            'south' => ['count' => 0, 'max_precipitation' => 0.0, 'examples' => []],
+            'west' => ['count' => 0, 'max_precipitation' => 0.0, 'examples' => []],
         ];
         $normalisedCells = [];
         foreach ($cells as $cell) {
@@ -80,14 +80,14 @@ try {
                 'quadrant' => $quadrant,
             ];
             $quadrants[$quadrant]['count']++;
-            $quadrants[$quadrant]['max_mm'] = max($quadrants[$quadrant]['max_mm'], $amount);
+            $quadrants[$quadrant]['max_precipitation'] = max($quadrants[$quadrant]['max_precipitation'], $amount);
             if (count($quadrants[$quadrant]['examples']) < 8) {
                 $quadrants[$quadrant]['examples'][] = $entry;
             }
             $normalisedCells[] = $entry;
         }
         foreach ($quadrants as &$quadrantData) {
-            $quadrantData['max_mm'] = round($quadrantData['max_mm'], 2);
+            $quadrantData['max_precipitation'] = round($quadrantData['max_precipitation'], 2);
         }
         unset($quadrantData);
         usort($normalisedCells, static fn(array $a, array $b): int =>
