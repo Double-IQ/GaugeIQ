@@ -173,7 +173,7 @@ try {
     $enabledRuleStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE location_id = ? AND enabled = 1');
     $enabledRuleStmt->execute([$locationId]);
     $enabledRuleCount = (int)$enabledRuleStmt->fetchColumn();
-    $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'stability_alert_threshold' LIMIT 1");
+    $stabilityThresholdStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
     $stabilityThresholdStmt->execute(['stability_alert_threshold' . $locationStatusSuffix]);
     $stabilityThresholdValue = $stabilityThresholdStmt->fetchColumn();
     $weatherStabilityAlertThreshold = ($stabilityThresholdValue !== false && is_numeric($stabilityThresholdValue)
