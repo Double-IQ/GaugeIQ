@@ -286,7 +286,7 @@ $allRules = $rules->all();
 $enabledRuleCount = count(array_filter($allRules, static fn(array $rule): bool => (bool)$rule['enabled']));
 
 $checkMinutes = max(1, (int)$config['pressure']['check_interval_minutes']);
-$monitorCronMinutes = 30;
+$monitorCronMinutes = 60;
 $monitorSettings = [];
 $monitorSuccessKey = 'monitor_last_success_at' . $locationSuffix;
 $monitorErrorKey = 'monitor_last_error' . $locationSuffix;
@@ -483,7 +483,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </label>
 
         <button type="submit">Save daily forecast alert</button>
-        <p class="alert-help muted">The daily check runs with your existing scheduled monitor. With a 30-minute cron, delivery is at the first check at or after your chosen time (normally within 30 minutes). Only selected conditions trigger a notification; if several match, GaugeIQ combines them into one message.</p>
+        <p class="alert-help muted">The daily check runs with your existing scheduled monitor. With the hourly scheduled monitor, delivery is at the first check at or after your chosen time (normally within one hour). Only selected conditions trigger a notification; if several match, GaugeIQ combines them into one message.</p>
         <?php if ($dailyForecastAlertLastDate !== ''): ?>
             <p class="daily-forecast-last-status" role="status">Last daily forecast check: <?= h($dailyForecastAlertLastDate) ?><?= $dailyForecastAlertLastStatus !== '' ? ' · ' . h($dailyForecastAlertLastStatus) : '' ?></p>
         <?php endif; ?>
@@ -523,7 +523,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
                 </div>
             </div>
             <button type="submit">Save rainfall outlook alert</button>
-            <p class="alert-help muted">GaugeIQ checks the latest two-hour ECMWF outlook every 30 minutes. To avoid repeated notifications for the same passing system, alerts have a three-hour cooldown. This is model guidance, not live radar.</p>
+            <p class="alert-help muted">GaugeIQ checks the latest two-hour ECMWF outlook with its hourly scheduled monitor. To avoid repeated notifications for the same passing system, alerts have a three-hour cooldown. This is model guidance, not live radar.</p>
             <?php if ($ecmwfRainfallAlertLastStatus !== ''): ?>
                 <p class="daily-forecast-last-status" role="status"><?= h($ecmwfRainfallAlertLastStatus) ?></p>
             <?php endif; ?>
