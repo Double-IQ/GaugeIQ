@@ -76,6 +76,7 @@ if ($locationId === 2) {
     try { new DateTimeZone($dashboardTimezone); } catch (Throwable) { $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC'); }
 }
 date_default_timezone_set($dashboardTimezone);
+$activeLocationChangedAt = '';
 
 try {
     $changedAtKey = $locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
