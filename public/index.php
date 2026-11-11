@@ -549,12 +549,16 @@ if ($current && !empty($current['observed_at'])) {
                     <p class="label">ECMWF IFS · Next 6 hours</p>
                     <h2>Rainfall outlook</h2>
                 </div>
+                <div class="rainfall-radar-compass-controls">
+                    <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
+                    <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
+                </div>
                 <span class="rainfall-nowcast-source">Model forecast</span>
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
                     <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
-                    <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
+                    <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">\n                        <g id="rainfallRadarOrientation" transform="rotate(0 160 160)">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
                             <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
@@ -1195,7 +1199,6 @@ if ($current && !empty($current['observed_at'])) {
                 <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
             </div>
             <div class="gaugeiq-weather-map-controls">
-                <button id="weatherMapCompassButton" class="gaugeiq-weather-map-action" type="button" aria-pressed="false">Enable Compass</button>
                 <select id="layer-select" aria-label="Weather layer">
                     <option value="temperature_2m">Temperature</option>
                     <option value="precipitation_cloud_cover" selected>Combined</option>
@@ -1203,7 +1206,6 @@ if ($current && !empty($current['observed_at'])) {
                     <option value="cloud_cover">Cloud cover only</option>
                 </select>
                 <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php?location=<?= $locationId ?>">Appearance</a>
-            <span id="weatherMapCompassStatus" class="gaugeiq-weather-map-compass-status" role="status" aria-live="polite">North-up</span>
             </div>
         </header>
         <div class="gaugeiq-weather-map-timeline">
