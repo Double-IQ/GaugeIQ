@@ -15,26 +15,37 @@ $db = new Database($config);
 $pdo = $db->pdo();
 migrateDatabase($pdo);
 
+$locationId = (int)($_GET['location'] ?? 1);
+$secondEnabledStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'second_location_enabled' LIMIT 1");
+$secondEnabledStmt->execute();
+$secondLocationEnabled = $secondEnabledStmt->fetchColumn() === '1';
+if (!in_array($locationId, [1, 2], true) || ($locationId === 2 && !$secondLocationEnabled)) $locationId = 1;
 $locationName = (string)($config['pressure']['location_name'] ?? 'Your location');
 $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
-$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name', 'active_location_changed_at')");
+$coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_name', 'location_name', 'active_location_changed_at', 'second_location_name')");
 $coordinateSettings->execute();
 $settings = [];
 foreach ($coordinateSettings->fetchAll() as $setting) {
     $settings[(string)$setting['key']] = (string)$setting['value'];
 }
-$locationName = $settings['active_location_name'] ?? $settings['location_name'] ?? $locationName;
+if ($locationId === 2) {
+    $locationName = $settings['second_location_name'] ?? 'Location 2';
+} else {
+    $locationName = $settings['active_location_name'] ?? $settings['location_name'] ?? $locationName;
+}
 
-$latest = null;
-$changedAt = $settings['active_location_changed_at'] ?? '';
+$latestSql = "SELECT forecast_json, observed_at FROM gaugeiq_pressure_readings
+              WHERE location_id = ? AND (source IS NULL OR source = 'Open-Meteo')";
+$latestParams = [$locationId];
+$changedAt = $locationId === 1 ? ($settings['active_location_changed_at'] ?? '') : '';
 if ($changedAt !== '') {
-    $stmt = $pdo->prepare("SELECT forecast_json, observed_at FROM gaugeiq_pressure_readings WHERE created_at >= ? AND (source IS NULL OR source = 'Open-Meteo') ORDER BY id DESC LIMIT 1");
-    $stmt->execute([$changedAt]);
-    $latest = $stmt->fetch() ?: null;
+    $latestSql .= ' AND created_at >= ?';
+    $latestParams[] = $changedAt;
 }
-if ($latest === null) {
-    $latest = $pdo->query("SELECT forecast_json, observed_at FROM gaugeiq_pressure_readings WHERE source IS NULL OR source = 'Open-Meteo' ORDER BY id DESC LIMIT 1")->fetch() ?: null;
-}
+$latestSql .= ' ORDER BY id DESC LIMIT 1';
+$stmt = $pdo->prepare($latestSql);
+$stmt->execute($latestParams);
+$latest = $stmt->fetch() ?: null;
 $forecast = [];
 if ($latest) {
     $decoded = json_decode((string)($latest['forecast_json'] ?? '[]'), true);
@@ -100,7 +111,7 @@ $formatHour = static function (?string $time): string {
             <h1><?= $fromDailyAlert ? 'Your daily forecast' : '7-day forecast' ?></h1>
             <p class="muted forecast-location"><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></p>
         </div>
-        <a class="secondary forecast-back-link" href="index.php">← Dashboard</a>
+        <a class="secondary forecast-back-link" href="index.php?location=<?= $locationId ?>">← Dashboard</a>
     </header>
 
     <section class="card forecast-detail-intro<?= $fromDailyAlert ? ' forecast-from-notification' : '' ?>">
