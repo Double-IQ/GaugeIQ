@@ -230,6 +230,16 @@ final class PressureService
         $gapHours = max(1, min(24, $gapHours));
         $pastHours = max(1, min(12, $pastHours));
 
+        $timezoneKey = $this->locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+        $timezoneQuery = $this->db->prepare('SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1');
+        $timezoneQuery->execute([$timezoneKey]);
+        $timezoneName = (string)($timezoneQuery->fetchColumn() ?: ($this->config['app']['timezone'] ?? 'UTC'));
+        try {
+            $timezone = new DateTimeZone($timezoneName);
+        } catch (Throwable) {
+            $timezone = new DateTimeZone('UTC');
+        }
+
         $latestQuery = $this->db->prepare(
             'SELECT observed_at FROM gaugeiq_pressure_readings
              WHERE location_id = ? ORDER BY observed_at DESC, id DESC LIMIT 1'
@@ -238,8 +248,8 @@ final class PressureService
         $latestObservedAt = $latestQuery->fetchColumn();
         if (is_string($latestObservedAt) && $latestObservedAt !== '') {
             try {
-                $latestTimestamp = (new DateTimeImmutable($latestObservedAt))->getTimestamp();
-                if ($latestTimestamp >= time() - ($gapHours * 3600)) {
+                $latestTimestamp = (new DateTimeImmutable($latestObservedAt, $timezone))->getTimestamp();
+                if ($latestTimestamp >= (new DateTimeImmutable('now', $timezone))->getTimestamp() - ($gapHours * 3600)) {
                     return null;
                 }
             } catch (Throwable) {
@@ -314,9 +324,9 @@ final class PressureService
             }
 
             $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-            $timezoneName = (string)($data['timezone'] ?? ($this->config['app']['timezone'] ?? 'UTC'));
+            $responseTimezoneName = (string)($data['timezone'] ?? $timezoneName);
             try {
-                $timezone = new DateTimeZone($timezoneName);
+                $timezone = new DateTimeZone($responseTimezoneName);
             } catch (Throwable) {
                 $timezone = new DateTimeZone('UTC');
             }
@@ -339,7 +349,7 @@ final class PressureService
 
             $findExisting = $this->db->prepare(
                 'SELECT 1 FROM gaugeiq_pressure_readings
-                 WHERE location_id = ? AND observed_at = ? LIMIT 1'
+                 WHERE location_id = ? AND (observed_at = ? OR observed_at = ?) LIMIT 1'
             );
             $insert = $this->db->prepare(
                 'INSERT INTO gaugeiq_pressure_readings
@@ -371,8 +381,11 @@ final class PressureService
                         continue;
                     }
 
-                    $observedAt = $observedDate->format('Y-m-d\\TH:i:s');
-                    $findExisting->execute([$this->locationId, $observedAt]);
+                    // Match the API's minute-precision timestamps, while
+                    // also recognising older rows stored with seconds.
+                    $observedAt = $observedDate->format('Y-m-d\\TH:i');
+                    $observedAtWithSeconds = $observedDate->format('Y-m-d\\TH:i:s');
+                    $findExisting->execute([$this->locationId, $observedAt, $observedAtWithSeconds]);
                     if ($findExisting->fetchColumn() !== false) {
                         continue;
                     }
