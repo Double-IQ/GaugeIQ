@@ -190,6 +190,7 @@ final class WeatherMapRainfallNowcastService
                     'longitude' => round((float)$cell['longitude'], 4),
                     'distance_km' => round((float)$cell['distance_km'], 1),
                     'bearing_degrees' => round(fmod($bearing + 360.0, 360.0), 1),
+                    'raw_precipitation_mm' => round($rawAmount, 3),
                     'precipitation_mm_per_hour' => round($amount, 2),
                 ];
             }
