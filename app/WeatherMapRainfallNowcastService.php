@@ -11,7 +11,7 @@ final class WeatherMapRainfallNowcastService
 {
     private const USER_AGENT = 'GaugeIQ-WeatherMap/1.0';
     private const SEARCH_RADIUS_KM = 100.0;
-    private const WET_THRESHOLD_MM = 0.1;
+    private const WET_THRESHOLD_MM_PER_HOUR = 0.1;
 
     public function __construct(
         private readonly PDO $pdo,
@@ -24,6 +24,19 @@ final class WeatherMapRainfallNowcastService
         if (!function_exists('curl_init')) {
             throw new RuntimeException('PHP cURL is required for the ECMWF rainfall outlook.');
         }
+    }
+
+    /**
+     * ECMWF precipitation values are accumulated over each forecast step.
+     * Open-Meteo's weather-map renderer displays this precipitation family
+     * as a per-hour rate, so the card must apply the same step normalisation.
+     */
+    public static function precipitationRate(float $accumulatedMm, float $deltaTimeHours): float
+    {
+        if (!is_finite($accumulatedMm) || !is_finite($deltaTimeHours) || $deltaTimeHours <= 0.0) {
+            throw new InvalidArgumentException('A finite precipitation amount and positive forecast-step duration are required.');
+        }
+        return max(0.0, $accumulatedMm) / $deltaTimeHours;
     }
 
     public function refreshIfDue(int $intervalSeconds = 1800, bool $force = false, ?array $locationOverride = null, bool $persist = true): array
@@ -53,11 +66,29 @@ final class WeatherMapRainfallNowcastService
         if ($frames === []) throw new RuntimeException('No scheduled ECMWF weather-map frames are available.');
 
         $now = time();
-        $futureFrames = [];
+        $scheduledFrames = [];
         foreach ($frames as $frame) {
             $timestamp = strtotime((string)($frame['frame_time'] ?? ''));
-            if (($frame['frame_type'] ?? '') !== 'future' || $timestamp === false || $timestamp < $now) continue;
-            $futureFrames[] = $frame + ['timestamp' => $timestamp];
+            if ($timestamp === false) continue;
+            $scheduledFrames[] = $frame + ['timestamp' => $timestamp];
+        }
+        usort($scheduledFrames, static fn(array $a, array $b): int => $a['timestamp'] <=> $b['timestamp']);
+
+        // Match the map renderer: use the gap to the previous valid time,
+        // except for the first frame, which uses the next valid time.
+        $futureFrames = [];
+        foreach ($scheduledFrames as $index => $frame) {
+            $neighbour = $index === 0
+                ? ($scheduledFrames[1] ?? null)
+                : $scheduledFrames[$index - 1];
+            $deltaTimeHours = $neighbour === null
+                ? 3.0
+                : abs((int)$frame['timestamp'] - (int)$neighbour['timestamp']) / 3600.0;
+            if (!is_finite($deltaTimeHours) || $deltaTimeHours <= 0.0) {
+                throw new RuntimeException('The scheduled ECMWF forecast-step duration is invalid.');
+            }
+            if (($frame['frame_type'] ?? '') !== 'future' || (int)$frame['timestamp'] < $now) continue;
+            $futureFrames[] = $frame + ['delta_time_hours' => $deltaTimeHours];
         }
         if ($futureFrames === []) {
             throw new RuntimeException('No future ECMWF precipitation frames are scheduled yet.');
@@ -119,8 +150,11 @@ final class WeatherMapRainfallNowcastService
             }
             if ($nearestCell === null) throw new RuntimeException('The ECMWF regular grid has no cells around the configured location.');
 
+            $stepDurationHours = (float)$frame['delta_time_hours'];
             $localValue = (float)($values[$nearestCell['index']] ?? 0.0);
-            $localAmount = is_finite($localValue) ? max(0.0, $localValue) : 0.0;
+            $localAmount = is_finite($localValue)
+                ? self::precipitationRate($localValue, $stepDurationHours)
+                : 0.0;
             $wet15 = 0;
             $wet50 = 0;
             $wet100 = 0;
@@ -132,9 +166,9 @@ final class WeatherMapRainfallNowcastService
             foreach ($samples as $cell) {
                 $rawAmount = (float)($values[$cell['index']] ?? 0.0);
                 if (!is_finite($rawAmount)) continue;
-                $amount = max(0.0, $rawAmount);
+                $amount = self::precipitationRate($rawAmount, $stepDurationHours);
                 $maximum = max($maximum, $amount);
-                if ($amount < self::WET_THRESHOLD_MM) continue;
+                if ($amount < self::WET_THRESHOLD_MM_PER_HOUR) continue;
                 $wetCount++;
                 if ($cell['distance_km'] <= 15) $wet15++;
                 if ($cell['distance_km'] <= 50) $wet50++;
@@ -154,19 +188,20 @@ final class WeatherMapRainfallNowcastService
                 $radarCells[] = [
                     'distance_km' => round((float)$cell['distance_km'], 1),
                     'bearing_degrees' => round(fmod($bearing + 360.0, 360.0), 1),
-                    'precipitation_mm' => round($amount, 2),
+                    'precipitation_mm_per_hour' => round($amount, 2),
                 ];
             }
 
             $frameResults[] = [
                 'time' => gmdate('c', (int)$frame['timestamp']),
-                'local_precipitation_mm' => round($localAmount, 2),
-                'maximum_precipitation_mm' => round($maximum, 2),
+                'step_duration_hours' => round($stepDurationHours, 2),
+                'local_precipitation_mm_per_hour' => round($localAmount, 2),
+                'maximum_precipitation_mm_per_hour' => round($maximum, 2),
                 'wet_cells_within_15km' => $wet15,
                 'wet_cells_within_50km' => $wet50,
                 'wet_cells_within_100km' => $wet100,
                 'nearest_rain_km' => $nearestWetDistance === null ? null : round($nearestWetDistance, 1),
-                'nearest_rain_precipitation_mm' => $nearestWetAmount === null ? null : round($nearestWetAmount, 2),
+                'nearest_rain_precipitation_mm_per_hour' => $nearestWetAmount === null ? null : round($nearestWetAmount, 2),
                 'wet_cells' => $wetCount,
                 'rain_cells' => $radarCells,
             ];
@@ -194,7 +229,7 @@ final class WeatherMapRainfallNowcastService
         $statusPriority = ['clear' => 0, 'rain_in_area' => 1, 'rain_nearby' => 2, 'rain_near_location' => 3];
         foreach ($frameResults as $result) {
             $frameStatus = 'clear';
-            if ($result['local_precipitation_mm'] >= self::WET_THRESHOLD_MM ||
+            if ($result['local_precipitation_mm_per_hour'] >= self::WET_THRESHOLD_MM_PER_HOUR ||
                 $result['wet_cells_within_15km'] > 0) {
                 $frameStatus = 'rain_near_location';
             } elseif ($result['wet_cells_within_50km'] > 0) {
@@ -217,7 +252,7 @@ final class WeatherMapRainfallNowcastService
                 $summary = sprintf(
                     'ECMWF forecasts precipitation at or very close to your location around %s (%s mm at the nearest grid cell).',
                     $localTime,
-                    number_format($firstRain['local_precipitation_mm'], 1)
+                    number_format($firstRain['local_precipitation_mm_per_hour'], 1)
                 );
             } elseif ($status === 'rain_nearby') {
                 $summary = sprintf(
@@ -252,20 +287,21 @@ final class WeatherMapRainfallNowcastService
         }
 
         $payload = [
+            'schema_version' => 2,
             'source' => 'ECMWF IFS',
             'status' => $status,
             'forecast_consistency' => $forecastConsistency,
             'summary' => $summary,
             'location' => ['latitude' => (float)$latitudeValue, 'longitude' => (float)$longitudeValue],
             'search_radius_km' => self::SEARCH_RADIUS_KM,
-            'wet_threshold_mm' => self::WET_THRESHOLD_MM,
+            'wet_threshold_mm_per_hour' => self::WET_THRESHOLD_MM_PER_HOUR,
             'rain_footprint_trend' => $movementTrend,
             'nearest_rain_distance_change_km' => $distanceChangeKm === null ? null : round($distanceChangeKm, 1),
             'grid_cells_sampled' => count($samples),
             'encoding' => $encodingInfo,
             'updated_at' => gmdate('c'),
             'frames' => $frameResults,
-            'note' => 'Model forecast derived from decoded ECMWF precipitation grid values; not live radar.',
+            'note' => 'Model forecast derived from decoded ECMWF precipitation grid values and normalised to mm per hour; not live radar.',
         ];
         if ($persist) {
             $this->saveSetting($this->locationSettingKey('weather_map_rainfall_nowcast'), json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
