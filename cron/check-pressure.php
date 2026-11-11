@@ -371,10 +371,11 @@ foreach ($monitorLocationIds as $locationId) {
         $current = $service->fetchCurrent();
         $locationTimezone = (string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC');
         try {
-            new DateTimeZone($locationTimezone);
+            $locationTimezoneObject = new DateTimeZone($locationTimezone);
             setGaugeIqStatus($pdo, 'location_timezone' . $statusSuffix, $locationTimezone);
         } catch (Throwable) {
             $locationTimezone = (string)($config['app']['timezone'] ?? 'UTC');
+            $locationTimezoneObject = new DateTimeZone($locationTimezone);
         }
         $previous = $service->record($current);
         setGaugeIqStatus($pdo, 'monitor_last_success_at' . $statusSuffix, gmdate('c'));
@@ -395,7 +396,7 @@ foreach ($monitorLocationIds as $locationId) {
                               AND (source IS NULL OR source = 'Open-Meteo')";
             $baselineParams = [
                 $locationId,
-                date('Y-m-d\\TH:i:s', $targetTimestamp),
+                (new DateTimeImmutable('@' . $targetTimestamp))->setTimezone($locationTimezoneObject)->format('Y-m-d\\TH:i:s'),
                 (string)$current['observed_at'],
             ];
             if ($locationId === 1) {
@@ -424,11 +425,7 @@ foreach ($monitorLocationIds as $locationId) {
             $previous === null ? '' : ' | pressure change ' . number_format($pressureChange, 1) . ' hPa'
         );
 
-        try {
-            $alertTimezone = new DateTimeZone((string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC'));
-        } catch (Throwable) {
-            $alertTimezone = new DateTimeZone('UTC');
-        }
+        $alertTimezone = $locationTimezoneObject;
         $ruleService = new AlertRuleService($pdo, $alertTimezone, $locationId);
         $ruleMatches = $baseline === null ? [] : $ruleService->evaluate($baseline, $current);
         $weatherStabilityMatches = $ruleService->evaluateWeatherStability();
