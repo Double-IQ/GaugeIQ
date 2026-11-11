@@ -250,8 +250,8 @@ if ($current && !empty($current['observed_at'])) {
     </header>
     <?php if ($secondLocationEnabled): ?>
     <nav class="location-switcher" aria-label="Monitoring location">
-        <a class="secondary button-link<?= $locationId === 1 ? ' active' : '' ?>" href="?location=1" <?= $locationId === 1 ? 'aria-current="page"' : '' ?>><?= h($storedCoordinates['location_name'] ?? $config['pressure']['location_name'] ?? 'Location 1') ?></a>
-        <a class="secondary button-link<?= $locationId === 2 ? ' active' : '' ?>" href="?location=2" <?= $locationId === 2 ? 'aria-current="page"' : '' ?>><?= h($storedCoordinates['second_location_name'] ?? 'Location 2') ?></a>
+        <a class="secondary button-link<?= $locationId === 1 ? ' active' : '' ?>" href="?location=1" <?= $locationId === 1 ? 'aria-current="page"' : '' ?>><?= htmlspecialchars((string)($storedCoordinates['location_name'] ?? $config['pressure']['location_name'] ?? 'Location 1'), ENT_QUOTES, 'UTF-8') ?></a>
+        <a class="secondary button-link<?= $locationId === 2 ? ' active' : '' ?>" href="?location=2" <?= $locationId === 2 ? 'aria-current="page"' : '' ?>><?= htmlspecialchars((string)($storedCoordinates['second_location_name'] ?? 'Location 2'), ENT_QUOTES, 'UTF-8') ?></a>
     </nav>
     <?php endif; ?>
 
@@ -617,7 +617,7 @@ if ($current && !empty($current['observed_at'])) {
             </p>
         </article>
     <?php endif; ?>
-    <a class="card forecast-preview-card" href="forecast.php" aria-label="Open the detailed seven-day weather forecast">
+    <a class="card forecast-preview-card" href="forecast.php?location=<?= $locationId ?>" aria-label="Open the detailed seven-day weather forecast">
         <div class="section-heading forecast-preview-heading" style="text-align: left; justify-content: flex-start;">
             <div>
                 <p class="label">A quick look at the days ahead</p>
