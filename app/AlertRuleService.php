@@ -225,6 +225,9 @@ final class AlertRuleService
             'UPDATE gaugeiq_alert_rules SET last_triggered_at = ?, updated_at = ? WHERE id = ? AND location_id = ?'
         );
         $stmt->execute([$now, $now, $ruleId, $this->locationId]);
+        if ($stmt->rowCount() < 1) {
+            return;
+        }
 
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_alert_events (rule_id, observed_at, message, created_at)
