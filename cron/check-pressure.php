@@ -425,7 +425,7 @@ foreach ($monitorLocationIds as $locationId) {
         );
 
         try {
-            $alertTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+            $alertTimezone = new DateTimeZone((string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC'));
         } catch (Throwable) {
             $alertTimezone = new DateTimeZone('UTC');
         }
