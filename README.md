@@ -133,7 +133,7 @@ GaugeIQ supports a second monitored place without replacing the primary location
 
 Each location has its own current readings, historical weather imports, recent-reading backfill, forecast data, rainfall-outlook analysis, alert rules, comparison window, alert status and monitoring health. The hourly server monitor checks each enabled location independently. A failure at one place does not prevent the other place from being checked.
 
-Push subscriptions remain shared across the GaugeIQ installation, but notification messages identify the location that triggered the alert. The detailed forecast, history graphs, dashboard map centre and rainfall outlook follow the selected location. ECMWF map-frame scheduling remains shared; the rainfall analysis is calculated around each location's own coordinates.
+Push subscriptions remain shared across the GaugeIQ installation, but notification messages identify the location that triggered the alert. The detailed forecast, history graphs, dashboard map centre, manually selected rectangular map coverage area and rainfall outlook follow the selected location. The map coverage rectangle can be configured separately for each location in Weather Map Appearance; colour palettes and other visual styling remain shared on the device. ECMWF map-frame scheduling remains shared; the rainfall analysis is calculated around each location's own coordinates.
 
 GaugeIQ detects when saved coordinates change. It keeps the old records in the database, but excludes them from the current location's readings and history, and resets the affected location's recent backfill and rainfall-outlook cache. Each location's timezone is detected from Open-Meteo and used for its forecasts, history and scheduled alerts.
 
