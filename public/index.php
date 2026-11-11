@@ -1362,11 +1362,21 @@ if ($current && !empty($current['observed_at'])) {
 try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 $historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$historyWeatherCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?");
-$historyWeatherCountStmt->execute([$locationId, 'Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59']);
+$historyCountSql = "SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?";
+$historyCountParams = [$locationId, 'Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59'];
+$historyLatestSql = "SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ?";
+$historyLatestParams = [$locationId, 'Open-Meteo Historical Weather'];
+if ($activeLocationChangedAt !== '') {
+    $historyCountSql .= ' AND created_at >= ?';
+    $historyCountParams[] = $activeLocationChangedAt;
+    $historyLatestSql .= ' AND created_at >= ?';
+    $historyLatestParams[] = $activeLocationChangedAt;
+}
+$historyWeatherCountStmt = $pdo->prepare($historyCountSql);
+$historyWeatherCountStmt->execute($historyCountParams);
 $historyWeatherCount = (int)$historyWeatherCountStmt->fetchColumn();
-$historyWeatherLatestStmt = $pdo->prepare("SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ?");
-$historyWeatherLatestStmt->execute([$locationId, 'Open-Meteo Historical Weather']);
+$historyWeatherLatestStmt = $pdo->prepare($historyLatestSql);
+$historyWeatherLatestStmt->execute($historyLatestParams);
 $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '');
 ?>
 <div id="historicalDatasetStatus"
