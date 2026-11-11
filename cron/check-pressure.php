@@ -386,9 +386,13 @@ foreach ($monitorLocationIds as $locationId) {
 
         $lookbackHours = max(1, min(168, (int)getGaugeIqSetting($pdo, gaugeIqLocationSettingKey('alert_lookback_hours', $locationId), '3')));
         $baseline = null;
-        $targetTimestamp = strtotime((string)$current['observed_at']);
+        try {
+            $targetTimestamp = (new DateTimeImmutable((string)$current['observed_at'], $locationTimezoneObject))->getTimestamp()
+                - ($lookbackHours * 3600);
+        } catch (Throwable) {
+            $targetTimestamp = false;
+        }
         if ($targetTimestamp !== false) {
-            $targetTimestamp -= $lookbackHours * 3600;
             $baselineSql = "SELECT pressure_hpa, humidity_percent, dew_point_c, temperature_c,
                                    wind_speed_kmh, wind_direction_degrees, observed_at
                             FROM gaugeiq_pressure_readings
