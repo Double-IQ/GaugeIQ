@@ -123,11 +123,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $locationLatitude = trim((string)($_POST['location_latitude'] ?? $locationLatitude));
     $locationLongitude = trim((string)($_POST['location_longitude'] ?? $locationLongitude));
 }
-$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+$historyTimezoneName = gaugeSetting($pdo, 'location_timezone', '') ?? '';
+if ($historyTimezoneName === '') $historyTimezoneName = (string)($config['app']['timezone'] ?? 'UTC');
+try { $historyTimezone = new DateTimeZone($historyTimezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 $historicalStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
 $historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$weatherHistoryCountStmt = $pdo->prepare("SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = 1 AND source = ? AND observed_at >= ? AND observed_at <= ?");
-$weatherHistoryCountStmt->execute(['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59']);
+$primaryChangedAt = gaugeSetting($pdo, 'active_location_changed_at', '') ?? '';
+$historyCountSql = "SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = 1 AND source = ? AND observed_at >= ? AND observed_at <= ?";
+$historyCountParams = ['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59'];
+if ($primaryChangedAt !== '') {
+    $historyCountSql .= ' AND created_at >= ?';
+    $historyCountParams[] = $primaryChangedAt;
+}
+$weatherHistoryCountStmt = $pdo->prepare($historyCountSql);
+$weatherHistoryCountStmt->execute($historyCountParams);
 $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 ?>
 <!doctype html>
