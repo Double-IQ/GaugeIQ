@@ -207,6 +207,7 @@ final class PressureService
             'weather_code' => (int)$current['weather_code'],
             'wind_speed_kmh' => (float)$current['wind_speed_10m'],
             'wind_direction_degrees' => (float)$current['wind_direction_10m'],
+            'timezone' => (string)($data['timezone'] ?? 'UTC'),
             'observed_at' => (string)($current['time'] ?? gmdate('c')),
             'forecast' => $forecast,
         ];
@@ -217,12 +218,12 @@ final class PressureService
      * temporary fallback when live monitoring has too few recent readings.
      * These rows are deliberately kept under their own source label.
      */
-    public function refreshRecentBackfill(int $pastHours = 24): int
+    public function refreshRecentBackfill(int $pastHours = 24, ?string $locationTimezone = null): int
     {
         $pastHours = max(6, min(24, $pastHours));
         [$latitude, $longitude] = $this->locationCoordinates();
 
-        $timezoneName = (string)($this->config['app']['timezone'] ?? 'UTC');
+        $timezoneName = $locationTimezone ?: (string)($this->config['app']['timezone'] ?? 'UTC');
         try {
             $timezone = new DateTimeZone($timezoneName);
         } catch (Throwable) {
