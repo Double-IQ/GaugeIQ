@@ -22,6 +22,8 @@ try {
     $db = new Database($config);
     $pdo = $db->pdo();
     migrateDatabase($pdo);
+    $locationId = (int)($_GET['location'] ?? 1);
+    if (!in_array($locationId, [1, 2], true)) $locationId = 1;
 
     $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
     try {
@@ -43,10 +45,10 @@ try {
                 wind_direction_degrees, rainfall_mm, cloud_cover_percent, weather_code,
                 observed_at, created_at, source
          FROM gaugeiq_pressure_readings
-         WHERE observed_at >= ?
+         WHERE location_id = ? AND observed_at >= ?
          ORDER BY observed_at ASC, id ASC'
     );
-    $stmt->execute([$fromDay]);
+    $stmt->execute([$locationId, $fromDay]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $fromTimestamp = $from->getTimestamp();
