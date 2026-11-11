@@ -346,11 +346,29 @@ SQL);
 
         if ($driver === 'mysql') {
             gaugeIqEnsureColumn($db, 'gaugeiq_rain_forecasts', 'location_id', $integerType);
-            $db->exec('ALTER TABLE gaugeiq_rain_forecasts DROP INDEX uq_gaugeiq_rain_forecast_time');
-            $db->exec('ALTER TABLE gaugeiq_rain_forecasts ADD UNIQUE KEY uq_gaugeiq_rain_location_time (location_id, forecast_at)');
-            $db->exec('CREATE INDEX idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings (location_id, observed_at)');
-            $db->exec('CREATE INDEX idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules (location_id, enabled)');
-            $db->exec('CREATE INDEX idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts (location_id, forecast_at)');
+            $indexExists = static function (string $table, string $index) use ($db): bool {
+                $stmt = $db->prepare(
+                    'SELECT 1 FROM information_schema.statistics
+                     WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ? LIMIT 1'
+                );
+                $stmt->execute([$table, $index]);
+                return $stmt->fetchColumn() !== false;
+            };
+            if ($indexExists('gaugeiq_rain_forecasts', 'uq_gaugeiq_rain_forecast_time')) {
+                $db->exec('ALTER TABLE gaugeiq_rain_forecasts DROP INDEX uq_gaugeiq_rain_forecast_time');
+            }
+            if (!$indexExists('gaugeiq_rain_forecasts', 'uq_gaugeiq_rain_location_time')) {
+                $db->exec('ALTER TABLE gaugeiq_rain_forecasts ADD UNIQUE KEY uq_gaugeiq_rain_location_time (location_id, forecast_at)');
+            }
+            if (!$indexExists('gaugeiq_pressure_readings', 'idx_gaugeiq_pressure_location_observed')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_pressure_location_observed ON gaugeiq_pressure_readings (location_id, observed_at)');
+            }
+            if (!$indexExists('gaugeiq_alert_rules', 'idx_gaugeiq_alert_rules_location')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_alert_rules_location ON gaugeiq_alert_rules (location_id, enabled)');
+            }
+            if (!$indexExists('gaugeiq_rain_forecasts', 'idx_gaugeiq_rain_location_time')) {
+                $db->exec('CREATE INDEX idx_gaugeiq_rain_location_time ON gaugeiq_rain_forecasts (location_id, forecast_at)');
+            }
         } else {
             // SQLite cannot drop the table-level UNIQUE(forecast_at) constraint.
             // Rebuild this small forecast table so the same forecast hour can
