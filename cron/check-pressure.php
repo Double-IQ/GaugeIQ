@@ -101,7 +101,8 @@ function evaluateDailyForecastAlert(PDO $pdo, array $config, array $current, int
     }
 
     try {
-        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+        $timezoneName = (string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC');
+        $timezone = new DateTimeZone($timezoneName);
     } catch (Throwable) {
         $timezone = new DateTimeZone('UTC');
     }
@@ -351,7 +352,8 @@ foreach ($monitorLocationIds as $locationId) {
         $lastBackfillValue = getGaugeIqSetting($pdo, $backfillSuccessKey, '');
         $lastBackfillTime = $lastBackfillValue !== '' ? strtotime($lastBackfillValue) : false;
         if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
-            $backfillCount = $service->refreshRecentBackfill(24);
+            $locationTimezone = getGaugeIqSetting($pdo, 'location_timezone' . $statusSuffix, (string)($config['app']['timezone'] ?? 'UTC'));
+            $backfillCount = $service->refreshRecentBackfill(24, $locationTimezone);
             setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
             setGaugeIqStatus($pdo, $backfillErrorKey, '');
             printf("Recent hourly fallback refreshed for %s: %d rows.\n", $locationName, $backfillCount);
@@ -367,6 +369,13 @@ foreach ($monitorLocationIds as $locationId) {
 
     try {
         $current = $service->fetchCurrent();
+        $locationTimezone = (string)($current['timezone'] ?? $config['app']['timezone'] ?? 'UTC');
+        try {
+            new DateTimeZone($locationTimezone);
+            setGaugeIqStatus($pdo, 'location_timezone' . $statusSuffix, $locationTimezone);
+        } catch (Throwable) {
+            $locationTimezone = (string)($config['app']['timezone'] ?? 'UTC');
+        }
         $previous = $service->record($current);
         setGaugeIqStatus($pdo, 'monitor_last_success_at' . $statusSuffix, gmdate('c'));
         setGaugeIqStatus($pdo, 'monitor_last_error' . $statusSuffix, '');
