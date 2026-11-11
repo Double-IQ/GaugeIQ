@@ -78,17 +78,15 @@ if ($locationId === 2) {
 date_default_timezone_set($dashboardTimezone);
 
 try {
-    $activeLocationChangedAt = '';
-    if ($locationId === 1) {
-        $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = 'active_location_changed_at' LIMIT 1");
-        $changedAtStmt->execute();
-        $changedAtValue = $changedAtStmt->fetchColumn();
-        $activeLocationChangedAt = is_string($changedAtValue) ? $changedAtValue : '';
-    }
+    $changedAtKey = $locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+    $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $changedAtStmt->execute([$changedAtKey]);
+    $changedAtValue = $changedAtStmt->fetchColumn();
+    $activeLocationChangedAt = is_string($changedAtValue) ? $changedAtValue : '';
     $latestSql = "SELECT * FROM gaugeiq_pressure_readings
                   WHERE location_id = ? AND (source IS NULL OR source = 'Open-Meteo')";
     $latestParams = [$locationId];
-    if ($locationId === 1 && $activeLocationChangedAt !== '') {
+    if ($activeLocationChangedAt !== '') {
         $latestSql .= ' AND created_at >= ?';
         $latestParams[] = $activeLocationChangedAt;
     }
@@ -112,7 +110,7 @@ try {
                          WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                            AND (source IS NULL OR source IN ('Open-Meteo', 'Open-Meteo Historical Weather'))";
     $pressureRangeParams = [$locationId, $pressureRangeStartText, $pressureRangeEndText];
-    if ($locationId === 1 && $activeLocationChangedAt !== '') {
+    if ($activeLocationChangedAt !== '') {
         $pressureRangeSql .= ' AND created_at >= ?';
         $pressureRangeParams[] = $activeLocationChangedAt;
     }
@@ -143,7 +141,7 @@ try {
                                  WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
                                    AND (source IS NULL OR source = 'Open-Meteo')";
             $pressurePriorParams = [$locationId, $windowStart, $windowEnd];
-            if ($locationId === 1 && $activeLocationChangedAt !== '') {
+            if ($activeLocationChangedAt !== '') {
                 $pressurePriorSql .= ' AND created_at >= ?';
                 $pressurePriorParams[] = $activeLocationChangedAt;
             }
@@ -290,10 +288,13 @@ if ($current && !empty($current['observed_at'])) {
                     "SELECT rainfall_mm, observed_at
                      FROM gaugeiq_pressure_readings
                      WHERE location_id = ? AND observed_at > ? AND observed_at <= ?
-                       AND (source IS NULL OR source = 'Open-Meteo')
-                     ORDER BY observed_at ASC, id ASC"
+                       AND (source IS NULL OR source = 'Open-Meteo')" .
+                       ($activeLocationChangedAt !== '' ? " AND created_at >= ?" : "") .
+                     " ORDER BY observed_at ASC, id ASC"
                 );
-                $rainfall24hStmt->execute([$locationId, $rainfallWindowStart, $rainfallWindowEnd]);
+                $rainfallParams = [$locationId, $rainfallWindowStart, $rainfallWindowEnd];
+                if ($activeLocationChangedAt !== '') $rainfallParams[] = $activeLocationChangedAt;
+                $rainfall24hStmt->execute($rainfallParams);
                 $hourlyRainfall = [];
                 foreach ($rainfall24hStmt->fetchAll() as $rainfallRow) {
                     $rainTimestamp = strtotime((string)($rainfallRow['observed_at'] ?? ''));
@@ -675,14 +676,18 @@ if ($current && !empty($current['observed_at'])) {
                 $targetTimestamp = $currentTimestamp - 3600;
                 $windowStart = date('Y-m-d\\TH:i:s', $targetTimestamp - 1800);
                 $windowEnd = date('Y-m-d\\TH:i:s', $targetTimestamp + 1800);
-                $climatePriorStmt = $pdo->prepare(
-                    "SELECT temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
-                     FROM gaugeiq_pressure_readings
-                     WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
-                       AND (source IS NULL OR source = 'Open-Meteo')
-                     ORDER BY observed_at ASC, id ASC"
-                );
-                $climatePriorStmt->execute([$locationId, $windowStart, $windowEnd]);
+                $climatePriorSql = "SELECT temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, observed_at
+                                    FROM gaugeiq_pressure_readings
+                                    WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
+                                      AND (source IS NULL OR source = 'Open-Meteo')";
+                $climatePriorParams = [$locationId, $windowStart, $windowEnd];
+                if ($activeLocationChangedAt !== '') {
+                    $climatePriorSql .= ' AND created_at >= ?';
+                    $climatePriorParams[] = $activeLocationChangedAt;
+                }
+                $climatePriorSql .= ' ORDER BY observed_at ASC, id ASC';
+                $climatePriorStmt = $pdo->prepare($climatePriorSql);
+                $climatePriorStmt->execute($climatePriorParams);
                 $climateCandidates = $climatePriorStmt->fetchAll();
                 $closestDistance = PHP_INT_MAX;
                 foreach ($climateCandidates as $candidate) {
@@ -762,14 +767,18 @@ if ($current && !empty($current['observed_at'])) {
             if ($climateHistoryEnd !== false) {
                 $climateHistoryStart = date('Y-m-d\\TH:i:s', $climateHistoryEnd - 86400);
                 $climateHistoryEndText = date('Y-m-d\\TH:i:s', $climateHistoryEnd);
-                $climateHistoryStmt = $pdo->prepare(
-                    "SELECT pressure_hpa, temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
-                     FROM gaugeiq_pressure_readings
-                     WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
-                       AND (source IS NULL OR source = 'Open-Meteo')
-                     ORDER BY observed_at ASC, id ASC"
-                );
-                $climateHistoryStmt->execute([$locationId, $climateHistoryStart, $climateHistoryEndText]);
+                $climateHistorySql = "SELECT pressure_hpa, temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
+                                      FROM gaugeiq_pressure_readings
+                                      WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
+                                        AND (source IS NULL OR source = 'Open-Meteo')";
+                $climateHistoryParams = [$locationId, $climateHistoryStart, $climateHistoryEndText];
+                if ($activeLocationChangedAt !== '') {
+                    $climateHistorySql .= ' AND created_at >= ?';
+                    $climateHistoryParams[] = $activeLocationChangedAt;
+                }
+                $climateHistorySql .= ' ORDER BY observed_at ASC, id ASC';
+                $climateHistoryStmt = $pdo->prepare($climateHistorySql);
+                $climateHistoryStmt->execute($climateHistoryParams);
                 $climateHistory = $climateHistoryStmt->fetchAll();
             }
         }
@@ -1005,20 +1014,22 @@ $windSpeedChange1h = null;
 if ($current && !empty($current['observed_at'])) {
     try {
         $windObservedAt = new DateTimeImmutable((string)$current['observed_at']);
-        $windPreviousStmt = $pdo->prepare(
-            "SELECT wind_speed_kmh FROM gaugeiq_pressure_readings
-             WHERE location_id = ? AND observed_at <= ? AND observed_at >= ?
-               AND (source IS NULL OR source = 'Open-Meteo')
-               AND wind_speed_kmh IS NOT NULL
-             ORDER BY observed_at DESC LIMIT 1"
-        );
+        $windPreviousSql = "SELECT wind_speed_kmh FROM gaugeiq_pressure_readings
+                            WHERE location_id = ? AND observed_at <= ? AND observed_at >= ?
+                              AND (source IS NULL OR source = 'Open-Meteo')
+                              AND wind_speed_kmh IS NOT NULL";
+        if ($activeLocationChangedAt !== '') $windPreviousSql .= ' AND created_at >= ?';
+        $windPreviousSql .= ' ORDER BY observed_at DESC LIMIT 1';
+        $windPreviousStmt = $pdo->prepare($windPreviousSql);
         // Stored Open-Meteo timestamps use an ISO 'T' separator. Match that
         // format in the bounds so string comparisons find the prior reading.
-        $windPreviousStmt->execute([
+        $windPreviousParams = [
             $locationId,
             $windObservedAt->modify('-45 minutes')->format('Y-m-d\\TH:i:s'),
             $windObservedAt->modify('-90 minutes')->format('Y-m-d\\TH:i:s')
-        ]);
+        ];
+        if ($activeLocationChangedAt !== '') $windPreviousParams[] = $activeLocationChangedAt;
+        $windPreviousStmt->execute($windPreviousParams);
         $windPreviousSpeed = $windPreviousStmt->fetchColumn();
         if ($windPreviousSpeed !== false) {
             $windSpeedChange1h = $windSpeed - (float)$windPreviousSpeed;
