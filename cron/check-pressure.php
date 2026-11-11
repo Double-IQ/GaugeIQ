@@ -353,8 +353,7 @@ foreach ($monitorLocationIds as $locationId) {
         $lastBackfillValue = getGaugeIqSetting($pdo, $backfillSuccessKey, '');
         $lastBackfillTime = $lastBackfillValue !== '' ? strtotime($lastBackfillValue) : false;
         if ($lastBackfillTime === false || $lastBackfillTime < time() - 45 * 60) {
-            $locationTimezone = getGaugeIqSetting($pdo, 'location_timezone' . $statusSuffix, (string)($config['app']['timezone'] ?? 'UTC'));
-            $backfillCount = $service->refreshRecentBackfill(24, $locationTimezone);
+            $backfillCount = $service->refreshRecentBackfill(24, 'auto');
             setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
             setGaugeIqStatus($pdo, $backfillErrorKey, '');
             printf("Recent hourly fallback refreshed for %s: %d rows.\n", $locationName, $backfillCount);
