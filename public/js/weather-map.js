@@ -13,10 +13,19 @@ const appearanceDefaults = {
             weatherRegionBounds: null
         };
         let appearance = { ...appearanceDefaults };
+        const activeLocationId = String(document.body?.dataset.locationId || '1');
         try {
             const savedAppearance = JSON.parse(localStorage.getItem('gaugeiqWeatherMapAppearance') || 'null');
             if (savedAppearance && typeof savedAppearance === 'object') {
                 appearance = { ...appearanceDefaults, ...savedAppearance };
+                const locationBounds = savedAppearance.weatherRegionBoundsByLocation?.[activeLocationId];
+                if (Array.isArray(locationBounds) && locationBounds.length === 4 && locationBounds.every(Number.isFinite)) {
+                    appearance.weatherRegionBounds = locationBounds;
+                } else if (activeLocationId !== '1') {
+                    // Legacy single-location bounds belong to Location 1 only.
+                    // Let each other location start with a rectangle around its own coordinates.
+                    appearance.weatherRegionBounds = null;
+                }
             }
         } catch (error) {
             console.warn('Could not read saved weather-map appearance settings.', error);
