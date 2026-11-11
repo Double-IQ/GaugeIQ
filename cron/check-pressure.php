@@ -291,7 +291,8 @@ function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config, int $locatio
     if ($lastSent !== false && $lastSent >= time() - 3 * 3600) return;
 
     try {
-        $timezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+        $timezoneName = getGaugeIqSetting($pdo, 'location_timezone' . ($locationId === 2 ? '_location_2' : ''), (string)($config['app']['timezone'] ?? 'UTC'));
+        $timezone = new DateTimeZone($timezoneName);
     } catch (Throwable) {
         $timezone = new DateTimeZone('UTC');
     }
