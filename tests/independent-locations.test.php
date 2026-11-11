@@ -52,6 +52,16 @@ assertLocationTest(count($twoRules) === 1, 'Location 2 did not return only its o
 assertLocationTest($oneRules[0]['name'] === 'Location 1 pressure drop', 'Location 1 returned another location\'s rule.');
 assertLocationTest($twoRules[0]['name'] === 'Location 2 humidity rise', 'Location 2 returned another location\'s rule.');
 
+$locationTwo->markTriggered((int)$oneRules[0]['id'], 'Invalid cross-location event', '2026-11-11T00:00:00');
+$crossLocationEvents = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_events')->fetchColumn();
+$locationOneTriggeredAt = $pdo->query('SELECT last_triggered_at FROM gaugeiq_alert_rules WHERE id = ' . (int)$oneRules[0]['id'])->fetchColumn();
+assertLocationTest($crossLocationEvents === 0, 'Location 2 inserted an event for a Location 1 rule.');
+assertLocationTest($locationOneTriggeredAt === null, 'Location 2 changed the cooldown on a Location 1 rule.');
+
+$locationTwo->markTriggered((int)$twoRules[0]['id'], 'Location 2 alert', '2026-11-11T00:00:00');
+$locationTwoEvents = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_events')->fetchColumn();
+assertLocationTest($locationTwoEvents === 1, 'Location 2 could not create an event for its own alert.');
+
 $locationTwo->delete((int)$oneRules[0]['id']);
 assertLocationTest(count($locationOne->all()) === 1, 'Location 2 was able to delete a Location 1 rule.');
 assertLocationTest(count($locationTwo->all()) === 1, 'Location 2 lost its own alert rule after a cross-location delete attempt.');
