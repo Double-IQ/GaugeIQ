@@ -70,8 +70,8 @@ if ($locationId === 2) {
     $locationName = $storedCoordinates['active_location_name']
         ?? $storedCoordinates['location_name']
         ?? $locationName;
-    $dashboardTimezone = $storedCoordinates['active_location_timezone']
-        ?? gaugeIqDashboardSetting($pdo, 'location_timezone')
+    $dashboardTimezone = gaugeIqDashboardSetting($pdo, 'location_timezone')
+        ?? $storedCoordinates['active_location_timezone']
         ?? $dashboardTimezone;
     try { new DateTimeZone($dashboardTimezone); } catch (Throwable) { $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC'); }
 }
