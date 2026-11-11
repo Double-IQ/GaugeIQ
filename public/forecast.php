@@ -222,6 +222,6 @@ $formatHour = static function (?string $time): string {
         <p class="muted forecast-disclaimer">Forecasts are model guidance and can change as new weather data arrives. GaugeIQ refreshes stored forecasts through its scheduled monitor; opening this page does not trigger a weather fetch.</p>
     <?php endif; ?>
 </main>
-<script src="js/app.js?v=20261017-svg-animation-resume"></script>
+<script src="js/app.js?v=20261111-independent-locations"></script>
 </body>
 </html>
