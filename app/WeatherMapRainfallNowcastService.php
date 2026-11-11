@@ -250,7 +250,7 @@ final class WeatherMapRainfallNowcastService
             )->format('H:i');
             if ($status === 'rain_near_location') {
                 $summary = sprintf(
-                    'ECMWF forecasts precipitation at or very close to your location around %s (%s mm at the nearest grid cell).',
+                    'ECMWF forecasts precipitation at or very close to your location around %s (%s mm/h at the nearest grid cell).',
                     $localTime,
                     number_format($firstRain['local_precipitation_mm_per_hour'], 1)
                 );
