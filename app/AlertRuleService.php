@@ -8,8 +8,14 @@ final class AlertRuleService
     private DateTimeZone $timezone;
     private array $weatherFormulaValues;
 
-    public function __construct(private PDO $db, ?DateTimeZone $timezone = null)
-    {
+    public function __construct(
+        private PDO $db,
+        ?DateTimeZone $timezone = null,
+        private int $locationId = 1
+    ) {
+        if (!in_array($this->locationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Unsupported GaugeIQ location.');
+        }
         $this->timezone = $timezone ?? new DateTimeZone(date_default_timezone_get());
         $this->weatherFormulaValues = weatherFormulaValues($this->db);
         $this->migrateLegacyWeatherChangeRules();
@@ -61,13 +67,14 @@ final class AlertRuleService
 
     public function all(bool $enabledOnly = false): array
     {
-        $sql = 'SELECT * FROM gaugeiq_alert_rules';
+        $sql = 'SELECT * FROM gaugeiq_alert_rules WHERE location_id = ?';
         if ($enabledOnly) {
-            $sql .= ' WHERE enabled = 1';
+            $sql .= ' AND enabled = 1';
         }
         $sql .= ' ORDER BY id ASC';
-
-        return $this->db->query($sql)->fetchAll();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$this->locationId]);
+        return $stmt->fetchAll();
     }
 
     public function create(
@@ -82,10 +89,11 @@ final class AlertRuleService
         $now = gmdate('c');
         $stmt = $this->db->prepare(
             'INSERT INTO gaugeiq_alert_rules
-             (name, metric, condition_type, configuration_json, enabled, cooldown_minutes, created_at, updated_at)
-             VALUES (?, ?, ?, ?, 1, ?, ?, ?)'
+             (location_id, name, metric, condition_type, configuration_json, enabled, cooldown_minutes, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)'
         );
         $stmt->execute([
+            $this->locationId,
             trim($name) ?: 'GaugeIQ alert',
             $metric,
             $conditionType,
@@ -113,7 +121,7 @@ final class AlertRuleService
             'UPDATE gaugeiq_alert_rules
              SET name = ?, metric = ?, condition_type = ?, configuration_json = ?,
                  enabled = ?, cooldown_minutes = ?, updated_at = ?
-             WHERE id = ?'
+             WHERE id = ? AND location_id = ?'
         );
         $stmt->execute([
             trim($name) ?: 'GaugeIQ alert',
@@ -124,13 +132,14 @@ final class AlertRuleService
             max(0, $cooldownMinutes),
             gmdate('c'),
             $id,
+            $this->locationId,
         ]);
     }
 
     public function delete(int $id): void
     {
-        $stmt = $this->db->prepare('DELETE FROM gaugeiq_alert_rules WHERE id = ?');
-        $stmt->execute([$id]);
+        $stmt = $this->db->prepare('DELETE FROM gaugeiq_alert_rules WHERE id = ? AND location_id = ?');
+        $stmt->execute([$id, $this->locationId]);
 
         $stmt = $this->db->prepare('DELETE FROM gaugeiq_alert_events WHERE rule_id = ?');
         $stmt->execute([$id]);
@@ -420,10 +429,10 @@ final class AlertRuleService
                     wind_speed_kmh, wind_direction_degrees, rainfall_mm,
                     cloud_cover_percent, weather_code, observed_at, created_at, source
              FROM gaugeiq_pressure_readings
-             WHERE observed_at >= ?
+             WHERE location_id = ? AND observed_at >= ?
              ORDER BY observed_at ASC, id ASC'
         );
-        $stmt->execute([$fromDay]);
+        $stmt->execute([$this->locationId, $fromDay]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $liveReadings = [];
