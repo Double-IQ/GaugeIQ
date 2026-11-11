@@ -400,12 +400,11 @@ foreach ($monitorLocationIds as $locationId) {
                 (new DateTimeImmutable('@' . $targetTimestamp))->setTimezone($locationTimezoneObject)->format('Y-m-d\\TH:i:s'),
                 (string)$current['observed_at'],
             ];
-            if ($locationId === 1) {
-                $locationChangedAt = getGaugeIqSetting($pdo, 'active_location_changed_at', '');
-                if ($locationChangedAt !== '') {
-                    $baselineSql .= ' AND created_at >= ?';
-                    $baselineParams[] = $locationChangedAt;
-                }
+            $locationChangedAtKey = $locationId === 2 ? 'second_location_changed_at' : 'active_location_changed_at';
+            $locationChangedAt = getGaugeIqSetting($pdo, $locationChangedAtKey, '');
+            if ($locationChangedAt !== '') {
+                $baselineSql .= ' AND created_at >= ?';
+                $baselineParams[] = $locationChangedAt;
             }
             $baselineSql .= ' ORDER BY observed_at DESC, id DESC LIMIT 1';
             $baselineQuery = $pdo->prepare($baselineSql);
