@@ -309,6 +309,13 @@ protocolOptions.fileReaderConfig = {
         let weatherMapCompassCurrent = null;
         let weatherMapCompassAnimation = null;
         let weatherMapCompassLastStatus = 0;
+        let weatherMapCompassApplyingBearing = false;
+
+        function applyWeatherMapCompassBearing(heading) {
+            weatherMapCompassApplyingBearing = true;
+            try { map.setBearing(-heading); }
+            finally { weatherMapCompassApplyingBearing = false; }
+        }
 
         function normalizeMapHeading(value) {
             const heading = Number(value);
@@ -352,7 +359,7 @@ protocolOptions.fileReaderConfig = {
                 weatherMapCompassCurrent = normalizeMapHeading(weatherMapCompassCurrent + delta * 0.22);
                 // MapLibre's bearing is clockwise from north. A negative device
                 // heading keeps the phone's forward direction at the top of the map.
-                map.setBearing(-weatherMapCompassCurrent);
+                applyWeatherMapCompassBearing(weatherMapCompassCurrent);
                 const now = performance.now();
                 if (weatherMapCompassStatus && now - weatherMapCompassLastStatus > 250) {
                     weatherMapCompassStatus.textContent = 'Heading ' + Math.round(weatherMapCompassCurrent) + '°';
@@ -407,7 +414,7 @@ protocolOptions.fileReaderConfig = {
             weatherMapCompassNativeHeadingSeen = false;
             weatherMapCompassTarget = null;
             weatherMapCompassCurrent = null;
-            map.setBearing(0);
+            applyWeatherMapCompassBearing(0);
             if (weatherMapCompassStatus) weatherMapCompassStatus.textContent = 'North-up';
             updateWeatherMapCompassButton();
         }
@@ -1118,13 +1125,13 @@ protocolOptions.fileReaderConfig = {
         // during zoom, pan, pitch or rotation gestures. Resume only if playback
         // was active before the user interacted with the map.
         map.on('movestart', () => {
-            if (animationTimer === null) return;
+            if (weatherMapCompassApplyingBearing || animationTimer === null) return;
             clearInterval(animationTimer);
             animationTimer = null;
             animationPausedForMapInteraction = true;
         });
         map.on('moveend', () => {
-            if (!animationPausedForMapInteraction) return;
+            if (weatherMapCompassApplyingBearing || !animationPausedForMapInteraction) return;
             animationPausedForMapInteraction = false;
             runAnimation();
         });
