@@ -140,7 +140,7 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 </head><body>
 <main class="shell admin-shell">
 <header class="admin-header">
-<div><p class="eyebrow">GAUGЕIQ ADMIN</p><h1>Location &amp; historical data</h1><p class="muted">Configure the location used by GaugeIQ and check the imported historical datasets.</p></div>
+<div><p class="eyebrow">GAUGЕIQ ADMIN</p><h1>Location &amp; historical data</h1><p class="muted">Configure GaugeIQ's monitored locations and check historical weather data.</p></div>
 <a class="secondary button-link" href="admin.php">Back to Admin</a>
 </header>
 <?php if ($notice): ?><div class="notice" role="status"><?= h($notice) ?></div><?php endif; ?>
@@ -178,7 +178,7 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
 </section>
 
 <section class="card location-card" aria-labelledby="secondLocationTitle">
-    <div class="section-heading"><div><h2 id="secondLocationTitle">Second monitoring location</h2><p class="muted">Add another place without replacing your current location. Each location can be identified separately.</p></div></div>
+    <div class="section-heading"><div><h2 id="secondLocationTitle">Second monitoring location</h2><p class="muted">Add another place without replacing your current location. Each location keeps separate readings, history, rainfall outlooks and alert rules. Push notifications identify which location triggered them.</p></div></div>
     <form method="post" class="location-form">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
         <input type="hidden" name="action" value="save_second_location">
