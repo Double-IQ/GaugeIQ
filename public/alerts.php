@@ -20,7 +20,10 @@ $locationSuffix = $locationId === 2 ? '_location_2' : '';
 $locationName = $locationId === 2
     ? (gaugeSetting($pdo, 'second_location_name', 'Location 2') ?? 'Location 2')
     : (gaugeSetting($pdo, 'location_name', (string)($config['pressure']['location_name'] ?? 'Location 1')) ?? 'Location 1');
-$rules = new AlertRuleService($pdo, null, $locationId);
+$timezoneKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+$locationTimezoneName = gaugeSetting($pdo, $timezoneKey, (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC';
+try { $locationTimezone = new DateTimeZone($locationTimezoneName); } catch (Throwable) { $locationTimezone = new DateTimeZone('UTC'); }
+$rules = new AlertRuleService($pdo, $locationTimezone, $locationId);
 
 $updated = trim((string)($_GET['updated'] ?? ''));
 $updateError = isset($_GET['update_error']);
@@ -75,7 +78,7 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
     $stmt->execute([$key, $value]);
 }
 
-$historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
+$historyTimezone = $locationTimezone;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
