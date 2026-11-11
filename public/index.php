@@ -46,6 +46,8 @@ $weatherFormulaJson = json_encode($weatherFormulaValues, JSON_HEX_TAG | JSON_HEX
 
 $locationName = (string)$config['pressure']['location_name'];
 $dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
+$dashboardLatitudeFloat = is_numeric($dashboardLatitude) ? (float)$dashboardLatitude : 0.0;
+$dashboardLongitudeFloat = is_numeric($dashboardLongitude ?? null) ? (float)$dashboardLongitude : 0.0;
 $dashboardLongitude = (string)($config['pressure']['longitude'] ?? '');
 $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC');
 $coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'active_location_name', 'active_location_timezone', 'location_latitude', 'location_longitude', 'location_name', 'second_location_latitude', 'second_location_longitude', 'second_location_name')");
@@ -535,14 +537,50 @@ if ($current && !empty($current['observed_at'])) {
         $radarCellMarkup = '';
         foreach ($radarCells as $radarCell) {
             if (!is_array($radarCell) || !is_numeric($radarCell['distance_km'] ?? null) || !is_numeric($radarCell['bearing_degrees'] ?? null)) continue;
-            $distanceRatio = max(0.0, min(1.0, (float)$radarCell['distance_km'] / 100.0));
-            $bearingRadians = deg2rad((float)$radarCell['bearing_degrees']);
-            $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
-            $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
-            $amount = is_numeric($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm'] ?? null) ? (float)($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm']) : 0.1;
-            $cellRadius = max(3.0, min(7.0, 3.0 + log10(1.0 + max(0.0, $amount)) * 3.0));
+            $amount = is_numeric($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm'] ?? null)
+                ? (float)($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm'])
+                : 0.1;
             $cellColour = $amount >= 5.0 ? '#E7C84B' : ($amount >= 1.0 ? '#45D69D' : '#36B9D6');
-            $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . number_format($amount, 2) . ' ' . $rainfallDisplayUnit . ' at ' . number_format((float)$radarCell['distance_km'], 1) . ' km</title></circle>';
+            $cellTitle = number_format($amount, 2) . ' ' . $rainfallDisplayUnit . ' at ' . number_format((float)$radarCell['distance_km'], 1) . ' km';
+
+            // IFS 0.25° data represents geographic grid cells, not isolated
+            // point observations. Draw each cell footprint from its real
+            // latitude/longitude corners instead of an oversized circular dot.
+            if (is_numeric($radarCell['latitude'] ?? null) && is_numeric($radarCell['longitude'] ?? null)) {
+                $cellLatitude = (float)$radarCell['latitude'];
+                $cellLongitude = (float)$radarCell['longitude'];
+                $cornerPoints = [];
+                foreach ([[-0.125, -0.125], [-0.125, 0.125], [0.125, 0.125], [0.125, -0.125]] as [$latOffset, $lonOffset]) {
+                    $cornerLatitude = max(-90.0, min(90.0, $cellLatitude + $latOffset));
+                    $cornerLongitude = fmod($cellLongitude + $lonOffset + 180.0, 360.0);
+                    if ($cornerLongitude < 0) $cornerLongitude += 360.0;
+                    $cornerLongitude -= 180.0;
+
+                    $lat1 = deg2rad($dashboardLatitudeFloat);
+                    $lat2 = deg2rad($cornerLatitude);
+                    $deltaLongitude = deg2rad($cornerLongitude - $dashboardLongitudeFloat);
+                    $a = sin(($lat2 - $lat1) / 2.0) ** 2
+                        + cos($lat1) * cos($lat2) * sin($deltaLongitude / 2.0) ** 2;
+                    $cornerDistance = 6371.0 * 2.0 * asin(min(1.0, sqrt($a)));
+                    $cornerBearing = deg2rad(rad2deg(atan2(
+                        sin($deltaLongitude) * cos($lat2),
+                        cos($lat1) * sin($lat2) - sin($lat1) * cos($lat2) * cos($deltaLongitude)
+                    )));
+                    $cornerX = 160.0 + sin($cornerBearing) * 136.0 * ($cornerDistance / 100.0);
+                    $cornerY = 160.0 - cos($cornerBearing) * 136.0 * ($cornerDistance / 100.0);
+                    $cornerPoints[] = number_format($cornerX, 2, '.', '') . ',' . number_format($cornerY, 2, '.', '');
+                }
+                $radarCellMarkup .= '<polygon class="rainfall-radar-cell rainfall-radar-grid-cell" points="' . implode(' ', $cornerPoints) . '" fill="' . $cellColour . '" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></polygon>';
+            } else {
+                // Legacy payloads lack grid coordinates; retain their original
+                // point marker until the next scheduled refresh writes schema v2.
+                $distanceRatio = max(0.0, min(1.0, (float)$radarCell['distance_km'] / 100.0));
+                $bearingRadians = deg2rad((float)$radarCell['bearing_degrees']);
+                $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
+                $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
+                $cellRadius = max(2.5, min(4.0, 2.5 + log10(1.0 + max(0.0, $amount))));
+                $radarCellMarkup .= '<circle class="rainfall-radar-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
+            }
         }
         $frameLeadLabels = ['+3h', '+6h'];
         ?>
