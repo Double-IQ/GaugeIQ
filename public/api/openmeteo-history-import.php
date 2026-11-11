@@ -31,20 +31,7 @@ $source = (string)($input['source'] ?? 'weather');
 if (!in_array($source, ['weather', 'forecast'], true)) openMeteoHistoryReply(422, ['error' => 'Choose a supported historical data source.']);
 $startText = (string)($input['start_date'] ?? '');
 $endText = (string)($input['end_date'] ?? '');
-try {
-    $historyTimezone = new DateTimeZone((string)($config['app']['timezone'] ?? 'UTC'));
-} catch (Throwable) {
-    $historyTimezone = new DateTimeZone('UTC');
-}
-$start = DateTimeImmutable::createFromFormat('!Y-m-d', $startText, $historyTimezone);
-$end = DateTimeImmutable::createFromFormat('!Y-m-d', $endText, $historyTimezone);
-$yesterday = new DateTimeImmutable('yesterday', $historyTimezone);
-if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 366) {
-    openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 367 calendar days, ending no later than yesterday in GaugeIQ\'s configured timezone.']);
-}
-if ($source === 'forecast' && $start < new DateTimeImmutable('2022-01-01', $historyTimezone)) {
-    openMeteoHistoryReply(422, ['error' => 'Historical Forecast data is available from 2022 onward.']);
-}
+
 function openMeteoFetch(string $url): array
 {
     if (!function_exists('curl_init')) throw new RuntimeException('PHP cURL is required to import Open-Meteo history.');
@@ -71,6 +58,28 @@ try {
     $locationId = (int)($input['location_id'] ?? 1);
     if (!in_array($locationId, [1, 2], true)) $locationId = 1;
     $settings = $pdo->query("SELECT gaugeiq_settings.key, gaugeiq_settings.value FROM gaugeiq_settings WHERE gaugeiq_settings.key IN ('location_latitude','location_longitude','location_name','active_location_latitude','active_location_longitude','active_location_name','second_location_latitude','second_location_longitude','second_location_name','second_location_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $timezoneSettingKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
+    $timezoneSettingStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
+    $timezoneSettingStmt->execute([$timezoneSettingKey]);
+    $storedHistoryTimezone = $timezoneSettingStmt->fetchColumn();
+    try {
+        $historyTimezone = new DateTimeZone(
+            is_string($storedHistoryTimezone) && $storedHistoryTimezone !== ''
+                ? $storedHistoryTimezone
+                : (string)($config['app']['timezone'] ?? 'UTC')
+        );
+    } catch (Throwable) {
+        $historyTimezone = new DateTimeZone('UTC');
+    }
+    $start = DateTimeImmutable::createFromFormat('!Y-m-d', $startText, $historyTimezone);
+    $end = DateTimeImmutable::createFromFormat('!Y-m-d', $endText, $historyTimezone);
+    $yesterday = new DateTimeImmutable('yesterday', $historyTimezone);
+    if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 366) {
+        openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 367 calendar days, ending no later than yesterday in the selected location timezone.']);
+    }
+    if ($source === 'forecast' && $start < new DateTimeImmutable('2022-01-01', $historyTimezone)) {
+        openMeteoHistoryReply(422, ['error' => 'Historical Forecast data is available from 2022 onward.']);
+    }
     if ($locationId === 2) {
         if (($settings['second_location_enabled'] ?? '0') !== '1') {
             openMeteoHistoryReply(422, ['error' => 'Save and enable Location 2 before importing its history.']);
