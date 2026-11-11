@@ -56,9 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         || abs((float)$secondLocationLongitude - $longitude) > 0.000001);
                 if ($secondCoordinatesChanged) {
                     saveGaugeSetting($pdo, 'second_location_changed_at', gmdate('c'));
-                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_location_2', '');
-                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_updated_at_location_2', '');
-                    saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at_location_2', '');
+                    foreach ([
+                        'location_timezone_location_2',
+                        'recent_backfill_last_success_at_location_2',
+                        'monitor_last_success_at_location_2',
+                        'monitor_last_error_location_2',
+                        'daily_forecast_alert_last_evaluated_date_location_2',
+                        'daily_forecast_alert_last_status_location_2',
+                        'weather_map_rainfall_nowcast_location_2',
+                        'weather_map_rainfall_nowcast_updated_at_location_2',
+                        'ecmwf_rainfall_alert_last_sent_at_location_2',
+                    ] as $resetKey) {
+                        saveGaugeSetting($pdo, $resetKey, '');
+                    }
                     $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 2')->execute();
                 }
                 saveGaugeSetting($pdo, 'second_location_name', $name);
@@ -74,9 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         || abs((float)$locationLongitude - $longitude) > 0.000001);
                 if ($primaryCoordinatesChanged) {
                     saveGaugeSetting($pdo, 'active_location_changed_at', gmdate('c'));
-                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast', '');
-                    saveGaugeSetting($pdo, 'weather_map_rainfall_nowcast_updated_at', '');
-                    saveGaugeSetting($pdo, 'ecmwf_rainfall_alert_last_sent_at', '');
+                    foreach ([
+                        'location_timezone',
+                        'recent_backfill_last_success_at',
+                        'monitor_last_success_at',
+                        'monitor_last_error',
+                        'daily_forecast_alert_last_evaluated_date',
+                        'daily_forecast_alert_last_status',
+                        'weather_map_rainfall_nowcast',
+                        'weather_map_rainfall_nowcast_updated_at',
+                        'ecmwf_rainfall_alert_last_sent_at',
+                    ] as $resetKey) {
+                        saveGaugeSetting($pdo, $resetKey, '');
+                    }
                     $pdo->prepare('DELETE FROM gaugeiq_rain_forecasts WHERE location_id = 1')->execute();
                 }
                 saveGaugeSetting($pdo, 'location_name', $name);
