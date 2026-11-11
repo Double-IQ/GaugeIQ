@@ -202,17 +202,18 @@ const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
 const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
+// Keep the iOS permission grant separate from the user's on/off preference.
+// Disabling the compass must not make the next Enable action request permission again.
+const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
 const storedWindCompassState = localStorage.getItem(WIND_COMPASS_STORAGE_KEY);
 const windCompassCanRequestPermission = typeof DeviceOrientationEvent !== 'undefined'
     && typeof DeviceOrientationEvent.requestPermission === 'function';
-// A saved "on" preference cannot replace the fresh user gesture required
-// by iOS/Safari. Start off there so the permission button is always available.
-let windCompassEnabled = windCompassCanRequestPermission
-    ? false
-    : storedWindCompassState === 'true';
+// Restore the saved on/off preference. A previously granted iOS permission
+// is restored by attaching listeners directly, without prompting on page load.
+let windCompassEnabled = storedWindCompassState === 'true';
 let windCompassListening = false;
 // Once the browser supplies iOS's native compass heading, ignore fallback alpha
 // readings from the parallel absolute-orientation event stream.
@@ -343,9 +344,23 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Compass permission was not granted.');
+            let permissionAlreadyGranted = false;
+            try {
+                permissionAlreadyGranted = localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true';
+            } catch {
+                // If storage is unavailable, request permission through the user gesture.
+            }
+
+            if (!permissionAlreadyGranted) {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    throw new Error('Compass permission was not granted.');
+                }
+                try {
+                    localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+                } catch {
+                    // Compass can still work for this session if storage is unavailable.
+                }
             }
         }
 
@@ -427,10 +442,18 @@ if (windGauge) {
         updateWindCompassButton();
     }
 
-    if (windCompassEnabled &&
-        typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        enableWindCompass();
+    if (windCompassEnabled && typeof DeviceOrientationEvent !== 'undefined') {
+        // A prior successful permission is remembered locally. Do not call
+        // requestPermission() again on page load: iOS requires a user gesture.
+        if (!windCompassListening) {
+            window.addEventListener('deviceorientation', handleWindDeviceOrientation, true);
+            window.addEventListener('deviceorientationabsolute', handleWindDeviceOrientation, true);
+            windCompassListening = true;
+        }
+        if (windCompassStatus) {
+            windCompassStatus.hidden = false;
+            windCompassStatus.textContent = 'Restoring compass…';
+        }
     }
 }
 
