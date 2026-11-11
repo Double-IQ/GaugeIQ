@@ -140,6 +140,9 @@ final class AlertRuleService
     {
         $stmt = $this->db->prepare('DELETE FROM gaugeiq_alert_rules WHERE id = ? AND location_id = ?');
         $stmt->execute([$id, $this->locationId]);
+        if ($stmt->rowCount() < 1) {
+            return;
+        }
 
         $stmt = $this->db->prepare('DELETE FROM gaugeiq_alert_events WHERE rule_id = ?');
         $stmt->execute([$id]);
