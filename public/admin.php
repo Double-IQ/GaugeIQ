@@ -58,6 +58,8 @@ function saveGaugeSetting(PDO $pdo, string $key, string $value): void {
 $enabledRuleCount = (int)$pdo->query('SELECT COUNT(*) FROM gaugeiq_alert_rules WHERE location_id = 1 AND enabled = 1')->fetchColumn();
 $secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
 $secondLocationName = gaugeSetting($pdo, 'second_location_name', 'Location 2') ?? 'Location 2';
+$secondTimezoneName = gaugeSetting($pdo, 'location_timezone_location_2', (string)($config['app']['timezone'] ?? 'UTC')) ?? 'UTC';
+try { $secondTimezone = new DateTimeZone($secondTimezoneName); } catch (Throwable) { $secondTimezone = new DateTimeZone('UTC'); }
 $secondMonitorSuccess = null;
 $secondMonitorError = '';
 $secondEnabledRuleCount = 0;
@@ -138,8 +140,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
     ?>
     <div class="section-heading" style="margin-top:18px"><div><h3><?= h($secondLocationName) ?></h3><p class="muted">Independent scheduled monitoring status.</p></div><span class="status-pill <?= $secondMonitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $secondMonitorHealthy ? '● Monitoring active' : '● Check required' ?></span></div>
     <div class="status-grid">
-        <div><span>Last successful check</span><strong><?= $secondMonitorSuccess ? htmlspecialchars(date('d M, H:i', (int)strtotime($secondMonitorSuccess)), ENT_QUOTES) : 'Not yet' ?></strong></div>
-        <div><span>Next expected check</span><strong><?= $secondNextMonitorAt ? htmlspecialchars(date('d M, H:i', $secondNextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
+        <div><span>Last successful check</span><strong><?= $secondMonitorSuccess ? (new DateTimeImmutable('@' . (int)strtotime($secondMonitorSuccess)))->setTimezone($secondTimezone)->format('d M, H:i') : 'Not yet' ?></strong></div>
+        <div><span>Next expected check</span><strong><?= $secondNextMonitorAt ? (new DateTimeImmutable('@' . $secondNextMonitorAt))->setTimezone($secondTimezone)->format('d M, H:i') : 'Waiting for cron' ?></strong></div>
         <div><span>Active alert rules</span><strong><?= $secondEnabledRuleCount ?></strong></div>
     </div>
     <?php if ($secondMonitorError): ?><p class="monitor-warning"><?= htmlspecialchars($secondMonitorError, ENT_QUOTES) ?></p><?php endif; ?>
