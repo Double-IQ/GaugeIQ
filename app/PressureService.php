@@ -223,12 +223,7 @@ final class PressureService
         $pastHours = max(6, min(24, $pastHours));
         [$latitude, $longitude] = $this->locationCoordinates();
 
-        $timezoneName = $locationTimezone ?: (string)($this->config['app']['timezone'] ?? 'UTC');
-        try {
-            $timezone = new DateTimeZone($timezoneName);
-        } catch (Throwable) {
-            $timezone = new DateTimeZone('UTC');
-        }
+        $requestedTimezone = $locationTimezone ?: 'auto';
 
         $url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query([
             'latitude' => $latitude,
@@ -240,7 +235,7 @@ final class PressureService
             'temperature_unit' => 'celsius',
             'wind_speed_unit' => 'kmh',
             'precipitation_unit' => 'mm',
-            'timezone' => $timezone->getName(),
+            'timezone' => $requestedTimezone,
         ]);
 
         if (!function_exists('curl_init')) {
@@ -276,6 +271,14 @@ final class PressureService
         }
 
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        $timezoneName = $requestedTimezone === 'auto'
+            ? (string)($data['timezone'] ?? ($this->config['app']['timezone'] ?? 'UTC'))
+            : $requestedTimezone;
+        try {
+            $timezone = new DateTimeZone($timezoneName);
+        } catch (Throwable) {
+            $timezone = new DateTimeZone('UTC');
+        }
         $hourly = $data['hourly'] ?? null;
         $times = is_array($hourly) ? ($hourly['time'] ?? []) : [];
         if (!is_array($hourly) || !is_array($times) || $times === []) {
