@@ -46,8 +46,6 @@ $weatherFormulaJson = json_encode($weatherFormulaValues, JSON_HEX_TAG | JSON_HEX
 
 $locationName = (string)$config['pressure']['location_name'];
 $dashboardLatitude = (string)($config['pressure']['latitude'] ?? '');
-$dashboardLatitudeFloat = is_numeric($dashboardLatitude) ? (float)$dashboardLatitude : 0.0;
-$dashboardLongitudeFloat = is_numeric($dashboardLongitude ?? null) ? (float)$dashboardLongitude : 0.0;
 $dashboardLongitude = (string)($config['pressure']['longitude'] ?? '');
 $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC');
 $coordinateSettings = $pdo->prepare("SELECT `key`, `value` FROM gaugeiq_settings WHERE `key` IN ('active_location_latitude', 'active_location_longitude', 'active_location_name', 'active_location_timezone', 'location_latitude', 'location_longitude', 'location_name', 'second_location_latitude', 'second_location_longitude', 'second_location_name')");
@@ -77,6 +75,8 @@ if ($locationId === 2) {
         ?? $dashboardTimezone;
     try { new DateTimeZone($dashboardTimezone); } catch (Throwable) { $dashboardTimezone = (string)($config['app']['timezone'] ?? 'UTC'); }
 }
+$dashboardLatitudeFloat = is_numeric($dashboardLatitude) ? (float)$dashboardLatitude : 0.0;
+$dashboardLongitudeFloat = is_numeric($dashboardLongitude) ? (float)$dashboardLongitude : 0.0;
 date_default_timezone_set($dashboardTimezone);
 $activeLocationChangedAt = '';
 
