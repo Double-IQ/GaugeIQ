@@ -15,10 +15,15 @@ if (!is_file($configPath)) {
 try {
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
+    require_once __DIR__ . '/../../app/Schema.php';
 
     $pdo = (new Database($config))->pdo();
+    migrateDatabase($pdo);
+    $locationId = (int)($_GET['location'] ?? 1);
+    if (!in_array($locationId, [1, 2], true)) $locationId = 1;
+    $key = $locationId === 2 ? 'monitor_last_success_at_location_2' : 'monitor_last_success_at';
     $stmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
-    $stmt->execute(['monitor_last_success_at']);
+    $stmt->execute([$key]);
     $lastSuccess = $stmt->fetchColumn();
 
     echo json_encode([
