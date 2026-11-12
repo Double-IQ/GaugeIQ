@@ -138,21 +138,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $locationLatitude = trim((string)($_POST['location_latitude'] ?? $locationLatitude));
     $locationLongitude = trim((string)($_POST['location_longitude'] ?? $locationLongitude));
 }
-$historyTimezoneName = gaugeSetting($pdo, 'location_timezone', '') ?? '';
-if ($historyTimezoneName === '') $historyTimezoneName = (string)($config['app']['timezone'] ?? 'UTC');
-try { $historyTimezone = new DateTimeZone($historyTimezoneName); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
-$historicalStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
-$historicalEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
-$primaryChangedAt = gaugeSetting($pdo, 'active_location_changed_at', '') ?? '';
-$historyCountSql = "SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = 1 AND source = ? AND observed_at >= ? AND observed_at <= ?";
-$historyCountParams = ['Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59'];
-if ($primaryChangedAt !== '') {
-    $historyCountSql .= ' AND created_at >= ?';
-    $historyCountParams[] = $primaryChangedAt;
+$historyPanels = [];
+$historyLocations = [
+    ['id' => 1, 'name' => $locationName, 'timezone_key' => 'location_timezone', 'changed_key' => 'active_location_changed_at'],
+];
+if ($secondLocationEnabled) {
+    $historyLocations[] = ['id' => 2, 'name' => $secondLocationName, 'timezone_key' => 'location_timezone_location_2', 'changed_key' => 'second_location_changed_at'];
 }
-$weatherHistoryCountStmt = $pdo->prepare($historyCountSql);
-$weatherHistoryCountStmt->execute($historyCountParams);
-$historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
+foreach ($historyLocations as $historyLocation) {
+    $timezoneName = gaugeSetting($pdo, $historyLocation['timezone_key'], '') ?? '';
+    if ($timezoneName === '') $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
+    try { $locationTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $locationTimezone = new DateTimeZone('UTC'); }
+    $historicalStart = (new DateTimeImmutable('now', $locationTimezone))->modify('-1 year')->format('Y-m-d');
+    $historicalEnd = (new DateTimeImmutable('yesterday', $locationTimezone))->format('Y-m-d');
+    $changedAt = gaugeSetting($pdo, $historyLocation['changed_key'], '') ?? '';
+    $where = 'location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?';
+    $params = [$historyLocation['id'], 'Open-Meteo Historical Weather', $historicalStart . 'T00:00', $historicalEnd . 'T23:59'];
+    if ($changedAt !== '') { $where .= ' AND created_at >= ?'; $params[] = $changedAt; }
+    $countStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE ' . $where);
+    $countStmt->execute($params);
+    $latestStmt = $pdo->prepare('SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE ' . $where);
+    $latestStmt->execute($params);
+    $historyPanels[] = [
+        'id' => $historyLocation['id'],
+        'name' => $historyLocation['name'],
+        'start' => $historicalStart,
+        'end' => $historicalEnd,
+        'count' => (int)$countStmt->fetchColumn(),
+        'latest' => (string)($latestStmt->fetchColumn() ?: ''),
+    ];
+}
 ?>
 <!doctype html>
 <html lang="en"><head>
@@ -232,21 +247,29 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
     <?php endif; ?>
 </section>
 
- <section class="card history-management-card" id="historicalDatasetStatus"
-    data-weather-count="<?= $historicalWeatherCount ?>"
-    aria-labelledby="openMeteoHistoryTitle">
+<?php foreach ($historyPanels as $historyPanel): ?>
+<section class="card history-management-card" id="historicalDatasetStatus<?= (int)$historyPanel['id'] ?>"
+    data-location-id="<?= (int)$historyPanel['id'] ?>"
+    data-csrf="<?= h($csrf) ?>"
+    data-start="<?= h($historyPanel['start']) ?>"
+    data-end="<?= h($historyPanel['end']) ?>"
+    data-weather-count="<?= (int)$historyPanel['count'] ?>"
+    data-weather-latest="<?= h($historyPanel['latest']) ?>"
+    aria-labelledby="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">
     <div class="section-heading">
         <div>
-            <h2 id="openMeteoHistoryTitle">Historical weather data</h2>
-            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather for the configured location. Existing weather records are kept.</p>
+            <h2 id="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">Historical weather data — <?= h($historyPanel['name']) ?></h2>
+            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather for this location. Existing weather records are kept.</p>
         </div>
     </div>
     <div class="local-weather-tools">
-        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus" role="status" aria-live="polite"><?= $historicalWeatherCount >= 5000 ? 'Available — ' . number_format($historicalWeatherCount) . ' hourly records found.' : 'Waiting for the automatic dashboard download to finish.' ?></span></p>
-        <p id="historicalDatasetMessage" class="muted" role="status" aria-live="polite">Historical weather records are stored separately from current readings and future forecasts.</p>
+        <p><strong>Historical Weather:</strong> <span id="historicalWeatherStatus<?= (int)$historyPanel['id'] ?>" role="status" aria-live="polite"><?= (int)$historyPanel['count'] > 0 ? 'Checking hourly coverage…' : 'Waiting for the automatic historical download to start.' ?></span></p>
+        <p id="historicalDatasetMessage<?= (int)$historyPanel['id'] ?>" class="muted" role="status" aria-live="polite">Historical weather records are stored separately from current readings and future forecasts.</p>
     </div>
 </section>
+<?php endforeach; ?>
 </main>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
 <script src="js/location-geolocation.js?v=20261111-location-fix" defer></script>
+<script src="js/openmeteo-history.js?v=20261112-location-history-fix" defer></script>
 </body></html>
