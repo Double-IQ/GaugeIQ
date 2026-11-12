@@ -1,14 +1,18 @@
 name: Publish production release from main
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - PHP syntax checks
+    types:
+      - completed
     branches:
       - main
-  workflow_dispatch:
 
 permissions:
   contents: write
   actions: write
+  checks: read
 
 concurrency:
   group: gaugeiq-production-release
@@ -16,15 +20,34 @@ concurrency:
 
 jobs:
   publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out main
+      - name: Check out the exact commit that passed CI
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
+      - name: Confirm tested commit is still main
+        id: target
+        env:
+          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [[ "$TARGET_SHA" != "$MAIN_SHA" ]]; then
+            echo "Main has moved to $MAIN_SHA; skipping release of older tested commit $TARGET_SHA."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+
       - name: Calculate next patch release
+        if: steps.target.outputs.publish == 'true'
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
@@ -50,18 +73,20 @@ jobs:
           fi
 
           echo "tag=$NEXT_TAG" >> "$GITHUB_OUTPUT"
-          echo "Publishing $NEXT_TAG from commit $GITHUB_SHA"
+          echo "Publishing $NEXT_TAG from tested commit $GITHUB_SHA"
 
       - name: Create published GitHub release
+        if: steps.target.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
           gh release create "$RELEASE_TAG" \
-            --target main \
+            --target "$TARGET_SHA" \
             --title "GaugeIQ $RELEASE_TAG" \
-            --notes "Automated production release built from the main branch."
+            --notes "Automated production release built from main after all PHP syntax and regression checks passed."
 
           # GITHUB_TOKEN-created releases do not trigger tag-push workflows.
           # Dispatch the existing package builder explicitly after the release exists.
