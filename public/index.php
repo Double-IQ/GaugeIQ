@@ -592,7 +592,6 @@ if ($current && !empty($current['observed_at'])) {
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
                     <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
                 </div>
-                <span class="rainfall-nowcast-source">Model forecast</span>
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
