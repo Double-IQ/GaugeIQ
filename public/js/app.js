@@ -1564,69 +1564,48 @@ async function loadWeatherChange() {
         const response = await fetch('../api/history.php?hours=360&include_recent_backfill=1&location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
+        // Treat imported observations and subsequent live cron readings as one
+        // continuous observation timeline. Source labels remain available for
+        // auditing, but do not determine which weather features may consume data.
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
-        // Archived historical observations stay out of the live meter window.
-        // Recent model backfill is considered only when live-only calculations
-        // cannot produce their required result.
-        const liveReadings = allReadings.filter(item => item.source == null || item.source === 'Open-Meteo');
-        // Keep live meters live-only, but let the local stability baseline use
-        // archived observed weather as well. Historical forecasts and temporary
-        // recent-model backfill are not treated as observed baseline readings.
-        const baselineReadings = allReadings.filter(item =>
-            item.source == null ||
-            item.source === 'Open-Meteo' ||
-            item.source === 'Open-Meteo Historical Weather'
-        );
+        const latestTime = allReadings.reduce((latest, item) => {
+            const timestamp = weatherReadingTimestamp(item);
+            return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
+        }, 0);
         const responseTime = new Date(data.to || Date.now()).getTime();
-        const referenceTime = Number.isFinite(responseTime) ? responseTime : Date.now();
+        // Anchor calculations to the newest observation actually available.
+        // This lets a completed historical download power WVI/trend immediately;
+        // the next hourly live observation naturally becomes the new endpoint.
+        const referenceTime = latestTime > 0
+            ? latestTime
+            : (Number.isFinite(responseTime) ? responseTime : Date.now());
         const currentWindowStart = referenceTime - 6 * 60 * 60 * 1000;
         const inCurrentWindow = item => {
             const timestamp = weatherReadingTimestamp(item);
             return Number.isFinite(timestamp) && timestamp >= currentWindowStart && timestamp <= referenceTime + 300000;
         };
-        const readings = liveReadings.filter(inCurrentWindow);
-        const liveResult = weatherChangeScore(readings);
-        const liveTrend = weatherConditionsTrend(readings);
-        let result = liveResult;
-        let trend = liveTrend;
-        let usedRecentBackfillForScore = false;
-        let usedRecentBackfillForTrend = false;
-        const recentBackfill = allReadings.filter(item =>
-            item.source === 'Open-Meteo Recent Backfill' && inCurrentWindow(item)
-        );
+        const readings = allReadings.filter(inCurrentWindow);
+        const result = weatherChangeScore(readings);
+        const trend = weatherConditionsTrend(readings);
 
-        if ((liveResult.score === null || liveTrend.score === null) && recentBackfill.length > 0) {
-            const combinedReadings = [...readings, ...recentBackfill];
-            if (liveResult.score === null) {
-                result = weatherChangeScore(combinedReadings);
-                usedRecentBackfillForScore = true;
-            }
-            if (liveTrend.score === null) {
-                trend = weatherConditionsTrend(combinedReadings);
-                usedRecentBackfillForTrend = true;
-            }
-        }
-
-        updateAtmosphericWvi(result, liveReadings, referenceTime);
-
-        const latestTime = liveReadings.reduce((latest, item) => {
-            const timestamp = weatherReadingTimestamp(item);
-            return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
-        }, 0);
+        // The WVI score, its rolling history line, and Conditions Trend all use
+        // the same unified observation set and the same latest-observation time.
+        updateAtmosphericWvi(result, allReadings, referenceTime);
+        const usedRecentBackfillForScore = false;
         const baselineElement = document.getElementById('weatherBaselineStatus');
-        if (baselineElement && latestTime > 0 && Number.isFinite(result.score) && !usedRecentBackfillForScore) {
-            const baseline = weatherLocalBaseline(baselineReadings, result.score, latestTime);
+        if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
+            const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
             const ageMinutes = Math.max(0, Math.round((referenceTime - latestTime) / 60000));
             baselineElement.textContent = baseline.text + (ageMinutes > 90
-                ? ' Latest live reading is about ' + ageMinutes + ' minutes old; the result may be stale.'
+                ? ' Latest available observation is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
-            if (usedRecentBackfillForScore) {
+            if (false) {
                 baselineElement.textContent = 'Recent hourly model estimates are temporarily included because the live reading window is insufficient. The live-only local baseline comparison is paused until enough live readings return.';
             } else {
                 baselineElement.textContent = latestTime > 0
                     ? 'Not enough valid current readings to compare against the recent local pattern.'
-                    : 'No live readings are available yet to establish a local baseline.';
+                    : 'No observations are available yet to establish a local baseline.';
             }
         }
 
