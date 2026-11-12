@@ -1,14 +1,14 @@
 (() => {
     'use strict';
 
-    const panel = document.getElementById('historicalDatasetStatus');
-    if (!panel) return;
+    document.querySelectorAll('[id^="historicalDatasetStatus"]').forEach(panel => {
+    {
 
     const csrf = panel.dataset.csrf || '';
     const start = panel.dataset.start || '';
     const end = panel.dataset.end || '';
-    const weatherStatus = document.getElementById('historicalWeatherStatus');
-    const message = document.getElementById('historicalDatasetMessage');
+    const weatherStatus = panel.querySelector('[id^="historicalWeatherStatus"]');
+    const message = panel.querySelector('[id^="historicalDatasetMessage"]');
     const setStatus = (element, text) => { if (element) element.textContent = text; };
 
     const dateString = date => date.toISOString().slice(0, 10);
@@ -111,4 +111,6 @@
     }
 
     run();
+    }
+    });
 })();
