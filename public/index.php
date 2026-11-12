@@ -551,7 +551,11 @@ if ($current && !empty($current['observed_at'])) {
                 $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
-                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
+                $blobRadius = max(5.0, min(8.5, 5.0 + log10(1.0 + max(0.0, $amount)) * 2.2);
+                $blobX = number_format($cellX, 2, '.', '');
+                $blobY = number_format($cellY, 2, '.', '');
+                $blobR = number_format($blobRadius, 2, '.', '');
+                $radarCellMarkup .= '<g class="rainfall-radar-cell rainfall-radar-grid-cell" data-rainfall="' . number_format($amount, 2, '.', '') . '"><ellipse cx="' . $blobX . '" cy="' . $blobY . '" rx="' . number_format($blobRadius * 1.65, 2, '.', '') . '" ry="' . number_format($blobRadius * 1.18, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.42" filter="url(#rainfallRadarGlow)"/><ellipse cx="' . number_format($cellX - $blobRadius * 0.72, 2, '.', '') . '" cy="' . number_format($cellY + $blobRadius * 0.12, 2, '.', '') . '" rx="' . number_format($blobRadius * 0.92, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.82, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.58"/><ellipse cx="' . number_format($cellX + $blobRadius * 0.68, 2, '.', '') . '" cy="' . number_format($cellY - $blobRadius * 0.18, 2, '.', '') . '" rx="' . number_format($blobRadius * 0.88, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.76, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.58"/><ellipse cx="' . $blobX . '" cy="' . $blobY . '" rx="' . number_format($blobRadius * 0.88, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.62, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.74"/><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></g>';
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
                 // point marker until the next scheduled refresh writes schema v2.
@@ -581,7 +585,6 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="rainfall-radar-scope-wrap">
                     <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
-                        <g id="rainfallRadarOrientation" transform="rotate(0 160 160)">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
                             <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
@@ -595,7 +598,7 @@ if ($current && !empty($current['observed_at'])) {
                             <circle cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
                             <circle cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
                             <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
-                            <g class="rainfall-radar-cells"><?= $radarCellMarkup ?></g>
+                            <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)"><?= $radarCellMarkup ?></g>
                             <g class="rainfall-radar-sweep">
                                 <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
                                 <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
@@ -607,7 +610,6 @@ if ($current && !empty($current['observed_at'])) {
                             <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
                             <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
                         </g>
-                                            </g>
                     </svg>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
