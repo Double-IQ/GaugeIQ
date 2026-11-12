@@ -66,9 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($action === 'save_second_location') {
                 $newLatitude = number_format($latitude, 6, '.', '');
                 $newLongitude = number_format($longitude, 6, '.', '');
-                $secondCoordinatesChanged = $secondLocationLatitude !== '' && $secondLocationLongitude !== ''
-                    && (abs((float)$secondLocationLatitude - $latitude) > 0.000001
-                        || abs((float)$secondLocationLongitude - $longitude) > 0.000001);
+                $secondCoordinatesChanged = $secondLocationLatitude === '' || $secondLocationLongitude === ''
+                    || abs((float)$secondLocationLatitude - $latitude) > 0.000001
+                    || abs((float)$secondLocationLongitude - $longitude) > 0.000001;
                 if ($secondCoordinatesChanged) {
                     saveGaugeSetting($pdo, 'second_location_changed_at', gmdate('c'));
                     foreach ([
