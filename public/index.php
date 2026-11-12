@@ -807,14 +807,21 @@ if ($current && !empty($current['observed_at'])) {
     $climateHistory = [];
     try {
         if ($current && !empty($current['observed_at'])) {
-            $climateHistoryEnd = strtotime((string)$current['observed_at']);
+            $climateLatestSql = "SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ?";
+            $climateLatestParams = [$locationId];
+            if ($activeLocationChangedAt !== '') {
+                $climateLatestSql .= ' AND created_at >= ?';
+                $climateLatestParams[] = $activeLocationChangedAt;
+            }
+            $climateLatestStmt = $pdo->prepare($climateLatestSql);
+            $climateLatestStmt->execute($climateLatestParams);
+            $climateHistoryEnd = strtotime((string)($climateLatestStmt->fetchColumn() ?: ''));
             if ($climateHistoryEnd !== false) {
                 $climateHistoryStart = date('Y-m-d\\TH:i:s', $climateHistoryEnd - 86400);
                 $climateHistoryEndText = date('Y-m-d\\TH:i:s', $climateHistoryEnd);
                 $climateHistorySql = "SELECT pressure_hpa, temperature_c, dew_point_c, humidity_percent, cloud_cover_percent, rainfall_mm, wind_speed_kmh, observed_at
                                       FROM gaugeiq_pressure_readings
-                                      WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?
-                                        AND (source IS NULL OR source = 'Open-Meteo')";
+                                      WHERE location_id = ? AND observed_at >= ? AND observed_at <= ?";
                 $climateHistoryParams = [$locationId, $climateHistoryStart, $climateHistoryEndText];
                 if ($activeLocationChangedAt !== '') {
                     $climateHistorySql .= ' AND created_at >= ?';
