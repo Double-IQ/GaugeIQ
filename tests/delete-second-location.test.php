@@ -67,9 +67,11 @@ INSERT INTO gaugeiq_settings (`key`, `value`) VALUES
  ('second_location_enabled', '1'), ('second_location_name', 'New primary'),
  ('second_location_latitude', '-29.500000'), ('second_location_longitude', '30.500000'),
  ('location_timezone_location_2', 'Africa/Johannesburg'),
- ('monitor_last_success_at_location_2', '2026-11-12T01:00:00Z'),
- ('location_name', 'Old primary'), ('location_latitude', '-33.000000'),
- ('location_longitude', '18.000000'), ('monitor_last_success_at', 'stale-old-primary');
+ ('monitor_last_success_at_location_2', '2026-11-12T01:00:00Z');
+UPDATE gaugeiq_settings SET value='Old primary' WHERE `key`='location_name';
+UPDATE gaugeiq_settings SET value='-33.000000' WHERE `key`='location_latitude';
+UPDATE gaugeiq_settings SET value='18.000000' WHERE `key`='location_longitude';
+UPDATE gaugeiq_settings SET value='stale-old-primary' WHERE `key`='monitor_last_success_at';
 INSERT INTO gaugeiq_pressure_readings (location_id, pressure_hpa, source, observed_at)
  VALUES (1, 1000, 'Open-Meteo Historical Weather', '2026-11-10T00:00'),
         (2, 1005, 'Open-Meteo Historical Weather', '2026-11-10T00:00');
