@@ -225,10 +225,9 @@ final class PressureService
      * Returns null when no recovery is needed, otherwise the number of rows
      * inserted (which may be zero if all returned hours already exist).
      */
-    public function recoverRecentGap(int $gapHours = 3, int $pastHours = 4): ?int
+    public function recoverRecentGap(int $gapHours = 3): ?int
     {
         $gapHours = max(1, min(24, $gapHours));
-        $pastHours = max(1, min(12, $pastHours));
 
         $timezoneKey = $this->locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
         $timezoneQuery = $this->db->prepare('SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1');
