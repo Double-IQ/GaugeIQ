@@ -8,7 +8,7 @@ header('Cache-Control: no-store');
 
 try {
     $current = GaugeIQVersion::VERSION;
-    $response = @file_get_contents('https://api.github.com/repos/BTM-SA/GaugeIQ/releases/latest', false, stream_context_create([
+    $response = @file_get_contents('https://api.github.com/repos/Double-IQ/GaugeIQ/releases/latest', false, stream_context_create([
         'http' => [
             'method' => 'GET',
             'header' => "Accept: application/vnd.github+json\r\nUser-Agent: GaugeIQ/{$current}\r\n",
