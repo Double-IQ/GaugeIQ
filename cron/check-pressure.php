@@ -350,7 +350,7 @@ foreach ($monitorLocationIds as $locationId) {
     $backfillSuccessKey = 'recent_backfill_last_success_at' . $statusSuffix;
     $backfillErrorKey = 'recent_backfill_last_error' . $statusSuffix;
     try {
-        $recoveredCount = $service->recoverRecentGap(3, 4);
+        $recoveredCount = $service->recoverRecentGap(3);
         if ($recoveredCount !== null) {
             setGaugeIqStatus($pdo, $backfillSuccessKey, gmdate('c'));
             setGaugeIqStatus($pdo, $backfillErrorKey, '');
