@@ -2268,3 +2268,146 @@ async function updateNetworkDiagnostics() {
 }
 
 updateNetworkDiagnostics();
+
+
+// Rainfall radar compass: rotate only the forecast echo layer. The radar
+// housing, range rings, labels and independently animated sweep stay fixed.
+(() => {
+    const radarEchoes = document.getElementById('rainfallRadarEchoes');
+    const radarCompassButton = document.getElementById('rainfallRadarCompassButton');
+    const radarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
+    if (!radarEchoes || !radarCompassButton) return;
+
+    const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
+    const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
+        && typeof DeviceOrientationEvent.requestPermission === 'function';
+    let enabled = !permissionApi && localStorage.getItem(storageKey) === 'true';
+    let listening = false;
+    let nativeHeadingSeen = false;
+    let currentHeading = null;
+    let targetHeading = null;
+    let animationFrame = null;
+
+    const normalize = value => {
+        const number = Number(value);
+        return Number.isFinite(number) ? ((number % 360) + 360) % 360 : null;
+    };
+    const deltaBetween = (from, to) => ((to - from + 540) % 360) - 180;
+    const direction = degrees => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(degrees / 45) % 8];
+
+    function setStatus(value) {
+        if (radarCompassStatus) radarCompassStatus.textContent = value;
+    }
+
+    function renderHeading() {
+        if (!enabled || currentHeading === null || targetHeading === null) {
+            animationFrame = null;
+            return;
+        }
+        const delta = deltaBetween(currentHeading, targetHeading);
+        currentHeading = normalize(currentHeading + delta * 0.2);
+        if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
+
+        // Bearings are north-up in the forecast data, so counter-rotate the
+        // echoes by the device heading to keep them geographically aligned.
+        radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
+        setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
+
+        if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
+            animationFrame = null;
+            return;
+        }
+        animationFrame = requestAnimationFrame(renderHeading);
+    }
+
+    function applyHeading(value) {
+        const heading = normalize(value);
+        if (!enabled || heading === null) return;
+        targetHeading = heading;
+        if (currentHeading === null) currentHeading = heading;
+        if (animationFrame === null) animationFrame = requestAnimationFrame(renderHeading);
+    }
+
+    function handleOrientation(event) {
+        if (!enabled) return;
+        let heading = null;
+        if (Number.isFinite(event.webkitCompassHeading)) {
+            nativeHeadingSeen = true;
+            heading = event.webkitCompassHeading;
+        } else if (!nativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
+            const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
+            heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
+        }
+        if (heading !== null) applyHeading(heading);
+    }
+
+    function startListening() {
+        if (listening) return;
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+        listening = true;
+    }
+
+    function updateButton() {
+        radarCompassButton.textContent = enabled ? 'Disable Compass' : 'Enable Compass';
+        radarCompassButton.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+        radarCompassButton.classList.toggle('is-enabled', enabled);
+        radarCompassButton.disabled = !('DeviceOrientationEvent' in window);
+    }
+
+    async function enableCompass() {
+        if (!('DeviceOrientationEvent' in window)) {
+            setStatus('Compass unavailable');
+            updateButton();
+            return;
+        }
+        try {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') throw new Error('Compass permission was not granted.');
+            }
+            enabled = true;
+            localStorage.setItem(storageKey, 'true');
+            nativeHeadingSeen = false;
+            currentHeading = null;
+            targetHeading = null;
+            startListening();
+            setStatus('Finding heading…');
+            updateButton();
+        } catch (error) {
+            setStatus(error instanceof Error ? error.message : 'Compass unavailable');
+            updateButton();
+        }
+    }
+
+    function disableCompass() {
+        enabled = false;
+        try { localStorage.setItem(storageKey, 'false'); } catch {}
+        if (listening) {
+            window.removeEventListener('deviceorientation', handleOrientation, true);
+            window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+            listening = false;
+        }
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        nativeHeadingSeen = false;
+        currentHeading = null;
+        targetHeading = null;
+        radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
+        setStatus('North-up');
+        updateButton();
+    }
+
+    radarCompassButton.addEventListener('click', () => {
+        if (enabled) disableCompass();
+        else enableCompass();
+    });
+
+    if (enabled) {
+        startListening();
+        setStatus('Finding heading…');
+    } else {
+        setStatus('North-up');
+    }
+    updateButton();
+})();
