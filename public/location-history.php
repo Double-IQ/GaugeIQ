@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/AdminAuth.php';
+require __DIR__ . '/../app/LocationManagementService.php';
 $config = require __DIR__ . '/../config/local.php';
 $db = new Database($config);
 $pdo = $db->pdo();
@@ -31,13 +32,23 @@ $secondLocationLongitude = gaugeSetting($pdo, 'second_location_longitude', '') ?
 $secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
-$notice = isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : '');
+$notice = isset($_GET['second_deleted']) ? 'Second location and its associated monitoring data were deleted.' : (isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : ''));
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
         $errors[] = 'Your session expired. Please try again.';
     } else {
         try {
+            $action = (string)($_POST['action'] ?? '');
+            if ($action === 'delete_second_location') {
+                if (!$secondLocationEnabled) {
+                    throw new InvalidArgumentException('There is no second location to delete.');
+                }
+                LocationManagementService::deleteSecondLocation($pdo);
+                header('Location: location-history.php?second_deleted=1');
+                exit;
+            }
+
             $name = trim((string)($_POST['location_name'] ?? ''));
             $latitudeInput = trim((string)($_POST['location_latitude'] ?? ''));
             $longitudeInput = trim((string)($_POST['location_longitude'] ?? ''));
@@ -48,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $longitude = (float)$longitudeInput;
             if ($latitude < -90 || $latitude > 90) throw new InvalidArgumentException('Latitude must be between -90 and 90.');
             if ($longitude < -180 || $longitude > 180) throw new InvalidArgumentException('Longitude must be between -180 and 180.');
-            if ((string)($_POST['action'] ?? '') === 'save_second_location') {
+            if ($action === 'save_second_location') {
                 $newLatitude = number_format($latitude, 6, '.', '');
                 $newLongitude = number_format($longitude, 6, '.', '');
                 $secondCoordinatesChanged = $secondLocationLatitude !== '' && $secondLocationLongitude !== ''
@@ -199,6 +210,13 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
         <div class="location-actions"><button type="button" class="secondary" id="useSecondDeviceLocation">Use device location</button><button type="submit">Save second location</button></div>
         <p id="secondLocationHelp" class="alert-help muted"><?= $secondLocationEnabled ? 'Second location saved.' : 'No second location has been saved yet.' ?> Saving this location does not change your current location.</p>
     </form>
+    <?php if ($secondLocationEnabled): ?>
+    <form method="post" class="location-actions" onsubmit="return window.confirm('Delete ' + <?= json_encode($secondLocationName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?> + ' and permanently remove its readings, rainfall forecasts, alert rules and monitoring history?');">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="delete_second_location">
+        <button type="submit" class="secondary">Delete second location</button>
+    </form>
+    <?php endif; ?>
 </section>
 
  <section class="card history-management-card" id="historicalDatasetStatus"
