@@ -360,6 +360,7 @@ if ($current && !empty($current['observed_at'])) {
         : null;
 
     $rainfallNowcast = null;
+    $nowcastIsStale = true;
     try {
         $nowcastStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
         $nowcastStmt->execute([$locationId === 2 ? 'weather_map_rainfall_nowcast_location_2' : 'weather_map_rainfall_nowcast']);
@@ -368,13 +369,25 @@ if ($current && !empty($current['observed_at'])) {
             $decodedNowcast = json_decode($nowcastJson, true);
             $updatedTimestamp = is_array($decodedNowcast) ? strtotime((string)($decodedNowcast['updated_at'] ?? '')) : false;
             if (is_array($decodedNowcast) && $updatedTimestamp !== false && $updatedTimestamp >= time() - 3 * 3600) {
-                // Keep existing scheduled radar payloads visible while the next
-                // hourly refresh replaces legacy accumulated-mm fields with schema v2 rates.
+                // Use only fresh model data for plotted echoes and rainfall amounts.
                 $rainfallNowcast = $decodedNowcast;
+                $nowcastIsStale = false;
             }
         }
     } catch (Throwable $nowcastReadError) {
-        $rainfallNowcast = null;
+        // Keep the radar panel visible even when its scheduled payload cannot be read.
+    }
+    if (!is_array($rainfallNowcast)) {
+        // Do not hide the entire card while the hourly cron catches up. Show an
+        // empty radar shell instead of presenting expired forecast data as current.
+        $rainfallNowcast = [
+            'status' => 'waiting',
+            'frames' => [],
+            'updated_at' => null,
+            'schema_version' => 2,
+            'rain_footprint_trend' => 'not_assessed',
+            'forecast_consistency' => 'no_signal',
+        ];
     }
 
     $forecastCondition = static function (?int $code, bool $isDay = true): array {
@@ -518,7 +531,7 @@ if ($current && !empty($current['observed_at'])) {
         $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
-        $radarLocalAmount = is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm']) : 0.0;
+        $radarLocalAmount = !$nowcastIsStale && is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'])) : null;
         $rainfallDisplayUnit = (int)($rainfallNowcast['schema_version'] ?? 1) >= 2 ? 'mm/h' : 'mm';
         $radarTrend = (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed');
         $radarTrendLabel = match ($radarTrend) {
@@ -615,13 +628,13 @@ if ($current && !empty($current['observed_at'])) {
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
                     <?php if ($radarCells === []): ?>
-                        <p class="rainfall-radar-empty"><?= !empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.') ?></p>
+                        <p class="rainfall-radar-empty"><?= $nowcastIsStale ? 'Waiting for the next scheduled ECMWF refresh. Expired forecast echoes are not shown.' : (!empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.')) ?></p>
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
-                        <strong><?= number_format($radarLocalAmount, 1) ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
+                        <strong><?= $radarLocalAmount === null ? '—' : number_format($radarLocalAmount, 1) ?><?php if ($radarLocalAmount !== null): ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small><?php endif; ?></strong>
                     </div>
                     <div class="rainfall-radar-readout-grid">
                         <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
@@ -631,6 +644,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="rainfall-radar-timeline">
                 <div class="rainfall-radar-section-label"><strong>FORECAST SCAN</strong><span>LOCAL TIME</span></div>
+                <?php if ($nowcastIsStale): ?><p class="rainfall-radar-empty">Forecast steps will appear after the next scheduled update.</p><?php endif; ?>
                 <?php foreach ($nowcastFrames as $frameIndex => $nowcastFrame):
                     $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
                     if ($frameTimestamp === false) continue;
@@ -650,7 +664,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div><strong>Forecast consistency · <?= htmlspecialchars($consistencyLabel, ENT_QUOTES) ?></strong><small>How the rain signal changes between the two model steps — not a probability.</small></div>
             </div>
             <p class="rainfall-nowcast-footnote">
-                <?= $nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
+                <?= $nowcastIsStale ? 'Awaiting scheduled refresh · ' : ($nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '') ?>
                 ECMWF model forecast, not live radar · 25 km grid
             </p>
         </article>
