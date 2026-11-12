@@ -1592,6 +1592,7 @@ async function loadWeatherChange() {
         // the same unified observation set and the same latest-observation time.
         updateAtmosphericWvi(result, allReadings, referenceTime);
         const usedRecentBackfillForScore = false;
+        const usedRecentBackfillForTrend = false;
         const baselineElement = document.getElementById('weatherBaselineStatus');
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
             const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
@@ -1600,13 +1601,9 @@ async function loadWeatherChange() {
                 ? ' Latest available observation is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
         } else if (baselineElement) {
-            if (false) {
-                baselineElement.textContent = 'Recent hourly model estimates are temporarily included because the live reading window is insufficient. The live-only local baseline comparison is paused until enough live readings return.';
-            } else {
-                baselineElement.textContent = latestTime > 0
-                    ? 'Not enough valid current readings to compare against the recent local pattern.'
-                    : 'No observations are available yet to establish a local baseline.';
-            }
+            baselineElement.textContent = latestTime > 0
+                ? 'Not enough valid observations to compare against the recent local pattern.'
+                : 'No observations are available yet to establish a local baseline.';
         }
 
         const conditionsElement = document.getElementById('weatherConditions');
@@ -1616,12 +1613,12 @@ async function loadWeatherChange() {
         const trendReasons = document.getElementById('conditionsTrendReasonItems');
 
         if (trend.score === null) {
-            if (trendSummary) trendSummary.textContent = 'Not enough recent data to establish a directional trend yet.';
+            if (trendSummary) trendSummary.textContent = 'Not enough observations in the latest six-hour window to establish a directional trend yet.';
             if (trendLabel) {
                 trendLabel.textContent = 'Gathering readings…';
                 trendLabel.dataset.trend = 'unavailable';
             }
-            if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three readings spanning one hour.</div>';
+            if (trendReasons) trendReasons.innerHTML = '<div class="weather-change-reason">A directional trend needs at least three observations spanning one hour.</div>';
             if (trendIcon) trendIcon.textContent = '→';
             if (conditionsElement) conditionsElement.innerHTML = 'Trend: <b class="conditions-status gathering">→ Gathering readings…</b>';
         } else {
@@ -1658,7 +1655,7 @@ async function loadWeatherChange() {
                 ? ' Recent hourly model estimates were included, but the available signals are still insufficient.'
                 : '');
             reasonsElement.replaceChildren(summaryElement);
-            reasonsElement.insertAdjacentHTML('beforeend', '<div class="weather-change-reason"><span>GaugeIQ needs at least three readings spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>');
+            reasonsElement.insertAdjacentHTML('beforeend', '<div class="weather-change-reason"><span>GaugeIQ needs at least three observations spanning one hour and at least five of nine valid signals. ' + result.coverage + '/9 signals are available in this window.</span></div>');
             document.getElementById('weatherChangeTrack')?.setAttribute('aria-valuenow', '0');
             document.getElementById('weatherChangeFill')?.style.setProperty('width', '0%');
         } else {
