@@ -1596,7 +1596,7 @@ async function loadWeatherChange() {
         const baselineElement = document.getElementById('weatherBaselineStatus');
         if (baselineElement && latestTime > 0 && Number.isFinite(result.score)) {
             const baseline = weatherLocalBaseline(allReadings, result.score, latestTime);
-            const ageMinutes = Math.max(0, Math.round((referenceTime - latestTime) / 60000));
+            const ageMinutes = Math.max(0, Math.round((Date.now() - latestTime) / 60000));
             baselineElement.textContent = baseline.text + (ageMinutes > 90
                 ? ' Latest available observation is about ' + ageMinutes + ' minutes old; the result may be stale.'
                 : '');
