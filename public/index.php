@@ -806,7 +806,7 @@ if ($current && !empty($current['observed_at'])) {
     // Draw compact 24-hour sparklines from readings already stored in the database.
     $climateHistory = [];
     try {
-        if ($current && !empty($current['observed_at'])) {
+        if ($locationId > 0) {
             $climateLatestSql = "SELECT MAX(observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ?";
             $climateLatestParams = [$locationId];
             if ($activeLocationChangedAt !== '') {
