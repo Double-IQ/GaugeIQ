@@ -240,16 +240,18 @@ final class PressureService
             $timezone = new DateTimeZone('UTC');
         }
 
+        $now = new DateTimeImmutable('now', $timezone);
         $latestQuery = $this->db->prepare(
             'SELECT observed_at FROM gaugeiq_pressure_readings
              WHERE location_id = ? ORDER BY observed_at DESC, id DESC LIMIT 1'
         );
         $latestQuery->execute([$this->locationId]);
         $latestObservedAt = $latestQuery->fetchColumn();
+        $latestTimestamp = null;
         if (is_string($latestObservedAt) && $latestObservedAt !== '') {
             try {
                 $latestTimestamp = (new DateTimeImmutable($latestObservedAt, $timezone))->getTimestamp();
-                if ($latestTimestamp >= (new DateTimeImmutable('now', $timezone))->getTimestamp() - ($gapHours * 3600)) {
+                if ($latestTimestamp >= $now->getTimestamp() - ($gapHours * 3600)) {
                     return null;
                 }
             } catch (Throwable) {
@@ -257,6 +259,50 @@ final class PressureService
                 // the recovery path can repair the recent history safely.
             }
         }
+
+        // The monitor records this only after a successful live fetch and
+        // database insert. Use it as the recovery anchor so a missed 3+ hour
+        // cron interval is not limited to an arbitrary four-hour lookback.
+        $successKey = $this->locationId === 2
+            ? 'monitor_last_success_at_location_2'
+            : 'monitor_last_success_at';
+        $successQuery = $this->db->prepare('SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1');
+        $successQuery->execute([$successKey]);
+        $lastSuccessValue = $successQuery->fetchColumn();
+        $lastSuccessTimestamp = null;
+        if (is_string($lastSuccessValue) && $lastSuccessValue !== '') {
+            try {
+                $lastSuccessTimestamp = (new DateTimeImmutable($lastSuccessValue))->getTimestamp();
+            } catch (Throwable) {
+                // Fall back to the newest stored observation if status is invalid.
+            }
+        }
+
+        $anchorTimestamp = max(
+            $latestTimestamp ?? 0,
+            $lastSuccessTimestamp ?? 0
+        );
+        if ($anchorTimestamp <= 0) {
+            // First-run fallback: recover from the newest stored observation.
+            $anchorTimestamp = $latestTimestamp ?? 0;
+        }
+        if ($anchorTimestamp <= 0) {
+            return null;
+        }
+
+        // Start at the next full hour after the last known successful point.
+        // The current, incomplete hour is left to the normal live monitor.
+        $currentHourTimestamp = $now->setTime((int)$now->format('H'), 0, 0)->getTimestamp();
+        $firstMissingHour = (int)(floor($anchorTimestamp / 3600) * 3600) + 3600;
+        if ($firstMissingHour >= $currentHourTimestamp) {
+            return null;
+        }
+
+        $cutoff = (new DateTimeImmutable('@' . $firstMissingHour))->setTimezone($timezone);
+        // Open-Meteo's past_hours window is sized to the actual outage, with
+        // a small overlap for API timestamp alignment; never assume four hours.
+        $pastHours = max(4, (int)ceil(($now->getTimestamp() - $firstMissingHour) / 3600) + 1);
+        $pastHours = min(92, $pastHours);
 
         [$latitude, $longitude] = $this->locationCoordinates();
         $url = 'https://api.open-meteo.com/v1/forecast?' . http_build_query([
@@ -338,8 +384,8 @@ final class PressureService
             }
 
             $now = new DateTimeImmutable('now', $timezone);
-            $cutoff = $now->modify('-' . $pastHours . ' hours');
-            // Only import completed hours. The live current observation is
+            // Only import completed hours after the last successful monitor run.
+            // The live current observation is
             // recorded by the normal monitor immediately after this method.
             $currentHour = $now->setTime((int)$now->format('H'), 0, 0);
             $createdAt = gmdate('c');
