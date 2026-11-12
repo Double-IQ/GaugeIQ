@@ -32,7 +32,7 @@ $secondLocationLongitude = gaugeSetting($pdo, 'second_location_longitude', '') ?
 $secondLocationEnabled = gaugeSetting($pdo, 'second_location_enabled', '0') === '1';
 $locationLatitude = gaugeSetting($pdo, 'location_latitude', (string)$config['pressure']['latitude']) ?? '';
 $locationLongitude = gaugeSetting($pdo, 'location_longitude', (string)$config['pressure']['longitude']) ?? '';
-$notice = isset($_GET['second_deleted']) ? 'Second location and its associated monitoring data were deleted.' : (isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : ''));
+$notice = isset($_GET['primary_deleted']) ? 'The previous primary location and its data were deleted. The second location and its complete history have been promoted to the primary location.' : (isset($_GET['second_deleted']) ? 'Second location and its associated monitoring data were deleted.' : (isset($_GET['second_saved']) ? 'Second location saved. Independent monitoring will begin on the next scheduled check.' : (isset($_GET['saved']) ? 'Current location saved.' : '')));
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!AdminAuth::verifyCsrf((string)($_POST['csrf'] ?? ''))) {
@@ -40,12 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $action = (string)($_POST['action'] ?? '');
-            if ($action === 'delete_second_location') {
-                if (!$secondLocationEnabled) {
+            if ($action === 'delete_location') {
+                $deleteLocationId = (int)($_POST['location_id'] ?? 0);
+                if ($deleteLocationId === 2 && !$secondLocationEnabled) {
                     throw new InvalidArgumentException('There is no second location to delete.');
                 }
-                LocationManagementService::deleteSecondLocation($pdo);
-                header('Location: location-history.php?second_deleted=1');
+                if ($deleteLocationId === 1 && !$secondLocationEnabled) {
+                    throw new InvalidArgumentException('Configure a second location before deleting the primary location.');
+                }
+                $promoted = LocationManagementService::deleteLocation($pdo, $deleteLocationId);
+                header('Location: location-history.php?' . ($promoted ? 'primary_deleted=1' : 'second_deleted=1'));
                 exit;
             }
 
@@ -195,6 +199,14 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
         </div>
         <p id="locationHelp" class="alert-help muted">Changing the location affects the next weather check. Existing historical readings remain unchanged.</p>
     </form>
+    <?php if ($secondLocationEnabled): ?>
+    <form method="post" class="location-actions" onsubmit="return window.confirm('Permanently delete ' + <?= json_encode($locationName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?> + ' and all of its stored readings, historical downloads, rainfall forecasts and alert history? The second location will be promoted and its data preserved.');">
+        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="action" value="delete_location">
+        <input type="hidden" name="location_id" value="1">
+        <button type="submit" class="secondary">Delete current location</button>
+    </form>
+    <?php endif; ?>
 </section>
 
 <section class="card location-card" aria-labelledby="secondLocationTitle">
@@ -211,9 +223,10 @@ $historicalWeatherCount = (int)$weatherHistoryCountStmt->fetchColumn();
         <p id="secondLocationHelp" class="alert-help muted"><?= $secondLocationEnabled ? 'Second location saved.' : 'No second location has been saved yet.' ?> Saving this location does not change your current location.</p>
     </form>
     <?php if ($secondLocationEnabled): ?>
-    <form method="post" class="location-actions" onsubmit="return window.confirm('Delete ' + <?= json_encode($secondLocationName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?> + ' and permanently remove its readings, rainfall forecasts, alert rules and monitoring history?');">
+    <form method="post" class="location-actions" onsubmit="return window.confirm('Permanently delete ' + <?= json_encode($secondLocationName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?> + ' and all of its stored readings, historical downloads, rainfall forecasts and alert history?');">
         <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-        <input type="hidden" name="action" value="delete_second_location">
+        <input type="hidden" name="action" value="delete_location">
+        <input type="hidden" name="location_id" value="2">
         <button type="submit" class="secondary">Delete second location</button>
     </form>
     <?php endif; ?>
