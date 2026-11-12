@@ -1390,7 +1390,9 @@ if ($current && !empty($current['observed_at'])) {
 </main>
 <?php
 try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
-$historyAutoStart = (new DateTimeImmutable('now', $historyTimezone))->modify('-1 year')->format('Y-m-d');
+$historyNow = new DateTimeImmutable('now', $historyTimezone);
+$historyMonthStart = $historyNow->modify('first day of this month')->modify('-1 month');
+$historyAutoStart = $historyMonthStart->modify('+' . (min((int)$historyNow->format('j'), (int)$historyMonthStart->format('t')) - 1) . ' days')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
 $historyCountSql = "SELECT COUNT(*) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?";
 $historyCountParams = [$locationId, 'Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59'];
