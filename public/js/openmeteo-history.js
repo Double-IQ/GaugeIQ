@@ -24,7 +24,9 @@
         const last = new Date(to + 'T00:00:00Z');
         while (cursor <= last) {
             const chunkEnd = new Date(cursor);
-            chunkEnd.setUTCDate(chunkEnd.getUTCDate() + 365);
+            // Keep each request small so a new location's one-month archive
+            // import can commit progressively instead of waiting on one large request.
+            chunkEnd.setUTCDate(chunkEnd.getUTCDate() + 6);
             if (chunkEnd > last) chunkEnd.setTime(last.getTime());
             chunks.push([dateString(cursor), dateString(chunkEnd)]);
             cursor = nextDay(dateString(chunkEnd));
@@ -84,7 +86,9 @@
         let completed = [];
 
         try {
-            if (weatherCount < 5000) {
+            const expectedHours = Math.max(1, Math.round((new Date(end + 'T00:00:00Z').getTime() - new Date(start + 'T00:00:00Z').getTime()) / 3600000) + 24);
+            const minimumExpectedCoverage = Math.floor(expectedHours * 0.75);
+            if (weatherCount < minimumExpectedCoverage) {
                 const count = await importSource('weather', 'Historical Weather', weatherStatus);
                 completed.push('weather (' + count.toLocaleString() + ' records)');
             } else if (coverageIsStale(weatherLatest)) {
