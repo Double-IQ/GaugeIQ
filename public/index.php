@@ -551,7 +551,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
-                $blobRadius = max(5.0, min(8.5, 5.0 + log10(1.0 + max(0.0, $amount)) * 2.2);
+                $blobRadius = max(5.0, min(8.5, 5.0 + log10(1.0 + max(0.0, $amount)) * 2.2));
                 $blobX = number_format($cellX, 2, '.', '');
                 $blobY = number_format($cellY, 2, '.', '');
                 $blobR = number_format($blobRadius, 2, '.', '');
