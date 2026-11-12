@@ -588,7 +588,6 @@ if ($current && !empty($current['observed_at'])) {
                     <p class="label">ECMWF IFS · Next 6 hours</p>
                     <h2>Rainfall outlook</h2>
                 </div>
-                <span class="rainfall-nowcast-source">Model forecast</span>
                 <div class="rainfall-radar-compass-controls">
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
                     <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
