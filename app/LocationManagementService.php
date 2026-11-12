@@ -121,6 +121,11 @@ final class LocationManagementService
         foreach ($primaryKeys as $key) {
             $delete->execute([$key]);
         }
+        // Also clear any additional location-scoped key discovered from the
+        // secondary settings, not just keys known when this service was written.
+        foreach (array_keys($promoted) as $key) {
+            $delete->execute([$key]);
+        }
         foreach ($promoted as $key => $value) {
             self::saveSetting($pdo, $key, $value);
         }
