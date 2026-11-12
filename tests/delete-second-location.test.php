@@ -63,8 +63,9 @@ assertLocationManagement((string)$pdo->query("SELECT value FROM gaugeiq_settings
 // Re-create a second location, then delete primary: Location 2 must be promoted,
 // with all its imported historical readings, forecast records and alert rules/events.
 $pdo->exec(<<<'SQL'
+UPDATE gaugeiq_settings SET value='1' WHERE `key`='second_location_enabled';
 INSERT INTO gaugeiq_settings (`key`, `value`) VALUES
- ('second_location_enabled', '1'), ('second_location_name', 'New primary'),
+ ('second_location_name', 'New primary'),
  ('second_location_latitude', '-29.500000'), ('second_location_longitude', '30.500000'),
  ('location_timezone_location_2', 'Africa/Johannesburg'),
  ('monitor_last_success_at_location_2', '2026-11-12T01:00:00Z');
