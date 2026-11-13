@@ -4,6 +4,13 @@ declare(strict_types=1);
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/AdminAuth.php';
+
+$config = require __DIR__ . '/../config/local.php';
+$db = new Database($config);
+$pdo = $db->pdo();
+migrateDatabase($pdo);
+AdminAuth::requireLogin();
+$csrf = AdminAuth::csrfToken();
 $updated = trim((string)($_GET['updated'] ?? ''));
 $updateError = isset($_GET['update_error']);
 $notice = '';

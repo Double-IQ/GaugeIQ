@@ -12,15 +12,6 @@ $pdo = $db->pdo();
 migrateDatabase($pdo);
 AdminAuth::requireLogin();
 $csrf = AdminAuth::csrfToken();
-
-require __DIR__ . '/../app/WeatherFormulaConfig.php';
-
-$config = require __DIR__ . '/../config/local.php';
-$db = new Database($config);
-$pdo = $db->pdo();
-migrateDatabase($pdo);
-AdminAuth::requireLogin();
-$csrf = AdminAuth::csrfToken();
 $formulaFields = weatherFormulaFields();
 $formulaValues = weatherFormulaValues($pdo);
 $formulaNotice = '';
@@ -154,7 +145,7 @@ foreach ($formulaFields as $key => $field) {
         <div class="formula-equation"><strong>Local baseline</strong><code>median(previous comparable six-hour weather-change scores)</code><p>This is contextual information only; it does not feed back into or alter the WVI score. A configured minimum number of valid historical windows is required before the median is displayed.</p></div>
     </div>
     <form method="post" class="formula-form">
-        <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+        <input type="hidden" name="csrf" value="<?= formulaH($csrf) ?>">
         <?php foreach ($formulaGroups as $groupName => $groupFields): ?>
         <section class="formula-group">
             <h3><?= formulaH($groupName) ?></h3>
