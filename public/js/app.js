@@ -2142,7 +2142,8 @@ updateNetworkDiagnostics();
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
     const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
         && typeof DeviceOrientationEvent.requestPermission === 'function';
-    let enabled = !permissionApi && localStorage.getItem(storageKey) === 'true';
+    let enabled = false;
+    try { enabled = !permissionApi && localStorage.getItem(storageKey) === 'true'; } catch {}
     let listening = false;
     let nativeHeadingSeen = false;
     let currentHeading = null;
@@ -2228,7 +2229,7 @@ updateNetworkDiagnostics();
                 if (permission !== 'granted') throw new Error('Compass permission was not granted.');
             }
             enabled = true;
-            localStorage.setItem(storageKey, 'true');
+            try { localStorage.setItem(storageKey, 'true'); } catch {}
             nativeHeadingSeen = false;
             currentHeading = null;
             targetHeading = null;
