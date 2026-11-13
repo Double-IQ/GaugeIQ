@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ([
                         'location_timezone_location_2',
                         'recent_backfill_last_success_at_location_2',
+                        'historical_weather_import_completed_at_location_2',
                         'monitor_last_success_at_location_2',
                         'monitor_last_error_location_2',
                         'daily_forecast_alert_last_evaluated_date_location_2',
@@ -107,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ([
                         'location_timezone',
                         'recent_backfill_last_success_at',
+                        'historical_weather_import_completed_at_location_1',
                         'monitor_last_success_at',
                         'monitor_last_error',
                         'daily_forecast_alert_last_evaluated_date',
@@ -149,7 +151,7 @@ foreach ($historyLocations as $historyLocation) {
     $timezoneName = gaugeSetting($pdo, $historyLocation['timezone_key'], '') ?? '';
     if ($timezoneName === '') $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
     try { $locationTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $locationTimezone = new DateTimeZone('UTC'); }
-    $historicalStart = (new DateTimeImmutable('now', $locationTimezone))->modify('-1 year')->format('Y-m-d');
+    $historicalStart = (new DateTimeImmutable('now', $locationTimezone))->modify('-1 month')->format('Y-m-d');
     $historicalEnd = (new DateTimeImmutable('yesterday', $locationTimezone))->format('Y-m-d');
     $changedAt = gaugeSetting($pdo, $historyLocation['changed_key'], '') ?? '';
     $where = 'location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?';
@@ -166,6 +168,7 @@ foreach ($historyLocations as $historyLocation) {
         'end' => $historicalEnd,
         'count' => (int)$countStmt->fetchColumn(),
         'latest' => (string)($latestStmt->fetchColumn() ?: ''),
+        'import_completed' => (gaugeSetting($pdo, 'historical_weather_import_completed_at_location_' . $historyLocation['id'], '') ?? '') !== '',
     ];
 }
 ?>
@@ -255,11 +258,12 @@ foreach ($historyLocations as $historyLocation) {
     data-end="<?= h($historyPanel['end']) ?>"
     data-weather-count="<?= (int)$historyPanel['count'] ?>"
     data-weather-latest="<?= h($historyPanel['latest']) ?>"
+    data-import-completed="<?= $historyPanel['import_completed'] ? '1' : '0' ?>"
     aria-labelledby="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">
     <div class="section-heading">
         <div>
             <h2 id="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">Historical weather data — <?= h($historyPanel['name']) ?></h2>
-            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather for this location. Existing weather records are kept.</p>
+            <p class="muted">GaugeIQ imports one rolling calendar month of Open-Meteo historical weather once for this location. Existing weather records are kept.</p>
         </div>
     </div>
     <div class="local-weather-tools">
