@@ -1446,7 +1446,7 @@ async function loadWeatherChange() {
     if (!scoreElement || !summaryElement || !reasonsElement) return;
 
     try {
-        const response = await fetch('../api/history.php?hours=360&include_recent_backfill=1&location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
+        const response = await fetch('../api/history.php?hours=720&include_recent_backfill=1&location=' + encodeURIComponent(document.body?.dataset.locationId || '1'), { cache: 'no-store' });
         if (!response.ok) throw new Error('Unable to load recent readings.');
         const data = await response.json();
         // Treat imported observations and subsequent live cron readings as one
