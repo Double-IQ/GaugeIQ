@@ -265,6 +265,14 @@ protocolOptions.fileReaderConfig = {
             OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
         );
 
+        // The standalone rainfall radar has its own viewport and must not
+        // inherit the main map's user-drawn regional clipping boundary.
+        const radarProtocolOptions = { ...protocolOptions };
+        delete radarProtocolOptions.clippingOptions;
+        maplibregl.addProtocol('om-radar', (params, abortController) =>
+            OMWeatherMapLayer.omProtocol(params, abortController, radarProtocolOptions)
+        );
+
         const savedMapZoom = (() => {
             try {
                 const value = Number(localStorage.getItem('gaugeiqWeatherMapZoom'));
@@ -332,7 +340,7 @@ protocolOptions.fileReaderConfig = {
                 try {
                     radarMap.addSource('gaugeiq-radar-precipitation', {
                         type: 'raster',
-                        url: 'om://' + dataUrl.href,
+                        url: 'om-radar://' + dataUrl.href,
                         tileSize: 256,
                         maxzoom: 12
                     });
