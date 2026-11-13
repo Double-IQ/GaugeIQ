@@ -638,7 +638,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="rainfall-radar-readouts">
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
-                        <strong><?= number_format($radarLocalAmount, 1) ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
+                        <strong><?= $radarLocalAmount === null ? '—' : number_format($radarLocalAmount, 1) ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
                     </div>
                     <div class="rainfall-radar-readout-grid">
                         <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
