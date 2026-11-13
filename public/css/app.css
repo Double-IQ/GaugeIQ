@@ -7213,7 +7213,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-scope{display:block;width:min(100%,350px);height:auto;overflow:visible;margin:4px auto 0}
 .rainfall-radar-sweep{transform-origin:160px 160px;animation:rainfall-radar-rotation 7s linear infinite}
 /* Only the forecast echoes rotate for compass mode; the radar housing and sweep remain independent. */
-.rainfall-radar-cells{transform-box:view-box;transform-origin:160px 160px;transition:transform 180ms ease-out}
+.rainfall-radar-cells{transition:transform 180ms ease-out}
 .rainfall-radar-cell{opacity:.88;animation:rainfall-cell-pulse 2.8s ease-in-out infinite}
 .rainfall-radar-cell:nth-child(3n+2){animation-delay:.65s}
 .rainfall-radar-cell:nth-child(3n){animation-delay:1.3s}
