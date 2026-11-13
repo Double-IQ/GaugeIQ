@@ -1267,7 +1267,6 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
             </div>
         </div>
-</div>
         <div id="map" class="gaugeiq-weather-map-canvas"
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
