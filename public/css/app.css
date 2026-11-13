@@ -7221,11 +7221,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-sweep{transform-origin:160px 160px;animation:rainfall-radar-rotation 7s linear infinite}
 /* Only forecast echoes rotate for compass mode; the radar housing and sweep stay fixed. */
 .rainfall-radar-cells{transform-box:view-box;transform-origin:160px 160px;transition:transform 180ms ease-out}
-.rainfall-radar-cell{stroke:rgba(222,248,255,.5);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.88;transform-box:fill-box;transform-origin:center;animation:rainfall-cell-pulse 2.8s ease-in-out infinite}
-.rainfall-radar-cell:nth-child(3n+2){animation-delay:.65s}
-.rainfall-radar-cell:nth-child(3n){animation-delay:1.3s}
-@keyframes rainfall-cell-pulse{0%,100%{opacity:.68;transform:scale(.88)}50%{opacity:1;transform:scale(1.16)}}
-@media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.9}.rainfall-radar-cells{transition:none}}
+.rainfall-radar-cell{stroke:rgba(222,248,255,.28);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.035;transform-box:fill-box;transform-origin:center;animation:rainfall-echo-sweep 7s linear infinite;animation-delay:var(--rainfall-radar-phase,0s)}
+/* Each echo lights as the clockwise sweep crosses its bearing, then fades almost dark. */
+@keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}8%{opacity:.88;filter:url(#rainfallRadarGlow) brightness(1.45)}20%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
+@media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.72;filter:url(#rainfallRadarGlow)}.rainfall-radar-cells{transition:none}}
 /* The ECMWF raster rotates beneath the fixed scope overlay in compass mode. */
 @media(prefers-reduced-motion:reduce){.rainfall-radar-map{transition:none}}
 .rainfall-radar-legend{display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin-top:1px;color:#91a9c7;font-size:10px}
