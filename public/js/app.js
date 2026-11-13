@@ -2131,10 +2131,10 @@ async function updateNetworkDiagnostics() {
 updateNetworkDiagnostics();
 
 
-// Rainfall radar compass: rotate only the forecast echo layer. The radar
-// housing, range rings, labels and independently animated sweep stay fixed.
+// Rainfall radar compass: rotate only the rendered precipitation raster.
+// The radar housing, range rings, labels and independently animated sweep stay fixed.
 (() => {
-    const radarEchoes = document.getElementById('rainfallRadarEchoes');
+    const radarEchoes = document.getElementById('rainfallRadarMap');
     const radarCompassButton = document.getElementById('rainfallRadarCompassButton');
     const radarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
     if (!radarEchoes || !radarCompassButton) return;
@@ -2169,9 +2169,8 @@ updateNetworkDiagnostics();
         currentHeading = normalize(currentHeading + delta * 0.2);
         if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
 
-        // The echo group's SVG transform uses an explicit centre (160,160).
-        // Counter-rotate the north-up field by the device's clockwise heading.
-        radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
+        // Counter-rotate the north-up raster viewport; dial graphics stay fixed.
+        radarEchoes.style.transform = 'rotate(' + (-currentHeading).toFixed(2) + 'deg)';
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
@@ -2257,7 +2256,7 @@ updateNetworkDiagnostics();
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
-        radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
+        radarEchoes.style.transform = 'rotate(0deg)';
         setStatus('North-up');
         updateButton();
     }
