@@ -2256,7 +2256,7 @@ updateNetworkDiagnostics();
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
-        radarEchoes.style.transform = 'rotate(0deg)';
+        radarField.style.transform = 'rotate(0deg)';
         setStatus('North-up');
         updateButton();
     }
