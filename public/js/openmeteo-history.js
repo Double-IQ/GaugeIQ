@@ -24,7 +24,7 @@
         const last = new Date(to + 'T00:00:00Z');
         while (cursor <= last) {
             const chunkEnd = new Date(cursor);
-            // Keep each request small so a new location's one-month archive
+            // Keep each request small so the rolling 365-day archive
             // import can commit progressively instead of waiting on one large request.
             chunkEnd.setUTCDate(chunkEnd.getUTCDate() + 6);
             if (chunkEnd > last) chunkEnd.setTime(last.getTime());
@@ -63,7 +63,12 @@
             covered += Number(result.covered_rows) || 0;
         }
 
-        setStatus(statusElement, 'Available — ' + covered.toLocaleString() + ' hourly records. ' + inserted.toLocaleString() + ' added; ' + skipped.toLocaleString() + ' already present or unavailable.');
+        const expectedHours = Math.max(1, Math.round((new Date(to + 'T00:00:00Z').getTime() - new Date(from + 'T00:00:00Z').getTime()) / 3600000) + 24);
+        if (covered >= expectedHours) {
+            setStatus(statusElement, 'Available — ' + covered.toLocaleString() + ' of ' + expectedHours.toLocaleString() + ' expected hourly records. ' + inserted.toLocaleString() + ' added; ' + skipped.toLocaleString() + ' already present or unavailable.');
+        } else {
+            setStatus(statusElement, 'Partial — ' + covered.toLocaleString() + ' of ' + expectedHours.toLocaleString() + ' expected hourly records. ' + inserted.toLocaleString() + ' added; ' + skipped.toLocaleString() + ' already present or unavailable.');
+        }
         return covered;
     }
 
@@ -87,8 +92,9 @@
 
         try {
             const expectedHours = Math.max(1, Math.round((new Date(end + 'T00:00:00Z').getTime() - new Date(start + 'T00:00:00Z').getTime()) / 3600000) + 24);
-            const minimumExpectedCoverage = Math.floor(expectedHours * 0.75);
-            if (weatherCount < minimumExpectedCoverage) {
+            // Do not label a partial year as complete. Existing timestamps are
+            // skipped by the importer, so retrying the full window safely fills gaps.
+            if (weatherCount < expectedHours) {
                 const count = await importSource('weather', 'Historical Weather', weatherStatus);
                 completed.push('weather (' + count.toLocaleString() + ' records)');
             } else if (coverageIsStale(weatherLatest)) {
