@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261113-radar-rain-footprint">
+<link rel="stylesheet" href="css/app.css?v=20261113-radar-raster">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
@@ -547,38 +547,11 @@ if ($current && !empty($current['observed_at'])) {
             'fading' => 'Fading',
             default => 'No consistent rain signal',
         };
-        $radarCellMarkup = '';
-        $radarCentreLatitude = $dashboardLatitudeFloat;
-        $radarCentreLongitude = $dashboardLongitudeFloat;
-        $radarLongitudeScale = max(0.08, cos(deg2rad($radarCentreLatitude)));
-        foreach ($radarCells as $radarCell) {
-            if (!is_array($radarCell) ||
-                !is_numeric($radarCell['latitude'] ?? null) ||
-                !is_numeric($radarCell['longitude'] ?? null)) {
-                continue;
-            }
-            $amount = is_numeric($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm'] ?? null)
-                ? max(0.0, (float)($radarCell['precipitation_mm_per_hour'] ?? $radarCell['precipitation_mm']))
-                : 0.0;
-            if ($amount < 0.1) continue;
-            $cellColour = $amount >= 5.0 ? '#E7C84B' : ($amount >= 1.0 ? '#45D69D' : '#36B9D6');
-
-            // Project real ECMWF grid-cell centres into a local north-up radar plane.
-            $deltaLongitude = fmod((float)$radarCell['longitude'] - $radarCentreLongitude + 540.0, 360.0) - 180.0;
-            $eastKm = $deltaLongitude * 111.32 * $radarLongitudeScale;
-            $northKm = ((float)$radarCell['latitude'] - $radarCentreLatitude) * 110.574;
-            $cellX = 160.0 + ($eastKm * 1.36);
-            $cellY = 160.0 - ($northKm * 1.36);
-            $cellOpacity = min(0.88, 0.48 + (log1p($amount) * 0.12));
-            $cellTitle = number_format($amount, 2) . ' ' . $rainfallDisplayUnit .
-                ' · ' . number_format((float)($radarCell['distance_km'] ?? 0.0), 1) . ' km';
-            $radarCellMarkup .= '<ellipse class="rainfall-radar-cell rainfall-radar-grid-cell" cx="' .
-                number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') .
-                '" rx="20.5" ry="19.5" fill="' . $cellColour . '" fill-opacity="' .
-                number_format($cellOpacity, 2, '.', '') . '" data-rainfall="' .
-                number_format($amount, 2, '.', '') . '"><title>' .
-                htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></ellipse>';
-        }
+        // The dial renders the scheduled ECMWF .om precipitation raster directly.
+        $radarRasterUrl = is_string($radarFrame['frame_url'] ?? null) ? $radarFrame['frame_url'] : '';
+        $radarRasterStepHours = is_numeric($radarFrame['step_duration_hours'] ?? null)
+            ? max(0.1, (float)$radarFrame['step_duration_hours'])
+            : 3.0;
         $frameLeadLabels = ['+3h', '+6h'];
         ?>
         <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
@@ -595,39 +568,48 @@ if ($current && !empty($current['observed_at'])) {
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
                     <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
-                    <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast precipitation footprint around your location, rendered from the model grid">
-                        <defs>
-                            <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
-                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
-                            <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
-                            <filter id="rainfallRadarGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                            <filter id="rainfallRadarRainSoftness" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter>
-                        </defs>
-                        <circle cx="160" cy="160" r="143" fill="#0A202B" stroke="#315263" stroke-width="1.5"/>
-                        <g clip-path="url(#rainfallRadarClip)">
-                            <circle cx="160" cy="160" r="140" fill="url(#rainfallRadarBackground)"/>
-                            <circle cx="160" cy="160" r="21" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
-                            <circle cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
-                            <circle cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
-                            <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
-                            <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)" filter="url(#rainfallRadarRainSoftness)"><?= $radarCellMarkup ?></g>
-                            <g class="rainfall-radar-sweep">
-                                <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
-                                <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
+                    <div class="rainfall-radar-plot">
+                        <div
+                            id="rainfallRadarMap"
+                            class="rainfall-radar-map"
+                            data-frame-url="<?= htmlspecialchars($radarRasterUrl, ENT_QUOTES, 'UTF-8') ?>"
+                            data-step-hours="<?= number_format($radarRasterStepHours, 2, '.', '') ?>"
+                            data-latitude="<?= number_format($radarCentreLatitude, 6, '.', '') ?>"
+                            data-longitude="<?= number_format($radarCentreLongitude, 6, '.', '') ?>"
+                            aria-hidden="true"
+                        ></div>
+                        <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast precipitation raster around your location, using the same Open-Meteo weather-map rendering">
+                            <defs>
+                                <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
+                                <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
+                                <filter id="rainfallRadarGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                            </defs>
+                            <circle cx="160" cy="160" r="143" fill="none" stroke="#315263" stroke-width="1.5"/>
+                            <g clip-path="url(#rainfallRadarClip)">
+                                <circle cx="160" cy="160" r="21" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                                <circle cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                                <circle cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                                <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
+                                <g class="rainfall-radar-sweep">
+                                    <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
+                                    <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
+                                </g>
+                                <circle cx="160" cy="160" r="5" fill="#F4FBFF" stroke="#47D9B0" stroke-width="3" filter="url(#rainfallRadarGlow)"/>
+                                <circle cx="160" cy="160" r="12" fill="none" stroke="#47D9B0" stroke-width="1"/>
                             </g>
-                            <circle cx="160" cy="160" r="5" fill="#F4FBFF" stroke="#47D9B0" stroke-width="3" filter="url(#rainfallRadarGlow)"/>
-                            <circle cx="160" cy="160" r="12" fill="none" stroke="#47D9B0" stroke-width="1"/>
-                        </g>
-                        <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
-                            <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
-                            <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
-                        </g>
-                    </svg>
+                            <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
+                                <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
+                                <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
+                            </g>
+                        </svg>
+                    </div>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
-                    <?php if ($radarCells === []): ?>
-                        <p class="rainfall-radar-empty"><?= $nowcastIsStale ? 'Waiting for the next scheduled ECMWF refresh. Expired forecast echoes are not shown.' : (!empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.')) ?></p>
+                    <?php if ($radarRasterUrl === ''): ?>
+                        <p class="rainfall-radar-empty">Waiting for the next scheduled ECMWF refresh to provide the raster frame.</p>
+                    <?php elseif ($radarCells === []): ?>
+                        <p class="rainfall-radar-empty">No wet grid cells forecast within 100 km at this step.</p>
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
@@ -1446,6 +1428,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261113-radar-compass-axis"></script>
+<script src="js/app.js?v=20261113-radar-raster-compass"></script>
 </body>
 </html>
