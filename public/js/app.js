@@ -2131,13 +2131,13 @@ async function updateNetworkDiagnostics() {
 updateNetworkDiagnostics();
 
 
-// Rainfall radar compass: rotate only the rendered precipitation raster.
-// The radar housing, range rings, labels and independently animated sweep stay fixed.
+// Rainfall radar compass: rotate only the forecast echo layer. The radar
+// housing, range rings, labels and independently animated sweep stay fixed.
 (() => {
-    const radarField = document.getElementById('rainfallRadarMap');
+    const radarEchoes = document.getElementById('rainfallRadarEchoes');
     const radarCompassButton = document.getElementById('rainfallRadarCompassButton');
     const radarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
-    if (!radarField || !radarCompassButton) return;
+    if (!radarEchoes || !radarCompassButton) return;
 
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
     const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
@@ -2169,8 +2169,9 @@ updateNetworkDiagnostics();
         currentHeading = normalize(currentHeading + delta * 0.2);
         if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
 
-        // Counter-rotate the north-up raster viewport; dial graphics stay fixed.
-        radarField.style.transform = 'rotate(' + (-currentHeading).toFixed(2) + 'deg)';
+        // Bearings are north-up in the forecast data, so counter-rotate the
+        // echoes by the device heading to keep them geographically aligned.
+        radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
@@ -2195,11 +2196,8 @@ updateNetworkDiagnostics();
             nativeHeadingSeen = true;
             heading = event.webkitCompassHeading;
         } else if (!nativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
-            // Match the wind compass conversion: alpha is screen-relative on
-            // browsers without a native heading, so compensate for rotation.
             const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
-            const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
-            heading = 360 - event.alpha + screenOffset;
+            heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
         }
         if (heading !== null) applyHeading(heading);
     }
@@ -2256,7 +2254,7 @@ updateNetworkDiagnostics();
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
-        radarField.style.transform = 'rotate(0deg)';
+        radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
         setStatus('North-up');
         updateButton();
     }
