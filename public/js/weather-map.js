@@ -270,7 +270,11 @@ protocolOptions.fileReaderConfig = {
         const radarProtocolOptions = { ...protocolOptions };
         delete radarProtocolOptions.clippingOptions;
         maplibregl.addProtocol('om-radar', (params, abortController) =>
-            OMWeatherMapLayer.omProtocol(params, abortController, radarProtocolOptions)
+            OMWeatherMapLayer.omProtocol({
+                ...params,
+                // The Open-Meteo protocol parser expects its own "om://" scheme.
+                url: params.url.replace(/^om-radar:\/\//, 'om://')
+            }, abortController, radarProtocolOptions)
         );
 
         const savedMapZoom = (() => {
@@ -1128,8 +1132,13 @@ protocolOptions.fileReaderConfig = {
         }
     
 
-// The map is part of the dashboard, so initialise it as soon as the module loads.
-createMap();
+// Initialise the two maps independently: an error in the full weather map
+// must not prevent the standalone rainfall radar from starting (or vice versa).
+try {
+    createMap();
+} catch (error) {
+    console.error('GaugeIQ weather map initialisation failed:', error);
+}
 try {
     createRainfallRadarMap();
 } catch (error) {
