@@ -565,7 +565,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
                 $cellBearing = fmod((float)$radarCell['bearing_degrees'] + 360.0, 360.0);
-                $cellSweepPhase = -(fmod($cellBearing - 18.0 + 360.0, 360.0) / 360.0 * 7.0);
+                $cellSweepPhase = (fmod($cellBearing - 18.0 + 360.0, 360.0) / 360.0 * 7.0);
                 $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" data-bearing="' . number_format($cellBearing, 2, '.', '') . '" style="--rainfall-radar-phase:' . number_format($cellSweepPhase, 3, '.', '') . 's" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
@@ -576,7 +576,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(2.5, min(4.0, 2.5 + log10(1.0 + max(0.0, $amount))));
                 $cellBearing = fmod((float)$radarCell['bearing_degrees'] + 360.0, 360.0);
-                $cellSweepPhase = -(fmod($cellBearing - 18.0 + 360.0, 360.0) / 360.0 * 7.0);
+                $cellSweepPhase = (fmod($cellBearing - 18.0 + 360.0, 360.0) / 360.0 * 7.0);
                 $radarCellMarkup .= '<circle class="rainfall-radar-cell" data-bearing="' . number_format($cellBearing, 2, '.', '') . '" style="--rainfall-radar-phase:' . number_format($cellSweepPhase, 3, '.', '') . 's" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
             }
         }
@@ -585,8 +585,8 @@ if ($current && !empty($current['observed_at'])) {
         <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
             <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
-                    <h2>Rain Radar</h2>
-                    <p class="label">6 hour outlook</p>
+                    <p class="label">Rain Radar</p>
+                    <div class="wind-hud-subtitle">6 HOUR OUTLOOK</div>
                 </div>
                 <div class="rainfall-radar-compass-controls">
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
