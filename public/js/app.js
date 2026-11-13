@@ -2176,10 +2176,19 @@ updateNetworkDiagnostics();
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
+            currentHeading = targetHeading;
+            syncEchoSweepPhases(currentHeading);
             animationFrame = null;
             return;
         }
         animationFrame = requestAnimationFrame(renderHeading);
+    }
+
+    function syncEchoSweepPhases(heading) {
+        radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
+            const bearing = normalize(Number(cell.dataset.bearing) - heading);
+            if (bearing !== null) cell.style.animationDelay = (bearing / 360 * 7).toFixed(3) + 's';
+        });
     }
 
     function applyHeading(value) {
