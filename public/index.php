@@ -1240,6 +1240,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="wind-compass-controls">
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
             </div>
+            </div>
         </article>
     </section>
 
