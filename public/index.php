@@ -254,8 +254,8 @@ if ($current && !empty($current['observed_at'])) {
             <img src="/branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ" width="150" height="60" class="header-brand-logo">
         </div>
         <div class="header-actions">
-            <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
             <button id="gaugeiqMenuButton" class="menu-button" type="button" aria-label="Open GaugeIQ administration">Admin</button>
+            <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
     <?php if ($secondLocationEnabled): ?>
