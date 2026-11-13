@@ -2134,10 +2134,10 @@ updateNetworkDiagnostics();
 // Rainfall radar compass: rotate only the rendered precipitation raster.
 // The radar housing, range rings, labels and independently animated sweep stay fixed.
 (() => {
-    const radarEchoes = document.getElementById('rainfallRadarMap');
+    const radarField = document.getElementById('rainfallRadarMap');
     const radarCompassButton = document.getElementById('rainfallRadarCompassButton');
     const radarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
-    if (!radarEchoes || !radarCompassButton) return;
+    if (!radarField || !radarCompassButton) return;
 
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
     const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
@@ -2170,7 +2170,7 @@ updateNetworkDiagnostics();
         if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
 
         // Counter-rotate the north-up raster viewport; dial graphics stay fixed.
-        radarEchoes.style.transform = 'rotate(' + (-currentHeading).toFixed(2) + 'deg)';
+        radarField.style.transform = 'rotate(' + (-currentHeading).toFixed(2) + 'deg)';
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
