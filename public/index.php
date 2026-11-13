@@ -593,6 +593,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
                     <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
+                    <div class="rainfall-radar-plot">
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
@@ -620,6 +621,7 @@ if ($current && !empty($current['observed_at'])) {
                             <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
                         </g>
                     </svg>
+                    </div>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
