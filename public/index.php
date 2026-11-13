@@ -1241,7 +1241,7 @@ if ($current && !empty($current['observed_at'])) {
                 <span class="wind-compass-status" id="windCompassStatus" hidden></span>
             </div>
         </article>
-
+    </section>
 
     <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
         <header class="gaugeiq-weather-map-toolbar">
@@ -1398,8 +1398,6 @@ if ($current && !empty($current['observed_at'])) {
             <div class="chart-block"><h3>Humidity</h3><canvas id="humidityChart" height="220"></canvas></div>
             <div class="chart-block"><h3>Wind speed</h3><canvas id="windChart" height="220"></canvas></div>
         </div>
-    </section>
-
     </section>
     <dialog id="notificationRepairDialog" class="notification-repair-dialog" aria-labelledby="notificationRepairTitle">
         <div class="notification-repair-content">
