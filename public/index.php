@@ -585,8 +585,8 @@ if ($current && !empty($current['observed_at'])) {
         <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
             <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
-                    <p class="label">ECMWF IFS · Next 6 hours</p>
-                    <h2>Rainfall outlook</h2>
+                    <h2>Rain Radar</h2>
+                    <p class="label">6 hour outlook</p>
                 </div>
                 <div class="rainfall-radar-compass-controls">
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
