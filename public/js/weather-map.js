@@ -1013,6 +1013,13 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
 
+            // Briefly explain the touch-only pan gesture once the map is ready.
+            const gestureHint = document.getElementById('weather-map-gesture-hint');
+            if (gestureHint && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                requestAnimationFrame(() => gestureHint.classList.add('is-visible'));
+                setTimeout(() => gestureHint.classList.remove('is-visible'), 6000);
+            }
+
             // Show the latest single weather layer first. Do not download all five
             // animation frames during dashboard startup; that creates up to twelve
             // raster sources at once in Combined mode and can overwhelm mobile browsers.
