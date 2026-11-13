@@ -329,22 +329,26 @@ protocolOptions.fileReaderConfig = {
             });
 
             radarMap.on('load', () => {
-                radarMap.addSource('gaugeiq-radar-precipitation', {
-                    type: 'raster',
-                    url: 'om://' + dataUrl.href,
-                    tileSize: 256,
-                    maxzoom: 12
-                });
-                radarMap.addLayer({
-                    id: 'gaugeiq-radar-precipitation-layer',
-                    type: 'raster',
-                    source: 'gaugeiq-radar-precipitation',
-                    paint: {
-                        'raster-opacity': Math.max(0, Math.min(100, Number(appearance.precipitationOpacity ?? 100))) / 100,
-                        'raster-fade-duration': 0
-                    }
-                });
-                requestAnimationFrame(() => radarMap.resize());
+                try {
+                    radarMap.addSource('gaugeiq-radar-precipitation', {
+                        type: 'raster',
+                        url: 'om://' + dataUrl.href,
+                        tileSize: 256,
+                        maxzoom: 12
+                    });
+                    radarMap.addLayer({
+                        id: 'gaugeiq-radar-precipitation-layer',
+                        type: 'raster',
+                        source: 'gaugeiq-radar-precipitation',
+                        paint: {
+                            'raster-opacity': Math.max(0, Math.min(100, Number(appearance.precipitationOpacity ?? 100))) / 100,
+                            'raster-fade-duration': 0
+                        }
+                    });
+                    requestAnimationFrame(() => radarMap.resize());
+                } catch (error) {
+                    console.error('GaugeIQ rainfall radar layer initialisation failed:', error);
+                }
             });
             radarMap.on('error', event => {
                 console.warn('GaugeIQ rainfall raster failed to render:', event?.error?.message || event);
@@ -1118,7 +1122,11 @@ protocolOptions.fileReaderConfig = {
 
 // The map is part of the dashboard, so initialise it as soon as the module loads.
 createMap();
-createRainfallRadarMap();
+try {
+    createRainfallRadarMap();
+} catch (error) {
+    console.error('GaugeIQ rainfall radar map initialisation failed:', error);
+}
 requestAnimationFrame(() => {
     if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
     if (window.GaugeIQRainfallRadarResize) window.GaugeIQRainfallRadarResize();
