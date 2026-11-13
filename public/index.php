@@ -1270,6 +1270,7 @@ if ($current && !empty($current['observed_at'])) {
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
              data-location-id="<?= $locationId ?>">
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
+            <div id="weather-map-gesture-hint" class="weather-map-gesture-hint" role="status" aria-live="polite">Double-tap and drag to move the map</div>
         </div>
     </section>
     <details class="weather-map-credits-card">
