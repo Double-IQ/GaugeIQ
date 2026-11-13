@@ -168,6 +168,17 @@ try {
         }
     }
     $pdo->commit();
+
+    if ($source === 'weather' && !empty($input['complete'])) {
+        $completionKey = 'historical_weather_import_completed_at_location_' . $locationId;
+        $completionValue = gmdate('c');
+        if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+            $saveCompletion = $pdo->prepare('INSERT INTO gaugeiq_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+        } else {
+            $saveCompletion = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+        }
+        $saveCompletion->execute([$completionKey, $completionValue]);
+    }
     if ($source === 'forecast') {
         $countStmt = $pdo->prepare('SELECT COUNT(*) FROM gaugeiq_rain_forecasts WHERE location_id = ? AND forecast_at >= ? AND forecast_at <= ?');
         $countStmt->execute([$locationId, $startText . 'T00:00', $endText . 'T23:59']);
