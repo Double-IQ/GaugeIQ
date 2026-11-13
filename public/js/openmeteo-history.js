@@ -24,7 +24,7 @@
         const last = new Date(to + 'T00:00:00Z');
         while (cursor <= last) {
             const chunkEnd = new Date(cursor);
-            // Keep each request small so the rolling 365-day archive
+            // Keep each request small so the rolling one-month archive
             // import can commit progressively instead of waiting on one large request.
             chunkEnd.setUTCDate(chunkEnd.getUTCDate() + 6);
             if (chunkEnd > last) chunkEnd.setTime(last.getTime());
@@ -47,7 +47,7 @@
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ csrf, source, start_date: from, end_date: to, location_id: Number(panel.dataset.locationId || 1) })
+                body: JSON.stringify({ csrf, source, start_date: from, end_date: to, location_id: Number(panel.dataset.locationId || 1), complete: source === 'weather' && index === chunks.length - 1 })
             });
             let result;
             try {
@@ -72,50 +72,22 @@
         return covered;
     }
 
-    function recentRepairStart() {
-        const endTime = new Date(end + 'T00:00:00Z').getTime();
-        const requestedStart = endTime - 6 * 24 * 60 * 60 * 1000;
-        const configuredStart = new Date(start + 'T00:00:00Z').getTime();
-        return dateString(new Date(Math.max(requestedStart, configuredStart)));
-    }
-
-    function coverageIsStale(latestValue) {
-        const latestDate = String(latestValue || '').slice(0, 10);
-        return latestDate === '' || latestDate < end;
-    }
-
     async function run() {
-        const weatherCount = Number(panel.dataset.weatherCount) || 0;
-        const weatherLatest = panel.dataset.weatherLatest || '';
-        const repairStart = recentRepairStart();
-        let completed = [];
+        if (panel.dataset.importCompleted === '1') {
+            setStatus(weatherStatus, 'Available — the one-month historical import for this location is already complete.');
+            setStatus(message, 'Historical data was imported once for this location. Reopening GaugeIQ will not download it again.');
+            return;
+        }
 
         try {
-            const expectedHours = Math.max(1, Math.round((new Date(end + 'T00:00:00Z').getTime() - new Date(start + 'T00:00:00Z').getTime()) / 3600000) + 24);
-            // Do not label a partial year as complete. Existing timestamps are
-            // skipped by the importer, so retrying the full window safely fills gaps.
-            if (weatherCount < expectedHours) {
-                const count = await importSource('weather', 'Historical Weather', weatherStatus);
-                completed.push('weather (' + count.toLocaleString() + ' records)');
-            } else if (coverageIsStale(weatherLatest)) {
-                const count = await importSource('weather', 'Recent historical weather backfill', weatherStatus, repairStart, end);
-                completed.push('recent weather backfill (' + count.toLocaleString() + ' records)');
-            } else {
-                setStatus(weatherStatus, 'Available — ' + weatherCount.toLocaleString() + ' hourly records found through ' + String(weatherLatest).slice(0, 10) + '.');
-            }
-
-
-            if (completed.length) {
-                setStatus(message, 'Automatic historical download/backfill finished for the configured location. ' + completed.join(' and ') + '.');
-            } else {
-                setStatus(message, 'Historical weather data is present through the latest required date. No duplicate import was needed.');
-            }
+            const count = await importSource('weather', 'Historical Weather', weatherStatus);
+            setStatus(message, 'One-month historical weather import completed for this location (' + count.toLocaleString() + ' records). It will not run again when GaugeIQ is reopened.');
+            panel.dataset.importCompleted = '1';
         } catch (error) {
-            setStatus(message, (error instanceof Error ? error.message : 'Historical download failed.') + ' Existing records are preserved and duplicate timestamps are skipped.');
+            setStatus(message, (error instanceof Error ? error.message : 'Historical download failed.') + ' Existing records are preserved. The import can be retried after the error is corrected.');
             if (message) message.dataset.state = 'error';
         }
     }
-
     run();
     }
     });
