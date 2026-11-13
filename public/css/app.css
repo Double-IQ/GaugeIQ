@@ -7332,7 +7332,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .dashboard-header{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .header-brand{display:flex;align-items:center;min-width:0}
 .header-brand-logo{display:block;width:150px;height:auto;max-height:60px;object-fit:contain;object-position:left center}
-.dashboard-header .header-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:8px}
+.dashboard-header .header-actions{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px}
+.dashboard-header .header-actions>*{width:100%;box-sizing:border-box}
 .dashboard-header .menu-button{min-width:84px;height:42px;padding:0 18px;font:inherit;font-weight:700}
 
 /* Respect the hidden state even where header button styles set display:flex. */
@@ -7341,7 +7342,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){
   .dashboard-header{align-items:center;gap:10px}
   .header-brand-logo{width:clamp(108px,36vw,140px);max-height:52px}
-  .dashboard-header .header-actions{align-items:center;flex-direction:row;gap:6px}
+  .dashboard-header .header-actions{align-items:stretch;flex-direction:column;gap:6px}
   .dashboard-header .header-actions .secondary{padding:10px 11px;font-size:13px}
   .dashboard-header .menu-button{min-width:68px;height:40px;padding:0 12px}
 }
