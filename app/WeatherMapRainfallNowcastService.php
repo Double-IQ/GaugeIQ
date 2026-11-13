@@ -197,6 +197,8 @@ final class WeatherMapRainfallNowcastService
 
             $frameResults[] = [
                 'time' => gmdate('c', (int)$frame['timestamp']),
+                // Preserve the exact scheduled source for the matching weather-map raster.
+                'frame_url' => $url,
                 'step_duration_hours' => round($stepDurationHours, 2),
                 'local_precipitation_mm_per_hour' => round($localAmount, 2),
                 'maximum_precipitation_mm_per_hour' => round($maximum, 2),
