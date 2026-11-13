@@ -260,10 +260,6 @@ protocolOptions.fileReaderConfig = {
             refs.status.textContent = network.failed ? network.failed + ' request error(s)' : (state || 'Waiting');
             refs.status.classList.toggle('is-error', Boolean(network.failed));
         }
-        function updateAllFrameDiagnostics(state) {
-            selectedAnimationFrames().forEach((frame, index) => updateFrameDiagnostic(frame, index,
-                index === animationCurrentFrame && state ? state : undefined));
-        }
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -522,6 +518,13 @@ protocolOptions.fileReaderConfig = {
 
         function selectedAnimationFrames() {
             return animationFrames;
+        }
+
+        // Keep diagnostics in createMap's scope: animationFrames and
+        // animationCurrentFrame are local to this map instance.
+        function updateAllFrameDiagnostics(state) {
+            selectedAnimationFrames().forEach((frame, index) => updateFrameDiagnostic(frame, index,
+                index === animationCurrentFrame && state ? state : undefined));
         }
 
         function updateFrameLabel(index) {
