@@ -574,8 +574,8 @@ if ($current && !empty($current['observed_at'])) {
                             class="rainfall-radar-map"
                             data-frame-url="<?= htmlspecialchars($radarRasterUrl, ENT_QUOTES, 'UTF-8') ?>"
                             data-step-hours="<?= number_format($radarRasterStepHours, 2, '.', '') ?>"
-                            data-latitude="<?= number_format($radarCentreLatitude, 6, '.', '') ?>"
-                            data-longitude="<?= number_format($radarCentreLongitude, 6, '.', '') ?>"
+                            data-latitude="<?= number_format($dashboardLatitudeFloat, 6, '.', '') ?>"
+                            data-longitude="<?= number_format($dashboardLongitudeFloat, 6, '.', '') ?>"
                             aria-hidden="true"
                         ></div>
                         <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast precipitation raster around your location, using the same Open-Meteo weather-map rendering">
