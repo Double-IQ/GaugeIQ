@@ -7219,6 +7219,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-map .maplibregl-control-container{display:none}
 .rainfall-radar-scope{position:absolute;z-index:1;inset:0;display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
 .rainfall-radar-sweep{transform-origin:160px 160px;animation:rainfall-radar-rotation 7s linear infinite}
+/* Only forecast echoes rotate for compass mode; the radar housing and sweep stay fixed. */
+.rainfall-radar-cells{transform-box:view-box;transform-origin:160px 160px;transition:transform 180ms ease-out}
+.rainfall-radar-cell{stroke:rgba(222,248,255,.5);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.88;transform-box:fill-box;transform-origin:center;animation:rainfall-cell-pulse 2.8s ease-in-out infinite}
+.rainfall-radar-cell:nth-child(3n+2){animation-delay:.65s}
+.rainfall-radar-cell:nth-child(3n){animation-delay:1.3s}
+@keyframes rainfall-cell-pulse{0%,100%{opacity:.68;transform:scale(.88)}50%{opacity:1;transform:scale(1.16)}}
+@media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.9}.rainfall-radar-cells{transition:none}}
 /* The ECMWF raster rotates beneath the fixed scope overlay in compass mode. */
 @media(prefers-reduced-motion:reduce){.rainfall-radar-map{transition:none}}
 .rainfall-radar-legend{display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin-top:1px;color:#91a9c7;font-size:10px}
