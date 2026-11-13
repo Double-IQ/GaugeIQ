@@ -564,7 +564,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
-                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>'
+                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
                 // point marker until the next scheduled refresh writes schema v2.
