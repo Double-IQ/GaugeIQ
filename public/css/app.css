@@ -7220,7 +7220,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-scope{position:absolute;z-index:1;inset:0;display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
 .rainfall-radar-sweep{transform-origin:160px 160px;animation:rainfall-radar-rotation 7s linear infinite}
 /* Only forecast echoes rotate for compass mode; the radar housing and sweep stay fixed. */
-.rainfall-radar-cells{transform-box:view-box;transform-origin:160px 160px;transition:transform 180ms ease-out}
+.rainfall-radar-cells{transition:none}
 .rainfall-radar-cell{stroke:rgba(222,248,255,.28);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.035;transform-box:fill-box;transform-origin:center;animation:rainfall-echo-sweep 7s linear infinite;animation-delay:var(--rainfall-radar-phase,0s)}
 /* Each echo lights as the clockwise sweep crosses its bearing, then fades almost dark. */
 @keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}10%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}24%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
