@@ -758,7 +758,10 @@ body.gaugeiq-menu-open{overflow:hidden}
   gap:22px;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));
   background:#061648;color:#f9fafb;opacity:1;visibility:visible;
   transition:opacity 160ms ease,visibility 160ms ease;
+  /* CSS-only safety net if the external dismissal script fails to load. */
+  animation:gaugeiq-loading-failsafe 0s linear 6s forwards;
 }
+@keyframes gaugeiq-loading-failsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
 .gaugeiq-loading-screen.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
 .gaugeiq-loading-screen[hidden]{display:none!important}
 .gaugeiq-loading-screen img{display:block;width:min(300px,76vw);height:auto;max-height:24vh;object-fit:contain}
