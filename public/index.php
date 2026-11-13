@@ -564,11 +564,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellX = 160.0 + sin($bearingRadians) * 136.0 * $distanceRatio;
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
-                $blobRadius = max(5.0, min(8.5, 5.0 + log10(1.0 + max(0.0, $amount)) * 2.2));
-                $blobX = number_format($cellX, 2, '.', '');
-                $blobY = number_format($cellY, 2, '.', '');
-                $blobR = number_format($blobRadius, 2, '.', '');
-                $radarCellMarkup .= '<g class="rainfall-radar-cell rainfall-radar-grid-cell" data-rainfall="' . number_format($amount, 2, '.', '') . '"><ellipse cx="' . $blobX . '" cy="' . $blobY . '" rx="' . number_format($blobRadius * 1.65, 2, '.', '') . '" ry="' . number_format($blobRadius * 1.18, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.42" filter="url(#rainfallRadarGlow)"/><ellipse cx="' . number_format($cellX - $blobRadius * 0.72, 2, '.', '') . '" cy="' . number_format($cellY + $blobRadius * 0.12, 2, '.', '') . '" rx="' . number_format($blobRadius * 0.92, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.82, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.58"/><ellipse cx="' . number_format($cellX + $blobRadius * 0.68, 2, '.', '') . '" cy="' . number_format($cellY - $blobRadius * 0.18, 2, '.', '') . '" rx="' . number_format($blobRadius * 0.88, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.76, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.58"/><ellipse cx="' . $blobX . '" cy="' . $blobY . '" rx="' . number_format($blobRadius * 0.88, 2, '.', '') . '" ry="' . number_format($blobRadius * 0.62, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.74"/><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></g>';
+                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>'
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
                 // point marker until the next scheduled refresh writes schema v2.
