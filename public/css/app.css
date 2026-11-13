@@ -7235,7 +7235,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-readouts{display:grid;gap:10px;min-width:0}
 .rainfall-radar-readout-primary,.rainfall-radar-readout-grid>div{padding:12px;border:1px solid rgba(117,164,211,.2);border-radius:11px;background:linear-gradient(145deg,rgba(38,76,116,.35),rgba(1,10,24,.25));min-width:0}
 .rainfall-radar-readout-primary>span,.rainfall-radar-readout-grid>div>span{display:block;color:#83a8bd;font-size:9px;font-weight:800;letter-spacing:.09em}
-.rainfall-radar-readout-primary>strong{display:block;margin-top:5px;color:#f0faff;font-size:30px;line-height:1.1;font-weight:800}
+.rainfall-radar-readout-primary{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:10px}.rainfall-radar-readout-primary>div{min-width:0}.rainfall-radar-readout-primary>strong{display:block;margin-top:5px;color:#f0faff;font-size:30px;line-height:1.1;font-weight:800}.rainfall-radar-readout-primary .rainfall-radar-provider{font-size:18px}.rainfall-radar-provider-detail{display:block;margin-top:3px;color:#91a9c7;font-size:10px}
 .rainfall-radar-readout-primary>strong small{font-size:13px;color:#9bb6c8}
 .rainfall-radar-readout-grid{display:grid;grid-template-columns:1fr;gap:8px}
 .rainfall-radar-readout-grid>div strong{display:block;margin-top:5px;color:#edf6ff;font-size:16px;line-height:1.25;overflow-wrap:anywhere}
