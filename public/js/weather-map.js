@@ -474,6 +474,7 @@ protocolOptions.fileReaderConfig = {
         }
 
         function clearAnimation() {
+            animationNetworkProgress = null;
             animationToken++;
             if (animationTimer !== null) {
                 clearInterval(animationTimer);
@@ -777,6 +778,7 @@ protocolOptions.fileReaderConfig = {
                         clearInterval(animationLoadPoll);
                         animationLoadPoll = null;
                     }
+                    animationNetworkProgress = null;
                     activeLayers.forEach(id => {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
