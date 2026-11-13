@@ -71,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     || abs((float)$secondLocationLongitude - $longitude) > 0.000001;
                 if ($secondCoordinatesChanged) {
                     saveGaugeSetting($pdo, 'second_location_changed_at', gmdate('c'));
+                    saveGaugeSetting($pdo, 'historical_weather_initial_import_completed_at_location_2', '');
                     foreach ([
                         'location_timezone_location_2',
                         'recent_backfill_last_success_at_location_2',
@@ -104,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         || abs((float)$locationLongitude - $longitude) > 0.000001);
                 if ($primaryCoordinatesChanged) {
                     saveGaugeSetting($pdo, 'active_location_changed_at', gmdate('c'));
+                    saveGaugeSetting($pdo, 'historical_weather_initial_import_completed_at', '');
                     foreach ([
                         'location_timezone',
                         'recent_backfill_last_success_at',
@@ -140,16 +142,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $historyPanels = [];
 $historyLocations = [
-    ['id' => 1, 'name' => $locationName, 'timezone_key' => 'location_timezone', 'changed_key' => 'active_location_changed_at'],
+    ['id' => 1, 'name' => $locationName, 'timezone_key' => 'location_timezone', 'changed_key' => 'active_location_changed_at', 'completed_key' => 'historical_weather_initial_import_completed_at'],
 ];
 if ($secondLocationEnabled) {
-    $historyLocations[] = ['id' => 2, 'name' => $secondLocationName, 'timezone_key' => 'location_timezone_location_2', 'changed_key' => 'second_location_changed_at'];
+    $historyLocations[] = ['id' => 2, 'name' => $secondLocationName, 'timezone_key' => 'location_timezone_location_2', 'changed_key' => 'second_location_changed_at', 'completed_key' => 'historical_weather_initial_import_completed_at_location_2'];
 }
 foreach ($historyLocations as $historyLocation) {
     $timezoneName = gaugeSetting($pdo, $historyLocation['timezone_key'], '') ?? '';
     if ($timezoneName === '') $timezoneName = (string)($config['app']['timezone'] ?? 'UTC');
     try { $locationTimezone = new DateTimeZone($timezoneName); } catch (Throwable) { $locationTimezone = new DateTimeZone('UTC'); }
-    $historicalStart = (new DateTimeImmutable('now', $locationTimezone))->modify('-1 year')->format('Y-m-d');
+    $historicalStart = (new DateTimeImmutable('now', $locationTimezone))->modify('-1 month')->format('Y-m-d');
     $historicalEnd = (new DateTimeImmutable('yesterday', $locationTimezone))->format('Y-m-d');
     $changedAt = gaugeSetting($pdo, $historyLocation['changed_key'], '') ?? '';
     $where = 'location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?';
@@ -166,6 +168,7 @@ foreach ($historyLocations as $historyLocation) {
         'end' => $historicalEnd,
         'count' => (int)$countStmt->fetchColumn(),
         'latest' => (string)($latestStmt->fetchColumn() ?: ''),
+        'initial_import_completed' => gaugeSetting($pdo, $historyLocation['completed_key'], '') !== '' ? '1' : '0',
     ];
 }
 ?>
@@ -255,11 +258,12 @@ foreach ($historyLocations as $historyLocation) {
     data-end="<?= h($historyPanel['end']) ?>"
     data-weather-count="<?= (int)$historyPanel['count'] ?>"
     data-weather-latest="<?= h($historyPanel['latest']) ?>"
+    data-initial-import-completed="<?= h($historyPanel['initial_import_completed']) ?>"
     aria-labelledby="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">
     <div class="section-heading">
         <div>
             <h2 id="openMeteoHistoryTitle<?= (int)$historyPanel['id'] ?>">Historical weather data — <?= h($historyPanel['name']) ?></h2>
-            <p class="muted">GaugeIQ automatically downloads the last year of Open-Meteo historical weather for this location. Existing weather records are kept.</p>
+            <p class="muted">GaugeIQ downloads one month of Open-Meteo historical weather once for this location. Existing weather records are kept. Existing weather records are kept.</p>
         </div>
     </div>
     <div class="local-weather-tools">
