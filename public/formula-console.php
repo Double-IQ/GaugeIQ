@@ -171,6 +171,19 @@ foreach ($formulaFields as $key => $field) {
             </div>
             <?php endforeach; ?>
         </section>
+        <?php endforeach; ?>
+        <div class="formula-actions">
+            <button type="submit" name="formula_action" value="save">Save formula parameters</button>
+            <button type="submit" name="formula_action" value="reset" class="secondary" formnovalidate>Reset to defaults</button>
+        </div>
+    </form>
+    <div class="formula-readonly">
+        <h3>Other dashboard values</h3>
+        <p><strong>Rain Probability</strong> is supplied by the weather forecast provider; GaugeIQ displays the provider's probability rather than inventing its own probability formula.</p>
+        <p><strong>Current temperature, humidity, wind, pressure and forecast values</strong> are observations or forecasts from the configured data provider. The dashboard formats and displays them; they are not calculated from the WVI.</p>
+        <p><strong>Weather-code severity mapping</strong> currently uses fixed WMO-code groups in the code (clear/cloudy, fog, drizzle, rain, snow and thunderstorm categories). The group mapping itself is documented here but is not editable on this page yet.</p>
+    </div>
+</section>
 </main>
 </body>
 </html>
