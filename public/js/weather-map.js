@@ -298,10 +298,12 @@ protocolOptions.fileReaderConfig = {
             cooperativeGestures: false,
             attributionControl: false
         });
-        // A double tap should begin a one-finger pan, not trigger MapLibre's
-        // default double-tap zoom. Pinch-to-zoom remains enabled.
+        // Touch navigation is deliberate: a single-finger drag must not move
+        // the map. Double-tap, then drag with that finger to pan. Pinch zoom
+        // remains handled by MapLibre's touchZoomRotate interaction.
         map.doubleClickZoom.disable();
         const mapCanvas = map.getCanvas();
+        mapCanvas.style.touchAction = 'none';
         let lastMapTap = null;
         let touchPanActive = false;
         let lastTouchPanPoint = null;
@@ -309,12 +311,21 @@ protocolOptions.fileReaderConfig = {
         mapCanvas.addEventListener('touchstart', event => {
             if (event.touches.length !== 1 || !event.changedTouches.length) {
                 lastMapTap = null;
+                touchPanActive = false;
+                lastTouchPanPoint = null;
                 return;
             }
+
+            // Disable MapLibre's one-finger drag before its own touch handlers
+            // see this event; restore it after the touch sequence so desktop
+            // mouse dragging continues to work normally.
+            map.dragPan.disable();
+
             const point = getTouchPoint(event.changedTouches[0]);
             const now = Date.now();
-            const isSecondTap = lastMapTap && now - lastMapTap.time < 350 &&
-                Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 28;
+            const isSecondTap = lastMapTap && now - lastMapTap.time < 450 &&
+                Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 32;
+
             if (isSecondTap) {
                 touchPanActive = true;
                 lastTouchPanPoint = point;
@@ -322,28 +333,45 @@ protocolOptions.fileReaderConfig = {
                 event.preventDefault();
                 event.stopImmediatePropagation();
             } else {
+                touchPanActive = false;
+                lastTouchPanPoint = null;
                 lastMapTap = { ...point, time: now };
             }
         }, { capture: true, passive: false });
+
         mapCanvas.addEventListener('touchmove', event => {
-            if (!touchPanActive || !event.touches.length) return;
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            const point = getTouchPoint(event.touches[0]);
-            if (lastTouchPanPoint) {
-                map.panBy([
-                    point.x - lastTouchPanPoint.x,
-                    point.y - lastTouchPanPoint.y
-                ], { animate: false });
+            if (event.touches.length > 1) return; // Preserve native pinch-to-zoom.
+            if (touchPanActive && event.touches.length === 1) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const point = getTouchPoint(event.touches[0]);
+                if (lastTouchPanPoint) {
+                    map.panBy([
+                        point.x - lastTouchPanPoint.x,
+                        point.y - lastTouchPanPoint.y
+                    ], { animate: false });
+                }
+                lastTouchPanPoint = point;
+                return;
             }
-            lastTouchPanPoint = point;
+
+            // Suppress an ordinary one-finger drag rather than allowing it to
+            // pan the map or scroll the page while the map is being touched.
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
         }, { capture: true, passive: false });
+
         const finishTouchPan = event => {
-            if (!touchPanActive) return;
-            event.preventDefault();
-            event.stopImmediatePropagation();
+            if (event.touches && event.touches.length > 0) return;
+            if (touchPanActive) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
             touchPanActive = false;
             lastTouchPanPoint = null;
+            map.dragPan.enable();
         };
         mapCanvas.addEventListener('touchend', finishTouchPan, { capture: true, passive: false });
         mapCanvas.addEventListener('touchcancel', finishTouchPan, { capture: true, passive: false });
@@ -984,6 +1012,13 @@ protocolOptions.fileReaderConfig = {
 
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
+
+            // Briefly explain the touch-only pan gesture once the map is ready.
+            const gestureHint = document.getElementById('weather-map-gesture-hint');
+            if (gestureHint && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                requestAnimationFrame(() => gestureHint.classList.add('is-visible'));
+                setTimeout(() => gestureHint.classList.remove('is-visible'), 6000);
+            }
 
             // Show the latest single weather layer first. Do not download all five
             // animation frames during dashboard startup; that creates up to twelve

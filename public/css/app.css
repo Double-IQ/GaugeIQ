@@ -3353,6 +3353,17 @@ body.gaugeiq-menu-open{overflow:hidden}
   padding:8px 11px;border:1px solid rgba(148,163,184,.25);border-radius:9px;
   background:rgba(6,22,72,.88);color:#dbeafe;font-size:12px;pointer-events:none;
 }
+.weather-map-gesture-hint{
+  position:absolute;z-index:2;left:50%;bottom:52px;transform:translate(-50%,6px);
+  width:max-content;max-width:calc(100% - 28px);padding:9px 13px;
+  border:1px solid rgba(148,163,184,.28);border-radius:999px;
+  background:rgba(6,22,72,.88);color:#e5efff;font-size:12px;font-weight:600;
+  text-align:center;pointer-events:none;opacity:0;visibility:hidden;
+  transition:opacity .25s ease,transform .25s ease,visibility .25s ease;
+}
+.weather-map-gesture-hint.is-visible{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media (hover:none) and (pointer:coarse){.weather-map-gesture-hint{display:block}}
+@media (prefers-reduced-motion:reduce){.weather-map-gesture-hint{transition:none}}
 .gaugeiq-weather-map-canvas .maplibregl-ctrl-group{border-radius:10px!important;overflow:hidden}
 :root[data-theme="light"] .weather-map-dashboard-card{
   color:#202b38;
