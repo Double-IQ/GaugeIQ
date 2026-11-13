@@ -1416,9 +1416,9 @@ if ($current && !empty($current['observed_at'])) {
 <?php
 try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
 $historyNow = new DateTimeImmutable('now', $historyTimezone);
-// Keep a rolling 365-day archive window, ending yesterday in the
-// selected location's timezone. The end date is inclusive (365 calendar days).
-$historyAutoStart = $historyNow->modify('-365 days')->format('Y-m-d');
+// Keep a rolling one-month archive window, ending yesterday in the
+// selected location's timezone. The end date is inclusive.
+$historyAutoStart = $historyNow->modify('-1 month')->format('Y-m-d');
 $historyAutoEnd = (new DateTimeImmutable('yesterday', $historyTimezone))->format('Y-m-d');
 $historyCountSql = "SELECT COUNT(DISTINCT observed_at) FROM gaugeiq_pressure_readings WHERE location_id = ? AND source = ? AND observed_at >= ? AND observed_at <= ?";
 $historyCountParams = [$locationId, 'Open-Meteo Historical Weather', $historyAutoStart . 'T00:00', $historyAutoEnd . 'T23:59'];
