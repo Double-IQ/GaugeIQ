@@ -1453,17 +1453,27 @@ async function loadWeatherChange() {
         // continuous observation timeline. Source labels remain available for
         // auditing, but do not determine which weather features may consume data.
         const allReadings = Array.isArray(data.readings) ? data.readings : [];
-        const latestTime = allReadings.reduce((latest, item) => {
+        // Recent Backfill contains model-derived estimates, not observed weather.
+        // Do not let a newer estimate move the six-hour observation window forward
+        // and thereby exclude the historical/live observations the cards should use.
+        const observedReadings = allReadings.filter(item => item?.source !== 'Open-Meteo Recent Backfill');
+        const latestObservedTime = observedReadings.reduce((latest, item) => {
+            const timestamp = weatherReadingTimestamp(item);
+            return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
+        }, 0);
+        const latestAvailableTime = allReadings.reduce((latest, item) => {
             const timestamp = weatherReadingTimestamp(item);
             return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
         }, 0);
         const responseTime = new Date(data.to || Date.now()).getTime();
-        // Anchor calculations to the newest observation actually available.
-        // This lets a completed historical download power WVI/trend immediately;
-        // the next hourly live observation naturally becomes the new endpoint.
-        const referenceTime = latestTime > 0
-            ? latestTime
-            : (Number.isFinite(responseTime) ? responseTime : Date.now());
+        // Prefer the newest actual observation as the window endpoint. Use model
+        // estimates only when no observed readings exist at all.
+        const referenceTime = latestObservedTime > 0
+            ? latestObservedTime
+            : (latestAvailableTime > 0
+                ? latestAvailableTime
+                : (Number.isFinite(responseTime) ? responseTime : Date.now()));
+        const latestTime = referenceTime;
         const currentWindowStart = referenceTime - 6 * 60 * 60 * 1000;
         const inCurrentWindow = item => {
             const timestamp = weatherReadingTimestamp(item);
