@@ -8,6 +8,16 @@ require __DIR__ . '/../../app/AdminAuth.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
+function openMeteoHistorySaveSetting(PDO $pdo, string $key, string $value): void
+{
+    if ((string)$pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        $stmt = $pdo->prepare('INSERT INTO gaugeiq_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+    } else {
+        $stmt = $pdo->prepare('INSERT INTO gaugeiq_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+    }
+    $stmt->execute([$key, $value]);
+}
+
 function openMeteoHistoryReply(int $status, array $payload): never
 {
     http_response_code($status);
@@ -58,6 +68,14 @@ try {
     $locationId = (int)($input['location_id'] ?? 1);
     if (!in_array($locationId, [1, 2], true)) $locationId = 1;
     $settings = $pdo->query("SELECT gaugeiq_settings.key, gaugeiq_settings.value FROM gaugeiq_settings WHERE gaugeiq_settings.key IN ('location_latitude','location_longitude','location_name','active_location_latitude','active_location_longitude','active_location_name','second_location_latitude','second_location_longitude','second_location_name','second_location_enabled')")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $completionKey = $locationId === 2 ? 'historical_weather_initial_import_completed_at_location_2' : 'historical_weather_initial_import_completed_at';
+    if (($input['action'] ?? '') === 'complete') {
+        if ($locationId === 2 && ($settings['second_location_enabled'] ?? '0') !== '1') {
+            openMeteoHistoryReply(422, ['error' => 'Save and enable Location 2 before completing its history import.']);
+        }
+        openMeteoHistorySaveSetting($pdo, $completionKey, gmdate('c'));
+        openMeteoHistoryReply(200, ['success' => true, 'completed' => true, 'location_id' => $locationId]);
+    }
     $timezoneSettingKey = $locationId === 2 ? 'location_timezone_location_2' : 'location_timezone';
     $timezoneSettingStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
     $timezoneSettingStmt->execute([$timezoneSettingKey]);
@@ -74,8 +92,8 @@ try {
     $start = DateTimeImmutable::createFromFormat('!Y-m-d', $startText, $historyTimezone);
     $end = DateTimeImmutable::createFromFormat('!Y-m-d', $endText, $historyTimezone);
     $yesterday = new DateTimeImmutable('yesterday', $historyTimezone);
-    if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 366) {
-        openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 367 calendar days, ending no later than yesterday in the selected location timezone.']);
+    if (!$start || $start->format('Y-m-d') !== $startText || !$end || $end->format('Y-m-d') !== $endText || $end < $start || $end > $yesterday || $start->diff($end)->days > 32) {
+        openMeteoHistoryReply(422, ['error' => 'Choose a valid date range of no more than 33 calendar days, ending no later than yesterday in the selected location timezone.']);
     }
     if ($source === 'forecast' && $start < new DateTimeImmutable('2022-01-01', $historyTimezone)) {
         openMeteoHistoryReply(422, ['error' => 'Historical Forecast data is available from 2022 onward.']);
