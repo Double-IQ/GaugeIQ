@@ -565,7 +565,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellY = 160.0 - cos($bearingRadians) * 136.0 * $distanceRatio;
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
                 $cellBearing = fmod((float)$radarCell['bearing_degrees'] + 360.0, 360.0);
-                $cellSweepPhase = $cellBearing / 360.0 * 7.0;
+                $cellSweepPhase = -($cellBearing / 360.0 * 7.0);
                 $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" data-bearing="' . number_format($cellBearing, 2, '.', '') . '" style="--rainfall-radar-phase:' . number_format($cellSweepPhase, 3, '.', '') . 's" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
@@ -592,7 +592,7 @@ if ($current && !empty($current['observed_at'])) {
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
                     <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
                 </div>
-                <span class="rainfall-nowcast-source">Model forecast</span>
+                <span class="rainfall-nowcast-source">ECMWF IFS · Open-Meteo</span>
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
@@ -614,8 +614,8 @@ if ($current && !empty($current['observed_at'])) {
                             <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
                             <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)"><?= $radarCellMarkup ?></g>
                             <g class="rainfall-radar-sweep">
-                                <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
-                                <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
+                                <path d="M160 160 L160 20 A140 140 0 0 1 184 22 Z" fill="url(#rainfallRadarSweepGradient)"/>
+                                <path d="M160 160L160 20" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
                             </g>
                             <circle cx="160" cy="160" r="5" fill="#F4FBFF" stroke="#47D9B0" stroke-width="3" filter="url(#rainfallRadarGlow)"/>
                             <circle cx="160" cy="160" r="12" fill="none" stroke="#47D9B0" stroke-width="1"/>
@@ -666,7 +666,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <p class="rainfall-nowcast-footnote">
                 <?= $nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
-                ECMWF model forecast, not live radar · 25 km grid
+                ECMWF IFS forecast via Open-Meteo · not live radar · 25 km grid
             </p>
         </article>
     <?php endif; ?>
