@@ -7324,3 +7324,33 @@ body.gaugeiq-menu-open{overflow:hidden}
   .gaugeiq-frame-diagnostic-row{grid-template-columns:1fr;gap:3px}
   .gaugeiq-frame-diagnostic-row .gaugeiq-frame-diagnostic-state{text-align:left}
 }
+
+
+/* Keep the GaugeIQ mark at the left of the dashboard header and Admin at the right. */
+.dashboard-header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header-brand{display:flex;align-items:center;min-width:0}
+.header-brand-logo{display:block;width:150px;height:auto;max-height:60px;object-fit:contain;object-position:left center}
+.dashboard-header .header-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:8px}
+.dashboard-header .menu-button{min-width:84px;height:42px;padding:0 18px;font:inherit;font-weight:700}
+@media(max-width:560px){
+  .dashboard-header{align-items:center;gap:10px}
+  .header-brand-logo{width:clamp(108px,36vw,140px);max-height:52px}
+  .dashboard-header .header-actions{align-items:center;flex-direction:row;gap:6px}
+  .dashboard-header .header-actions .secondary{padding:10px 11px;font-size:13px}
+  .dashboard-header .menu-button{min-width:68px;height:40px;padding:0 12px}
+}
+
+
+/* Admin page navigation actions stack vertically, with sign out above dashboard return. */
+.admin-header-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:150px}
+.admin-header-actions .button-link{text-align:center;white-space:nowrap}
+.formula-console-admin{margin-top:16px}
+.formula-console-admin .formula-intro,.formula-console-admin .formula-equations,.formula-console-admin .formula-readonly{margin-top:18px}
+.formula-console-admin .formula-group{margin-top:14px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface,rgba(255,255,255,.025))}
+.formula-console-admin .formula-group h3{margin:0 0 12px}
+.formula-console-admin .formula-notice,.formula-console-admin .formula-errors{margin:14px 0;padding:12px 14px;border-radius:10px}
+@media(max-width:560px){
+  .admin-header{align-items:flex-start;gap:12px}
+  .admin-header-actions{min-width:118px}
+  .admin-header-actions .button-link{padding:10px 9px;font-size:13px}
+}
