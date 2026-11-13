@@ -2186,7 +2186,7 @@ updateNetworkDiagnostics();
 
     function syncEchoSweepPhases(heading) {
         radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
-            const bearing = normalize(Number(cell.dataset.bearing) - heading);
+            const bearing = normalize(Number(cell.dataset.bearing) - heading - 18);
             if (bearing !== null) cell.style.animationDelay = (-bearing / 360 * 7).toFixed(3) + 's';
         });
     }
