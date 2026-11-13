@@ -257,7 +257,7 @@ protocolOptions.fileReaderConfig = {
             refs.metrics.textContent = 'Source ' + (network.sourceFileSize ? formatDiagnosticBytes(network.sourceFileSize) : '—')
                 + '  |  Network ' + formatDiagnosticBytes(network.bytes || 0)
                 + '  |  Range requests ' + (network.rangeCompleted || 0) + '/' + (network.rangeStarted || 0);
-            refs.status.textContent = state || (network.failed ? network.failed + ' request error(s)' : 'Waiting');
+            refs.status.textContent = network.failed ? network.failed + ' request error(s)' : (state || 'Waiting');
             refs.status.classList.toggle('is-error', Boolean(network.failed));
         }
         function updateAllFrameDiagnostics(state) {
