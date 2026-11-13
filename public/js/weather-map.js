@@ -265,18 +265,6 @@ protocolOptions.fileReaderConfig = {
             OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
         );
 
-        // The standalone rainfall radar has its own viewport and must not
-        // inherit the main map's user-drawn regional clipping boundary.
-        const radarProtocolOptions = { ...protocolOptions };
-        delete radarProtocolOptions.clippingOptions;
-        maplibregl.addProtocol('om-radar', (params, abortController) =>
-            OMWeatherMapLayer.omProtocol({
-                ...params,
-                // The Open-Meteo protocol parser expects its own "om://" scheme.
-                url: params.url.replace(/^om-radar:\/\//, 'om://')
-            }, abortController, radarProtocolOptions)
-        );
-
         const savedMapZoom = (() => {
             try {
                 const value = Number(localStorage.getItem('gaugeiqWeatherMapZoom'));
@@ -285,90 +273,6 @@ protocolOptions.fileReaderConfig = {
                 return 5;
             }
         })();
-
-        function createRainfallRadarMap() {
-            const container = document.getElementById('rainfallRadarMap');
-            if (!container) return null;
-
-            const frameUrl = container.dataset.frameUrl || '';
-            const latitude = Number(container.dataset.latitude);
-            const longitude = Number(container.dataset.longitude);
-            const stepHours = Number(container.dataset.stepHours);
-            if (!frameUrl || !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
-                !Number.isFinite(stepHours) || stepHours <= 0) {
-                return null;
-            }
-
-            let dataUrl;
-            try {
-                dataUrl = new URL(frameUrl);
-            } catch {
-                console.warn('GaugeIQ rainfall radar has an invalid ECMWF frame URL.');
-                return null;
-            }
-            if (dataUrl.protocol !== 'https:' ||
-                dataUrl.hostname !== 'openmeteo.s3.amazonaws.com' ||
-                !dataUrl.pathname.startsWith('/data_spatial/ecmwf_ifs025/') ||
-                !dataUrl.pathname.endsWith('.om')) {
-                console.warn('GaugeIQ rainfall radar rejected an unexpected ECMWF frame source.');
-                return null;
-            }
-
-            // Use the same scheduled .om field, Open-Meteo protocol, palette,
-            // cubic interpolation and colour blending as the full weather map.
-            dataUrl.searchParams.set('delta_time_hours', String(stepHours));
-            dataUrl.searchParams.set('variable', 'precipitation');
-            dataUrl.searchParams.set('interpolation', 'cubic');
-            dataUrl.searchParams.set('color_blend', 'true');
-            dataUrl.searchParams.set('tile_size', '256');
-
-            // A 280 px circular viewport represents a 200 km diameter.
-            const latitudeRadians = latitude * Math.PI / 180;
-            const radarZoom = Math.max(0, Math.min(12, Math.log2(
-                (280 * 40075016.685 * Math.max(0.08, Math.cos(latitudeRadians))) / (256 * 200000)
-            )));
-            const radarMap = new maplibregl.Map({
-                container,
-                style: { version: 8, sources: {}, layers: [] },
-                center: [longitude, latitude],
-                zoom: radarZoom,
-                minZoom: radarZoom,
-                maxZoom: radarZoom,
-                interactive: false,
-                attributionControl: false,
-                renderWorldCopies: false,
-                fadeDuration: 0
-            });
-
-            radarMap.on('load', () => {
-                try {
-                    radarMap.addSource('gaugeiq-radar-precipitation', {
-                        type: 'raster',
-                        url: 'om-radar://' + dataUrl.href,
-                        tileSize: 256,
-                        maxzoom: 12
-                    });
-                    radarMap.addLayer({
-                        id: 'gaugeiq-radar-precipitation-layer',
-                        type: 'raster',
-                        source: 'gaugeiq-radar-precipitation',
-                        paint: {
-                            'raster-opacity': Math.max(0, Math.min(100, Number(appearance.precipitationOpacity ?? 100))) / 100,
-                            'raster-fade-duration': 0
-                        }
-                    });
-                    requestAnimationFrame(() => radarMap.resize());
-                } catch (error) {
-                    console.error('GaugeIQ rainfall radar layer initialisation failed:', error);
-                }
-            });
-            radarMap.on('error', event => {
-                console.warn('GaugeIQ rainfall raster failed to render:', event?.error?.message || event);
-            });
-
-            window.GaugeIQRainfallRadarResize = () => radarMap.resize();
-            return radarMap;
-        }
 
         let mapInstance = null;
         function createMap() {
@@ -1140,21 +1044,17 @@ try {
     console.error('GaugeIQ weather map initialisation failed:', error);
 }
 try {
-    createRainfallRadarMap();
 } catch (error) {
     console.error('GaugeIQ rainfall radar map initialisation failed:', error);
 }
 requestAnimationFrame(() => {
     if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
-    if (window.GaugeIQRainfallRadarResize) window.GaugeIQRainfallRadarResize();
 });
 window.addEventListener('resize', () => {
     if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
-    if (window.GaugeIQRainfallRadarResize) window.GaugeIQRainfallRadarResize();
 });
 window.addEventListener('orientationchange', () => {
     setTimeout(() => {
         if (window.GaugeIQWeatherMapResize) window.GaugeIQWeatherMapResize();
-        if (window.GaugeIQRainfallRadarResize) window.GaugeIQRainfallRadarResize();
     }, 180);
 });
