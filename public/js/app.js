@@ -455,121 +455,6 @@ if (windGauge) {
 }
 
  
-// Independent device-compass alignment for the circular rainfall outlook radar.
-const rainfallRadarOrientation = document.getElementById('rainfallRadarOrientation');
-const rainfallRadarCompassButton = document.getElementById('rainfallRadarCompassButton');
-const rainfallRadarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
-let rainfallRadarCompassEnabled = false;
-let rainfallRadarCompassListening = false;
-let rainfallRadarNativeHeadingSeen = false;
-let rainfallRadarTargetHeading = null;
-let rainfallRadarCurrentHeading = null;
-let rainfallRadarAnimationFrame = null;
-
-function normalizeRainfallRadarHeading(value) {
-    const heading = Number(value);
-    return Number.isFinite(heading) ? ((heading % 360) + 360) % 360 : null;
-}
-
-function rainfallRadarHeadingDelta(from, to) {
-    return ((to - from + 540) % 360) - 180;
-}
-
-function updateRainfallRadarCompassButton() {
-    if (!rainfallRadarCompassButton) return;
-    rainfallRadarCompassButton.textContent = rainfallRadarCompassEnabled ? 'Disable Compass' : 'Enable Compass';
-    rainfallRadarCompassButton.setAttribute('aria-pressed', rainfallRadarCompassEnabled ? 'true' : 'false');
-    rainfallRadarCompassButton.classList.toggle('is-enabled', rainfallRadarCompassEnabled);
-    rainfallRadarCompassButton.disabled = !('DeviceOrientationEvent' in window);
-}
-
-function handleRainfallRadarOrientation(event) {
-    if (!rainfallRadarCompassEnabled || !rainfallRadarOrientation) return;
-    let heading = null;
-    const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
-    if (Number.isFinite(event.webkitCompassHeading)) {
-        rainfallRadarNativeHeadingSeen = true;
-        heading = event.webkitCompassHeading;
-    } else if (!rainfallRadarNativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
-        heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
-    }
-    const normalized = normalizeRainfallRadarHeading(heading);
-    if (normalized === null) return;
-    rainfallRadarTargetHeading = normalized;
-    if (rainfallRadarCurrentHeading === null) rainfallRadarCurrentHeading = normalized;
-    if (rainfallRadarAnimationFrame !== null) return;
-
-    const animate = () => {
-        if (!rainfallRadarCompassEnabled || rainfallRadarCurrentHeading === null || rainfallRadarTargetHeading === null) {
-            rainfallRadarAnimationFrame = null;
-            return;
-        }
-        const delta = rainfallRadarHeadingDelta(rainfallRadarCurrentHeading, rainfallRadarTargetHeading);
-        rainfallRadarCurrentHeading = normalizeRainfallRadarHeading(rainfallRadarCurrentHeading + delta * 0.2);
-        rainfallRadarOrientation.setAttribute('transform', 'rotate(' + (-rainfallRadarCurrentHeading).toFixed(2) + ' 160 160)');
-        if (rainfallRadarCompassStatus) rainfallRadarCompassStatus.textContent = 'Heading ' + Math.round(rainfallRadarCurrentHeading) + '°';
-        if (Math.abs(delta) < 0.08) {
-            rainfallRadarCurrentHeading = rainfallRadarTargetHeading;
-            rainfallRadarOrientation.setAttribute('transform', 'rotate(' + (-rainfallRadarCurrentHeading).toFixed(2) + ' 160 160)');
-            rainfallRadarAnimationFrame = null;
-            return;
-        }
-        rainfallRadarAnimationFrame = requestAnimationFrame(animate);
-    };
-    rainfallRadarAnimationFrame = requestAnimationFrame(animate);
-}
-
-async function enableRainfallRadarCompass() {
-    if (!('DeviceOrientationEvent' in window)) {
-        if (rainfallRadarCompassStatus) rainfallRadarCompassStatus.textContent = 'Compass unavailable';
-        return;
-    }
-    try {
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') throw new Error('Compass permission was not granted.');
-        }
-        rainfallRadarCompassEnabled = true;
-        rainfallRadarNativeHeadingSeen = false;
-        rainfallRadarTargetHeading = null;
-        rainfallRadarCurrentHeading = null;
-        if (!rainfallRadarCompassListening) {
-            window.addEventListener('deviceorientation', handleRainfallRadarOrientation, true);
-            window.addEventListener('deviceorientationabsolute', handleRainfallRadarOrientation, true);
-            rainfallRadarCompassListening = true;
-        }
-        updateRainfallRadarCompassButton();
-        if (rainfallRadarCompassStatus) rainfallRadarCompassStatus.textContent = 'Finding heading…';
-    } catch (error) {
-        if (rainfallRadarCompassStatus) rainfallRadarCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
-    }
-}
-
-function disableRainfallRadarCompass() {
-    rainfallRadarCompassEnabled = false;
-    if (rainfallRadarCompassListening) {
-        window.removeEventListener('deviceorientation', handleRainfallRadarOrientation, true);
-        window.removeEventListener('deviceorientationabsolute', handleRainfallRadarOrientation, true);
-        rainfallRadarCompassListening = false;
-    }
-    if (rainfallRadarAnimationFrame !== null) cancelAnimationFrame(rainfallRadarAnimationFrame);
-    rainfallRadarAnimationFrame = null;
-    rainfallRadarNativeHeadingSeen = false;
-    rainfallRadarTargetHeading = null;
-    rainfallRadarCurrentHeading = null;
-    rainfallRadarOrientation?.setAttribute('transform', 'rotate(0 160 160)');
-    if (rainfallRadarCompassStatus) rainfallRadarCompassStatus.textContent = 'North-up';
-    updateRainfallRadarCompassButton();
-}
-
-if (rainfallRadarCompassButton && rainfallRadarOrientation) {
-    rainfallRadarCompassButton.addEventListener('click', () => {
-        if (rainfallRadarCompassEnabled) disableRainfallRadarCompass();
-        else enableRainfallRadarCompass();
-    });
-    updateRainfallRadarCompassButton();
-}
-
 const status = document.getElementById('status');
 const notifyButton = document.getElementById('notifyButton');
 const notificationEnabledNote = document.getElementById('notificationEnabledNote');
@@ -2284,8 +2169,8 @@ updateNetworkDiagnostics();
         currentHeading = normalize(currentHeading + delta * 0.2);
         if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
 
-        // Bearings are north-up in the forecast data, so counter-rotate the
-        // echoes by the device heading to keep them geographically aligned.
+        // The echo group's SVG transform uses an explicit centre (160,160).
+        // Counter-rotate the north-up field by the device's clockwise heading.
         radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
@@ -2311,8 +2196,11 @@ updateNetworkDiagnostics();
             nativeHeadingSeen = true;
             heading = event.webkitCompassHeading;
         } else if (!nativeHeadingSeen && event.absolute === true && Number.isFinite(event.alpha)) {
+            // Match the wind compass conversion: alpha is screen-relative on
+            // browsers without a native heading, so compensate for rotation.
             const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
-            heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
+            const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
+            heading = 360 - event.alpha + screenOffset;
         }
         if (heading !== null) applyHeading(heading);
     }
