@@ -7326,24 +7326,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){.rainfall-radar-compass-controls{gap:5px}.rainfall-radar-compass-button{font-size:9px;padding:0 7px}}
 
 
-/* Expandable per-frame transfer diagnostics for the weather map. */
-.gaugeiq-frame-diagnostics{
-  margin:8px 0 12px;padding:9px 11px;border:1px solid rgba(148,163,184,.22);
-  border-radius:10px;background:rgba(15,23,42,.42);color:#dbeafe;font-size:12px;
-}
-.gaugeiq-frame-diagnostics summary{cursor:pointer;font-weight:600;list-style-position:inside}
-.gaugeiq-frame-diagnostics-note{margin:7px 0;color:#94a3b8;font-size:11px;line-height:1.45}
-.gaugeiq-frame-diagnostics-list{display:grid;gap:6px}
-.gaugeiq-frame-diagnostic-row{display:grid;grid-template-columns:minmax(105px,.7fr) minmax(0,2fr) auto;gap:8px;align-items:center;padding:7px 8px;border-radius:7px;background:rgba(30,41,59,.62)}
-.gaugeiq-frame-diagnostic-row strong{font-size:11px}
-.gaugeiq-frame-diagnostic-row>span{font-variant-numeric:tabular-nums;color:#cbd5e1}
-.gaugeiq-frame-diagnostic-row .gaugeiq-frame-diagnostic-state{color:#7dd3fc;text-align:right}
-.gaugeiq-frame-diagnostic-row .gaugeiq-frame-diagnostic-state.is-error{color:#fca5a5}
-@media(max-width:560px){
-  .gaugeiq-frame-diagnostic-row{grid-template-columns:1fr;gap:3px}
-  .gaugeiq-frame-diagnostic-row .gaugeiq-frame-diagnostic-state{text-align:left}
-}
-
 
 /* Keep the GaugeIQ mark at the left of the dashboard header and Admin at the right. */
 .dashboard-header{display:flex;align-items:center;justify-content:space-between;gap:16px}
