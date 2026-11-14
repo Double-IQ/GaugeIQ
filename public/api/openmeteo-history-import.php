@@ -135,11 +135,22 @@ try {
     $changedAtStmt = $pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
     $changedAtStmt->execute([$changedAtKey]);
     $changedAtValue = $changedAtStmt->fetchColumn();
-    $locationChangedAt = is_string($changedAtValue) ? $changedAtValue : '';
+    $locationChangedAt = is_string($changedAtValue) ? trim($changedAtValue) : '';
+
+    // A first-run installation may import history before the location-save
+    // endpoint has ever written a location boundary. Establish it once, at
+    // the start of the first weather import, so this location's imported rows
+    // are included while any older rows from a previous location are excluded.
+    // Never reset an existing boundary during subsequent imports.
+    $createdAt = gmdate('c');
+    if ($source === 'weather' && $locationChangedAt === '') {
+        openMeteoHistorySaveSetting($pdo, $changedAtKey, $createdAt);
+        $locationChangedAt = $createdAt;
+    }
+
     $hourly = $data['hourly'];
     $times = $hourly['time'];
     $sourceLabel = $source === 'forecast' ? 'Open-Meteo Historical Forecast' : 'Open-Meteo Historical Weather';
-    $createdAt = gmdate('c');
     $count = 0;
     $skipped = 0;
 
