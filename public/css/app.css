@@ -7217,9 +7217,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* ATC-inspired ECMWF rainfall forecast scope */
-.rainfall-radar-card{margin-top:16px;color:#edf6ff;background:radial-gradient(ellipse at 50% 0%,rgba(45,91,150,.16),transparent 55%),linear-gradient(145deg,#0b1b29 0%,#07131e 100%);border:1px solid rgba(91,153,178,.3);box-shadow:0 12px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.045)}
+.rainfall-radar-card{margin-top:16px;color:var(--text);background:var(--card);border:1px solid var(--border);box-shadow:0 8px 30px rgba(17,24,39,.06)}
 .rainfall-radar-card .rainfall-nowcast-heading{align-items:center}
-.rainfall-radar-card .rainfall-nowcast-heading h2,.rainfall-radar-card .rainfall-nowcast-heading .label{color:#edf6ff;font-size:22px;font-weight:750;letter-spacing:-.02em}
+.rainfall-radar-card .rainfall-nowcast-heading h2,.rainfall-radar-card .rainfall-nowcast-heading .label{color:var(--text);font-size:22px;font-weight:750;letter-spacing:-.02em}
 .rainfall-radar-card .rainfall-nowcast-source{padding:6px 8px;border:1px solid rgba(104,210,255,.25);border-radius:6px;background:rgba(53,196,235,.08);color:#9bd0ff;font-size:9px;font-weight:800;letter-spacing:.1em}
 .rainfall-radar-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(150px,.88fr);gap:16px;align-items:center;margin-top:14px}
 .rainfall-radar-scope-wrap{min-width:0;display:flex;flex-direction:column;align-items:center}
@@ -7244,14 +7244,14 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-legend-low{background:#36b9d6}.rainfall-legend-mid{background:#45d69d}.rainfall-legend-high{background:#e7c84b}
 .rainfall-radar-empty{margin:8px 0 0;color:#91a9c7;font-size:10px;text-align:center}
 .rainfall-radar-readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
-.rainfall-radar-readout-primary,.rainfall-radar-readout-grid>div{padding:11px 12px;border:1px solid rgba(117,164,211,.18);border-radius:9px;background:rgba(4,17,29,.34);min-width:0}
+.rainfall-radar-readout-primary,.rainfall-radar-readout-grid>div{padding:11px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);min-width:0}
 .rainfall-radar-readout-primary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.rainfall-radar-readout-primary>span,.rainfall-radar-readout-grid>div>span{display:block;color:#91a9c7;font-size:9px;font-weight:700;letter-spacing:.07em}
-.rainfall-radar-readout-primary>strong{display:block;color:#f0faff;font-size:24px;line-height:1.1;font-weight:750;white-space:nowrap}
-.rainfall-radar-readout-primary>strong small{font-size:12px;color:#9bb6c8}
+.rainfall-radar-readout-primary>span,.rainfall-radar-readout-grid>div>span{display:block;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em}
+.rainfall-radar-readout-primary>strong{display:block;color:var(--text);font-size:24px;line-height:1.1;font-weight:750;white-space:nowrap}
+.rainfall-radar-readout-primary>strong small{font-size:12px;color:var(--muted)}
 .rainfall-radar-readout-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
-.rainfall-radar-readout-grid>div strong{display:block;margin-top:5px;color:#edf6ff;font-size:15px;line-height:1.25;overflow-wrap:anywhere}
-.rainfall-radar-readout-grid>div small{display:block;margin-top:3px;color:#91a9c7;font-size:10px}
+.rainfall-radar-readout-grid>div strong{display:block;margin-top:5px;color:var(--text);font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.rainfall-radar-readout-grid>div small{display:block;margin-top:3px;color:var(--muted);font-size:10px}
 .rainfall-radar-timeline{margin-top:16px;padding:13px;border:1px solid rgba(117,164,211,.18);border-radius:12px;background:rgba(4,17,29,.46)}
 .rainfall-radar-section-label{margin-bottom:11px}
 .rainfall-radar-time-step{display:grid;grid-template-columns:58px minmax(40px,1fr) auto;align-items:center;gap:9px;padding:8px 0;border-top:1px solid rgba(117,164,211,.12)}
@@ -7269,7 +7269,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-consistency-dot[data-consistency="fading"]{background:#36b9d6;color:#36b9d6}
 .rainfall-radar-consistency strong{display:block;color:#eaf5ff;font-size:11px}
 .rainfall-radar-consistency small{display:block;margin-top:2px;color:#83a8bd;font-size:9px;line-height:1.35}
-.rainfall-radar-card .rainfall-nowcast-footnote{color:#83a8bd}
+.rainfall-radar-card .rainfall-nowcast-footnote{color:var(--muted)}
 @keyframes rainfall-radar-rotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @media(max-width:560px){
  .rainfall-radar-card{padding:16px}
@@ -7283,8 +7283,25 @@ body.gaugeiq-menu-open{overflow:hidden}
  .rainfall-radar-time-step{grid-template-columns:52px minmax(30px,1fr) auto;gap:7px}
 }
 @media(prefers-reduced-motion:reduce){.rainfall-radar-sweep{animation:none}}
-:root[data-theme="light"] .rainfall-radar-card{color:#eaf5ff;background:linear-gradient(145deg,#0b1b29 0%,#07131e 100%)!important;border:1px solid rgba(91,153,178,.3)!important}
 
+
+
+/* Keep the radar card aligned with the dashboard card theme; the radar plot itself remains dark for contrast. */
+.rainfall-radar-card .rainfall-radar-source,
+.rainfall-radar-card .rainfall-radar-compass-button{color:var(--text);border-color:var(--border);background:var(--surface)}
+.rainfall-radar-card .rainfall-radar-topline,
+.rainfall-radar-card .rainfall-radar-section-label,
+.rainfall-radar-card .rainfall-radar-empty,
+.rainfall-radar-card .rainfall-radar-legend,
+.rainfall-radar-card .rainfall-radar-time-heading span,
+.rainfall-radar-card .rainfall-radar-amount small,
+.rainfall-radar-card .rainfall-radar-consistency small{color:var(--muted)}
+.rainfall-radar-card .rainfall-radar-timeline,
+.rainfall-radar-card .rainfall-radar-consistency{background:var(--surface);border-color:var(--border)}
+.rainfall-radar-card .rainfall-radar-time-heading strong,
+.rainfall-radar-card .rainfall-radar-amount strong,
+.rainfall-radar-card .rainfall-radar-consistency strong{color:var(--text)}
+.rainfall-radar-card .rainfall-radar-time-step{border-top-color:var(--border)}
 
 /* Compact selector for switching between independently monitored locations. */
 .location-switcher {
