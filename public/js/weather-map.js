@@ -1082,11 +1082,12 @@ protocolOptions.fileReaderConfig = {
                 setTimeout(() => gestureHint.classList.remove('is-visible'), 6000);
             }
 
-            // Show the latest single weather layer first. Do not download all five
-            // animation frames during dashboard startup; that creates up to twelve
-            // raster sources at once in Combined mode and can overwhelm mobile browsers.
-            animationToggle.disabled = false;
-            showWeatherLayer(layerSelect.value);
+            // Keep the latest single weather layer visible while the five-frame
+            // animation is prepared sequentially. Once every frame is ready,
+            // prepareAnimation() starts playback automatically. Sequential loading
+            // limits cold-cache network/decode bursts on mobile browsers.
+            animationToggle.disabled = true;
+            prepareAnimation(true);
         });
         // Avoid changing raster layers while MapLibre is re-rendering the map
         // during zoom, pan, pitch or rotation gestures. Resume only if playback
