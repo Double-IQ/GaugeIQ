@@ -7217,7 +7217,24 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* ATC-inspired ECMWF rainfall forecast scope */
-.rainfall-radar-card{margin-top:16px;color:var(--text);background:var(--card);border:1px solid var(--border);box-shadow:0 8px 30px rgba(17,24,39,.06)}
+/* Match the Rain Radar outer card to the Wind HUD in both themes. */
+.rainfall-radar-card{
+  margin-top:16px;
+  padding:18px;
+  overflow:hidden;
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+}
+:root[data-theme="light"] .rainfall-radar-card{
+  color:#26313f!important;
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
+  border:1px solid #c3cbd5!important;
+  border-radius:18px;
+  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
 .rainfall-radar-card .rainfall-nowcast-heading{align-items:center}
 .rainfall-radar-card .rainfall-nowcast-heading h2,.rainfall-radar-card .rainfall-nowcast-heading .label{color:var(--text);font-size:22px;font-weight:750;letter-spacing:-.02em}
 .rainfall-radar-card .rainfall-nowcast-source{padding:6px 8px;border:1px solid rgba(104,210,255,.25);border-radius:6px;background:rgba(53,196,235,.08);color:#9bd0ff;font-size:9px;font-weight:800;letter-spacing:.1em}
