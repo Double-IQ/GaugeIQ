@@ -7326,9 +7326,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){.rainfall-radar-compass-controls{gap:5px}.rainfall-radar-compass-button{font-size:9px;padding:0 7px}}
 
 
-  .gaugeiq-frame-diagnostic-row .gaugeiq-frame-diagnostic-state{text-align:left}
-}
-
 
 /* Keep the GaugeIQ mark at the left of the dashboard header and Admin at the right. */
 .dashboard-header{display:flex;align-items:center;justify-content:space-between;gap:16px}
