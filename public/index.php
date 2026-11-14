@@ -535,6 +535,17 @@ if ($current && !empty($current['observed_at'])) {
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
         $radarLocalAmount = !$nowcastIsStale && is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'])) : null;
+        $radarLocalHasRain = $radarLocalAmount !== null && $radarLocalAmount > 0.0;
+        $forecastScanAmounts = [];
+        foreach (array_slice($nowcastFrames, 0, 2) as $forecastScanFrame) {
+            $forecastScanValue = $forecastScanFrame['local_precipitation_mm_per_hour'] ?? $forecastScanFrame['local_precipitation_mm'] ?? null;
+            if (is_numeric($forecastScanValue)) {
+                $forecastScanAmounts[] = max(0.0, (float)$forecastScanValue);
+            }
+        }
+        $forecastScanHasData = $forecastScanAmounts !== [];
+        $forecastScanHasRain = array_filter($forecastScanAmounts, static fn(float $amount): bool => $amount > 0.0) !== [];
+        $showForecastScan = !$forecastScanHasData || $forecastScanHasRain;
         $rainfallDisplayUnit = (int)($rainfallNowcast['schema_version'] ?? 1) >= 2 ? 'mm/h' : 'mm';
         $radarTrend = (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed');
         $radarTrendLabel = match ($radarTrend) {
@@ -636,16 +647,19 @@ if ($current && !empty($current['observed_at'])) {
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
+                    <?php if ($radarLocalAmount === null || $radarLocalHasRain): ?>
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
                         <strong><?= $radarLocalAmount !== null ? number_format($radarLocalAmount, 1) : '—' ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
                     </div>
+                    <?php endif; ?>
                     <div class="rainfall-radar-readout-grid">
                         <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
                         <div><span>RAIN MOVEMENT</span><strong><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
                     </div>
                 </div>
             </div>
+            <?php if ($showForecastScan): ?>
             <div class="rainfall-radar-timeline">
                 <div class="rainfall-radar-section-label"><strong>FORECAST SCAN</strong><span>LOCAL TIME</span></div>
                 <?php foreach ($nowcastFrames as $frameIndex => $nowcastFrame):
@@ -662,6 +676,7 @@ if ($current && !empty($current['observed_at'])) {
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
             <div class="rainfall-radar-consistency">
                 <span class="rainfall-radar-consistency-dot" data-consistency="<?= htmlspecialchars($consistency, ENT_QUOTES) ?>"></span>
                 <div><strong>Forecast consistency · <?= htmlspecialchars($consistencyLabel, ENT_QUOTES) ?></strong><small>How the rain signal changes between the two model steps — not a probability.</small></div>
