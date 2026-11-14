@@ -216,50 +216,6 @@ protocolOptions.fileReaderConfig = {
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
         const frameProgressBar = document.getElementById('map-frame-progress');
-        const frameDiagnostics = (() => {
-            const timeline = document.querySelector('.gaugeiq-weather-map-timeline');
-            if (!timeline) return null;
-            const panel = document.createElement('details');
-            panel.className = 'gaugeiq-frame-diagnostics';
-            const summary = document.createElement('summary');
-            summary.textContent = 'Frame download diagnostics';
-            const note = document.createElement('p');
-            note.className = 'gaugeiq-frame-diagnostics-note';
-            note.textContent = 'Network bytes count uncached HTTP range responses. Cached blocks are served inside the reader and are not exposed as a separate hit count.';
-            const list = document.createElement('div');
-            list.className = 'gaugeiq-frame-diagnostics-list';
-            panel.append(summary, note, list);
-            timeline.insertAdjacentElement('afterend', panel);
-            return { panel, list, rows: new Map() };
-        })();
-        const formatDiagnosticBytes = bytes => {
-            const value = Number(bytes) || 0;
-            return value >= 1024 * 1024 ? (value / (1024 * 1024)).toFixed(2) + ' MB'
-                : value >= 1024 ? (value / 1024).toFixed(1) + ' KB' : value + ' B';
-        };
-        function updateFrameDiagnostic(frame, index, state) {
-            if (!frameDiagnostics || !frame) return;
-            let row = frameDiagnostics.rows.get(frame.id);
-            if (!row) {
-                row = document.createElement('div');
-                row.className = 'gaugeiq-frame-diagnostic-row';
-                const heading = document.createElement('strong');
-                const metrics = document.createElement('span');
-                const status = document.createElement('span');
-                status.className = 'gaugeiq-frame-diagnostic-state';
-                row.append(heading, metrics, status);
-                frameDiagnostics.rows.set(frame.id, { row, heading, metrics, status });
-                frameDiagnostics.list.append(row);
-            }
-            const refs = frameDiagnostics.rows.get(frame.id);
-            const network = frame.networkProgress || {};
-            refs.heading.textContent = 'Frame ' + (index + 1) + ' · ' + (frame.type === 'past' ? 'Past' : 'Forecast');
-            refs.metrics.textContent = 'Source ' + (network.sourceFileSize ? formatDiagnosticBytes(network.sourceFileSize) : '—')
-                + '  |  Network ' + formatDiagnosticBytes(network.bytes || 0)
-                + '  |  Range requests ' + (network.rangeCompleted || 0) + '/' + (network.rangeStarted || 0);
-            refs.status.textContent = network.failed ? network.failed + ' request error(s)' : (state || 'Waiting');
-            refs.status.classList.toggle('is-error', Boolean(network.failed));
-        }
         const config = {
             latitude: Number(mapElement?.dataset.latitude),
             longitude: Number(mapElement?.dataset.longitude)
@@ -520,13 +476,6 @@ protocolOptions.fileReaderConfig = {
             return animationFrames;
         }
 
-        // Keep diagnostics in createMap's scope: animationFrames and
-        // animationCurrentFrame are local to this map instance.
-        function updateAllFrameDiagnostics(state) {
-            selectedAnimationFrames().forEach((frame, index) => updateFrameDiagnostic(frame, index,
-                index === animationCurrentFrame && state ? state : undefined));
-        }
-
         function updateFrameLabel(index) {
             const frame = selectedAnimationFrames()[index];
             if (!frame) return;
@@ -686,9 +635,6 @@ protocolOptions.fileReaderConfig = {
                     layerIds: [],
                     sourceIds: []
                 }));
-                if (frameDiagnostics) frameDiagnostics.list.replaceChildren();
-                frameDiagnostics?.rows.clear();
-                updateAllFrameDiagnostics('Queued');
                 const addFrameSources = frame => {
                     if (!frame || frame.sourceIds.length) return;
                     variables.forEach((item, variableIndex) => {
@@ -787,7 +733,6 @@ protocolOptions.fileReaderConfig = {
                     });
                     animationToggle.disabled = false;
                     setStatus('');
-                    updateAllFrameDiagnostics('Ready');
                     showFrame(animationCurrentFrame);
                     if (autoStart) runAnimation();
                 };
@@ -804,7 +749,7 @@ protocolOptions.fileReaderConfig = {
                         started: 0, completed: 0, active: 0, bytes: 0,
                         metadataStarted: 0, metadataCompleted: 0,
                         rangeStarted: 0, rangeCompleted: 0, failed: 0,
-                        onUpdate: () => { updateFrameProgress(frame, index); updateFrameDiagnostic(frame, index, 'Downloading / decoding'); }
+                        onUpdate: () => updateFrameProgress(frame, index)
                     };
                     animationNetworkProgress = frame.networkProgress;
                     updateFrameProgress(frame, index);
@@ -823,7 +768,6 @@ protocolOptions.fileReaderConfig = {
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
-                        updateFrameDiagnostic(frame, index, 'Ready');
                         setStatus('Weather frame ' + (index + 1) + '/5 ready…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
