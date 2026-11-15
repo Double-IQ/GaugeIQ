@@ -1378,7 +1378,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="mth-sun-vector"><span class="mth-sun-core"></span><small>SUN VECTOR</small><i></i></div>
                 <div class="mth-earth-system mth-tracker-system">
                     <div class="mth-orbit-ring"></div>
-                    <div class="mth-earth-globe mth-real-earth" role="img" aria-label="Rotating Earth with NASA Blue Marble surface texture">
+                    <div class="mth-earth-globe mth-real-earth" role="img" aria-label="Rotating Earth with simplified continent shapes">
                         <span class="mth-earth-atmosphere"></span><span class="mth-earth-night"></span>
                         <span class="mth-tidal-axis"></span>
                         <span class="mth-tidal-bulge mth-bulge-near"></span><span class="mth-tidal-bulge mth-bulge-far"></span>
