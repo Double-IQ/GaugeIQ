@@ -262,11 +262,15 @@
             try {
                 const timelinePayload = results[1].value;
                 const station = timelinePayload.station || {};
-                const distance = Number(timelinePayload.distance);
-                if (!station.name || (Number.isFinite(distance) && distance > 150)) {
-                    throw new Error(Number.isFinite(distance) && distance > 150 ? 'The nearest supported station is too far away to represent this location.' : 'The provider did not identify a verified tide station.');
+                const verifiedStation = extremesPayload?.station || {};
+                const verifiedDistance = Number(extremesPayload?.distance);
+                if (!station.name || !verifiedStation.name || !Array.isArray(extremesPayload?.extremes)) {
+                    throw new Error('The provider did not return matching station and high/low verification data.');
                 }
-                if (extremesPayload?.station?.id && station.id && extremesPayload.station.id !== station.id) {
+                if (Number.isFinite(verifiedDistance) && verifiedDistance > 150) {
+                    throw new Error('The nearest supported station is too far away to represent this location.');
+                }
+                if (verifiedStation.id && station.id && verifiedStation.id !== station.id) {
                     throw new Error('The high/low events and tide curve resolved to different stations.');
                 }
                 drawTideGraph(timelinePayload,extremesPayload);
