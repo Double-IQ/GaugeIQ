@@ -70,7 +70,7 @@ $error = curl_error($curl);
 curl_close($curl);
 
 if ($body === false) {
-    error_log('GaugeIQ tide API upstream request failed: ' . $error);
+    error_log('GaugeIQ tide API upstream ' . $mode . ' request failed (cURL ' . curl_errno($curl) . '): ' . $error);
     tideApiRespond(502, ['message' => 'GaugeIQ could not reach the tide prediction provider.']);
 }
 
@@ -78,6 +78,10 @@ $decoded = json_decode((string)$body, true);
 if (!is_array($decoded)) {
     error_log('GaugeIQ tide API returned a non-JSON response (HTTP ' . $status . ').');
     tideApiRespond(502, ['message' => 'The tide prediction provider returned an invalid response.']);
+}
+
+if ($status < 200 || $status >= 300) {
+    error_log('GaugeIQ tide provider returned HTTP ' . $status . ' for ' . $mode . ' request.');
 }
 
 tideApiRespond($status >= 200 && $status < 600 ? $status : 502, $decoded);
