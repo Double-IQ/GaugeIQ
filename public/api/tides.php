@@ -25,6 +25,11 @@ if ($latitude === false || $longitude === false ||
     tideApiRespond(400, ['message' => 'Valid latitude and longitude are required.']);
 }
 
+$mode = (string)($_GET['mode'] ?? 'extremes');
+if (!in_array($mode, ['extremes', 'timeline'], true)) {
+    tideApiRespond(400, ['message' => 'Unsupported tide prediction mode.']);
+}
+
 $start = (string)($_GET['start'] ?? '');
 $end = (string)($_GET['end'] ?? '');
 $startTime = strtotime($start);
@@ -41,11 +46,11 @@ if (!function_exists('curl_init')) {
 $query = http_build_query([
     'latitude' => (float)$latitude,
     'longitude' => (float)$longitude,
-    'start' => gmdate('Y-m-d\\TH:i:s\\Z', $startTime),
-    'end' => gmdate('Y-m-d\\TH:i:s\\Z', $endTime),
+    'start' => gmdate('Y-m-d\TH:i:s\Z', $startTime),
+    'end' => gmdate('Y-m-d\TH:i:s\Z', $endTime),
     'units' => 'meters',
 ]);
-$url = 'https://api.openwaters.io/tides/extremes?' . $query;
+$url = 'https://api.openwaters.io/tides/' . $mode . '?' . $query;
 $curl = curl_init($url);
 if ($curl === false) {
     tideApiRespond(503, ['message' => 'Unable to initialise the tide prediction request.']);
@@ -55,7 +60,7 @@ curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_CONNECTTIMEOUT => 8,
-    CURLOPT_TIMEOUT => 20,
+    CURLOPT_TIMEOUT => 25,
     CURLOPT_HTTPHEADER => ['Accept: application/json'],
     CURLOPT_USERAGENT => 'GaugeIQ-TideMonitor/1.0',
 ]);
