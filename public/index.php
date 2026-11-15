@@ -1413,63 +1413,83 @@ if ($current && !empty($current['observed_at'])) {
         <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
     </section>
 
-    <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
-        <div class="section-heading weather-change-heading">
+    <section class="card weather-change-card wind-hud-card mth-hud-card" aria-labelledby="weatherChangeTitle">
+        <div class="mth-header">
             <div>
-                <h2 id="weatherChangeTitle">Weather Volatility Index (WVI)</h2>
-                <p class="muted">Interprets the degree and speed of changing conditions.</p>
+                <p class="mth-kicker">GAUGEIQ // ATMOSPHERIC TELEMETRY</p>
+                <h2 id="weatherChangeTitle">WEATHER VOLATILITY INDEX</h2>
+                <p class="mth-subtitle">ENVIRONMENTAL MONITORING SYSTEM <span>·</span> LOCAL CONDITIONS</p>
+            </div>
+            <span class="mth-live"><i></i> SYSTEM ONLINE</span>
+        </div>
+        <div class="mth-section">
+            <div class="mth-section-head"><span class="mth-index">01</span><div><strong>VOLATILITY INDEX</strong><small>CUMULATIVE WEATHER MOVEMENT / 6H</small></div><span class="mth-section-state">LIVE CALC</span></div>
+            <div class="weather-change-metrics">
+                <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
+                <div class="weather-change-level" id="weatherChangeLevel" role="img" aria-label="WVI level">
+                    <span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
             </div>
         </div>
-        <div class="weather-change-metrics">
-            <div class="weather-change-score" id="weatherChangeScore" aria-label="Weather Volatility Index score">—</div>
-            <div class="weather-change-level" id="weatherChangeLevel" role="img" aria-label="WVI level">
-                <span></span><span></span><span></span><span></span><span></span>
-                <span></span><span></span><span></span><span></span><span></span>
+        <div class="mth-section">
+            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>VOLATILITY ANALYSIS</strong><small>CONTRIBUTING WEATHER SIGNALS</small></div></div>
+            <button type="button" class="secondary weather-change-reasons-toggle info-icon-button mth-more-toggle" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10.5v6"></path>
+                    <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+                </svg>
+                <span id="weatherChangeReasonsButtonLabel">MORE INFO</span>
+            </button>
+            <div class="weather-change-reasons mth-reasons" id="weatherChangeReasons" aria-live="polite" hidden>
+                <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
             </div>
+            <details class="algorithm-details mth-algorithm-details">
+                <summary>HOW THE WVI IS CALCULATED</summary>
+                <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
+            </details>
         </div>
-        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="weatherChangeReasonsToggle" aria-label="Show Weather Volatility Index reasons" title="More information" aria-controls="weatherChangeReasons" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 10.5v6"></path>
-                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
-            </svg>
-            <span id="weatherChangeReasonsButtonLabel">More information</span>
-        </button>
-        <div class="weather-change-reasons" id="weatherChangeReasons" aria-live="polite" hidden>
-            <div class="weather-change-summary" id="weatherChangeSummary">Analysing recent conditions…</div>
-        </div>
-        <details class="algorithm-details">
-            <summary>How the WVI is calculated</summary>
-            <p>GaugeIQ measures cumulative movement in nine weather signals across the latest six-hour observation window. Each signal is converted to a severity using its configured trigger and full-severity level, then combined using the configured weights to produce a score from 0 to 10. Reversals and repeated changes count towards the result. The local baseline is a separate comparison against previous comparable six-hour windows; it does not form part of the WVI score.</p>
-        </details>
+        <div class="mth-footer"><span>GQ // WVI-01</span><span>ATMOSPHERIC MONITORING</span><span>NO DATA FABRICATED</span></div>
     </section>
 
-    <section class="card conditions-trend-card" aria-labelledby="conditionsTrendTitle">
-        <div class="conditions-trend-heading">
-            <h2 id="conditionsTrendTitle">Conditions trend</h2>
-            <p class="muted">Interprets the change in weather conditions.</p>
+    <section class="card conditions-trend-card mth-hud-card" aria-labelledby="conditionsTrendTitle">
+        <div class="mth-header">
+            <div>
+                <p class="mth-kicker">GAUGEIQ // ATMOSPHERIC TELEMETRY</p>
+                <h2 id="conditionsTrendTitle">CONDITIONS TREND</h2>
+                <p class="mth-subtitle">LOCAL WEATHER MOVEMENT <span>·</span> DIRECTIONAL ANALYSIS</p>
+            </div>
+            <span class="mth-live"><i></i> SYSTEM ONLINE</span>
         </div>
-        <div class="conditions-trend-result">
-            <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
-            <strong class="conditions-trend-label" id="conditionsTrendLabel"></strong>
+        <div class="mth-section">
+            <div class="mth-section-head"><span class="mth-index">01</span><div><strong>CONDITION ASSESSMENT</strong><small>CURRENT DIRECTION / SIX-HOUR WINDOW</small></div><span class="mth-section-state">LIVE DATA</span></div>
+            <div class="conditions-trend-result mth-trend-result">
+                <div class="conditions-trend-score" id="conditionsTrendIcon" aria-hidden="true">→</div>
+                <strong class="conditions-trend-label" id="conditionsTrendLabel"></strong>
+            </div>
         </div>
-        <button type="button" class="secondary weather-change-reasons-toggle info-icon-button" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 10.5v6"></path>
-                <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
-            </svg>
-            <span id="conditionsTrendReasonsButtonLabel">More information</span>
-        </button>
-        <div class="conditions-trend-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
-            <p class="conditions-trend-summary" id="conditionsTrendSummary"></p>
-            <div id="conditionsTrendReasonItems"></div>
+        <div class="mth-section">
+            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>WEATHER SIGNALS</strong><small>FACTORS AFFECTING THE TREND</small></div></div>
+            <button type="button" class="secondary weather-change-reasons-toggle info-icon-button mth-more-toggle" id="conditionsTrendReasonsToggle" aria-label="Show conditions trend reasons" title="More information" aria-controls="conditionsTrendReasons" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10.5v6"></path>
+                    <circle cx="12" cy="7.5" r=".8" class="info-icon-dot"></circle>
+                </svg>
+                <span id="conditionsTrendReasonsButtonLabel">MORE INFO</span>
+            </button>
+            <div class="conditions-trend-reasons mth-reasons" id="conditionsTrendReasons" aria-live="polite" hidden>
+                <p class="conditions-trend-summary" id="conditionsTrendSummary"></p>
+                <div id="conditionsTrendReasonItems"></div>
+            </div>
+            <details class="algorithm-details mth-algorithm-details">
+                <summary>HOW THE CONDITIONS TREND IS CLASSIFIED</summary>
+                <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
+                <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
+            </details>
         </div>
-        <details class="algorithm-details">
-            <summary>How the conditions trend is classified</summary>
-            <p>This is a separate directional assessment, not the Weather Volatility Index (WVI).</p>
-            <p>Falling pressure, developing rain, strengthening wind, increasing cloud cover and more severe weather codes support a Worsening classification. The opposite signals can support Improving. The combined directional score must reach ±2 to classify a trend; otherwise the result is Steady/no clear trend.</p>
-        </details>
+        <div class="mth-footer"><span>GQ // CT-01</span><span>ATMOSPHERIC MONITORING</span><span>NO DATA FABRICATED</span></div>
     </section>
 
     <section class="card history-card" data-history-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES) ?>">
