@@ -139,9 +139,9 @@
         message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
         $('mthTideStation').textContent = station.name.toUpperCase();
         $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
-        if (station.attribution) $('mthTideAttribution').textContent = String(station.attribution) + ' · Predictions do not account for weather-driven surge. Not for navigation.';
-        root.querySelector('.mth-state-pending')?.classList.remove('mth-state-pending');
-        const state = root.querySelector('.mth-section-state');
+        $('mthTideAttribution').textContent = (station.attribution ? String(station.attribution) : 'Source: Open Waters / Slackwater harmonic tide predictions') + ' · Predictions do not account for weather-driven surge. Not for navigation.';
+        root.querySelector('.mth-tides .mth-state-pending')?.classList.remove('mth-state-pending');
+        const state = root.querySelector('.mth-tides .mth-section-state');
         if (state && state.textContent.includes('DATA LINK')) state.textContent = 'STATION LINKED';
     }
     loadTidePredictions().catch(error => {
