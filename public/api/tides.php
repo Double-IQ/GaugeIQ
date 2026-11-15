@@ -46,8 +46,8 @@ if (!function_exists('curl_init')) {
 $query = http_build_query([
     'latitude' => (float)$latitude,
     'longitude' => (float)$longitude,
-    'start' => gmdate('Y-m-d\\TH:i:s\\Z', $startTime),
-    'end' => gmdate('Y-m-d\\TH:i:s\\Z', $endTime),
+    'start' => gmdate('Y-m-d\TH:i:s\Z', $startTime),
+    'end' => gmdate('Y-m-d\TH:i:s\Z', $endTime),
     'units' => 'meters',
 ]);
 $url = 'https://api.openwaters.io/tides/' . $mode . '?' . $query;
