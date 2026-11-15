@@ -27,7 +27,7 @@
     const disc = $('mthMoonDisc');
     if (disc) {
         disc.style.setProperty('--mth-phase', String(phase));
-        disc.style.setProperty('--mth-illumination', String(illumination));\n        disc.style.setProperty('--mth-shadow-width', (50 * (1 - Math.abs(2 * illumination - 1))) .toFixed(1) + '%');\n        disc.style.setProperty('--mth-shadow-x', phase < 0.5 ? '0%' : '100%');
+        disc.style.setProperty('--mth-illumination', String(illumination));\n        disc.style.setProperty('--mth-shadow-width', (50 * (1 - illumination)).toFixed(1) + '%');\n        disc.style.setProperty('--mth-shadow-x', (phase < 0.02 || phase > 0.98) ? '50%' : (phase < 0.5 ? '0%' : '100%'));
         disc.dataset.phase = phase.toFixed(4);
     }
     function solarEvent(day, latitude, longitude, sunrise) {
@@ -79,7 +79,76 @@
     } else {
         ['mthSunrise','mthSolarNoon','mthSunset','mthDaylight'].forEach(id => $(id).textContent = 'LOCATION NEEDED');
     }
-    const moon = root.querySelector('.mth-orbit-moon');
+
+    async function loadTidePredictions() {
+        const status = $('mthTideStatus');
+        const message = $('mthTideMessage');
+        if (!validLocation) {
+            status.textContent = 'LOCATION COORDINATES UNAVAILABLE';
+            message.textContent = 'Set valid coordinates for the selected GaugeIQ location to search for a nearby tide station.';
+            return;
+        }
+        const cacheKey = 'gaugeiq-mth-tides-v1:' + lat.toFixed(3) + ':' + lon.toFixed(3);
+        let payload = null;
+        try {
+            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+            if (cached && cached.savedAt && Date.now() - cached.savedAt < 30 * 60 * 1000) payload = cached.payload;
+        } catch { /* Ignore unavailable or invalid session cache. */ }
+        if (!payload) {
+            const start = new Date();
+            const end = new Date(start.getTime() + 4 * 86400000);
+            const params = new URLSearchParams({
+                latitude: String(lat), longitude: String(lon),
+                start: start.toISOString(), end: end.toISOString(), units: 'meters'
+            });
+            const response = await fetch('https://api.openwaters.io/tides/extremes?' + params.toString(), {
+                headers: { Accept: 'application/json' }, cache: 'no-store'
+            });
+            if (!response.ok) throw new Error('Tide service returned HTTP ' + response.status);
+            payload = await response.json();
+            try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
+        }
+        const station = payload.station || {};
+        const distance = Number(payload.distance);
+        if (!station.name || !Array.isArray(payload.extremes)) throw new Error('The tide service returned incomplete station data.');
+        if (Number.isFinite(distance) && distance > 150) {
+            status.textContent = 'NO SUITABLE COASTAL STATION';
+            message.textContent = 'The nearest prediction station is ' + Math.round(distance) + ' km away. Tide data is hidden rather than presenting a distant station as local.';
+            $('mthTideStation').textContent = 'STATION OUTSIDE LOCAL RANGE';
+            $('mthTideDistance').textContent = Math.round(distance) + ' KM AWAY';
+            return;
+        }
+        const events = payload.extremes.map(event => ({
+            ...event, timestamp: Date.parse(event.time)
+        })).filter(event => Number.isFinite(event.timestamp) && event.timestamp >= Date.now() - 60000)
+          .sort((a,b) => a.timestamp - b.timestamp);
+        const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
+        const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
+        if (!nextHigh && !nextLow) throw new Error('No upcoming high or low tide events were returned.');
+        const localTime = timestamp => new Intl.DateTimeFormat(undefined,{timeZone:zone,weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(timestamp));
+        const height = event => Number.isFinite(Number(event.level)) ? Number(event.level).toFixed(2) + ' m' : '—';
+        $('mthNextHigh').textContent = nextHigh ? height(nextHigh) : '—';
+        $('mthNextHighTime').textContent = nextHigh ? localTime(nextHigh.timestamp) : 'NOT AVAILABLE';
+        $('mthNextLow').textContent = nextLow ? height(nextLow) : '—';
+        $('mthNextLowTime').textContent = nextLow ? localTime(nextLow.timestamp) : 'NOT AVAILABLE';
+        status.textContent = 'HARMONIC PREDICTIONS AVAILABLE';
+        message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
+        $('mthTideStation').textContent = station.name.toUpperCase();
+        $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
+        if (station.attribution) $('mthTideAttribution').textContent = String(station.attribution) + ' · Predictions do not account for weather-driven surge. Not for navigation.';
+        root.querySelector('.mth-state-pending')?.classList.remove('mth-state-pending');
+        const state = root.querySelector('.mth-section-state');
+        if (state && state.textContent.includes('DATA LINK')) state.textContent = 'STATION LINKED';
+    }
+    loadTidePredictions().catch(error => {
+        const status = $('mthTideStatus');
+        const message = $('mthTideMessage');
+        if (status) status.textContent = 'TIDE DATA UNAVAILABLE';
+        if (message) message.textContent = 'A verified nearby prediction could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.');
+        $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
+        $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
+    });
+\n    const moon = root.querySelector('.mth-orbit-moon');
     if (moon) moon.style.setProperty('--mth-orbit-angle', (phase * 360).toFixed(1) + 'deg');
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
