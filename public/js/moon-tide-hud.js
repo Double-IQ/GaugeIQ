@@ -211,17 +211,32 @@
             const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
             if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) return cached.payload;
         } catch { /* Ignore unavailable or invalid session cache. */ }
-        const response = await fetch(tideUrl(mode, start, end), {
-            headers: { Accept: 'application/json' }, cache: 'no-store'
-        });
-        if (!response.ok) {
-            let detail = '';
-            try { detail = (await response.json()).message || ''; } catch { /* Non-JSON error. */ }
-            throw new Error(detail || 'Tide service returned HTTP ' + response.status);
+        const controller = new AbortController();
+        let timedOut = false;
+        const timeoutId = window.setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+        }, 30000);
+        try {
+            const response = await fetch(tideUrl(mode, start, end), {
+                headers: { Accept: 'application/json' },
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                let detail = '';
+                try { detail = (await response.json()).message || ''; } catch { /* Non-JSON error. */ }
+                throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
+            }
+            const payload = await response.json();
+            try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
+            return payload;
+        } catch (error) {
+            if (timedOut) throw new Error('Tide ' + mode + ' request timed out after 30 seconds.');
+            throw error;
+        } finally {
+            window.clearTimeout(timeoutId);
         }
-        const payload = await response.json();
-        try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
-        return payload;
     }
     function tideLocalTime(timestamp, includeDay = true) {
         return new Intl.DateTimeFormat(undefined,{
@@ -326,74 +341,86 @@
         const start = new Date();
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
-        const results = await Promise.allSettled([
-            fetchTidePayload('extremes',start,extremesEnd),
-            fetchTidePayload('timeline',start,end)
-        ]);
-        let extremesPayload = null;
-        if (results[0].status === 'fulfilled') {
-            extremesPayload = results[0].value;
+
+        // Start both requests together, but update each instrument as soon as its
+        // own response arrives. Each request has an independent 30-second timeout.
+        const extremesRequest = fetchTidePayload('extremes',start,extremesEnd);
+        const timelineRequest = fetchTidePayload('timeline',start,end);
+
+        const extremesUi = extremesRequest.then(extremesPayload => {
             const station = extremesPayload.station || {};
             const distance = Number(extremesPayload.distance);
             if (!station.name || !Array.isArray(extremesPayload.extremes)) {
                 status.textContent = 'INCOMPLETE STATION DATA';
                 message.textContent = 'The tide provider returned an incomplete station prediction.';
-            } else if (Number.isFinite(distance) && distance > 150) {
+                $('mthTideStation').textContent = 'INCOMPLETE STATION RESPONSE';
+                $('mthTideDistance').textContent = 'VERIFICATION FAILED';
+                return;
+            }
+            if (Number.isFinite(distance) && distance > 150) {
                 status.textContent = 'NO SUITABLE COASTAL STATION';
                 message.textContent = 'The nearest prediction station is ' + Math.round(distance) + ' km away. Distant predictions are not presented as local.';
                 $('mthTideStation').textContent = 'STATION OUTSIDE LOCAL RANGE';
                 $('mthTideDistance').textContent = Math.round(distance) + ' KM AWAY';
-            } else {
-                const events = extremesPayload.extremes.map(event => ({...event,timestamp:Date.parse(event.time)}))
-                    .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= Date.now() - 60000)
-                    .sort((a,b) => a.timestamp - b.timestamp);
-                const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
-                const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
-                if (!nextHigh && !nextLow) {
-                    status.textContent = 'NO UPCOMING TIDE EVENTS';
-                    message.textContent = 'The station did not return upcoming high or low water events.';
-                } else {
-                    const height = event => Number.isFinite(Number(event.level)) ? Number(event.level).toFixed(2) + ' m' : '—';
-                    $('mthNextHigh').textContent = nextHigh ? height(nextHigh) : '—';
-                    $('mthNextHighTime').textContent = nextHigh ? tideLocalTime(nextHigh.timestamp) : 'NOT AVAILABLE';
-                    $('mthNextLow').textContent = nextLow ? height(nextLow) : '—';
-                    $('mthNextLowTime').textContent = nextLow ? tideLocalTime(nextLow.timestamp) : 'NOT AVAILABLE';
-                    status.textContent = 'HARMONIC PREDICTIONS AVAILABLE';
-                    message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
-                    $('mthTideStation').textContent = station.name.toUpperCase();
-                    $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
-                    $('mthTideAttribution').textContent = (station.attribution ? String(station.attribution) : 'Source: Open Waters / Slackwater harmonic tide predictions') + ' · Predictions do not account for weather-driven surge. Not for navigation.';
-                    root.querySelector('.mth-tides .mth-state-pending')?.classList.remove('mth-state-pending');
-                    const tideState = root.querySelector('.mth-tides .mth-section-state');
-                    if (tideState && tideState.textContent.includes('DATA LINK')) tideState.textContent = 'STATION LINKED';
-                }
+                return;
             }
-        } else {
+            const events = extremesPayload.extremes.map(event => ({...event,timestamp:Date.parse(event.time)}))
+                .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= Date.now() - 60000)
+                .sort((a,b) => a.timestamp - b.timestamp);
+            const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
+            const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
+            if (!nextHigh && !nextLow) {
+                status.textContent = 'NO UPCOMING TIDE EVENTS';
+                message.textContent = 'The station did not return upcoming high or low water events.';
+                $('mthTideStation').textContent = station.name.toUpperCase();
+                $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
+                return;
+            }
+            const height = event => Number.isFinite(Number(event.level)) ? Number(event.level).toFixed(2) + ' m' : '—';
+            $('mthNextHigh').textContent = nextHigh ? height(nextHigh) : '—';
+            $('mthNextHighTime').textContent = nextHigh ? tideLocalTime(nextHigh.timestamp) : 'NOT AVAILABLE';
+            $('mthNextLow').textContent = nextLow ? height(nextLow) : '—';
+            $('mthNextLowTime').textContent = nextLow ? tideLocalTime(nextLow.timestamp) : 'NOT AVAILABLE';
+            status.textContent = 'HARMONIC PREDICTIONS AVAILABLE';
+            message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
+            $('mthTideStation').textContent = station.name.toUpperCase();
+            $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
+            $('mthTideAttribution').textContent = (station.attribution ? String(station.attribution) : 'Source: Open Waters / Slackwater harmonic tide predictions') + ' · Predictions do not account for weather-driven surge. Not for navigation.';
+            root.querySelector('.mth-tides .mth-state-pending')?.classList.remove('mth-state-pending');
+            const tideState = root.querySelector('.mth-tides .mth-section-state');
+            if (tideState && tideState.textContent.includes('DATA LINK')) tideState.textContent = 'STATION LINKED';
+        }).catch(error => {
             status.textContent = 'TIDE DATA UNAVAILABLE';
-            message.textContent = 'Nearby high/low tide events could not be loaded. ' + (results[0].reason?.message || 'Please try again later.');
-        }
-        if (results[1].status === 'fulfilled') {
+            message.textContent = 'Nearby high/low tide events could not be loaded. ' + (error?.message || 'Please try again later.');
+            $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
+            $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
+        });
+
+        const timelineUi = timelineRequest.then(async timelinePayload => {
+            let extremesPayload;
             try {
-                const timelinePayload = results[1].value;
-                const station = timelinePayload.station || {};
-                const verifiedStation = extremesPayload?.station || {};
-                const verifiedDistance = Number(extremesPayload?.distance);
-                if (!station.name || !verifiedStation.name || !Array.isArray(extremesPayload?.extremes)) {
-                    throw new Error('The provider did not return matching station and high/low verification data.');
-                }
-                if (Number.isFinite(verifiedDistance) && verifiedDistance > 150) {
-                    throw new Error('The nearest supported station is too far away to represent this location.');
-                }
-                if (verifiedStation.id && station.id && verifiedStation.id !== station.id) {
-                    throw new Error('The high/low events and tide curve resolved to different stations.');
-                }
-                drawTideGraph(timelinePayload,extremesPayload);
+                extremesPayload = await extremesRequest;
             } catch (error) {
-                setGraphUnavailable(error.message || 'A verified local tide curve could not be loaded.');
+                throw new Error('High/low station verification failed: ' + (error?.message || 'prediction request unavailable.'));
             }
-        } else {
-            setGraphUnavailable('A verified local tide curve could not be loaded. ' + (results[1].reason?.message || 'Please try again later.'));
-        }
+            const station = timelinePayload.station || {};
+            const verifiedStation = extremesPayload.station || {};
+            const verifiedDistance = Number(extremesPayload.distance);
+            if (!station.name || !verifiedStation.name || !Array.isArray(extremesPayload.extremes)) {
+                throw new Error('The provider did not return matching station and high/low verification data.');
+            }
+            if (Number.isFinite(verifiedDistance) && verifiedDistance > 150) {
+                throw new Error('The nearest supported station is too far away to represent this location.');
+            }
+            if (verifiedStation.id && station.id && verifiedStation.id !== station.id) {
+                throw new Error('The high/low events and tide curve resolved to different stations.');
+            }
+            drawTideGraph(timelinePayload,extremesPayload);
+        }).catch(error => {
+            setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error?.message || 'Please try again later.'));
+        });
+
+        await Promise.all([extremesUi,timelineUi]);
     }
     loadTidePredictions().catch(error => {
         const status = $('mthTideStatus');
