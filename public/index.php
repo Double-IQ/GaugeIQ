@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261115-moon-tide-hud">
+<link rel="stylesheet" href="css/app.css?v=20261115-moon-tide-graph">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
@@ -1376,35 +1376,19 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <p class="mth-note">Conceptual orbital view. The two tidal bulges illustrate the gravitational tide-generating pattern; their size and shape are exaggerated for clarity.</p>
         </div>
-        <div class="mth-section mth-mechanics">
-            <div class="mth-section-head"><span class="mth-index">05</span><div><strong>GLOBAL TIDAL MECHANICS</strong><small>SPRING / NEAP TIDE CYCLE</small></div><span class="mth-section-state">REFERENCE MODEL</span></div>
-            <div class="mth-mechanics-grid">
-                <article class="mth-mechanic mth-mechanic-visual" aria-labelledby="mthSpringTitle">
-                    <div class="mth-mechanic-visual-head"><strong id="mthSpringTitle">SPRING TIDES</strong><span>NEW / FULL MOON</span></div>
-                    <svg class="mth-tide-diagram mth-spring-diagram" viewBox="0 0 360 156" role="img" aria-labelledby="mthSpringSvgTitle mthSpringSvgDesc">
-                        <title id="mthSpringSvgTitle">Spring tide alignment</title><desc id="mthSpringSvgDesc">The Sun, Earth and Moon are aligned. Their tide-generating effects reinforce one another, creating a larger tidal range.</desc>
-                        <defs><radialGradient id="mthSunGlow"><stop stop-color="#fff4c6"/><stop offset=".48" stop-color="#e9b66a"/><stop offset="1" stop-color="#e9b66a" stop-opacity="0"/></radialGradient><radialGradient id="mthEarthFill"><stop stop-color="#398f89"/><stop offset=".72" stop-color="#14515b"/><stop offset="1" stop-color="#071b26"/></radialGradient></defs>
-                        <path class="mth-force-line" d="M49 78H310"/><circle cx="38" cy="78" r="22" fill="url(#mthSunGlow)"/><circle cx="38" cy="78" r="8" fill="#f0c779"/><text x="38" y="117" text-anchor="middle">SUN</text>
-                        <ellipse class="mth-spring-bulge" cx="180" cy="78" rx="61" ry="25"/><circle class="mth-diagram-earth" cx="180" cy="78" r="21" fill="url(#mthEarthFill)"/><path class="mth-earth-latitude" d="M160 78h40M180 58v40"/>
-                        <g class="mth-spring-moon"><circle cx="310" cy="78" r="12" fill="#cbd5c7"/><circle cx="306" cy="74" r="3" fill="#8d9a91"/><circle cx="315" cy="82" r="2.5" fill="#8d9a91"/></g><text x="310" y="117" text-anchor="middle">MOON</text>
-                        <text x="180" y="145" text-anchor="middle" class="mth-svg-caption">ALIGNED · REINFORCED TIDAL RANGE</text>
-                    </svg>
-                    <p>New and full Moon: solar and lunar tide-generating effects reinforce one another, producing a larger tidal range.</p>
-                </article>
-                <article class="mth-mechanic mth-mechanic-visual" aria-labelledby="mthNeapTitle">
-                    <div class="mth-mechanic-visual-head"><strong id="mthNeapTitle">NEAP TIDES</strong><span>FIRST / THIRD QUARTER</span></div>
-                    <svg class="mth-tide-diagram mth-neap-diagram" viewBox="0 0 360 156" role="img" aria-labelledby="mthNeapSvgTitle mthNeapSvgDesc">
-                        <title id="mthNeapSvgTitle">Neap tide alignment</title><desc id="mthNeapSvgDesc">The Moon is at a right angle to the Sun-Earth line. Solar and lunar tide-generating effects partly offset, producing a smaller tidal range.</desc>
-                        <path class="mth-force-line" d="M49 94H310"/><path class="mth-force-line mth-force-line-lunar" d="M180 20V135"/><circle cx="38" cy="94" r="22" fill="url(#mthSunGlow)"/><circle cx="38" cy="94" r="8" fill="#f0c779"/>
-                        <ellipse class="mth-neap-bulge" cx="180" cy="94" rx="42" ry="19" transform="rotate(-35 180 94)"/><circle class="mth-diagram-earth" cx="180" cy="94" r="21" fill="url(#mthEarthFill)"/><path class="mth-earth-latitude" d="M160 94h40M180 74v40"/>
-                        <g class="mth-neap-moon"><circle cx="180" cy="20" r="12" fill="#cbd5c7"/><circle cx="176" cy="16" r="3" fill="#8d9a91"/><circle cx="185" cy="24" r="2.5" fill="#8d9a91"/></g>
-                        <text x="38" y="133" text-anchor="middle">SUN</text><text x="180" y="12" text-anchor="middle" class="mth-svg-caption">MOON</text>
-                        <text x="180" y="151" text-anchor="middle" class="mth-svg-caption">RIGHT-ANGLE GEOMETRY · REDUCED RANGE</text>
-                    </svg>
-                    <p>First and third quarter: solar and lunar effects partly offset, producing a smaller tidal range.</p>
-                </article>
+        <div class="mth-section mth-tide-graph-section">
+            <div class="mth-section-head"><span class="mth-index">05</span><div><strong>LOCAL TIDE PROFILE</strong><small>24-HOUR HARMONIC WATER-LEVEL PREDICTION</small></div><span class="mth-section-state mth-state-pending" id="mthGraphState">DATA LINK PENDING</span></div>
+            <div class="mth-graph-readout">
+                <div class="mth-graph-current"><small>CURRENT PREDICTED HEIGHT</small><strong id="mthGraphCurrent">—</strong><span id="mthGraphTrend">WAITING FOR STATION DATA</span></div>
+                <div class="mth-graph-window"><small>FORECAST WINDOW</small><strong id="mthGraphWindow">NEXT 24 HOURS</strong><span id="mthGraphDatum">STATION DATUM</span></div>
             </div>
-            <p class="mth-note">Local tides also depend on coastline shape, water depth, bays and ocean-basin resonance. This global model explains the mechanism; it does not replace station-based tide predictions.</p>
+            <div class="mth-tide-graph-wrap" id="mthTideGraphWrap">
+                <div class="mth-graph-loading" id="mthGraphMessage" role="status">Waiting for verified local tide-station predictions…</div>
+                <svg class="mth-tide-graph" id="mthTideGraph" viewBox="0 0 720 246" role="img" aria-label="24-hour local tide-height prediction graph" hidden></svg>
+            </div>
+            <div class="mth-graph-legend"><span><i class="mth-legend-curve"></i> PREDICTED WATER LEVEL</span><span><i class="mth-legend-now"></i> CURRENT TIME</span><span><i class="mth-legend-extreme"></i> HIGH / LOW WATER</span></div>
+            <div class="mth-graph-source"><span id="mthGraphStation">NO VERIFIED STATION DATA</span><strong id="mthGraphDistance">PREDICTION OFFLINE</strong></div>
+            <p class="mth-note">Harmonic station prediction in metres relative to the station’s chart datum. Actual water levels can differ due to wind, atmospheric pressure, waves and storm surge. Not for navigation.</p>
         </div>
         <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
     </section>
@@ -1542,6 +1526,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261113-rain-radar-dots"></script>
-<script src="js/moon-tide-hud.js?v=20261115-mth01"></script>
+<script src="js/moon-tide-hud.js?v=20261115-mth02"></script>
 </body>
 </html>
