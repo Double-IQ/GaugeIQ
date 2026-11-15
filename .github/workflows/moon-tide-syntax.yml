@@ -17,6 +17,6 @@ jobs:
         with:
           php-version: '8.2'
       - name: PHP syntax check
-        run: php -l public/index.php
+        run: php -l public/index.php && php -l public/api/tides.php
       - name: JavaScript syntax check
         run: node --check public/js/moon-tide-hud.js
