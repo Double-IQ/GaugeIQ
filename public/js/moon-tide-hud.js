@@ -5,7 +5,7 @@
     const lat = Number(root.dataset.latitude);
     const lon = Number(root.dataset.longitude);
     const zone = root.dataset.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    const validLocation = Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
+    const validLocation = root.dataset.latitude.trim() !== '' && root.dataset.longitude.trim() !== '' && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
     const $ = id => document.getElementById(id);
     const synodic = 29.530588853;
     const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
@@ -27,7 +27,7 @@
     const disc = $('mthMoonDisc');
     if (disc) {
         disc.style.setProperty('--mth-phase', String(phase));
-        disc.style.setProperty('--mth-illumination', String(illumination));
+        disc.style.setProperty('--mth-illumination', String(illumination));\n        disc.style.setProperty('--mth-shadow-width', (50 * (1 - Math.abs(2 * illumination - 1))) .toFixed(1) + '%');\n        disc.style.setProperty('--mth-shadow-x', phase < 0.5 ? '0%' : '100%');
         disc.dataset.phase = phase.toFixed(4);
     }
     function solarEvent(day, latitude, longitude, sunrise) {
