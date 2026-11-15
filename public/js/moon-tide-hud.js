@@ -23,7 +23,7 @@
     $('mthIllumination').textContent = (illumination * 100).toFixed(1) + '%';
     $('mthLunarAge').textContent = cycle.toFixed(1) + ' DAYS';
     $('mthMoonDistance').textContent = Math.round(distance).toLocaleString() + ' KM';
-    $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {day:'2-digit',month:'short'});
+    $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {timeZone:zone,day:'2-digit',month:'short'});
     const disc = $('mthMoonDisc');
     if (disc) {
         disc.style.setProperty('--mth-phase', String(phase));
