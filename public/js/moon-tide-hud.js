@@ -149,8 +149,8 @@
         const sunX = Math.sin(sunHourAngle) * Math.cos(sunPosition.dec*rad);
         const sunY = -Math.sin(sunPosition.dec*rad);
         const orbitRadius = 124;
-        orbitMoon.style.left = (110 + moonX * orbitRadius - 15) + 'px';
-        orbitMoon.style.top = (110 + moonY * orbitRadius - 15) + 'px';
+        orbitMoon.style.left = (130 + moonX * orbitRadius - 15) + 'px';
+        orbitMoon.style.top = (130 + moonY * orbitRadius - 15) + 'px';
         orbitMoon.style.transform = 'none';
         orbitMoon.style.opacity = moonZ < -0.1 ? '.62' : '1';
         const phaseAngle = Math.acos(Math.max(-1,Math.min(1,
@@ -173,7 +173,8 @@
             locationMarker.style.opacity = markerZ > 0 ? '1' : '.22';
             locationMarker.style.zIndex = markerZ > 0 ? '5' : '0';
             locationMarker.title = (root.dataset.locationName || 'Selected location') + (markerZ > 0 ? ' · visible hemisphere' : ' · far side of Earth');
-            $('mthOrbitLocation').textContent = markerZ > 0 ? 'MOON-FACING VIEW' : 'FAR SIDE';
+            const locationLabel = (root.dataset.locationName || 'LOCATION').toUpperCase();
+            $('mthOrbitLocation').textContent = locationLabel + ' · ' + Math.abs(lat).toFixed(1) + (lat >= 0 ? 'N' : 'S') + ' ' + Math.abs(lon).toFixed(1) + (lon >= 0 ? 'E' : 'W');
         }
         $('mthOrbitDistance').textContent = Math.round(moonPosition.distanceKm).toLocaleString() + ' KM';
         $('mthOrbitPosition').textContent = norm360(moonPosition.eclipticLongitude).toFixed(1) + '° ECL.';
@@ -181,6 +182,7 @@
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
         $('mthOrbitState').textContent = 'CALCULATED POSITION';
         globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
+        globe.style.backgroundPosition = ((norm360(gmst) / 360) * 300).toFixed(2) + 'px center';
         globe.style.setProperty('--mth-sun-side',sunX>=0?'right':'left');
         globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
     }
@@ -195,7 +197,6 @@
         if (timeScrubber && Number(timeScrubber.value) !== 0) return;
         updateEarthMoonTracker(new Date());
     },60000);
-    root.addEventListener('DOMNodeRemoved',() => window.clearInterval(liveTrackerTimer),{once:true});
 
     function tideUrl(mode, start, end) {
         const params = new URLSearchParams({
