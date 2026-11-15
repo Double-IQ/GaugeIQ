@@ -57,8 +57,10 @@
         catch { return date.toISOString().slice(11,16) + ' UTC'; }
     }
     if (validLocation) {
-        const sunrise = solarEvent(now,lat,lon,true);
-        const sunset = solarEvent(now,lat,lon,false);
+        const localDateParts = new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).reduce((out,part) => (out[part.type] = part.value, out), {});
+        const locationDay = new Date(Date.UTC(Number(localDateParts.year),Number(localDateParts.month)-1,Number(localDateParts.day)));
+        const sunrise = solarEvent(locationDay,lat,lon,true);
+        const sunset = solarEvent(locationDay,lat,lon,false);
         $('mthSunrise').textContent = timeLabel(sunrise);
         $('mthSunset').textContent = timeLabel(sunset);
         if (sunrise && sunset) {
@@ -72,9 +74,9 @@
         }
         const marker = root.querySelector('.mth-location-marker');
         if (marker) {
-            marker.style.setProperty('--mth-lat', String(Math.max(-70,Math.min(70,lat))));
-            marker.style.setProperty('--mth-lon', String(lon));
-            marker.setAttribute('aria-label','Selected location: ' + (root.dataset.locationName || 'GaugeIQ location'));
+            marker.style.left = (50 + (lon / 180) * 40).toFixed(2) + '%';
+            marker.style.top = (50 - (lat / 90) * 40).toFixed(2) + '%';
+            marker.setAttribute('aria-label','Selected location: ' + (root.dataset.locationName || 'GaugeIQ location') + ' (' + lat.toFixed(2) + ', ' + lon.toFixed(2) + ')');
         }
     } else {
         ['mthSunrise','mthSolarNoon','mthSunset','mthDaylight'].forEach(id => $(id).textContent = 'LOCATION NEEDED');
