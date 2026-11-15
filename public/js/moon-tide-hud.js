@@ -84,6 +84,119 @@
         ['mthSunrise','mthSolarNoon','mthSunset','mthDaylight'].forEach(id => $(id).textContent = 'LOCATION NEEDED');
     }
 
+    // Low-precision lunar orbital elements (Meeus/Schlyter-style) and
+    // Greenwich mean sidereal time keep the Earth, Moon and location on one clock.
+    const rad = Math.PI / 180;
+    const norm360 = value => (value % 360 + 360) % 360;
+    const orbitalElements = date => {
+        const d = (date.getTime() - Date.UTC(2000,0,0,0,0,0)) / 86400000;
+        const N = norm360(125.1228 - 0.0529538083 * d);
+        const inclination = 5.1454;
+        const w = norm360(318.0634 + 0.1643573223 * d);
+        const a = 60.2666;
+        const e = 0.0549;
+        const M = norm360(115.3654 + 13.0649929509 * d);
+        const E = M + (180 / Math.PI) * e * Math.sin(M * rad) * (1 + e * Math.cos(M * rad));
+        const xv = a * (Math.cos(E * rad) - e);
+        const yv = a * Math.sqrt(1 - e * e) * Math.sin(E * rad);
+        const v = Math.atan2(yv, xv) / rad;
+        const r = Math.sqrt(xv*xv + yv*yv);
+        const xh = r * (Math.cos(N*rad)*Math.cos((v+w)*rad) - Math.sin(N*rad)*Math.sin((v+w)*rad)*Math.cos(inclination*rad));
+        const yh = r * (Math.sin(N*rad)*Math.cos((v+w)*rad) + Math.cos(N*rad)*Math.sin((v+w)*rad)*Math.cos(inclination*rad));
+        const zh = r * Math.sin((v+w)*rad) * Math.sin(inclination*rad);
+        const eclLon = norm360(Math.atan2(yh,xh) / rad);
+        const eclLat = Math.atan2(zh,Math.sqrt(xh*xh+yh*yh)) / rad;
+        const obliq = 23.4393 - 3.563e-7 * d;
+        const xe = xh;
+        const ye = yh * Math.cos(obliq*rad) - zh * Math.sin(obliq*rad);
+        const ze = yh * Math.sin(obliq*rad) + zh * Math.cos(obliq*rad);
+        const ra = norm360(Math.atan2(ye,xe) / rad);
+        const dec = Math.atan2(ze,Math.sqrt(xe*xe+ye*ye)) / rad;
+        return {ra,dec,distanceKm:r*6378.14,eclipticLongitude:eclLon,eclipticLatitude:eclLat};
+    };
+    const solarCoordinates = date => {
+        const d = (date.getTime() - Date.UTC(2000,0,0,0,0,0)) / 86400000;
+        const w = 282.9404 + 4.70935e-5*d;
+        const M = norm360(356.0470 + 0.9856002585*d);
+        const L = norm360(w + M);
+        const obliq = 23.4393 - 3.563e-7*d;
+        const x = Math.cos(L*rad);
+        const y = Math.cos(obliq*rad)*Math.sin(L*rad);
+        const z = Math.sin(obliq*rad)*Math.sin(L*rad);
+        return {ra:norm360(Math.atan2(y,x)/rad),dec:Math.atan2(z,Math.sqrt(x*x+y*y))/rad,longitude:L};
+    };
+    const gmstDegrees = date => {
+        const jd = date.getTime()/86400000 + 2440587.5;
+        const T = (jd - 2451545.0)/36525;
+        return norm360(280.46061837 + 360.98564736629*(jd-2451545) + 0.000387933*T*T - T*T*T/38710000);
+    };
+    const orbitMoon = $('mthOrbitMoon');
+    const globe = root.querySelector('.mth-real-earth');
+    const locationMarker = $('mthLocationMarker');
+    const timeScrubber = $('mthTimeScrubber');
+    const trackerDisplay = root.querySelector('.mth-tracker-display');
+    const trackerSize = () => trackerDisplay ? Math.min(trackerDisplay.clientWidth,520) : 340;
+    function updateEarthMoonTracker(date) {
+        if (!globe || !orbitMoon || !date) return;
+        const moonPosition = orbitalElements(date);
+        const sunPosition = solarCoordinates(date);
+        const gmst = gmstDegrees(date);
+        const moonHourAngle = (moonPosition.ra - gmst) * rad;
+        const sunHourAngle = (sunPosition.ra - gmst) * rad;
+        const moonX = Math.sin(moonHourAngle) * Math.cos(moonPosition.dec*rad);
+        const moonY = -Math.sin(moonPosition.dec*rad);
+        const moonZ = Math.cos(moonHourAngle) * Math.cos(moonPosition.dec*rad);
+        const sunX = Math.sin(sunHourAngle) * Math.cos(sunPosition.dec*rad);
+        const sunY = -Math.sin(sunPosition.dec*rad);
+        const orbitRadius = 124;
+        orbitMoon.style.left = (110 + moonX * orbitRadius - 15) + 'px';
+        orbitMoon.style.top = (110 + moonY * orbitRadius - 15) + 'px';
+        orbitMoon.style.transform = 'none';
+        orbitMoon.style.opacity = moonZ < -0.1 ? '.62' : '1';
+        const phaseAngle = Math.acos(Math.max(-1,Math.min(1,
+            Math.sin(moonPosition.dec*rad)*Math.sin(sunPosition.dec*rad) +
+            Math.cos(moonPosition.dec*rad)*Math.cos(sunPosition.dec*rad)*Math.cos((moonPosition.ra-sunPosition.ra)*rad)
+        )));
+        const lit = (1 + Math.cos(Math.PI - phaseAngle))/2;
+        orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
+        const sunVector = root.querySelector('.mth-sun-vector');
+        if (sunVector) sunVector.style.setProperty('--mth-sun-angle',Math.atan2(sunY,sunX)+'rad');
+        const axis = root.querySelector('.mth-tidal-axis');
+        if (axis) axis.style.transform = 'translate(-50%,-50%) rotate(' + (Math.atan2(moonY,moonX)*180/Math.PI) + 'deg)';
+        if (locationMarker && validLocation) {
+            const delta = (lon-gmst)*rad;
+            const markerX = Math.cos(lat*rad)*Math.sin(delta);
+            const markerY = -Math.sin(lat*rad);
+            const markerZ = Math.cos(lat*rad)*Math.cos(delta);
+            locationMarker.style.left = (50 + markerX*43) + '%';
+            locationMarker.style.top = (50 + markerY*43) + '%';
+            locationMarker.style.opacity = markerZ > 0 ? '1' : '.22';
+            locationMarker.style.zIndex = markerZ > 0 ? '5' : '0';
+            locationMarker.title = (root.dataset.locationName || 'Selected location') + (markerZ > 0 ? ' · visible hemisphere' : ' · far side of Earth');
+            $('mthOrbitLocation').textContent = markerZ > 0 ? 'MOON-FACING VIEW' : 'FAR SIDE';
+        }
+        $('mthOrbitDistance').textContent = Math.round(moonPosition.distanceKm).toLocaleString() + ' KM';
+        $('mthOrbitPosition').textContent = norm360(moonPosition.eclipticLongitude).toFixed(1) + '° ECL.';
+        const hourOffset = (date.getTime()-now.getTime())/3600000;
+        $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
+        $('mthOrbitState').textContent = 'CALCULATED POSITION';
+        globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
+        globe.style.setProperty('--mth-sun-side',sunX>=0?'right':'left');
+        globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
+    }
+    if (timeScrubber) {
+        timeScrubber.addEventListener('input',() => {
+            const previewDate = new Date(now.getTime() + Number(timeScrubber.value)*3600000);
+            updateEarthMoonTracker(previewDate);
+        });
+    }
+    updateEarthMoonTracker(now);
+    const liveTrackerTimer = window.setInterval(() => {
+        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
+        updateEarthMoonTracker(new Date());
+    },60000);
+    root.addEventListener('DOMNodeRemoved',() => window.clearInterval(liveTrackerTimer),{once:true});
+
     function tideUrl(mode, start, end) {
         const params = new URLSearchParams({
             mode, latitude: String(lat), longitude: String(lon),
@@ -291,8 +404,6 @@
         setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.'));
     });
 
-    const moon = root.querySelector('.mth-orbit-moon');
-    if (moon) moon.style.animationDelay = (-phase * 18).toFixed(2) + 's';
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
 })();
