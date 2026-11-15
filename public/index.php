@@ -1358,8 +1358,10 @@ if ($current && !empty($current['observed_at'])) {
         </div>
         <div class="mth-section mth-tides">
             <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
-            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong>TIDE STATION NOT CONNECTED</strong><p>Accurate high- and low-tide times require a verified coastal station and harmonic prediction feed. No tide height or countdown is being estimated from the Moon phase.</p></div></div>
-            <div class="mth-tide-baseline"><span>LOCAL COASTAL PREDICTION</span><strong>AWAITING VERIFIED STATION DATA</strong></div>
+            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong id="mthTideStatus">SEARCHING FOR COASTAL STATION</strong><p id="mthTideMessage">Checking for a nearby station with harmonic tide predictions. No tide height will be inferred from the Moon phase.</p></div></div>
+            <div class="mth-tide-events"><div><small>NEXT HIGH WATER</small><strong id="mthNextHigh">—</strong><span id="mthNextHighTime">—</span></div><div><small>NEXT LOW WATER</small><strong id="mthNextLow">—</strong><span id="mthNextLowTime">—</span></div></div>
+            <div class="mth-tide-baseline"><span id="mthTideStation">LOCAL COASTAL PREDICTION</span><strong id="mthTideDistance">CHECKING STATION COVERAGE</strong></div>
+            <p class="mth-note" id="mthTideAttribution">Tide predictions are harmonic estimates and do not account for weather-driven surge. Not for navigation.</p>
         </div>
         <div class="mth-section mth-solar">
             <div class="mth-section-head"><span class="mth-index">03</span><div><strong>SOLAR WINDOW</strong><small>LOCAL HORIZON / DAYLIGHT CYCLE</small></div><span class="mth-section-state">LOCATION BASED</span></div>
