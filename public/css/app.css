@@ -7494,3 +7494,16 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-time-labels{color:#789b94;font:7px ui-monospace,monospace;letter-spacing:.08em}
 @media(max-width:480px){.mth-tracker-display{min-height:280px}.mth-tracker-system{transform:translate(-50%,-50%) scale(.88)}.mth-real-earth{width:132px;height:132px;background-size:auto 132px}.mth-tracker-readouts{gap:5px}.mth-tracker-readouts>div{padding:8px 6px}.mth-tracker-readouts small{font-size:7px}.mth-tracker-readouts strong{font-size:10px}.mth-tracker-display .mth-sun-vector{left:3%;font-size:7px}.mth-tracker-display .mth-sun-vector i{width:48px}}
 @media(prefers-reduced-motion:reduce){.mth-calculated-orbit .mth-orbit-moon,.mth-real-earth .mth-location-marker{transition:none}}
+
+
+/* Match the Moon & Tide outer card to the dashboard's shared card surface. */
+.moon-tide-hud-card{
+  background:var(--card)!important;
+  border-color:var(--border);
+  color:var(--text);
+  box-shadow:0 8px 30px rgba(17,24,39,.06);
+}
+:root[data-theme="light"] .moon-tide-hud-card{
+  background:var(--card)!important;
+  color:var(--text);
+}
