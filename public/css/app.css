@@ -7513,9 +7513,12 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-hud-card{
   --mth-bg:#090f13;--mth-panel:#0d171b;--mth-line:rgba(101,213,198,.22);
   --mth-cyan:#72e5e0;--mth-green:#9fca8d;--mth-amber:#e9b66a;--mth-dim:#718d8b;
-  background:radial-gradient(ellipse at 50% 0%,rgba(28,76,72,.25),transparent 52%),var(--mth-bg)!important;
-  border:1px solid rgba(113,194,178,.3)!important;color:#d7e7e1!important;
-  box-shadow:0 14px 38px rgba(0,0,0,.2)!important;padding:18px!important;overflow:hidden
+  /* Match the Moon & Tide card's shared dashboard surface exactly. */
+  background:var(--card)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+  box-shadow:0 8px 30px rgba(17,24,39,.06)!important;
+  padding:18px!important;overflow:hidden
 }
 .mth-hud-card .mth-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--mth-line)}
 .mth-hud-card .mth-kicker,.mth-hud-card .mth-subtitle{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em}
