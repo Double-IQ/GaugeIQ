@@ -7470,7 +7470,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-tracker-display{min-height:310px;background:radial-gradient(ellipse at 50% 48%,rgba(20,75,91,.28),transparent 65%),#040d16}
 .mth-tracker-system{width:260px;height:260px;transform:translate(-50%,-50%);left:50%;top:48%}
 .mth-tracker-system .mth-orbit-ring{inset:8px;border-color:rgba(114,229,224,.32);transform:scaleX(1.2) rotate(-12deg)}
-.mth-real-earth{width:150px;height:150px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#0b4566;background-image:url('https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x5400x2700.jpg');background-size:auto 150px;background-position:center center;background-repeat:repeat-x;animation:mth-earth-drift 90s linear infinite;background-blend-mode:normal;border:1px solid rgba(130,222,239,.85);box-shadow:inset -22px -8px 26px rgba(0,0,0,.7),inset 8px 4px 16px rgba(146,230,240,.2),0 0 24px rgba(57,187,219,.3)}
+.mth-real-earth{width:150px;height:150px;left:50%;top:50%;transform:translate(-50%,-50%);background-color:#0b4566;background-image:url('https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x5400x2700.jpg');background-size:auto 150px;background-position:center center;background-repeat:repeat-x;animation:none;background-blend-mode:normal;border:1px solid rgba(130,222,239,.85);box-shadow:inset -22px -8px 26px rgba(0,0,0,.7),inset 8px 4px 16px rgba(146,230,240,.2),0 0 24px rgba(57,187,219,.3)}
 .mth-real-earth .mth-earth-atmosphere{position:absolute;inset:-5px;border:2px solid rgba(93,202,236,.28);border-radius:50%;box-shadow:0 0 14px rgba(83,198,237,.35);pointer-events:none}
 .mth-real-earth .mth-earth-night{position:absolute;inset:0;border-radius:50%;background:linear-gradient(90deg,transparent 25%,rgba(0,5,17,.72) 100%);pointer-events:none}
 .mth-real-earth .mth-location-marker{left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%);transition:left .25s ease,top .25s ease,opacity .25s ease}
@@ -7492,6 +7492,5 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-time-heading span{color:var(--mth-amber);font:800 9px ui-monospace,monospace}
 .mth-time-control input{display:block;width:100%;margin:12px 0 7px;accent-color:#e9b66a}
 .mth-time-labels{color:#789b94;font:7px ui-monospace,monospace;letter-spacing:.08em}
-@keyframes mth-earth-drift{from{background-position:0 center}to{background-position:150px center}}
 @media(max-width:480px){.mth-tracker-display{min-height:280px}.mth-tracker-system{transform:translate(-50%,-50%) scale(.88)}.mth-real-earth{width:132px;height:132px;background-size:auto 132px}.mth-tracker-readouts{gap:5px}.mth-tracker-readouts>div{padding:8px 6px}.mth-tracker-readouts small{font-size:7px}.mth-tracker-readouts strong{font-size:10px}.mth-tracker-display .mth-sun-vector{left:3%;font-size:7px}.mth-tracker-display .mth-sun-vector i{width:48px}}
-@media(prefers-reduced-motion:reduce){.mth-real-earth{animation:none!important}.mth-calculated-orbit .mth-orbit-moon,.mth-real-earth .mth-location-marker{transition:none}}
+@media(prefers-reduced-motion:reduce){.mth-calculated-orbit .mth-orbit-moon,.mth-real-earth .mth-location-marker{transition:none}}
