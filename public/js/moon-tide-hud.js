@@ -27,7 +27,9 @@
     const disc = $('mthMoonDisc');
     if (disc) {
         disc.style.setProperty('--mth-phase', String(phase));
-        disc.style.setProperty('--mth-illumination', String(illumination));\n        disc.style.setProperty('--mth-shadow-width', (50 * (1 - illumination)).toFixed(1) + '%');\n        disc.style.setProperty('--mth-shadow-x', (phase < 0.02 || phase > 0.98) ? '50%' : (phase < 0.5 ? '0%' : '100%'));
+        disc.style.setProperty('--mth-illumination', String(illumination));
+        disc.style.setProperty('--mth-shadow-width', (50 * (1 - illumination)).toFixed(1) + '%');
+        disc.style.setProperty('--mth-shadow-x', (phase < 0.02 || phase > 0.98) ? '50%' : (phase < 0.5 ? '0%' : '100%'));
         disc.dataset.phase = phase.toFixed(4);
     }
     function solarEvent(day, latitude, longitude, sunrise) {
@@ -150,7 +152,8 @@
         $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
         $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
     });
-\n    const moon = root.querySelector('.mth-orbit-moon');
+
+    const moon = root.querySelector('.mth-orbit-moon');
     if (moon) moon.style.animationDelay = (-phase * 18).toFixed(2) + 's';
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
