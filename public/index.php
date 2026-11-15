@@ -1351,7 +1351,7 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="mth-lunar-readouts">
                     <div><small>ILLUMINATION</small><strong id="mthIllumination">—</strong></div>
                     <div><small>LUNAR AGE</small><strong id="mthLunarAge">—</strong></div>
-                    <div><small>MOON DISTANCE</small><strong id="mthMoonDistance">—</strong></div>
+                    <div><small>MOON DISTANCE · EST.</small><strong id="mthMoonDistance">—</strong></div>
                     <div><small>NEXT FULL MOON</small><strong id="mthNextFull">—</strong></div>
                 </div>
             </div>
