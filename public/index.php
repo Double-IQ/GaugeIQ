@@ -1335,6 +1335,53 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
+    <section class="moon-tide-hud-card card" id="moonTideHud" aria-labelledby="moonTideTitle"
+        data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
+        data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
+        data-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES, 'UTF-8') ?>"
+        data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>">
+        <div class="mth-header">
+            <div><p class="mth-kicker">GAUGEIQ // ASTRONOMICAL &amp; OCEANIC TELEMETRY</p><h2 id="moonTideTitle">MOON &amp; TIDE</h2><p class="mth-subtitle">LUNAR TRACKING SYSTEM <span>·</span> <span data-mth-location><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></span></p></div>
+            <span class="mth-live"><i></i> SYSTEM ONLINE</span>
+        </div>
+        <div class="mth-section mth-lunar">
+            <div class="mth-section-head"><span class="mth-index">01</span><div><strong>LUNAR TRACKING</strong><small>PHASE / ILLUMINATION / CYCLE</small></div><span class="mth-section-state">LIVE CALC</span></div>
+            <div class="mth-lunar-grid">
+                <div class="mth-moon-instrument"><div class="mth-moon-reticle"><span class="mth-reticle-tick"></span><div class="mth-moon-disc" id="mthMoonDisc"></div><span class="mth-reticle-cross"></span></div><div class="mth-moon-caption" id="mthPhaseName">CALCULATING PHASE</div></div>
+                <div class="mth-lunar-readouts">
+                    <div><small>ILLUMINATION</small><strong id="mthIllumination">—</strong></div>
+                    <div><small>LUNAR AGE</small><strong id="mthLunarAge">—</strong></div>
+                    <div><small>MOON DISTANCE</small><strong id="mthMoonDistance">—</strong></div>
+                    <div><small>NEXT FULL MOON</small><strong id="mthNextFull">—</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="mth-section mth-tides">
+            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
+            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong>TIDE STATION NOT CONNECTED</strong><p>Accurate high- and low-tide times require a verified coastal station and harmonic prediction feed. No tide height or countdown is being estimated from the Moon phase.</p></div></div>
+            <div class="mth-tide-baseline"><span>LOCAL COASTAL PREDICTION</span><strong>AWAITING VERIFIED STATION DATA</strong></div>
+        </div>
+        <div class="mth-section mth-solar">
+            <div class="mth-section-head"><span class="mth-index">03</span><div><strong>SOLAR WINDOW</strong><small>LOCAL HORIZON / DAYLIGHT CYCLE</small></div><span class="mth-section-state">LOCATION BASED</span></div>
+            <div class="mth-solar-readouts"><div><small>SUNRISE</small><strong id="mthSunrise">—</strong></div><div><small>SOLAR NOON</small><strong id="mthSolarNoon">—</strong></div><div><small>SUNSET</small><strong id="mthSunset">—</strong></div><div><small>DAYLIGHT</small><strong id="mthDaylight">—</strong></div></div>
+        </div>
+        <div class="mth-section mth-orbit">
+            <div class="mth-section-head"><span class="mth-index">04</span><div><strong>EARTH–MOON POSITIONING</strong><small>ORBITAL GEOMETRY / SUN VECTOR</small></div><span class="mth-section-state">SCHEMATIC</span></div>
+            <div class="mth-orbit-display">
+                <div class="mth-sun-vector"><span class="mth-sun-core"></span><small>SUNLIGHT</small><i></i></div>
+                <div class="mth-earth-system"><div class="mth-orbit-ring"></div><div class="mth-earth-globe" role="img" aria-label="Illustrative rotating Earth sphere with opposing tidal bulges"><div class="mth-earth-grid"></div><div class="mth-earth-land"></div><div class="mth-earth-terminator"></div><span class="mth-tidal-bulge mth-bulge-near"></span><span class="mth-tidal-bulge mth-bulge-far"></span><span class="mth-location-marker" title="Selected GaugeIQ location"></span></div><div class="mth-moon-orbit"><div class="mth-orbit-moon"><span></span></div></div><span class="mth-earth-label">EARTH</span><span class="mth-moon-label">MOON</span></div>
+                <div class="mth-orbit-legend"><span><i class="mth-legend-sun"></i> SUN VECTOR</span><span><i class="mth-legend-earth"></i> EARTH ROTATION</span><span><i class="mth-legend-tide"></i> TIDAL AXIS</span></div>
+            </div>
+            <p class="mth-note">Conceptual orbital view. The two tidal bulges illustrate the gravitational tide-generating pattern; their size and shape are exaggerated for clarity.</p>
+        </div>
+        <div class="mth-section mth-mechanics">
+            <div class="mth-section-head"><span class="mth-index">05</span><div><strong>GLOBAL TIDAL MECHANICS</strong><small>SPRING / NEAP TIDE CYCLE</small></div><span class="mth-section-state">REFERENCE MODEL</span></div>
+            <div class="mth-mechanics-grid"><div class="mth-mechanic"><span class="mth-alignment mth-alignment-spring">☼ — ● — ☾</span><strong>SPRING TIDES</strong><p>New and full Moon: Sun, Earth and Moon are aligned, producing a larger combined tidal range.</p></div><div class="mth-mechanic"><span class="mth-alignment mth-alignment-neap">☼ — ⊕ ⟂ ☾</span><strong>NEAP TIDES</strong><p>First and third quarter: solar and lunar tide-generating forces partly offset, producing a smaller range.</p></div></div>
+            <p class="mth-note">Local tides also depend on coastline shape, water depth, bays and ocean-basin resonance. This global model explains the mechanism; it does not replace station-based tide predictions.</p>
+        </div>
+        <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
+    </section>
+
     <section class="card weather-change-card wind-hud-card" aria-labelledby="weatherChangeTitle">
         <div class="section-heading weather-change-heading">
             <div>
@@ -1468,5 +1515,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261113-rain-radar-dots"></script>
+<script src="js/moon-tide-hud.js?v=20261115-mth01"></script>
 </body>
 </html>
