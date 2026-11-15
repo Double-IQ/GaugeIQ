@@ -67,10 +67,11 @@ curl_setopt_array($curl, [
 $body = curl_exec($curl);
 $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 $error = curl_error($curl);
+$errorCode = curl_errno($curl);
 curl_close($curl);
 
 if ($body === false) {
-    error_log('GaugeIQ tide API upstream ' . $mode . ' request failed (cURL ' . curl_errno($curl) . '): ' . $error);
+    error_log('GaugeIQ tide API upstream ' . $mode . ' request failed (cURL ' . $errorCode . '): ' . $error);
     tideApiRespond(502, ['message' => 'GaugeIQ could not reach the tide prediction provider.']);
 }
 
