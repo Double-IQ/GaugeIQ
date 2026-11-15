@@ -105,7 +105,7 @@
                 latitude: String(lat), longitude: String(lon),
                 start: start.toISOString(), end: end.toISOString(), units: 'meters'
             });
-            const response = await fetch('https://api.openwaters.io/tides/extremes?' + params.toString(), {
+            const response = await fetch('api/tides.php?' + params.toString(), {
                 headers: { Accept: 'application/json' }, cache: 'no-store'
             });
             if (!response.ok) throw new Error('Tide service returned HTTP ' + response.status);
