@@ -149,7 +149,7 @@
         $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
     });
 \n    const moon = root.querySelector('.mth-orbit-moon');
-    if (moon) moon.style.setProperty('--mth-orbit-angle', (phase * 360).toFixed(1) + 'deg');
+    if (moon) moon.style.animationDelay = (-phase * 18).toFixed(2) + 's';
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
 })();
