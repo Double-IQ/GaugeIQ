@@ -95,118 +95,118 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#07131d">
 <link rel="stylesheet" href="css/app.css?v=20261101-admin-action-buttons-v2">
 <link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
+<link rel="stylesheet" href="css/admin-console.css?v=20261116-console-v1">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
-<title>GaugeIQ Admin</title>
+<title>GaugeIQ Administration</title>
 </head>
-<body>
-<main class="shell admin-shell">
-<header class="admin-header">
-    <div>
-        <p class="eyebrow">GAUGЕIQ ADMIN</p>
+<body class="gaugeiq-admin-page">
+<main class="shell admin-shell admin-console">
+<header class="admin-console-header">
+    <a class="admin-brand" href="./" aria-label="GaugeIQ dashboard">
+        <img src="branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ">
+    </a>
+    <div class="admin-console-heading">
+        <p class="admin-kicker">SYSTEM CONTROL CENTRE</p>
         <h1>Administration</h1>
-        <p class="muted">Signed in as <?= h(AdminAuth::username()) ?></p>
+        <p class="admin-user">Signed in as <?= h(AdminAuth::username()) ?></p>
     </div>
-    <nav class="admin-header-actions" aria-label="Admin navigation">
-        <a class="secondary button-link" href="logout.php">Sign out</a>
-        <a class="secondary button-link" href="./">Back to GaugeIQ</a>
+    <nav class="admin-console-nav" aria-label="Admin navigation">
+        <a class="admin-console-link" href="./">Back to GaugeIQ</a>
+        <a class="admin-console-link admin-signout" href="logout.php">Sign out</a>
     </nav>
 </header>
 
 <?php if ($updated !== ''): ?>
-<section class="card success"><strong>GaugeIQ was updated to <?= h($updated) ?>.</strong><p>Return to the dashboard to verify the new release.</p></section>
+<section class="admin-notice admin-notice-success" role="status"><strong>GaugeIQ was updated to <?= h($updated) ?>.</strong><p>Return to the dashboard to verify the new release.</p></section>
 <?php endif; ?>
 <?php if ($updateError): ?>
-<section class="card error"><strong>GaugeIQ could not complete the update.</strong><p>For details, open <code>storage/update/manual-update.log</code> in cPanel File Manager inside the GaugeIQ project folder.</p></section>
+<section class="admin-notice admin-notice-error" role="alert"><strong>GaugeIQ could not complete the update.</strong><p>For details, open <code>storage/update/manual-update.log</code> in cPanel File Manager inside the GaugeIQ project folder.</p></section>
 <?php endif; ?>
-<?php if ($notice): ?><div class="notice"><?= h($notice) ?></div><?php endif; ?>
-<?php if ($errors): ?><div class="error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
+<?php if ($notice): ?><div class="admin-notice"><?= h($notice) ?></div><?php endif; ?>
+<?php if ($errors): ?><div class="admin-notice admin-notice-error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
 
-<section class="card monitoring-card" aria-labelledby="monitoringTitle">
-    <div class="section-heading">
-        <div><h2 id="monitoringTitle">Monitoring status</h2><p class="muted">GaugeIQ's scheduled hourly background monitor.</p></div>
-        <span class="status-pill <?= $monitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $monitorHealthy ? '● Monitoring active' : '● Check required' ?></span>
+<section class="admin-panel admin-monitor-panel" aria-labelledby="monitoringTitle">
+    <div class="admin-panel-heading">
+        <div><p class="admin-kicker">LIVE SYSTEM OVERVIEW</p><h2 id="monitoringTitle">System monitor</h2><p class="admin-muted">GaugeIQ's scheduled hourly background monitor.</p></div>
+        <span class="admin-status-pill <?= $monitorHealthy ? 'is-good' : 'is-warn' ?>"><span aria-hidden="true"></span><?= $monitorHealthy ? 'Monitoring active' : 'Check required' ?></span>
     </div>
-    <div class="status-grid">
-        <div><span>Last successful check</span><strong><?= $lastMonitorAt ? htmlspecialchars(date('d M, H:i', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'Not yet' ?></strong></div>
-        <div><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('d M, H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting for cron' ?></strong></div>
-        <div><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong></div>
+    <div class="admin-metrics-grid">
+        <div class="admin-metric"><span>Last successful check</span><strong><?= $lastMonitorAt ? htmlspecialchars(date('H:i', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'Not yet' ?></strong><small><?= $lastMonitorAt ? htmlspecialchars(date('d M Y', (int)strtotime($lastMonitorAt)), ENT_QUOTES) : 'No successful check recorded' ?></small></div>
+        <div class="admin-metric"><span>Next expected check</span><strong><?= $nextMonitorAt ? htmlspecialchars(date('H:i', $nextMonitorAt), ENT_QUOTES) : 'Waiting' ?></strong><small><?= $nextMonitorAt ? htmlspecialchars(date('d M Y', $nextMonitorAt), ENT_QUOTES) : 'Awaiting scheduled monitor' ?></small></div>
+        <div class="admin-metric"><span>Active alert rules</span><strong><?= $enabledRuleCount ?></strong><small>Location 1</small></div>
     </div>
-    <?php if ($monitorError): ?><p class="monitor-warning">Location 1: <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
+    <?php if ($monitorError): ?><p class="admin-monitor-warning">Location 1 · <?= htmlspecialchars($monitorError, ENT_QUOTES) ?></p><?php endif; ?>
     <?php if ($secondLocationEnabled):
         $secondMonitorAge = $secondMonitorSuccess ? time() - (int)strtotime($secondMonitorSuccess) : null;
         $secondMonitorHealthy = $secondMonitorAge !== null && $secondMonitorAge <= ($monitorCronMinutes * 60 * 1.5);
         $secondNextMonitorAt = $secondMonitorSuccess ? strtotime($secondMonitorSuccess) + ($monitorCronMinutes * 60) : null;
     ?>
-    <div class="section-heading" style="margin-top:18px"><div><h3><?= h($secondLocationName) ?></h3><p class="muted">Independent scheduled monitoring status.</p></div><span class="status-pill <?= $secondMonitorHealthy ? 'status-good' : 'status-warn' ?>"><?= $secondMonitorHealthy ? '● Monitoring active' : '● Check required' ?></span></div>
-    <div class="status-grid">
-        <div><span>Last successful check</span><strong><?= $secondMonitorSuccess ? (new DateTimeImmutable('@' . (int)strtotime($secondMonitorSuccess)))->setTimezone($secondTimezone)->format('d M, H:i') : 'Not yet' ?></strong></div>
-        <div><span>Next expected check</span><strong><?= $secondNextMonitorAt ? (new DateTimeImmutable('@' . $secondNextMonitorAt))->setTimezone($secondTimezone)->format('d M, H:i') : 'Waiting for cron' ?></strong></div>
-        <div><span>Active alert rules</span><strong><?= $secondEnabledRuleCount ?></strong></div>
+    <div class="admin-location-monitor">
+        <div class="admin-location-monitor-heading"><div><h3><?= h($secondLocationName) ?></h3><p class="admin-muted">Independent scheduled monitoring</p></div><span class="admin-status-pill <?= $secondMonitorHealthy ? 'is-good' : 'is-warn' ?>"><span aria-hidden="true"></span><?= $secondMonitorHealthy ? 'Monitoring active' : 'Check required' ?></span></div>
+        <div class="admin-metrics-grid">
+            <div class="admin-metric"><span>Last successful check</span><strong><?= $secondMonitorSuccess ? (new DateTimeImmutable('@' . (int)strtotime($secondMonitorSuccess)))->setTimezone($secondTimezone)->format('H:i') : 'Not yet' ?></strong><small><?= $secondMonitorSuccess ? (new DateTimeImmutable('@' . (int)strtotime($secondMonitorSuccess)))->setTimezone($secondTimezone)->format('d M Y') : 'No successful check recorded' ?></small></div>
+            <div class="admin-metric"><span>Next expected check</span><strong><?= $secondNextMonitorAt ? (new DateTimeImmutable('@' . $secondNextMonitorAt))->setTimezone($secondTimezone)->format('H:i') : 'Waiting' ?></strong><small><?= $secondNextMonitorAt ? (new DateTimeImmutable('@' . $secondNextMonitorAt))->setTimezone($secondTimezone)->format('d M Y') : 'Awaiting scheduled monitor' ?></small></div>
+            <div class="admin-metric"><span>Active alert rules</span><strong><?= $secondEnabledRuleCount ?></strong><small><?= h($secondLocationName) ?></small></div>
+        </div>
+        <?php if ($secondMonitorError): ?><p class="admin-monitor-warning"><?= htmlspecialchars($secondMonitorError, ENT_QUOTES) ?></p><?php endif; ?>
     </div>
-    <?php if ($secondMonitorError): ?><p class="monitor-warning"><?= htmlspecialchars($secondMonitorError, ENT_QUOTES) ?></p><?php endif; ?>
     <?php endif; ?>
 </section>
 
-<section class="admin-hero card weather-alerts-link">
-    <div>
-        <p class="eyebrow">WEATHER ALERTS</p>
-        <h2>Alerts</h2>
-        <p class="muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
-        <a class="secondary button-link" href="alerts.php?location=1">Manage Location 1 Alerts</a>
-        <?php if ($secondLocationEnabled): ?><a class="secondary button-link" href="alerts.php?location=2">Manage <?= h($secondLocationName) ?> Alerts</a><?php endif; ?>
-    </div>
-    
-</section>
+<div class="admin-section-label"><span>CONTROL MODULES</span><i></i></div>
+<div class="admin-module-grid">
+    <section class="admin-module admin-module-alerts weather-alerts-link">
+        <div class="admin-module-icon" aria-hidden="true">◉</div><p class="admin-kicker">WEATHER ALERTS</p><h2>Alerts</h2>
+        <p class="admin-muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
+        <div class="admin-module-actions">
+            <a class="admin-console-button button-link" href="alerts.php?location=1">Manage Location 1 Alerts <span aria-hidden="true">→</span></a>
+            <?php if ($secondLocationEnabled): ?><a class="admin-console-button button-link" href="alerts.php?location=2">Manage <?= h($secondLocationName) ?> Alerts <span aria-hidden="true">→</span></a><?php endif; ?>
+        </div>
+    </section>
 
-<section class="card location-history-link-card">
-    <div class="section-heading">
-        <div><h2>Location &amp; historical data</h2><p class="muted">Manage GaugeIQ's configured location and check historical dataset status.</p></div>
-        <a class="secondary button-link" href="location-history.php">Manage Data</a>
-    </div>
-</section>
+    <section class="admin-module location-history-link-card">
+        <div class="admin-module-icon" aria-hidden="true">⌖</div><p class="admin-kicker">CONFIGURATION</p><h2>Location &amp; history</h2>
+        <p class="admin-muted">Manage GaugeIQ's configured locations and inspect historical dataset status.</p>
+        <div class="admin-module-actions"><a class="admin-console-button button-link" href="location-history.php">Manage data <span aria-hidden="true">→</span></a></div>
+    </section>
 
-<section class="card appearance-card" aria-labelledby="appearanceTitle">
-    <div class="section-heading">
-        <div><h2 id="appearanceTitle">Appearance</h2><p class="muted">Choose how GaugeIQ looks on this device.</p></div>
-        <select id="themeSelect" class="theme-select" aria-label="Appearance">
-            <option value="system">Follow device</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
+    <section class="admin-module formula-console-link-card">
+        <div class="admin-module-icon" aria-hidden="true">◈</div><p class="admin-kicker">FORECAST ENGINE</p><h2>Formula Console</h2>
+        <p class="admin-muted">Review calculations and tune parameters used by the Weather Volatility Index and Conditions Trend.</p>
+        <div class="admin-module-actions"><a class="admin-console-button button-link" href="formula-console.php">Open Formula Console <span aria-hidden="true">→</span></a></div>
+    </section>
+
+    <section class="admin-module appearance-card">
+        <div class="admin-module-icon" aria-hidden="true">⚙</div><p class="admin-kicker">DISPLAY PREFERENCES</p><h2>Appearance</h2>
+        <p class="admin-muted">Choose how GaugeIQ looks on this device.</p>
+        <label class="admin-theme-label" for="themeSelect">Interface theme</label>
+        <select id="themeSelect" class="theme-select admin-theme-select" aria-label="Appearance">
+            <option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option>
         </select>
-    </div>
-</section>
+    </section>
+</div>
 
-
-<section class="card location-history-link-card formula-console-link-card">
-    <div class="section-heading">
-        <div><h2>Formula Console</h2><p class="muted">Review GaugeIQ's calculations and tune the parameters used by the Weather Volatility Index and Conditions Trend.</p></div>
-        <a class="secondary button-link" href="formula-console.php">Open Formula Console</a>
-    </div>
-</section>
-
-<section class="card admin-updates">
-    <div class="section-heading">
-        <div><h2>Updates</h2><p id="adminUpdateStatus" class="muted">Checking for the latest release…</p></div>
-    </div>
-    <div id="adminUpdateDetails" hidden>
+<section class="admin-panel admin-updates-panel" aria-labelledby="updatesTitle">
+    <div class="admin-updates-icon" aria-hidden="true">↻</div>
+    <div class="admin-updates-copy"><p class="admin-kicker">MAINTENANCE</p><h2 id="updatesTitle">Software updates</h2><p id="adminUpdateStatus" class="admin-muted">Checking for the latest release…</p></div>
+    <div id="adminUpdateDetails" class="admin-update-details" hidden>
         <p><strong id="adminLatestVersion"></strong></p>
         <form method="post" action="admin-update.php">
             <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
             <input type="hidden" name="version" id="adminUpdateVersion">
-            <button type="submit">Install update</button>
+            <button class="admin-console-button button-link" type="submit">Install update <span aria-hidden="true">→</span></button>
         </form>
     </div>
-    <a class="secondary button-link admin-main-back" href="./">Back to GaugeIQ</a>
 </section>
 
+<footer class="admin-console-footer"><span>GAUGЕIQ · ADMINISTRATION</span><a href="./">Return to dashboard</a></footer>
 
 <script src="js/admin-interactions.js?v=20261116-hud-feedback" defer></script>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
 <script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
-
 </body>
 </html>
