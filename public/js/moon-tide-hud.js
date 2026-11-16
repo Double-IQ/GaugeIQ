@@ -383,7 +383,7 @@
             '<text class="mth-graph-now-label" x="' + Math.max(65,Math.min(681,nowX)).toFixed(2) + '" y="25" text-anchor="middle">NOW</text>' +
             extremeMarks;
         graph.hidden = false;
-        tideLog('GRAPH SVG INSERTED', 'hidden=' + graph.hidden + '; children=' + graph.childElementCount + '; viewBox=' + graph.getAttribute('viewBox));
+        tideLog('GRAPH SVG INSERTED', 'hidden=' + graph.hidden + '; children=' + graph.childElementCount + '; viewBox=' + graph.getAttribute('viewBox'));
         $('mthGraphMessage').hidden = true;
         $('mthGraphCurrent').textContent = nearest.level.toFixed(2) + ' M';
         tideLog('CURRENT HEIGHT SET', $('mthGraphCurrent').textContent);
