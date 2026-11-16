@@ -1409,12 +1409,7 @@ if ($current && !empty($current['observed_at'])) {
             <div class="mth-graph-source"><span id="mthGraphStation">NO VERIFIED STATION DATA</span><strong id="mthGraphDistance">PREDICTION OFFLINE</strong></div>
             <p class="mth-note">Harmonic station prediction in metres relative to the station’s chart datum. Actual water levels can differ due to wind, atmospheric pressure, waves and storm surge. Not for navigation.</p>
         </div>
-            <details class="mth-tide-debug" open style="margin-top:16px;padding:12px;border:1px solid rgba(114,229,224,.28);border-radius:12px;background:rgba(5,16,25,.72);color:#d8e8ee">
-                <summary style="cursor:pointer;font-weight:700;font-size:12px;letter-spacing:.08em">DIAGNOSTICS · TIDE PROFILE</summary>
-                <p style="font-size:11px;opacity:.8;margin:8px 0">Temporary diagnostic trace. Reopen this panel after the tide section loads; entries include request status, rendering stages and JavaScript errors.</p>
-                <button type="button" id="mthTideDebugClear" class="secondary" style="margin-bottom:8px">Clear log</button>
-                <div id="mthTideDebugLog" role="log" aria-live="polite" style="max-height:260px;overflow:auto;overflow-wrap:anywhere;font:11px/1.55 ui-monospace,SFMono-Regular,monospace;background:rgba(0,0,0,.28);padding:9px;border-radius:8px">Waiting for tide diagnostics…</div>
-            </details>
+  </details>
         <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
     </section>
 
@@ -1572,6 +1567,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261116-compass-flow-restore"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
-<script src="js/moon-tide-hud.js?v=20261116-tide-loading-hidden-v1"></script>
+<script src="js/moon-tide-hud.js?v=20261116-remove-tide-diagnostics-v1"></script>
 </body>
 </html>
