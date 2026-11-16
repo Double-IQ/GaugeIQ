@@ -198,15 +198,17 @@
         updateEarthMoonTracker(new Date());
     },60000);
 
-    function tideUrl(mode, start, end) {
+    function tideUrl(mode, start, end, stationId = null) {
         const params = new URLSearchParams({
             mode, latitude: String(lat), longitude: String(lon),
             start: start.toISOString(), end: end.toISOString(), units: 'meters'
         });
+        if (stationId) params.set('station', stationId);
         return 'api/tides.php?' + params.toString();
     }
-    async function fetchTidePayload(mode, start, end) {
-        const cacheKey = 'gaugeiq-mth-tides-v2:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3);
+    async function fetchTidePayload(mode, start, end, stationId = null) {
+        // Scope cached data to the exact prediction window and station.
+        const cacheKey = 'gaugeiq-mth-tides-v3:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3) + ':' + start.toISOString() + ':' + end.toISOString() + ':' + (stationId || 'nearest');
         try {
             const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
             if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) return cached.payload;
@@ -218,7 +220,7 @@
             controller.abort();
         }, 30000);
         try {
-            const response = await fetch(tideUrl(mode, start, end), {
+            const response = await fetch(tideUrl(mode, start, end, stationId), {
                 headers: { Accept: 'application/json' },
                 cache: 'no-store',
                 signal: controller.signal
@@ -342,10 +344,18 @@
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
 
-        // Start both requests together, but update each instrument as soon as its
-        // own response arrives. Each request has an independent 30-second timeout.
+        // Resolve the nearest station once, then request its curve by canonical ID.
+        // This avoids a second nearest-station lookup and keeps both predictions aligned.
         const extremesRequest = fetchTidePayload('extremes',start,extremesEnd);
-        const timelineRequest = fetchTidePayload('timeline',start,end);
+        const timelineRequest = extremesRequest.then(extremesPayload => {
+            const stationId = extremesPayload?.station?.id;
+            if (!stationId || !/^[a-z0-9_-]+\/[a-z0-9._@-]+$/i.test(stationId)) {
+                throw new Error('The high/low response did not include a usable prediction-station ID for the tide curve.');
+            }
+            const graphMessage = $('mthGraphMessage');
+            if (graphMessage) graphMessage.textContent = 'Loading the 24-hour curve from ' + (extremesPayload.station.name || 'the verified station') + '…';
+            return fetchTidePayload('timeline',start,end,stationId);
+        });
 
         const extremesUi = extremesRequest.then(extremesPayload => {
             const station = extremesPayload.station || {};
