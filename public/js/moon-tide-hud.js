@@ -347,7 +347,7 @@
         // Resolve the nearest station once, then request its curve by canonical ID.
         // This avoids a second nearest-station lookup and keeps both predictions aligned.
         const extremesRequest = fetchTidePayload('extremes',start,extremesEnd);
-        const timelineRequest = extremesRequest.then(extremesPayload => {
+        const timelineRequest = extremesRequest.then(async extremesPayload => {
             const stationId = extremesPayload?.station?.id;
             if (!stationId || !/^[a-z0-9_-]+\/[a-z0-9._@-]+$/i.test(stationId)) {
                 throw new Error('The high/low response did not include a usable prediction-station ID for the tide curve.');
