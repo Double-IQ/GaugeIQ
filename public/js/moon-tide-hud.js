@@ -413,6 +413,13 @@
             '<text class="mth-graph-now-label" x="' + Math.max(65,Math.min(681,nowX)).toFixed(2) + '" y="25" text-anchor="middle">NOW</text>' +
             extremeMarks;
         graph.hidden = false;
+        // Some mobile Safari/iOS stylesheet states keep this SVG at display:none
+        // even after the hidden attribute is removed. Apply the visible layout
+        // directly to the rendered graph so the valid prediction is never blank.
+        graph.style.setProperty('display', 'block', 'important');
+        graph.style.setProperty('width', '100%');
+        graph.style.setProperty('height', 'auto');
+        graph.style.setProperty('min-height', '195px');
         tideLog('GRAPH SVG INSERTED', 'hidden=' + graph.hidden + '; children=' + graph.childElementCount + '; viewBox=' + graph.getAttribute('viewBox'));
         $('mthGraphMessage').hidden = true;
         $('mthGraphCurrent').textContent = nearest.level.toFixed(2) + ' M';
@@ -441,7 +448,7 @@
             const bounds = lineNode && lineNode.getBBox();
             if (bounds) pathBounds = [bounds.x,bounds.y,bounds.width,bounds.height].map(value => Number(value.toFixed(1))).join(',');
         } catch (error) { pathBounds = 'getBBox failed: ' + error.message; }
-        tideLog('RENDER GEOMETRY', 'graph=' + Math.round(graphRect.width) + 'x' + Math.round(graphRect.height) + '; wrap=' + Math.round(wrapRect.width) + 'x' + Math.round(wrapRect.height) + '; display=' + graphStyle.display + '; visibility=' + graphStyle.visibility + '; opacity=' + graphStyle.opacity + '; color=' + graphStyle.color + '; pathBounds=' + pathBounds);
+        tideLog('RENDER GEOMETRY', 'graph=' + Math.round(graphRect.width) + 'x' + Math.round(graphRect.height) + '; wrap=' + Math.round(wrapRect.width) + 'x' + Math.round(wrapRect.height) + '; display=' + graphStyle.display + '; inlineDisplay=' + graph.style.getPropertyValue('display') + '; inlinePriority=' + graph.style.getPropertyPriority('display') + '; visibility=' + graphStyle.visibility + '; opacity=' + graphStyle.opacity + '; color=' + graphStyle.color + '; pathBounds=' + pathBounds);
         tideLog('WINDOW GEOMETRY', 'text=' + windowNode.textContent + '; rect=' + Math.round(windowRect.width) + 'x' + Math.round(windowRect.height) + '; display=' + windowStyle.display + '; visibility=' + windowStyle.visibility + '; opacity=' + windowStyle.opacity + '; color=' + windowStyle.color + '; fontSize=' + windowStyle.fontSize);
         tideLog('PARENT GEOMETRY', 'readout=' + Math.round($('mthGraphCurrent').parentElement.parentElement.getBoundingClientRect().width) + 'px; section=' + Math.round(root.querySelector('.mth-tide-graph-section').getBoundingClientRect().width) + 'px');
         tideLog('GRAPH RENDER COMPLETE', 'state=' + state.textContent + '; graphHidden=' + graph.hidden + '; window=' + $('mthGraphWindow').textContent);
