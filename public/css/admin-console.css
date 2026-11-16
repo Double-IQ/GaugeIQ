@@ -46,7 +46,7 @@
 .admin-updates-panel{display:flex;align-items:center;gap:15px;margin:16px 0;padding:18px 20px}
 .admin-updates-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);font-size:24px}
 .admin-updates-copy{min-width:0;flex:1}.admin-updates-copy h2{font-size:18px}.admin-updates-copy .admin-muted{margin:4px 0 0}
-.admin-update-details{display:flex;align-items:center;gap:12px}.admin-update-details p{margin:0;color:var(--text);font-size:13px}.admin-update-details form{margin:0}
+.admin-update-details{display:flex;align-items:center;gap:12px}.admin-update-details[hidden]{display:none!important}.admin-update-details p{margin:0;color:var(--text);font-size:13px}.admin-update-details form{margin:0}
 .admin-console-footer{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 2px 0;border-top:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.1em}
 .admin-console-footer a{color:var(--text);text-decoration:none;letter-spacing:0}
 .admin-console .admin-console-button:focus-visible,.admin-console-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
