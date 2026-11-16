@@ -151,6 +151,8 @@
         const moonZ = Math.cos(moonHourAngle) * Math.cos(moonPosition.dec*rad);
         const sunX = Math.sin(sunHourAngle) * Math.cos(sunPosition.dec*rad);
         const sunY = -Math.sin(sunPosition.dec*rad);
+        // Keep the calculated Moon on the visible dotted orbit. The orbit
+        // ring is a 248px circle centred in the 260px tracker system.
         const orbitRadius = 124;
         orbitMoon.style.left = (130 + moonX * orbitRadius - 15) + 'px';
         orbitMoon.style.top = (130 + moonY * orbitRadius - 15) + 'px';
@@ -163,7 +165,19 @@
         const lit = (1 + Math.cos(Math.PI - phaseAngle))/2;
         orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
         const sunVector = root.querySelector('.mth-sun-vector');
-        if (sunVector) sunVector.style.setProperty('--mth-sun-angle',Math.atan2(sunY,sunX)+'rad');
+        if (sunVector && trackerDisplay) {
+            // Place the Sun around the tracker at its calculated sky direction.
+            // The inward dashed ray then points from the Sun toward Earth.
+            const displayWidth = trackerDisplay.clientWidth;
+            const displayHeight = trackerDisplay.clientHeight;
+            const sunRadius = Math.min(displayWidth * 0.42, displayHeight * 0.40, 170);
+            const earthCenterX = displayWidth / 2;
+            const earthCenterY = displayHeight * 0.48;
+            sunVector.style.left = (earthCenterX + sunX * sunRadius) + 'px';
+            sunVector.style.top = (earthCenterY + sunY * sunRadius) + 'px';
+            sunVector.style.transform = 'translate(-50%,-50%)';
+            sunVector.style.setProperty('--mth-sun-angle',Math.atan2(-sunY,-sunX)+'rad');
+        }
         const axis = root.querySelector('.mth-tidal-axis');
         if (axis) axis.style.transform = 'translate(-50%,-50%) rotate(' + (Math.atan2(moonY,moonX)*180/Math.PI) + 'deg)';
         if (locationMarker && validLocation) {
