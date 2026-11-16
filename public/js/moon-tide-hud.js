@@ -178,8 +178,9 @@
             const orbitRadius = 124;
             const centreX = systemWidth / 2;
             const centreY = systemHeight / 2;
-            sunVector.style.left = (centreX + sunX * orbitRadius) + 'px';
-            sunVector.style.top = (centreY + sunY * orbitRadius) + 'px';
+            const sunScreenAngle = Math.atan2(sunY,sunX);
+            sunVector.style.left = (centreX + Math.cos(sunScreenAngle) * orbitRadius) + 'px';
+            sunVector.style.top = (centreY + Math.sin(sunScreenAngle) * orbitRadius) + 'px';
             sunVector.style.transform = 'translate(-50%,-50%)';
             sunVector.style.setProperty('--mth-sun-angle',Math.atan2(-sunY,-sunX)+'rad');
         }
