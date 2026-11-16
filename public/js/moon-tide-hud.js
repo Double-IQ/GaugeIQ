@@ -154,8 +154,11 @@
         // Keep the calculated Moon on the visible dotted orbit. The orbit
         // ring is a 248px circle centred in the 260px tracker system.
         const orbitRadius = 124;
-        orbitMoon.style.left = (130 + moonX * orbitRadius - 15) + 'px';
-        orbitMoon.style.top = (130 + moonY * orbitRadius - 15) + 'px';
+        // Use the calculated sky direction but normalise its 2-D projection
+        // so the Moon remains on the circumference of the displayed orbit.
+        const moonScreenAngle = Math.atan2(moonY,moonX);
+        orbitMoon.style.left = (130 + Math.cos(moonScreenAngle) * orbitRadius - 15) + 'px';
+        orbitMoon.style.top = (130 + Math.sin(moonScreenAngle) * orbitRadius - 15) + 'px';
         orbitMoon.style.transform = 'none';
         orbitMoon.style.opacity = moonZ < -0.1 ? '.62' : '1';
         const phaseAngle = Math.acos(Math.max(-1,Math.min(1,
