@@ -1,0 +1,45 @@
+/* GaugeIQ HUD interaction feedback: brief cyan activation flash + persistent loading pulse. */
+.menu-button,
+.admin-shell button,
+.admin-shell .button-link {
+    -webkit-tap-highlight-color: transparent;
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.menu-button:active,
+.admin-shell button:active,
+.admin-shell .button-link:active,
+.menu-button.gaugeiq-tap-flash,
+.admin-shell button.gaugeiq-tap-flash,
+.admin-shell .button-link.gaugeiq-tap-flash {
+    color: #baf6ff !important;
+    border-color: #36dfff !important;
+    background-color: rgba(20, 153, 190, .22) !important;
+    box-shadow: 0 0 0 1px rgba(54, 223, 255, .38), 0 0 14px rgba(54, 223, 255, .48), inset 0 0 12px rgba(54, 223, 255, .12) !important;
+    transform: translateY(1px);
+    animation: gaugeiq-hud-tap-flash 420ms ease-out;
+}
+.menu-button.gaugeiq-is-loading,
+.admin-shell button.gaugeiq-is-loading,
+.admin-shell .button-link.gaugeiq-is-loading,
+.admin-shell button[aria-busy="true"] {
+    color: #baf6ff !important;
+    border-color: #36dfff !important;
+    box-shadow: 0 0 0 1px rgba(54, 223, 255, .3), 0 0 13px rgba(54, 223, 255, .35), inset 0 0 12px rgba(54, 223, 255, .1) !important;
+    animation: gaugeiq-hud-loading-pulse 1.35s ease-in-out infinite;
+}
+@keyframes gaugeiq-hud-tap-flash {
+    0% { box-shadow: 0 0 0 0 rgba(54, 223, 255, .65), 0 0 22px rgba(54, 223, 255, .65), inset 0 0 16px rgba(54, 223, 255, .2); }
+    100% { box-shadow: 0 0 0 1px rgba(54, 223, 255, .2), 0 0 7px rgba(54, 223, 255, .2), inset 0 0 5px rgba(54, 223, 255, .04); }
+}
+@keyframes gaugeiq-hud-loading-pulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(54, 223, 255, .22), 0 0 7px rgba(54, 223, 255, .2), inset 0 0 7px rgba(54, 223, 255, .05); }
+    50% { box-shadow: 0 0 0 1px rgba(54, 223, 255, .52), 0 0 17px rgba(54, 223, 255, .5), inset 0 0 13px rgba(54, 223, 255, .13); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .menu-button.gaugeiq-tap-flash,
+    .admin-shell button.gaugeiq-tap-flash,
+    .admin-shell .button-link.gaugeiq-tap-flash,
+    .menu-button.gaugeiq-is-loading,
+    .admin-shell button.gaugeiq-is-loading,
+    .admin-shell button[aria-busy="true"] { animation: none; }
+}
