@@ -158,31 +158,25 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 
 <div class="admin-section-label"><span>CONTROL MODULES</span><i></i></div>
 <div class="admin-module-grid">
-    <section class="admin-module admin-module-alerts weather-alerts-link">
+    <a class="admin-module admin-module-alerts weather-alerts-link" href="alerts.php?location=1">
         <div class="admin-module-icon" aria-hidden="true">◉</div><p class="admin-kicker">WEATHER ALERTS</p><h2>Alerts</h2>
-        <div class="admin-module-actions">
-            <a class="admin-console-button button-link" href="alerts.php?location=1">Open <span aria-hidden="true">→</span></a>
-            <?php if ($secondLocationEnabled): ?><a class="admin-console-button button-link" href="alerts.php?location=2">Open <span aria-hidden="true">→</span></a><?php endif; ?>
-        </div>
-    </section>
+    </a>
 
-    <section class="admin-module location-history-link-card">
+    <a class="admin-module location-history-link-card" href="location-history.php">
         <div class="admin-module-icon" aria-hidden="true">⌖</div><p class="admin-kicker">CONFIGURATION</p><h2>Location &amp; history</h2>
-        <div class="admin-module-actions"><a class="admin-console-button button-link" href="location-history.php">Open <span aria-hidden="true">→</span></a></div>
-    </section>
+    </a>
 
-    <section class="admin-module formula-console-link-card">
+    <a class="admin-module formula-console-link-card" href="formula-console.php">
         <div class="admin-module-icon" aria-hidden="true">◈</div><p class="admin-kicker">FORECAST ENGINE</p><h2>Formula Console</h2>
-        <div class="admin-module-actions"><a class="admin-console-button button-link" href="formula-console.php">Open <span aria-hidden="true">→</span></a></div>
-    </section>
+    </a>
 
-    <section class="admin-module appearance-card">
+    <label class="admin-module appearance-card" for="themeSelect">
         <div class="admin-module-icon" aria-hidden="true">⚙</div><p class="admin-kicker">DISPLAY PREFERENCES</p><h2>Appearance</h2>
-        <label class="admin-theme-label" for="themeSelect">Interface theme</label>
+        <span class="admin-theme-label">Interface theme</span>
         <select id="themeSelect" class="theme-select admin-theme-select" aria-label="Appearance">
             <option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option>
         </select>
-    </section>
+    </label>
 </div>
 
 <section class="admin-panel admin-updates-panel" aria-labelledby="updatesTitle">
