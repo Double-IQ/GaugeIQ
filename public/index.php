@@ -1356,13 +1356,6 @@ if ($current && !empty($current['observed_at'])) {
                 </div>
             </div>
         </div>
-        <div class="mth-section mth-tides">
-            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
-            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong id="mthTideStatus">SEARCHING FOR COASTAL STATION</strong><p id="mthTideMessage">Checking for a nearby station with harmonic tide predictions. No tide height will be inferred from the Moon phase.</p></div></div>
-            <div class="mth-tide-events"><div><small>NEXT HIGH WATER</small><strong id="mthNextHigh">—</strong><span id="mthNextHighTime">—</span></div><div><small>NEXT LOW WATER</small><strong id="mthNextLow">—</strong><span id="mthNextLowTime">—</span></div></div>
-            <div class="mth-tide-baseline"><span id="mthTideStation">LOCAL COASTAL PREDICTION</span><strong id="mthTideDistance">CHECKING STATION COVERAGE</strong></div>
-            <p class="mth-note" id="mthTideAttribution">Tide predictions are harmonic estimates and do not account for weather-driven surge. Not for navigation.</p>
-        </div>
         <div class="mth-section mth-solar">
             <div class="mth-section-head"><span class="mth-index">03</span><div><strong>SOLAR WINDOW</strong><small>LOCAL HORIZON / DAYLIGHT CYCLE</small></div><span class="mth-section-state">LOCATION BASED</span></div>
             <div class="mth-solar-readouts"><div><small>SUNRISE</small><strong id="mthSunrise">—</strong></div><div><small>SOLAR NOON</small><strong id="mthSolarNoon">—</strong></div><div><small>SUNSET</small><strong id="mthSunset">—</strong></div><div><small>DAYLIGHT</small><strong id="mthDaylight">—</strong></div></div>
@@ -1395,6 +1388,13 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="mth-time-labels"><span>−12 HOURS</span><span>NOW</span><span>+12 HOURS</span></div>
             </div>
             <p class="mth-note">Moon position, Earth rotation and your location are synchronised to the selected time. The orbital path and tidal bulges are enlarged for visibility; distances are not to scale.</p>
+        </div>
+        <div class="mth-section mth-tides">
+            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
+            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong id="mthTideStatus">SEARCHING FOR COASTAL STATION</strong><p id="mthTideMessage">Checking for a nearby station with harmonic tide predictions. No tide height will be inferred from the Moon phase.</p></div></div>
+            <div class="mth-tide-events"><div><small>NEXT HIGH WATER</small><strong id="mthNextHigh">—</strong><span id="mthNextHighTime">—</span></div><div><small>NEXT LOW WATER</small><strong id="mthNextLow">—</strong><span id="mthNextLowTime">—</span></div></div>
+            <div class="mth-tide-baseline"><span id="mthTideStation">LOCAL COASTAL PREDICTION</span><strong id="mthTideDistance">CHECKING STATION COVERAGE</strong></div>
+            <p class="mth-note" id="mthTideAttribution">Tide predictions are harmonic estimates and do not account for weather-driven surge. Not for navigation.</p>
         </div>
         <div class="mth-section mth-tide-graph-section">
             <div class="mth-section-head"><span class="mth-index">05</span><div><strong>LOCAL TIDE PROFILE</strong><small>24-HOUR HARMONIC WATER-LEVEL PREDICTION</small></div><span class="mth-section-state mth-state-pending" id="mthGraphState">DATA LINK PENDING</span></div>
