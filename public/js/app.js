@@ -202,18 +202,9 @@ const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
 const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
-// Wind HUD and Rain Radar share the same iOS permission request.
-// Always call requestPermission() directly from the Enable-button gesture:
-// iOS remembers the user's grant and returns "granted" without prompting
-// again, while the call still activates orientation-event delivery.
-async function requestCompassPermission() {
-    if (typeof DeviceOrientationEvent === 'undefined') return false;
-    if (typeof DeviceOrientationEvent.requestPermission !== 'function') return true;
-
-    const permission = await DeviceOrientationEvent.requestPermission();
-    return permission === 'granted';
-}
-
+// Keep the iOS permission grant separate from the user's on/off preference.
+// Disabling the compass must not make the next Enable action request permission again.
+const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
@@ -234,8 +225,6 @@ let windCompassHeading = null;
 let windCompassTargetHeading = null;
 let windCompassRotation = null;
 let windCompassAnimationFrame = null;
-let windCompassSensorTimer = null;
-let windCompassSensorEventSeen = false;
 
 function normalizeCompassHeading(value) {
     const heading = Number(value);
@@ -259,7 +248,6 @@ function applyWindCompassHeading(heading) {
     if (normalized === null) return;
 
     windCompassTargetHeading = normalized;
-    if (windCompassSensorTimer !== null) { window.clearTimeout(windCompassSensorTimer); windCompassSensorTimer = null; }
 
     if (windCompassHeading === null) {
         windCompassHeading = normalized;
@@ -319,7 +307,6 @@ function handleWindDeviceOrientation(event) {
     if (!windCompassEnabled) return;
 
     let heading = null;
-    windCompassSensorEventSeen = true;
 
     const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
     const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
@@ -338,9 +325,6 @@ function handleWindDeviceOrientation(event) {
 
     if (heading !== null) {
         applyWindCompassHeading(heading);
-    } else if (windCompassStatus) {
-        windCompassStatus.hidden = false;
-        windCompassStatus.textContent = 'Sensor active · no absolute heading';
     }
 }
 
@@ -362,9 +346,19 @@ async function enableWindCompass() {
     }
 
     try {
-        const permissionGranted = await requestCompassPermission();
-        if (!permissionGranted) {
-            throw new Error('Compass permission was not granted.');
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Call from this Enable-button gesture every time. Once iOS has
+            // granted access, it should return "granted" without showing the
+            // native prompt again, while still activating sensor delivery.
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Compass permission was not granted.');
+            }
+            try {
+                localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+            } catch {
+                // Compass can still work for this session if storage is unavailable.
+            }
         }
 
         windCompassEnabled = true;
@@ -376,20 +370,11 @@ async function enableWindCompass() {
             windCompassListening = true;
         }
 
-        windCompassSensorEventSeen = false;
         updateWindCompassButton();
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
-            windCompassStatus.textContent = 'Waiting for iPhone sensor…';
+            windCompassStatus.textContent = 'Finding heading…';
         }
-        if (windCompassSensorTimer !== null) window.clearTimeout(windCompassSensorTimer);
-        windCompassSensorTimer = window.setTimeout(() => {
-            windCompassSensorTimer = null;
-            if (!windCompassEnabled || windCompassHeading !== null || !windCompassStatus) return;
-            windCompassStatus.textContent = windCompassSensorEventSeen
-                ? 'Sensor events received, but no compass heading'
-                : 'No sensor events received · check iOS Safari access';
-        }, 3500);
     } catch (error) {
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
@@ -415,8 +400,6 @@ function disableWindCompass() {
     }
 
     windCompassNativeHeadingSeen = false;
-    if (windCompassSensorTimer !== null) { window.clearTimeout(windCompassSensorTimer); windCompassSensorTimer = null; }
-    windCompassSensorEventSeen = false;
     windCompassHeading = null;
     windCompassTargetHeading = null;
     windCompassRotation = null;
@@ -2176,8 +2159,6 @@ updateNetworkDiagnostics();
     let currentHeading = null;
     let targetHeading = null;
     let animationFrame = null;
-    let sensorTimer = null;
-    let sensorEventSeen = false;
 
     const normalize = value => {
         const number = Number(value);
@@ -2223,7 +2204,6 @@ updateNetworkDiagnostics();
     function applyHeading(value) {
         const heading = normalize(value);
         if (!enabled || heading === null) return;
-        if (sensorTimer !== null) { window.clearTimeout(sensorTimer); sensorTimer = null; }
         targetHeading = heading;
         if (currentHeading === null) currentHeading = heading;
         if (animationFrame === null) animationFrame = requestAnimationFrame(renderHeading);
@@ -2231,7 +2211,6 @@ updateNetworkDiagnostics();
 
     function handleOrientation(event) {
         if (!enabled) return;
-        sensorEventSeen = true;
         let heading = null;
         if (Number.isFinite(event.webkitCompassHeading)) {
             nativeHeadingSeen = true;
@@ -2241,7 +2220,6 @@ updateNetworkDiagnostics();
             heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
         }
         if (heading !== null) applyHeading(heading);
-        else setStatus('Sensor active · no absolute heading');
     }
 
     function startListening() {
@@ -2265,24 +2243,17 @@ updateNetworkDiagnostics();
             return;
         }
         try {
-            const permissionGranted = await requestCompassPermission();
-            if (!permissionGranted) throw new Error('Compass permission was not granted.');
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') throw new Error('Compass permission was not granted.');
+            }
             enabled = true;
             try { localStorage.setItem(storageKey, 'true'); } catch {}
             nativeHeadingSeen = false;
             currentHeading = null;
             targetHeading = null;
             startListening();
-            sensorEventSeen = false;
-            setStatus('Waiting for iPhone sensor…');
-            if (sensorTimer !== null) window.clearTimeout(sensorTimer);
-            sensorTimer = window.setTimeout(() => {
-                sensorTimer = null;
-                if (!enabled || currentHeading !== null) return;
-                setStatus(sensorEventSeen
-                    ? 'Sensor events received, but no compass heading'
-                    : 'No sensor events received · check iOS Safari access');
-            }, 3500);
+            setStatus('Finding heading…');
             updateButton();
         } catch (error) {
             setStatus(error instanceof Error ? error.message : 'Compass unavailable');
@@ -2300,9 +2271,6 @@ updateNetworkDiagnostics();
         }
         if (animationFrame !== null) cancelAnimationFrame(animationFrame);
         animationFrame = null;
-        if (sensorTimer !== null) window.clearTimeout(sensorTimer);
-        sensorTimer = null;
-        sensorEventSeen = false;
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
