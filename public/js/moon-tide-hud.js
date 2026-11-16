@@ -281,6 +281,16 @@
         $('mthGraphStation').textContent = 'NO VERIFIED STATION DATA';
         $('mthGraphDistance').textContent = 'PREDICTION OFFLINE';
     }
+    function hasUsableTideTimeline(payload) {
+        if (!Array.isArray(payload?.timeline)) return false;
+        const samples = payload.timeline.map(point => ({
+            timestamp: Date.parse(point?.time),
+            level: Number(point?.level)
+        })).filter(point => Number.isFinite(point.timestamp) && Number.isFinite(point.level))
+          .sort((a,b) => a.timestamp - b.timestamp);
+        if (samples.length < 2) return false;
+        return samples[samples.length - 1].timestamp - samples[0].timestamp >= 20 * 60 * 60 * 1000;
+    }
     function drawTideGraph(payload, extremesPayload) {
         const samples = Array.isArray(payload.timeline) ? payload.timeline.map(point => ({
             timestamp: Date.parse(point.time), level: Number(point.level)
@@ -375,20 +385,20 @@
             // Open Waters resolves the exact same station ID.
             try {
                 const stationPayload = await fetchTidePayload('timeline',start,end,stationId,15000);
-                if (!Array.isArray(stationPayload?.timeline) || stationPayload.timeline.length < 2) {
-                    throw new Error('The station-specific endpoint returned no usable curve samples.');
+                if (!hasUsableTideTimeline(stationPayload)) {
+                    throw new Error('The station-specific endpoint returned fewer than 20 hours of valid tide-height samples.');
                 }
                 return stationPayload;
             } catch (stationError) {
                 const graphMessage = $('mthGraphMessage');
-                if (graphMessage) graphMessage.textContent = 'Station curve unavailable; retrying East London by location…';
+                if (graphMessage) graphMessage.textContent = 'Station curve unavailable; retrying the selected location…';
                 const locationPayload = await fetchTidePayload('timeline',start,end,null,20000);
                 const locationStationId = locationPayload?.station?.id;
                 if (!locationStationId || locationStationId !== stationId) {
                     throw new Error('The station curve request failed (' + (stationError?.message || 'unknown error') + ') and the location fallback did not verify the same station.');
                 }
-                if (!Array.isArray(locationPayload.timeline) || locationPayload.timeline.length < 2) {
-                    throw new Error('The location fallback returned no usable tide-curve samples.');
+                if (!hasUsableTideTimeline(locationPayload)) {
+                    throw new Error('The location fallback returned fewer than 20 hours of valid tide-height samples.');
                 }
                 return locationPayload;
             }
