@@ -138,6 +138,7 @@
     const locationMarker = $('mthLocationMarker');
     const timeScrubber = $('mthTimeScrubber');
     const trackerDisplay = root.querySelector('.mth-tracker-display');
+    const trackerSystem = root.querySelector('.mth-tracker-system');
     const trackerSize = () => trackerDisplay ? Math.min(trackerDisplay.clientWidth,520) : 340;
     function updateEarthMoonTracker(date) {
         if (!globe || !orbitMoon || !date) return;
@@ -168,16 +169,17 @@
         const lit = (1 + Math.cos(Math.PI - phaseAngle))/2;
         orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
         const sunVector = root.querySelector('.mth-sun-vector');
-        if (sunVector && trackerDisplay) {
-            // Place the Sun around the tracker at its calculated sky direction.
-            // The inward dashed ray then points from the Sun toward Earth.
-            const displayWidth = trackerDisplay.clientWidth;
-            const displayHeight = trackerDisplay.clientHeight;
-            const sunRadius = Math.min(displayWidth * 0.42, displayHeight * 0.40, 170);
-            const earthCenterX = displayWidth / 2;
-            const earthCenterY = displayHeight * 0.48;
-            sunVector.style.left = (earthCenterX + sunX * sunRadius) + 'px';
-            sunVector.style.top = (earthCenterY + sunY * sunRadius) + 'px';
+        if (sunVector && trackerSystem) {
+            // Sun and Moon now share one 260px coordinate plane. The Sun is
+            // plotted on the same circular guide as the Moon, and its ray
+            // starts at the Sun's centre and points inward toward Earth.
+            const systemWidth = trackerSystem.clientWidth;
+            const systemHeight = trackerSystem.clientHeight;
+            const orbitRadius = 124;
+            const centreX = systemWidth / 2;
+            const centreY = systemHeight / 2;
+            sunVector.style.left = (centreX + sunX * orbitRadius) + 'px';
+            sunVector.style.top = (centreY + sunY * orbitRadius) + 'px';
             sunVector.style.transform = 'translate(-50%,-50%)';
             sunVector.style.setProperty('--mth-sun-angle',Math.atan2(-sunY,-sunX)+'rad');
         }
@@ -375,7 +377,7 @@
         }).join('');
         const graph = $('mthTideGraph');
         tideLog('GRAPH SVG BUILD', 'pathLength=' + path.length + '; points=' + samples.length);
-        graph.innerHTML = '<defs><linearGradient id="mthTideArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#72e5e0" stop-opacity=".28"/><stop offset="1" stop-color="#72e5e0" stop-opacity=".015"/></linearGradient></defs>' +
+        graph.innerHTML = '<defs><linearGradient id="mthTideArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".28"/><stop offset="1" stop-color="#72e5e0" stop-opacity=".015"/></linearGradient></defs>' +
             grid + ticks + '<path class="mth-graph-area" d="' + area + '"/><path class="mth-graph-line" d="' + path + '"/>' +
             '<line class="mth-graph-now-line" x1="' + nowX.toFixed(2) + '" y1="32" x2="' + nowX.toFixed(2) + '" y2="190"/>' +
             '<text class="mth-graph-now-label" x="' + Math.max(65,Math.min(681,nowX)).toFixed(2) + '" y="25" text-anchor="middle">NOW</text>' +
