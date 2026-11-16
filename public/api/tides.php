@@ -44,13 +44,13 @@ if (!function_exists('curl_init')) {
 }
 
 $queryParams = [
-    'start' => gmdate('Y-m-d\\TH:i:s\\Z', $startTime),
-    'end' => gmdate('Y-m-d\\TH:i:s\\Z', $endTime),
+    'start' => gmdate('Y-m-d\TH:i:s\Z', $startTime),
+    'end' => gmdate('Y-m-d\TH:i:s\Z', $endTime),
     'units' => 'meters',
 ];
 $stationId = trim((string)($_GET['station'] ?? ''));
 if ($stationId !== '') {
-    if ($mode !== 'timeline' || !preg_match('/^([a-z0-9_-]+)\\/([a-z0-9._@-]+)$/i', $stationId, $stationMatch)) {
+    if ($mode !== 'timeline' || !preg_match('/^([a-z0-9_-]+)\/([a-z0-9._@-]+)$/i', $stationId, $stationMatch)) {
         tideApiRespond(400, ['message' => 'A valid prediction station ID is required for a station-specific tide timeline.']);
     }
     // Reuse the exact station resolved by the high/low request. This avoids
