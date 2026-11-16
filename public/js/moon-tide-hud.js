@@ -398,6 +398,22 @@
         const state = $('mthGraphState');
         state.textContent = 'LIVE PREDICTION';
         state.classList.remove('mth-state-pending');
+        const windowNode = $('mthGraphWindow');
+        const graphWrap = $('mthTideGraphWrap');
+        const graphStyle = window.getComputedStyle(graph);
+        const windowStyle = window.getComputedStyle(windowNode);
+        const graphRect = graph.getBoundingClientRect();
+        const windowRect = windowNode.getBoundingClientRect();
+        const wrapRect = graphWrap.getBoundingClientRect();
+        let pathBounds = 'unavailable';
+        try {
+            const lineNode = graph.querySelector('.mth-graph-line');
+            const bounds = lineNode && lineNode.getBBox();
+            if (bounds) pathBounds = [bounds.x,bounds.y,bounds.width,bounds.height].map(value => Number(value.toFixed(1))).join(',');
+        } catch (error) { pathBounds = 'getBBox failed: ' + error.message; }
+        tideLog('RENDER GEOMETRY', 'graph=' + Math.round(graphRect.width) + 'x' + Math.round(graphRect.height) + '; wrap=' + Math.round(wrapRect.width) + 'x' + Math.round(wrapRect.height) + '; display=' + graphStyle.display + '; visibility=' + graphStyle.visibility + '; opacity=' + graphStyle.opacity + '; color=' + graphStyle.color + '; pathBounds=' + pathBounds);
+        tideLog('WINDOW GEOMETRY', 'text=' + windowNode.textContent + '; rect=' + Math.round(windowRect.width) + 'x' + Math.round(windowRect.height) + '; display=' + windowStyle.display + '; visibility=' + windowStyle.visibility + '; opacity=' + windowStyle.opacity + '; color=' + windowStyle.color + '; fontSize=' + windowStyle.fontSize);
+        tideLog('PARENT GEOMETRY', 'readout=' + Math.round($('mthGraphCurrent').parentElement.parentElement.getBoundingClientRect().width) + 'px; section=' + Math.round(root.querySelector('.mth-tide-graph-section').getBoundingClientRect().width) + 'px');
         tideLog('GRAPH RENDER COMPLETE', 'state=' + state.textContent + '; graphHidden=' + graph.hidden + '; window=' + $('mthGraphWindow').textContent);
     }
     async function loadTidePredictions() {
