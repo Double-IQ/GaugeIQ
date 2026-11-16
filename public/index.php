@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261116-rain-radar-compass-mobile">
+<link rel="stylesheet" href="css/app.css?v=20261116-rain-radar-hud-cyan">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
 <title>GaugeIQ</title>
@@ -1187,7 +1187,7 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
-                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#36E0A0" stop-opacity="0.01"/><stop offset="100%" stop-color="#36E0A0" stop-opacity="0.34"/></linearGradient>
+                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#26D9F8" stop-opacity="0.01"/><stop offset="100%" stop-color="#26D9F8" stop-opacity="0.34"/></linearGradient>
                             <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
                             <filter id="rainfallRadarGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                         </defs>
@@ -1201,10 +1201,8 @@ if ($current && !empty($current['observed_at'])) {
                             <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)"><?= $radarCellMarkup ?></g>
                             <g class="rainfall-radar-sweep">
                                 <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
-                                <path d="M160 160L280 88" stroke="#51E6B0" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
+                                <path d="M160 160L280 88" stroke="#42DDF8" stroke-width="1.8" filter="url(#rainfallRadarGlow)"/>
                             </g>
-                            <circle cx="160" cy="160" r="5" fill="#F4FBFF" stroke="#47D9B0" stroke-width="3" filter="url(#rainfallRadarGlow)"/>
-                            <circle cx="160" cy="160" r="12" fill="none" stroke="#47D9B0" stroke-width="1"/>
                         </g>
                         <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
                             <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
