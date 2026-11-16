@@ -7725,29 +7725,3 @@ body.gaugeiq-menu-open{overflow:hidden}
   .mth-tracker-system{transform:translate(-50%,-50%) scale(.88)}
   .mth-tracker-display .mth-sun-vector{left:130px;top:130px}
 }
-
-/* Use the same primary blue as the wind gauge for Moon and Tide accents. */
-.moon-tide-hud-card{--mth-cyan:#2563eb}
-.moon-tide-hud-card .mth-section-state,
-.moon-tide-hud-card .mth-lunar-readouts strong,
-.moon-tide-hud-card .mth-solar-readouts strong,
-.moon-tide-hud-card .mth-tide-events strong,
-.moon-tide-hud-card .mth-tracker-readouts strong,
-.moon-tide-hud-card .mth-tide-baseline strong,
-.moon-tide-hud-card .mth-time-heading span,
-.moon-tide-hud-card .mth-graph-source strong,
-.moon-tide-hud-card .mth-moon-caption,
-.moon-tide-hud-card .mth-earth-label,
-.moon-tide-hud-card .mth-moon-label{color:#60a5fa}
-.moon-tide-hud-card .mth-moon-reticle{border-color:rgba(37,99,235,.42);background:repeating-conic-gradient(from 0deg,rgba(37,99,235,.24) 0deg 1deg,transparent 1deg 15deg)}
-.moon-tide-hud-card .mth-moon-reticle:before,
-.moon-tide-hud-card .mth-moon-reticle:after{border-color:rgba(37,99,235,.26)}
-.moon-tide-hud-card .mth-reticle-tick{border-top-color:#2563eb;border-bottom-color:#2563eb}
-.moon-tide-hud-card .mth-orbit-ring{border-color:rgba(37,99,235,.55)}
-.moon-tide-hud-card .mth-tidal-bulge{border-color:rgba(37,99,235,.55);background:rgba(37,99,235,.12);box-shadow:0 0 15px rgba(37,99,235,.18)}
-.moon-tide-hud-card .mth-tidal-axis{border-top-color:rgba(37,99,235,.72)}
-.moon-tide-hud-card .mth-tide-panel{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.3)}
-.moon-tide-hud-card .mth-tide-status-mark{border-color:rgba(37,99,235,.48);color:#60a5fa}
-.moon-tide-hud-card .mth-tide-panel strong{color:#60a5fa}
-.moon-tide-hud-card .mth-graph-line{stroke:#2563eb}
-.moon-tide-hud-card .mth-legend-curve{background:#2563eb}
