@@ -7,6 +7,28 @@
     const zone = root.dataset.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const validLocation = root.dataset.latitude.trim() !== '' && root.dataset.longitude.trim() !== '' && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
     const $ = id => document.getElementById(id);
+    // Temporary on-device diagnostics for the section 05 tide profile.
+    const tideLogNode = $('mthTideDebugLog');
+    const tideLog = (event, detail = '') => {
+        const stamp = new Date().toLocaleTimeString();
+        const line = '[' + stamp + '] ' + event + (detail ? ' — ' + String(detail) : '');
+        if (tideLogNode) {
+            const row = document.createElement('div');
+            row.textContent = line;
+            tideLogNode.appendChild(row);
+            while (tideLogNode.children.length > 80) tideLogNode.removeChild(tideLogNode.firstChild);
+            tideLogNode.scrollTop = tideLogNode.scrollHeight;
+        }
+        console.info('[GaugeIQ Tide]', line);
+    };
+    tideLog('SCRIPT START', 'location=' + (validLocation ? lat.toFixed(4) + ',' + lon.toFixed(4) : 'missing') + '; timezone=' + zone + '; online=' + navigator.onLine);
+    window.addEventListener('error', event => tideLog('WINDOW ERROR', (event.message || 'unknown') + ' @ ' + (event.filename || '') + ':' + (event.lineno || 0) + ':' + (event.colno || 0)));
+    window.addEventListener('unhandledrejection', event => tideLog('UNHANDLED REJECTION', event.reason?.stack || event.reason?.message || String(event.reason)));
+    window.addEventListener('online', () => tideLog('NETWORK ONLINE'));
+    window.addEventListener('offline', () => tideLog('NETWORK OFFLINE'));
+    const debugClear = $('mthTideDebugClear');
+    if (debugClear) debugClear.addEventListener('click', () => { if (tideLogNode) tideLogNode.replaceChildren(); tideLog('LOG CLEARED'); });
+
     const synodic = 29.530588853;
     const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
     const now = new Date();
@@ -217,7 +239,7 @@
         const cacheKey = 'gaugeiq-mth-tides-v4:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3) + ':' + start.toISOString() + ':' + end.toISOString() + ':' + (stationId || 'nearest');
         try {
             const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-            if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) return cached.payload;
+            if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) { tideLog(mode.toUpperCase() + ' CACHE HIT', 'age=' + Math.round((Date.now()-cached.savedAt)/1000) + 's'); return cached.payload; }
         } catch { /* Ignore unavailable or invalid session cache. */ }
         const controller = new AbortController();
         let timedOut = false;
@@ -225,12 +247,15 @@
         // Race the whole request (including response parsing) against a hard
         // deadline. Some mobile browsers can leave an aborted fetch pending;
         // the independent rejection guarantees the HUD always leaves loading.
+        tideLog(mode.toUpperCase() + ' REQUEST START', tideUrl(mode,start,end,stationId));
+        const requestStartedAt = Date.now();
         const requestPromise = (async () => {
             const response = await fetch(tideUrl(mode, start, end, stationId), {
                 headers: { Accept: 'application/json' },
                 cache: 'no-store',
                 signal: controller.signal
             });
+            tideLog(mode.toUpperCase() + ' HTTP RESPONSE', 'status=' + response.status + '; elapsed=' + (Date.now()-requestStartedAt) + 'ms');
             let payload;
             try {
                 payload = await response.json();
@@ -244,6 +269,7 @@
                 const detail = [payload?.message, details].filter(Boolean).join(' — ');
                 throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
             }
+            tideLog(mode.toUpperCase() + ' JSON PARSED', 'elapsed=' + (Date.now()-requestStartedAt) + 'ms; keys=' + Object.keys(payload || {}).join(','));
             return payload;
         })();
         const deadlinePromise = new Promise((resolve, reject) => {
@@ -258,6 +284,7 @@
             try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
             return payload;
         } catch (error) {
+            tideLog(mode.toUpperCase() + ' REQUEST FAILED', (Date.now()-requestStartedAt) + 'ms; ' + (error?.stack || error?.message || String(error)));
             if (timedOut) throw new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.');
             throw error;
         } finally {
@@ -272,6 +299,7 @@
         }).format(new Date(timestamp));
     }
     function setGraphUnavailable(messageText) {
+        tideLog('GRAPH UNAVAILABLE', messageText);
         const graph = $('mthTideGraph');
         const messageNode = $('mthGraphMessage');
         if (graph) graph.hidden = true;
@@ -300,11 +328,13 @@
         return samples[samples.length - 1].timestamp - samples[0].timestamp >= 20 * 60 * 60 * 1000;
     }
     function drawTideGraph(payload, extremesPayload) {
+        tideLog('GRAPH RENDER START', 'timelineSamples=' + (Array.isArray(payload?.timeline) ? payload.timeline.length : 'not-array') + '; extremes=' + (Array.isArray(extremesPayload?.extremes) ? extremesPayload.extremes.length : 0));
         const samples = Array.isArray(payload.timeline) ? payload.timeline.map(point => ({
             timestamp: Date.parse(point.time), level: Number(point.level)
         })).filter(point => Number.isFinite(point.timestamp) && Number.isFinite(point.level))
           .sort((a,b) => a.timestamp - b.timestamp) : [];
         if (samples.length < 2) throw new Error('The station did not return enough tide-height samples to draw a 24-hour graph.');
+        tideLog('GRAPH SAMPLES VALID', 'count=' + samples.length + '; first=' + new Date(samples[0].timestamp).toISOString() + '; last=' + new Date(samples[samples.length-1].timestamp).toISOString());
         const startTime = samples[0].timestamp;
         const endTime = samples[samples.length - 1].timestamp;
         if (endTime - startTime < 20 * 60 * 60 * 1000) throw new Error('The tide provider returned less than 20 hours of prediction data.');
@@ -346,16 +376,20 @@
                 '<text class="mth-graph-extreme-label" x="' + x(timestamp).toFixed(2) + '" y="' + (y(level) + (isHigh ? -10 : 17)).toFixed(2) + '" text-anchor="middle">' + label + '</text>';
         }).join('');
         const graph = $('mthTideGraph');
+        tideLog('GRAPH SVG BUILD', 'pathLength=' + path.length + '; points=' + samples.length);
         graph.innerHTML = '<defs><linearGradient id="mthTideArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#72e5e0" stop-opacity=".28"/><stop offset="1" stop-color="#72e5e0" stop-opacity=".015"/></linearGradient></defs>' +
             grid + ticks + '<path class="mth-graph-area" d="' + area + '"/><path class="mth-graph-line" d="' + path + '"/>' +
             '<line class="mth-graph-now-line" x1="' + nowX.toFixed(2) + '" y1="32" x2="' + nowX.toFixed(2) + '" y2="190"/>' +
             '<text class="mth-graph-now-label" x="' + Math.max(65,Math.min(681,nowX)).toFixed(2) + '" y="25" text-anchor="middle">NOW</text>' +
             extremeMarks;
         graph.hidden = false;
+        tideLog('GRAPH SVG INSERTED', 'hidden=' + graph.hidden + '; children=' + graph.childElementCount + '; viewBox=' + graph.getAttribute('viewBox'));
         $('mthGraphMessage').hidden = true;
         $('mthGraphCurrent').textContent = nearest.level.toFixed(2) + ' M';
+        tideLog('CURRENT HEIGHT SET', $('mthGraphCurrent').textContent);
         $('mthGraphTrend').textContent = trend + ' · ' + tideLocalTime(now,false) + ' LOCAL';
         $('mthGraphWindow').textContent = 'NEXT 24 HOURS';
+        tideLog('FORECAST WINDOW SET', $('mthGraphWindow').textContent);
         $('mthGraphDatum').textContent = (payload.datum || 'STATION DATUM').toString().toUpperCase();
         const station = payload.station || {};
         $('mthGraphStation').textContent = (station.name || 'VERIFIED TIDE STATION').toString().toUpperCase();
@@ -364,6 +398,7 @@
         const state = $('mthGraphState');
         state.textContent = 'LIVE PREDICTION';
         state.classList.remove('mth-state-pending');
+        tideLog('GRAPH RENDER COMPLETE', 'state=' + state.textContent + '; graphHidden=' + graph.hidden + '; window=' + $('mthGraphWindow').textContent);
     }
     async function loadTidePredictions() {
         const status = $('mthTideStatus');
@@ -374,6 +409,7 @@
             setGraphUnavailable('Set valid coordinates for this GaugeIQ location to load a local tide profile.');
             return;
         }
+        tideLog('TIDE LOAD START');
         const start = new Date();
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
@@ -430,6 +466,7 @@
             const tideState = root.querySelector('.mth-tides .mth-section-state');
             if (tideState && tideState.textContent.includes('DATA LINK')) tideState.textContent = 'STATION LINKED';
         }).catch(error => {
+            tideLog('EXTREMES HANDLER FAILED', error?.stack || error?.message || String(error));
             status.textContent = 'TIDE DATA UNAVAILABLE';
             message.textContent = 'Nearby high/low tide events could not be loaded. ' + (error?.message || 'Please try again later.');
             $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
@@ -442,20 +479,23 @@
         let resolvedTimelinePayload = null;
         const timelineUi = timelineRequest.then(timelinePayload => {
             resolvedTimelinePayload = timelinePayload;
-            drawTideGraph(timelinePayload, null);
+            tideLog('TIMELINE PAYLOAD RECEIVED', 'samples=' + (Array.isArray(timelinePayload?.timeline) ? timelinePayload.timeline.length : 'not-array') + '; station=' + (timelinePayload?.station?.name || 'none') + '; distance=' + timelinePayload?.distance);
+            try { drawTideGraph(timelinePayload, null); } catch (error) { tideLog('GRAPH RENDER EXCEPTION', error?.stack || error?.message || String(error)); throw error; }
         }).catch(error => {
+            tideLog('TIMELINE HANDLER FAILED', error?.stack || error?.message || String(error));
             setGraphUnavailable('The 24-hour tide timeline could not be loaded. ' + (error?.message || 'Please try again later.'));
         });
 
         // Add high/low markers if the second request succeeds, without making
         // its success a prerequisite for displaying the tide curve.
         extremesRequest.then(extremesPayload => {
-            if (resolvedTimelinePayload) drawTideGraph(resolvedTimelinePayload, extremesPayload);
+            if (resolvedTimelinePayload) { tideLog('EXTREMES ARRIVED; ADDING MARKERS'); try { drawTideGraph(resolvedTimelinePayload, extremesPayload); } catch (error) { tideLog('MARKER RENDER EXCEPTION', error?.stack || error?.message || String(error)); } }
         }).catch(() => { /* High/low status is reported by extremesUi. */ });
 
         await Promise.all([extremesUi,timelineUi]);
     }
     loadTidePredictions().catch(error => {
+        tideLog('TOP-LEVEL TIDE FAILURE', error?.stack || error?.message || String(error));
         const status = $('mthTideStatus');
         const message = $('mthTideMessage');
         if (status) status.textContent = 'TIDE DATA UNAVAILABLE';
@@ -465,6 +505,8 @@
         setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.'));
     });
 
+    const graphWindowNode = $('mthGraphWindow');
+    if (graphWindowNode && window.MutationObserver) new MutationObserver(records => records.forEach(record => tideLog('DOM MUTATION', 'target=' + record.target.id + '; text=' + record.target.textContent))).observe(graphWindowNode, {childList:true,characterData:true,subtree:true});
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
 })();
