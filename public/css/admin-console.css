@@ -37,6 +37,7 @@
 .admin-module:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .admin-module-icon{display:grid;place-items:center;width:46px;height:46px;margin-bottom:14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);font-size:26px}
 .admin-module h2{font-size:18px}
+.admin-module.appearance-card{margin-top:0}
 .admin-module-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:auto}
 .admin-console-button{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:10px 14px;border:0!important;border-radius:12px;background:var(--accent)!important;color:#fff!important;box-shadow:none!important;text-decoration:none;font:inherit;font-size:13px;font-weight:700}
 .admin-console-button span{color:inherit;font-size:16px}
