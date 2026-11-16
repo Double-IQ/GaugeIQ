@@ -7570,3 +7570,29 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 .mth-hud-card .weather-change-level[data-level="moderate"] span.is-active{background:var(--mth-amber);border-color:var(--mth-amber);box-shadow:0 0 7px rgba(233,182,106,.25)}
 .mth-hud-card .mth-more-toggle span{text-transform:uppercase}
+
+
+/* Mobile Rain Radar compass controls: stack at the top-right of the card. */
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-nowcast-heading{
+    flex-wrap:nowrap;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    width:auto;
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    gap:4px;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-button,
+  .rainfall-radar-card #rainfallRadarCompassStatus{
+    align-self:flex-end;
+    text-align:right;
+  }
+}
