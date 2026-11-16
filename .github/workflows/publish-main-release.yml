@@ -99,6 +99,7 @@ jobs:
       - name: Build and verify the installable release package
         if: steps.target.outputs.publish == 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         shell: bash
         run: |
