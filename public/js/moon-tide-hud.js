@@ -421,7 +421,13 @@
         graph.style.setProperty('height', 'auto');
         graph.style.setProperty('min-height', '195px');
         tideLog('GRAPH SVG INSERTED', 'hidden=' + graph.hidden + '; children=' + graph.childElementCount + '; viewBox=' + graph.getAttribute('viewBox'));
-        $('mthGraphMessage').hidden = true;
+        const graphMessage = $('mthGraphMessage');
+        if (graphMessage) {
+            graphMessage.hidden = true;
+            // The loading element has display:grid in its class rule, which can
+            // override the browser's built-in [hidden] styling. Force it closed.
+            graphMessage.style.setProperty('display', 'none', 'important');
+        }
         $('mthGraphCurrent').textContent = nearest.level.toFixed(2) + ' M';
         tideLog('CURRENT HEIGHT SET', $('mthGraphCurrent').textContent);
         $('mthGraphTrend').textContent = trend + ' · ' + tideLocalTime(now,false) + ' LOCAL';
