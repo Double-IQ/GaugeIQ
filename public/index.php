@@ -1524,7 +1524,7 @@ if ($current && !empty($current['observed_at'])) {
             <button id="notificationRepairButton" type="button">Repair connection</button>
         </div>
     </dialog>
-    <p id="status" class="status"></p>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
 </main>
 <?php
 try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
@@ -1563,7 +1563,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261116-compass-flow-restore"></script>
+<script src="js/app.js?v=20261116-alert-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261116-tide-hard-timeout"></script>
 </body>
 </html>
