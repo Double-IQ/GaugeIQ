@@ -1566,6 +1566,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261113-rain-radar-dots"></script>
-<script src="js/moon-tide-hud.js?v=20261116-station-pinned-tide-curve"></script>
+<script src="js/moon-tide-hud.js?v=20261116-tide-curve-fallback-v2"></script>
 </body>
 </html>
