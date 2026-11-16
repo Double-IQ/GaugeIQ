@@ -138,7 +138,6 @@
     const locationMarker = $('mthLocationMarker');
     const timeScrubber = $('mthTimeScrubber');
     const trackerDisplay = root.querySelector('.mth-tracker-display');
-    const trackerSystem = root.querySelector('.mth-tracker-system');
     const trackerSize = () => trackerDisplay ? Math.min(trackerDisplay.clientWidth,520) : 340;
     function updateEarthMoonTracker(date) {
         if (!globe || !orbitMoon || !date) return;
@@ -146,12 +145,9 @@
         const sunPosition = solarCoordinates(date);
         const gmst = gmstDegrees(date);
         const moonHourAngle = (moonPosition.ra - gmst) * rad;
-        const sunHourAngle = (sunPosition.ra - gmst) * rad;
         const moonX = Math.sin(moonHourAngle) * Math.cos(moonPosition.dec*rad);
         const moonY = -Math.sin(moonPosition.dec*rad);
         const moonZ = Math.cos(moonHourAngle) * Math.cos(moonPosition.dec*rad);
-        const sunX = Math.sin(sunHourAngle) * Math.cos(sunPosition.dec*rad);
-        const sunY = -Math.sin(sunPosition.dec*rad);
         // Keep the calculated Moon on the visible dotted orbit. The orbit
         // ring is a 248px circle centred in the 260px tracker system.
         const orbitRadius = 124;
@@ -168,22 +164,8 @@
         )));
         const lit = (1 + Math.cos(Math.PI - phaseAngle))/2;
         orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
-        const sunVector = root.querySelector('.mth-sun-vector');
-        if (sunVector && trackerSystem) {
-            // Sun and Moon now share one 260px coordinate plane. The Sun is
-            // plotted on the same circular guide as the Moon, and its ray
-            // starts at the Sun's centre and points inward toward Earth.
-            const systemWidth = trackerSystem.clientWidth;
-            const systemHeight = trackerSystem.clientHeight;
-            const orbitRadius = 124;
-            const centreX = systemWidth / 2;
-            const centreY = systemHeight / 2;
-            const sunScreenAngle = Math.atan2(sunY,sunX);
-            sunVector.style.left = (centreX + Math.cos(sunScreenAngle) * orbitRadius) + 'px';
-            sunVector.style.top = (centreY + Math.sin(sunScreenAngle) * orbitRadius) + 'px';
-            sunVector.style.transform = 'translate(-50%,-50%)';
-            sunVector.style.setProperty('--mth-sun-angle',Math.atan2(-sunY,-sunX)+'rad');
-        }
+        // The Sun is a fixed external light source in this diagram. Only
+        // Earth's surface rotates and the Moon moves along its orbit.
         const axis = root.querySelector('.mth-tidal-axis');
         if (axis) axis.style.transform = 'translate(-50%,-50%) rotate(' + (Math.atan2(moonY,moonX)*180/Math.PI) + 'deg)';
         if (locationMarker && validLocation) {
@@ -212,7 +194,6 @@
         const globeViewportWidth = globe.clientWidth;
         const textureOffset = (globeViewportWidth / 2) - (norm360(gmst) / 360) * textureWidth;
         globe.style.backgroundPosition = textureOffset.toFixed(2) + 'px center';
-        globe.style.setProperty('--mth-sun-side',sunX>=0?'right':'left');
         globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
     }
     if (timeScrubber) {
