@@ -1,0 +1,100 @@
+/* GaugeIQ Administration Console — dedicated HUD layout */
+.gaugeiq-admin-page{min-height:100vh;background:radial-gradient(ellipse at 50% -12%,rgba(15,105,132,.22),transparent 48%),#050d14;color:#dcecf3}
+.gaugeiq-admin-page .admin-console{width:min(100% - 32px,1040px);max-width:1040px;margin:0 auto;padding:clamp(16px,3vw,30px) 0 24px}
+.admin-console{--ac-cyan:#69e5f5;--ac-line:rgba(83,203,229,.24);--ac-muted:#89a7b6}
+.admin-console-header{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) auto;align-items:center;gap:clamp(14px,3vw,28px);padding:4px 0 22px;border-bottom:1px solid var(--ac-line)}
+.admin-brand{display:block;min-width:0}
+.admin-brand img{display:block;width:100%;max-width:190px;height:auto;object-fit:contain}
+.admin-console-heading{min-width:0}
+.admin-kicker{margin:0 0 7px;color:#67cfe5;font:800 9px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.19em}
+.admin-console-heading h1{margin:0;color:#e5f8fc;font-size:clamp(22px,3vw,30px);line-height:1.1;letter-spacing:.025em}
+.admin-user,.admin-muted{color:var(--ac-muted);font-size:12px;line-height:1.55}
+.admin-user{margin:7px 0 0}
+.admin-console-nav{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:140px}
+.admin-console-link{display:inline-flex;justify-content:center;align-items:center;min-height:36px;padding:8px 12px;border:1px solid var(--ac-line);border-radius:9px;background:rgba(11,38,51,.72);color:#c8edf5;text-decoration:none;font-size:12px;font-weight:750}
+.admin-console-link.admin-signout{background:rgba(26,37,47,.55);color:#9eb5c0}
+.admin-notice{margin:16px 0;padding:13px 15px;border:1px solid var(--ac-line);border-radius:11px;background:rgba(9,34,46,.8);color:#d8f3f8;font-size:13px}
+.admin-notice p{margin:5px 0 0;color:var(--ac-muted)}
+.admin-notice-success{border-color:rgba(91,218,164,.42)}
+.admin-notice-error{border-color:rgba(255,125,125,.45);background:rgba(55,20,28,.62)}
+.admin-panel,.admin-module{position:relative;min-width:0;overflow:hidden;border:1px solid var(--ac-line);border-radius:15px;background:linear-gradient(145deg,rgba(12,34,47,.97),rgba(6,19,28,.98));box-shadow:inset 0 1px 0 rgba(185,240,255,.035),0 12px 32px rgba(0,0,0,.16)}
+.admin-monitor-panel{margin-top:20px;padding:clamp(16px,2.5vw,23px)}
+.admin-panel-heading,.admin-location-monitor-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.admin-panel-heading h2,.admin-module h2,.admin-updates-copy h2{margin:0;color:#e0f4f8;font-size:20px;letter-spacing:.015em}
+.admin-panel-heading .admin-muted{margin:5px 0 0}
+.admin-status-pill{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;padding:7px 10px;border:1px solid rgba(88,219,163,.3);border-radius:999px;background:rgba(35,125,88,.12);color:#8ce7b8;font-size:10px;font-weight:800;letter-spacing:.04em}
+.admin-status-pill>span{width:7px;height:7px;border-radius:50%;background:#6de5a7;box-shadow:0 0 9px rgba(109,229,167,.65)}
+.admin-status-pill.is-warn{border-color:rgba(255,184,92,.35);background:rgba(151,91,28,.13);color:#ffd08e}
+.admin-status-pill.is-warn>span{background:#ffbd65;box-shadow:0 0 9px rgba(255,189,101,.55)}
+.admin-metrics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.admin-metric{display:flex;min-width:0;flex-direction:column;gap:5px;padding:13px 14px;border:1px solid rgba(73,173,199,.16);border-radius:10px;background:rgba(5,23,33,.74)}
+.admin-metric>span{color:#8eacba;font-size:10px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+.admin-metric strong{color:var(--ac-cyan);font:700 clamp(20px,3vw,26px)/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.admin-metric small{color:#708e9d;font-size:10px}
+.admin-monitor-warning{margin:12px 0 0;padding:9px 11px;border-left:2px solid #ffbd65;background:rgba(151,91,28,.1);color:#ffd08e;font-size:11px;overflow-wrap:anywhere}
+.admin-location-monitor{margin-top:17px;padding-top:16px;border-top:1px solid var(--ac-line)}
+.admin-location-monitor-heading h3{margin:0;color:#d6edf3;font-size:14px}
+.admin-location-monitor-heading .admin-muted{margin:3px 0 0}
+.admin-section-label{display:flex;align-items:center;gap:13px;margin:24px 2px 12px;color:#71cfe2;font:800 10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.2em}
+.admin-section-label i{height:1px;flex:1;background:linear-gradient(90deg,var(--ac-line),transparent)}
+.admin-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.admin-module{display:flex;flex-direction:column;align-items:flex-start;min-height:218px;padding:18px}
+.admin-module:before{position:absolute;top:0;right:0;left:0;height:2px;background:linear-gradient(90deg,rgba(89,223,245,.8),rgba(89,223,245,0));content:""}
+.admin-module-icon{display:grid;place-items:center;width:37px;height:37px;margin-bottom:15px;border:1px solid rgba(91,212,237,.32);border-radius:10px;background:rgba(28,105,127,.17);color:#71e2f3;font-size:22px}
+.admin-module h2{font-size:17px}
+.admin-module>.admin-muted{margin:8px 0 16px;max-width:44ch}
+.admin-module-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:auto}
+.admin-console-button{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;padding:9px 12px;border:1px solid rgba(75,202,229,.36)!important;border-radius:9px;background:linear-gradient(180deg,rgba(17,76,95,.72),rgba(7,34,47,.92))!important;color:#c9f5fb!important;box-shadow:inset 0 1px 0 rgba(185,245,255,.08),0 0 10px rgba(25,190,225,.08)!important;text-decoration:none;font-size:11px;font-weight:800}
+.admin-console-button span{color:#6fe3f3;font-size:15px}
+.admin-console-button:hover{border-color:rgba(94,229,250,.8)!important;background:linear-gradient(180deg,rgba(20,104,127,.78),rgba(8,46,61,.96))!important;box-shadow:0 0 14px rgba(25,205,240,.2)!important}
+.admin-theme-label{margin:0 0 6px;color:#8eacba;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.06em}
+.admin-theme-select{width:100%;max-width:260px;min-height:39px;border:1px solid rgba(75,202,229,.3);border-radius:9px;background:#0a202c;color:#d8f1f6;padding:8px 11px}
+.admin-updates-panel{display:flex;align-items:center;gap:15px;margin-top:13px;padding:17px 19px}
+.admin-updates-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border:1px solid rgba(91,212,237,.3);border-radius:11px;background:rgba(28,105,127,.16);color:#71e2f3;font-size:23px}
+.admin-updates-copy{min-width:0;flex:1}
+.admin-updates-copy h2{font-size:16px}
+.admin-updates-copy .admin-muted{margin:4px 0 0}
+.admin-update-details{display:flex;align-items:center;gap:12px}
+.admin-update-details p{margin:0;color:#c8edf5;font-size:12px}
+.admin-update-details form{margin:0}
+.admin-console-footer{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 2px 0;border-top:1px solid rgba(83,203,229,.14);color:#658492;font:700 9px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em}
+.admin-console-footer a{color:#82cbd9;text-decoration:none;letter-spacing:0}
+.admin-console .admin-console-button:focus-visible,.admin-console-link:focus-visible{outline:2px solid #72e7f5;outline-offset:3px}
+@media(max-width:640px){
+ .gaugeiq-admin-page .admin-console{width:min(100% - 24px,1040px);padding-top:14px}
+ .admin-console-header{grid-template-columns:minmax(95px,126px) minmax(0,1fr);gap:12px;padding-bottom:16px}
+ .admin-brand img{max-width:126px}
+ .admin-console-heading h1{font-size:22px}
+ .admin-console-heading .admin-kicker{font-size:8px}
+ .admin-user{font-size:10px}
+ .admin-console-nav{grid-column:1/-1;flex-direction:row;justify-content:flex-end;min-width:0}
+ .admin-console-link{flex:1;min-height:34px}
+ .admin-monitor-panel{margin-top:14px;padding:14px}
+ .admin-panel-heading{align-items:flex-start}
+ .admin-panel-heading h2{font-size:18px}
+ .admin-status-pill{font-size:9px;padding:6px 8px}
+ .admin-metrics-grid{gap:7px;margin-top:13px}
+ .admin-metric{padding:10px 8px}
+ .admin-metric>span{font-size:9px;line-height:1.35}
+ .admin-metric strong{font-size:19px}
+ .admin-metric small{font-size:9px}
+ .admin-module-grid{gap:9px}
+ .admin-module{min-height:225px;padding:13px}
+ .admin-module-icon{width:33px;height:33px;margin-bottom:12px}
+ .admin-module h2{font-size:15px}
+ .admin-module>.admin-muted{font-size:11px}
+ .admin-module-actions{gap:6px}
+ .admin-console-button{width:100%;min-height:36px;padding:8px 9px;font-size:10px}
+ .admin-updates-panel{align-items:flex-start;flex-wrap:wrap;padding:14px}
+ .admin-update-details{width:100%;padding-left:55px}
+}
+@media(max-width:380px){
+ .admin-console-header{grid-template-columns:96px minmax(0,1fr);gap:9px}
+ .admin-brand img{max-width:96px}
+ .admin-console-heading h1{font-size:19px}
+ .admin-module{min-height:238px;padding:11px}
+ .admin-module h2{font-size:14px}
+ .admin-module>.admin-muted{font-size:10px}
+ .admin-metric strong{font-size:17px}
+}
+@media(prefers-reduced-motion:reduce){.admin-console *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
