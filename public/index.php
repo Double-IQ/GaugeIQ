@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261116-section04-sun-moon-alignment-v1">
+<link rel="stylesheet" href="css/app.css?v=20261116-section04-unified-orbit-wind-blue-v1">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -1367,8 +1367,8 @@ if ($current && !empty($current['observed_at'])) {
                 <div><small>YOUR LOCATION</small><strong id="mthOrbitLocation">—</strong></div>
             </div>
             <div class="mth-orbit-display mth-tracker-display">
-                <div class="mth-sun-vector"><span class="mth-sun-core"></span><small>SUN VECTOR</small><i></i></div>
                 <div class="mth-earth-system mth-tracker-system">
+                    <div class="mth-sun-vector" aria-label="Sun direction"><span class="mth-sun-core"></span><small>SUN</small><i></i></div>
                     <div class="mth-orbit-ring"></div>
                     <div class="mth-earth-globe mth-real-earth" role="img" aria-label="Rotating Earth with simplified continent shapes">
                         <span class="mth-earth-atmosphere"></span><span class="mth-earth-night"></span>
