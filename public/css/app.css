@@ -7128,11 +7128,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 .weather-map-dashboard-card .maplibregl-ctrl-compass{
   z-index:2;
 }
-.weather-map-dashboard-card .maplibregl-ctrl-compass::after{
-  inset:2px;
-  z-index:3;
-  transform-origin:center;
-}
 
 /* Expandable map credits disclosure. */
 .weather-map-credits-toggle{
