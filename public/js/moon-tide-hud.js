@@ -206,7 +206,7 @@
         if (stationId) params.set('station', stationId);
         return 'api/tides.php?' + params.toString();
     }
-    async function fetchTidePayload(mode, start, end, stationId = null) {
+    async function fetchTidePayload(mode, start, end, stationId = null, timeoutMs = 30000) {
         // Scope cached data to the exact prediction window and station.
         const cacheKey = 'gaugeiq-mth-tides-v3:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3) + ':' + start.toISOString() + ':' + end.toISOString() + ':' + (stationId || 'nearest');
         try {
@@ -218,7 +218,7 @@
         const timeoutId = window.setTimeout(() => {
             timedOut = true;
             controller.abort();
-        }, 30000);
+        }, timeoutMs);
         try {
             const response = await fetch(tideUrl(mode, start, end, stationId), {
                 headers: { Accept: 'application/json' },
@@ -234,7 +234,7 @@
             try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
             return payload;
         } catch (error) {
-            if (timedOut) throw new Error('Tide ' + mode + ' request timed out after 30 seconds.');
+            if (timedOut) throw new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.');
             throw error;
         } finally {
             window.clearTimeout(timeoutId);
@@ -347,14 +347,35 @@
         // Resolve the nearest station once, then request its curve by canonical ID.
         // This avoids a second nearest-station lookup and keeps both predictions aligned.
         const extremesRequest = fetchTidePayload('extremes',start,extremesEnd);
-        const timelineRequest = extremesRequest.then(extremesPayload => {
+        const timelineRequest = extremesRequest.then(async extremesPayload => {
             const stationId = extremesPayload?.station?.id;
             if (!stationId || !/^[a-z0-9_-]+\/[a-z0-9._@-]+$/i.test(stationId)) {
                 throw new Error('The high/low response did not include a usable prediction-station ID for the tide curve.');
             }
             const graphMessage = $('mthGraphMessage');
             if (graphMessage) graphMessage.textContent = 'Loading the 24-hour curve from ' + (extremesPayload.station.name || 'the verified station') + '…';
-            return fetchTidePayload('timeline',start,end,stationId);
+            // Try the canonical station route first. If that route is unavailable,
+            // fall back to the documented coordinate route, but only accept it if
+            // Open Waters resolves the exact same station ID.
+            try {
+                const stationPayload = await fetchTidePayload('timeline',start,end,stationId,15000);
+                if (!Array.isArray(stationPayload?.timeline) || stationPayload.timeline.length < 2) {
+                    throw new Error('The station-specific endpoint returned no usable curve samples.');
+                }
+                return stationPayload;
+            } catch (stationError) {
+                const graphMessage = $('mthGraphMessage');
+                if (graphMessage) graphMessage.textContent = 'Station curve unavailable; retrying East London by location…';
+                const locationPayload = await fetchTidePayload('timeline',start,end,null,20000);
+                const locationStationId = locationPayload?.station?.id;
+                if (!locationStationId || locationStationId !== stationId) {
+                    throw new Error('The station curve request failed (' + (stationError?.message || 'unknown error') + ') and the location fallback did not verify the same station.');
+                }
+                if (!Array.isArray(locationPayload.timeline) || locationPayload.timeline.length < 2) {
+                    throw new Error('The location fallback returned no usable tide-curve samples.');
+                }
+                return locationPayload;
+            }
         });
 
         const extremesUi = extremesRequest.then(extremesPayload => {
