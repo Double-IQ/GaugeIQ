@@ -160,28 +160,24 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <div class="admin-module-grid">
     <section class="admin-module admin-module-alerts weather-alerts-link">
         <div class="admin-module-icon" aria-hidden="true">◉</div><p class="admin-kicker">WEATHER ALERTS</p><h2>Alerts</h2>
-        <p class="admin-muted">Manage comparison settings, WVI threshold, notification rules and saved alerts.</p>
         <div class="admin-module-actions">
-            <a class="admin-console-button button-link" href="alerts.php?location=1">Manage Location 1 Alerts <span aria-hidden="true">→</span></a>
-            <?php if ($secondLocationEnabled): ?><a class="admin-console-button button-link" href="alerts.php?location=2">Manage <?= h($secondLocationName) ?> Alerts <span aria-hidden="true">→</span></a><?php endif; ?>
+            <a class="admin-console-button button-link" href="alerts.php?location=1">Open <span aria-hidden="true">→</span></a>
+            <?php if ($secondLocationEnabled): ?><a class="admin-console-button button-link" href="alerts.php?location=2">Open <span aria-hidden="true">→</span></a><?php endif; ?>
         </div>
     </section>
 
     <section class="admin-module location-history-link-card">
         <div class="admin-module-icon" aria-hidden="true">⌖</div><p class="admin-kicker">CONFIGURATION</p><h2>Location &amp; history</h2>
-        <p class="admin-muted">Manage GaugeIQ's configured locations and inspect historical dataset status.</p>
-        <div class="admin-module-actions"><a class="admin-console-button button-link" href="location-history.php">Manage data <span aria-hidden="true">→</span></a></div>
+        <div class="admin-module-actions"><a class="admin-console-button button-link" href="location-history.php">Open <span aria-hidden="true">→</span></a></div>
     </section>
 
     <section class="admin-module formula-console-link-card">
         <div class="admin-module-icon" aria-hidden="true">◈</div><p class="admin-kicker">FORECAST ENGINE</p><h2>Formula Console</h2>
-        <p class="admin-muted">Review calculations and tune parameters used by the Weather Volatility Index and Conditions Trend.</p>
-        <div class="admin-module-actions"><a class="admin-console-button button-link" href="formula-console.php">Open Formula Console <span aria-hidden="true">→</span></a></div>
+        <div class="admin-module-actions"><a class="admin-console-button button-link" href="formula-console.php">Open <span aria-hidden="true">→</span></a></div>
     </section>
 
     <section class="admin-module appearance-card">
         <div class="admin-module-icon" aria-hidden="true">⚙</div><p class="admin-kicker">DISPLAY PREFERENCES</p><h2>Appearance</h2>
-        <p class="admin-muted">Choose how GaugeIQ looks on this device.</p>
         <label class="admin-theme-label" for="themeSelect">Interface theme</label>
         <select id="themeSelect" class="theme-select admin-theme-select" aria-label="Appearance">
             <option value="system">Follow device</option><option value="light">Light</option><option value="dark">Dark</option>
