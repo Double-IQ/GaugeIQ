@@ -7108,7 +7108,11 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 @media(prefers-reduced-motion:reduce){
   .gaugeiq-map-location-marker::before,
-  .gaugeiq-map-location-marker::after,
+  .gaugeiq-map-location-marker::after{
+    animation:none;
+    opacity:.22;
+    transform:scale(1.25);
+  }
 }
 
 
