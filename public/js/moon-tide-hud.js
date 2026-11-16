@@ -378,38 +378,27 @@
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
 
-        // Resolve the nearest station once, then request its curve by canonical ID.
-        // This avoids a second nearest-station lookup and keeps both predictions aligned.
+        // Use Open Waters' documented coordinate timeline endpoint directly.
+        // The response includes its resolved station ID, which is checked against
+        // the station returned by the high/low request before drawing the curve.
+        // This avoids a station-specific route that can stall before fallback.
         const extremesRequest = fetchTidePayload('extremes',start,extremesEnd);
         const timelineRequest = extremesRequest.then(async extremesPayload => {
             const stationId = extremesPayload?.station?.id;
-            if (!stationId || !/^[a-z0-9_-]+\/[a-z0-9._@-]+$/i.test(stationId)) {
-                throw new Error('The high/low response did not include a usable prediction-station ID for the tide curve.');
+            if (!stationId) {
+                throw new Error('The high/low response did not include a prediction-station ID for the tide curve.');
             }
             const graphMessage = $('mthGraphMessage');
-            if (graphMessage) graphMessage.textContent = 'Loading the 24-hour curve from ' + (extremesPayload.station.name || 'the verified station') + '…';
-            // Try the canonical station route first. If that route is unavailable,
-            // fall back to the documented coordinate route, but only accept it if
-            // Open Waters resolves the exact same station ID.
-            try {
-                const stationPayload = await fetchTidePayload('timeline',start,end,stationId,15000);
-                if (!hasUsableTideTimeline(stationPayload)) {
-                    throw new Error('The station-specific endpoint returned fewer than 20 hours of valid tide-height samples.');
-                }
-                return stationPayload;
-            } catch (stationError) {
-                const graphMessage = $('mthGraphMessage');
-                if (graphMessage) graphMessage.textContent = 'Station curve unavailable; retrying the selected location…';
-                const locationPayload = await fetchTidePayload('timeline',start,end,null,20000);
-                const locationStationId = locationPayload?.station?.id;
-                if (!locationStationId || locationStationId !== stationId) {
-                    throw new Error('The station curve request failed (' + (stationError?.message || 'unknown error') + ') and the location fallback did not verify the same station.');
-                }
-                if (!hasUsableTideTimeline(locationPayload)) {
-                    throw new Error('The location fallback returned fewer than 20 hours of valid tide-height samples.');
-                }
-                return locationPayload;
+            if (graphMessage) graphMessage.textContent = 'Loading the 24-hour curve for ' + (extremesPayload.station.name || 'the verified station') + '…';
+            const timelinePayload = await fetchTidePayload('timeline',start,end,null,20000);
+            const timelineStationId = timelinePayload?.station?.id;
+            if (!timelineStationId || timelineStationId !== stationId) {
+                throw new Error('The location timeline resolved to a different station than the verified high/low prediction.');
             }
+            if (!hasUsableTideTimeline(timelinePayload)) {
+                throw new Error('The location timeline returned fewer than 20 hours of valid tide-height samples.');
+            }
+            return timelinePayload;
         });
 
         const extremesUi = extremesRequest.then(extremesPayload => {
