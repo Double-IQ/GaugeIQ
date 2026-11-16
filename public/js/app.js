@@ -249,6 +249,8 @@ let windCompassHeading = null;
 let windCompassTargetHeading = null;
 let windCompassRotation = null;
 let windCompassAnimationFrame = null;
+let windCompassSensorTimer = null;
+let windCompassSensorEventSeen = false;
 
 function normalizeCompassHeading(value) {
     const heading = Number(value);
@@ -272,6 +274,7 @@ function applyWindCompassHeading(heading) {
     if (normalized === null) return;
 
     windCompassTargetHeading = normalized;
+    if (windCompassSensorTimer !== null) { window.clearTimeout(windCompassSensorTimer); windCompassSensorTimer = null; }
 
     if (windCompassHeading === null) {
         windCompassHeading = normalized;
@@ -331,6 +334,7 @@ function handleWindDeviceOrientation(event) {
     if (!windCompassEnabled) return;
 
     let heading = null;
+    windCompassSensorEventSeen = true;
 
     const screenAngle = Number(window.screen?.orientation?.angle ?? window.orientation ?? 0);
     const screenOffset = Number.isFinite(screenAngle) ? screenAngle : 0;
@@ -349,6 +353,9 @@ function handleWindDeviceOrientation(event) {
 
     if (heading !== null) {
         applyWindCompassHeading(heading);
+    } else if (windCompassStatus) {
+        windCompassStatus.hidden = false;
+        windCompassStatus.textContent = 'Sensor active · no absolute heading';
     }
 }
 
@@ -384,11 +391,20 @@ async function enableWindCompass() {
             windCompassListening = true;
         }
 
+        windCompassSensorEventSeen = false;
         updateWindCompassButton();
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
-            windCompassStatus.textContent = 'Finding heading…';
+            windCompassStatus.textContent = 'Waiting for iPhone sensor…';
         }
+        if (windCompassSensorTimer !== null) window.clearTimeout(windCompassSensorTimer);
+        windCompassSensorTimer = window.setTimeout(() => {
+            windCompassSensorTimer = null;
+            if (!windCompassEnabled || windCompassHeading !== null || !windCompassStatus) return;
+            windCompassStatus.textContent = windCompassSensorEventSeen
+                ? 'Sensor events received, but no compass heading'
+                : 'No sensor events received · check iOS Safari access';
+        }, 3500);
     } catch (error) {
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
@@ -414,6 +430,8 @@ function disableWindCompass() {
     }
 
     windCompassNativeHeadingSeen = false;
+    if (windCompassSensorTimer !== null) { window.clearTimeout(windCompassSensorTimer); windCompassSensorTimer = null; }
+    windCompassSensorEventSeen = false;
     windCompassHeading = null;
     windCompassTargetHeading = null;
     windCompassRotation = null;
@@ -2173,6 +2191,8 @@ updateNetworkDiagnostics();
     let currentHeading = null;
     let targetHeading = null;
     let animationFrame = null;
+    let sensorTimer = null;
+    let sensorEventSeen = false;
 
     const normalize = value => {
         const number = Number(value);
@@ -2218,6 +2238,7 @@ updateNetworkDiagnostics();
     function applyHeading(value) {
         const heading = normalize(value);
         if (!enabled || heading === null) return;
+        if (sensorTimer !== null) { window.clearTimeout(sensorTimer); sensorTimer = null; }
         targetHeading = heading;
         if (currentHeading === null) currentHeading = heading;
         if (animationFrame === null) animationFrame = requestAnimationFrame(renderHeading);
@@ -2225,6 +2246,7 @@ updateNetworkDiagnostics();
 
     function handleOrientation(event) {
         if (!enabled) return;
+        sensorEventSeen = true;
         let heading = null;
         if (Number.isFinite(event.webkitCompassHeading)) {
             nativeHeadingSeen = true;
@@ -2234,6 +2256,7 @@ updateNetworkDiagnostics();
             heading = 360 - event.alpha + (Number.isFinite(screenAngle) ? screenAngle : 0);
         }
         if (heading !== null) applyHeading(heading);
+        else setStatus('Sensor active · no absolute heading');
     }
 
     function startListening() {
@@ -2265,7 +2288,16 @@ updateNetworkDiagnostics();
             currentHeading = null;
             targetHeading = null;
             startListening();
-            setStatus('Finding heading…');
+            sensorEventSeen = false;
+            setStatus('Waiting for iPhone sensor…');
+            if (sensorTimer !== null) window.clearTimeout(sensorTimer);
+            sensorTimer = window.setTimeout(() => {
+                sensorTimer = null;
+                if (!enabled || currentHeading !== null) return;
+                setStatus(sensorEventSeen
+                    ? 'Sensor events received, but no compass heading'
+                    : 'No sensor events received · check iOS Safari access');
+            }, 3500);
             updateButton();
         } catch (error) {
             setStatus(error instanceof Error ? error.message : 'Compass unavailable');
@@ -2283,6 +2315,9 @@ updateNetworkDiagnostics();
         }
         if (animationFrame !== null) cancelAnimationFrame(animationFrame);
         animationFrame = null;
+        if (sensorTimer !== null) window.clearTimeout(sensorTimer);
+        sensorTimer = null;
+        sensorEventSeen = false;
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
