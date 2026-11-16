@@ -98,6 +98,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="css/app.css?v=20261101-admin-action-buttons-v2">
 <link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
+<link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <title>GaugeIQ Admin</title>
 </head>
 <body>
@@ -202,6 +203,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 </section>
 
 
+<script src="js/admin-interactions.js?v=20261116-hud-feedback" defer></script>
 <script src="js/admin.js?v=20261031-admin-theme-v2" defer></script>
 <script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
