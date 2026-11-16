@@ -168,8 +168,9 @@
             const markerX = Math.cos(lat*rad)*Math.sin(delta);
             const markerY = -Math.sin(lat*rad);
             const markerZ = Math.cos(lat*rad)*Math.cos(delta);
-            locationMarker.style.left = (50 + markerX*43) + '%';
-            locationMarker.style.top = (50 + markerY*43) + '%';
+            const globeRadiusPercent = 46;
+            locationMarker.style.left = (50 + markerX*globeRadiusPercent) + '%';
+            locationMarker.style.top = (50 + markerY*globeRadiusPercent) + '%';
             locationMarker.style.opacity = markerZ > 0 ? '1' : '.22';
             locationMarker.style.zIndex = markerZ > 0 ? '5' : '0';
             locationMarker.title = (root.dataset.locationName || 'Selected location') + (markerZ > 0 ? ' · visible hemisphere' : ' · far side of Earth');
@@ -182,7 +183,12 @@
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
         $('mthOrbitState').textContent = 'CALCULATED POSITION';
         globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
-        globe.style.backgroundPosition = ((norm360(gmst) / 360) * 300).toFixed(2) + 'px center';
+        // Keep the equirectangular texture's Greenwich meridian aligned with the
+        // camera-facing meridian. The texture must move west as Earth rotates east.
+        const textureWidth = 300;
+        const globeViewportWidth = globe.clientWidth;
+        const textureOffset = (globeViewportWidth / 2) - (norm360(gmst) / 360) * textureWidth;
+        globe.style.backgroundPosition = textureOffset.toFixed(2) + 'px center';
         globe.style.setProperty('--mth-sun-side',sunX>=0?'right':'left');
         globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
     }
