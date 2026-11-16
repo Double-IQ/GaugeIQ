@@ -753,10 +753,22 @@ showAlertsOnIfAlreadyEnabled();
 
 if (notifyButton) {
     notifyButton.addEventListener('click', async () => {
+        const originalLabel = isInstalledPWA() ? 'Enable alerts' : 'Install';
+        notifyButton.disabled = true;
+        notifyButton.textContent = isInstalledPWA() ? 'Enabling…' : 'Opening install…';
+        if (status) {
+            status.setAttribute('role', 'status');
+            status.setAttribute('aria-live', 'polite');
+            status.textContent = isInstalledPWA()
+                ? 'Checking notification permission…'
+                : 'Preparing GaugeIQ installation…';
+        }
+
         try {
             const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             if (!isInstalledPWA() && isIOS) {
+                if (status) status.textContent = 'To enable alerts on iPhone, install GaugeIQ from Safari using Share → Add to Home Screen, then open it from your Home Screen.';
                 window.location.href = 'https://github.com/Double-IQ/GaugeIQ#install-gaugeiq';
                 return;
             }
@@ -769,9 +781,15 @@ if (notifyButton) {
             }
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') throw new Error('Notification permission was not granted.');
+            if (status) status.textContent = 'Permission granted. Connecting this device to GaugeIQ alerts…';
             await enablePushNotifications();
         } catch (error) {
             if (status) status.textContent = error instanceof Error ? error.message : 'Unable to install GaugeIQ or enable notifications.';
+        } finally {
+            if (notifyButton && !notifyButton.hidden) {
+                notifyButton.disabled = false;
+                notifyButton.textContent = originalLabel;
+            }
         }
     });
 }
