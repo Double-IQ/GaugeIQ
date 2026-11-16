@@ -72,7 +72,7 @@ curl_setopt_array($curl, [
     CURLOPT_CONNECTTIMEOUT => 8,
     CURLOPT_TIMEOUT => 25,
     CURLOPT_HTTPHEADER => ['Accept: application/json'],
-    CURLOPT_USERAGENT => 'GaugeIQ-TideMonitor/1.0',
+    CURLOPT_USERAGENT => 'GaugeIQ/1.0 (https://github.com/Double-IQ/GaugeIQ)',
 ]);
 $body = curl_exec($curl);
 $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
