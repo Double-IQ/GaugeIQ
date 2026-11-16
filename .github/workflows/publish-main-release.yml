@@ -88,6 +88,73 @@ jobs:
             --title "GaugeIQ $RELEASE_TAG" \
             --notes "Automated production release built from main after all PHP syntax and regression checks passed."
 
-          # GITHUB_TOKEN-created releases do not trigger tag-push workflows.
-          # Dispatch the existing package builder explicitly after the release exists.
-          gh workflow run release.yml --ref main -f tag="$RELEASE_TAG"
+      - name: Set up PHP for the release package
+        if: steps.target.outputs.publish == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, openssl, pdo_sqlite, pdo_mysql, zip
+          tools: composer
+
+      - name: Build and verify the installable release package
+        if: steps.target.outputs.publish == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG}"
+          SAFE_VERSION="${VERSION#v}"
+          PACKAGE="GaugeIQ-${SAFE_VERSION}"
+
+          cat > app/Version.php <<PHP
+          <?php
+          declare(strict_types=1);
+          final class GaugeIQVersion
+          {
+              public const VERSION = '${SAFE_VERSION}';
+          }
+          PHP
+          php -l app/Version.php
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+          test -f vendor/autoload.php
+          test -d vendor/minishlink/web-push
+          test -f vendor/web-token/jwt-library/KeyManagement/JWKFactory.php
+
+          mkdir -p "dist/${PACKAGE}"
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='config/local.php' \
+            --exclude='config/installed.lock' \
+            --exclude='storage/*' \
+            --exclude='*.log' \
+            ./ "dist/${PACKAGE}/"
+
+          rm -rf "dist/${PACKAGE}/storage"
+          mkdir -p "dist/${PACKAGE}/storage"
+          test -f "dist/${PACKAGE}/vendor/autoload.php"
+          test -d "dist/${PACKAGE}/vendor/minishlink/web-push"
+          test -f "dist/${PACKAGE}/vendor/web-token/jwt-library/KeyManagement/JWKFactory.php"
+
+          cd dist
+          zip -qr "${PACKAGE}.zip" "${PACKAGE}"
+          unzip -t "${PACKAGE}.zip" >/dev/null
+          unzip -l "${PACKAGE}.zip" | grep -q "/vendor/autoload.php$"
+          sha256sum "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
+          gh release upload "${RELEASE_TAG}" \
+            "${PACKAGE}.zip" "${PACKAGE}.zip.sha256" --clobber
+
+      - name: Verify both installer assets are attached
+        if: steps.target.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "${RELEASE_TAG}" --json assets \
+            --jq '.assets[].name' | grep -Fx "GaugeIQ-${RELEASE_TAG#v}.zip"
+          gh release view "${RELEASE_TAG}" --json assets \
+            --jq '.assets[].name' | grep -Fx "GaugeIQ-${RELEASE_TAG#v}.zip.sha256"
