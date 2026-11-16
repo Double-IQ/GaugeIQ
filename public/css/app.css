@@ -7698,3 +7698,13 @@ body.gaugeiq-menu-open{overflow:hidden}
   .moon-tide-hud-card .mth-section-head small{font-size:9px}
   .moon-tide-hud-card .mth-lunar-readouts strong{font-size:13px}
 }
+
+/* Section 05: explicitly restore the SVG's layout once a valid curve is available.
+   Keep the native hidden state respected while the graph is still loading. */
+#moonTideHud #mthTideGraph:not([hidden]){
+  display:block!important;
+  width:100%;
+  height:auto;
+  min-height:195px;
+}
+#moonTideHud #mthTideGraph[hidden]{display:none!important}
