@@ -258,6 +258,7 @@ if ($current && !empty($current['observed_at'])) {
             <button id="notifyButton" class="secondary" type="button">Enable alerts</button>
         </div>
     </header>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
     <?php if ($secondLocationEnabled): ?>
     <nav class="location-switcher" aria-label="Monitoring location">
         <a class="secondary button-link<?= $locationId === 1 ? ' active' : '' ?>" href="?location=1" <?= $locationId === 1 ? 'aria-current="page"' : '' ?>><?= htmlspecialchars((string)($storedCoordinates['location_name'] ?? $config['pressure']['location_name'] ?? 'Location 1'), ENT_QUOTES, 'UTF-8') ?></a>
@@ -1524,7 +1525,7 @@ if ($current && !empty($current['observed_at'])) {
             <button id="notificationRepairButton" type="button">Repair connection</button>
         </div>
     </dialog>
-    <p id="status" class="status" role="status" aria-live="polite"></p>
+    
 </main>
 <?php
 try { $historyTimezone = new DateTimeZone($dashboardTimezone); } catch (Throwable) { $historyTimezone = new DateTimeZone('UTC'); }
