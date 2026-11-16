@@ -202,31 +202,16 @@ const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
 
 const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
-// Keep the iOS permission grant separate from the user's on/off preference.
-// Disabling the compass must not make the next Enable action request permission again.
-const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
-
-// Wind HUD and Rain Radar share one iOS motion-sensor permission grant.
-// Remember a successful grant so enabling either compass does not prompt again.
+// Wind HUD and Rain Radar share the same iOS permission request.
+// Always call requestPermission() directly from the Enable-button gesture:
+// iOS remembers the user's grant and returns "granted" without prompting
+// again, while the call still activates orientation-event delivery.
 async function requestCompassPermission() {
     if (typeof DeviceOrientationEvent === 'undefined') return false;
     if (typeof DeviceOrientationEvent.requestPermission !== 'function') return true;
 
-    try {
-        if (localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true') return true;
-    } catch {
-        // Continue with the native permission request when storage is unavailable.
-    }
-
     const permission = await DeviceOrientationEvent.requestPermission();
-    if (permission !== 'granted') return false;
-
-    try {
-        localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
-    } catch {
-        // The permission remains valid for this session even without storage.
-    }
-    return true;
+    return permission === 'granted';
 }
 
 const WIND_COMPASS_SMOOTHING = 0.18;
