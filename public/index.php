@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261116-section04-unified-orbit-wind-blue-v1">
+<link rel="stylesheet" href="css/app.css?v=20261116-section04-blue-reverted-v1">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -1567,6 +1567,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
 <script src="js/app.js?v=20261116-compass-flow-restore"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
-<script src="js/moon-tide-hud.js?v=20261116-section04-sun-moon-alignment-v1"></script>
+<script src="js/moon-tide-hud.js?v=20261116-section04-blue-reverted-v1"></script>
 </body>
 </html>
