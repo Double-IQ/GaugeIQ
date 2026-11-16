@@ -106,7 +106,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <main class="shell admin-shell admin-console">
 <header class="admin-console-header">
     <a class="admin-brand" href="./" aria-label="GaugeIQ dashboard">
-        <img src="branding/gaugeiq-logo-dark-background-original.png" alt="GaugeIQ">
+        <img src="branding/icon-192.png" alt="GaugeIQ app icon" width="64" height="64">
     </a>
     <div class="admin-console-heading">
         <p class="admin-kicker">SYSTEM CONTROL CENTRE</p>
