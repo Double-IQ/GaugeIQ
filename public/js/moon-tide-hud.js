@@ -436,23 +436,22 @@
             $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
         });
 
-        const timelineUi = Promise.all([timelineRequest,extremesRequest]).then(([timelinePayload,extremesPayload]) => {
-            const station = timelinePayload.station || {};
-            const verifiedStation = extremesPayload.station || {};
-            const verifiedDistance = Number(extremesPayload.distance);
-            if (!station.name || !verifiedStation.name || !Array.isArray(extremesPayload.extremes)) {
-                throw new Error('The provider did not return matching station and high/low verification data.');
-            }
-            if (Number.isFinite(verifiedDistance) && verifiedDistance > 150) {
-                throw new Error('The nearest supported station is too far away to represent this location.');
-            }
-            if (verifiedStation.id && station.id && verifiedStation.id !== station.id) {
-                throw new Error('The high/low events and tide curve resolved to different stations.');
-            }
-            drawTideGraph(timelinePayload,extremesPayload);
+        // The 24-hour curve is an independent product of the timeline endpoint.
+        // Never hold it behind the separate extremes/high-low request: that
+        // endpoint may fail even when the timeline is valid.
+        let resolvedTimelinePayload = null;
+        const timelineUi = timelineRequest.then(timelinePayload => {
+            resolvedTimelinePayload = timelinePayload;
+            drawTideGraph(timelinePayload, null);
         }).catch(error => {
-            setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error?.message || 'Please try again later.'));
+            setGraphUnavailable('The 24-hour tide timeline could not be loaded. ' + (error?.message || 'Please try again later.'));
         });
+
+        // Add high/low markers if the second request succeeds, without making
+        // its success a prerequisite for displaying the tide curve.
+        extremesRequest.then(extremesPayload => {
+            if (resolvedTimelinePayload) drawTideGraph(resolvedTimelinePayload, extremesPayload);
+        }).catch(() => { /* High/low status is reported by extremesUi. */ });
 
         await Promise.all([extremesUi,timelineUi]);
     }
