@@ -43,14 +43,24 @@ if (!function_exists('curl_init')) {
     tideApiRespond(503, ['message' => 'The GaugeIQ server does not have cURL enabled for tide requests.']);
 }
 
-$query = http_build_query([
-    'latitude' => (float)$latitude,
-    'longitude' => (float)$longitude,
-    'start' => gmdate('Y-m-d\TH:i:s\Z', $startTime),
-    'end' => gmdate('Y-m-d\TH:i:s\Z', $endTime),
+$queryParams = [
+    'start' => gmdate('Y-m-d\\TH:i:s\\Z', $startTime),
+    'end' => gmdate('Y-m-d\\TH:i:s\\Z', $endTime),
     'units' => 'meters',
-]);
-$url = 'https://api.openwaters.io/tides/' . $mode . '?' . $query;
+];
+$stationId = trim((string)($_GET['station'] ?? ''));
+if ($stationId !== '') {
+    if ($mode !== 'timeline' || !preg_match('/^([a-z0-9_-]+)\\/([a-z0-9._@-]+)$/i', $stationId, $stationMatch)) {
+        tideApiRespond(400, ['message' => 'A valid prediction station ID is required for a station-specific tide timeline.']);
+    }
+    // Reuse the exact station resolved by the high/low request. This avoids
+    // a second nearest-station lookup and keeps the curve on the same datum.
+    $url = 'https://api.openwaters.io/tides/stations/' . rawurlencode($stationMatch[1]) . '/' . rawurlencode($stationMatch[2]) . '/timeline?' . http_build_query($queryParams);
+} else {
+    $queryParams['latitude'] = (float)$latitude;
+    $queryParams['longitude'] = (float)$longitude;
+    $url = 'https://api.openwaters.io/tides/' . $mode . '?' . http_build_query($queryParams);
+}
 $curl = curl_init($url);
 if ($curl === false) {
     tideApiRespond(503, ['message' => 'Unable to initialise the tide prediction request.']);
