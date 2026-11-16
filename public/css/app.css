@@ -1226,7 +1226,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   padding:18px;
   overflow:hidden;
   color:#edf6ff;
-  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  background:radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
   border:1px solid rgba(104,163,218,.34);
   border-radius:18px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
