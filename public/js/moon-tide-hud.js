@@ -22,6 +22,36 @@
         console.info('[GaugeIQ Tide]', line);
     };
     tideLog('SCRIPT START', 'location=' + (validLocation ? lat.toFixed(4) + ',' + lon.toFixed(4) : 'missing') + '; timezone=' + zone + '; online=' + navigator.onLine);
+    // Record responsive viewport metrics on every device, not just the device
+    // used to capture the current rendering diagnostics.
+    const logDisplayMetrics = reason => {
+        const viewport = window.visualViewport;
+        const card = root.getBoundingClientRect();
+        const graphSection = root.querySelector('.mth-tide-graph-section');
+        const graphWrap = $('mthTideGraphWrap');
+        const metrics = {
+            reason,
+            screen: (screen.width || 0) + 'x' + (screen.height || 0),
+            viewport: window.innerWidth + 'x' + window.innerHeight,
+            visualViewport: viewport ? Math.round(viewport.width) + 'x' + Math.round(viewport.height) + '@' + viewport.scale.toFixed(2) : 'unavailable',
+            document: document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight,
+            pixelRatio: window.devicePixelRatio || 1,
+            orientation: screen.orientation?.type || (window.innerWidth >= window.innerHeight ? 'landscape' : 'portrait'),
+            cardWidth: Math.round(card.width),
+            graphSectionWidth: graphSection ? Math.round(graphSection.getBoundingClientRect().width) : 'missing',
+            graphWrapWidth: graphWrap ? Math.round(graphWrap.getBoundingClientRect().width) : 'missing'
+        };
+        tideLog('DEVICE DISPLAY METRICS', Object.entries(metrics).map(([key,value]) => key + '=' + value).join('; '));
+    };
+    logDisplayMetrics('initial');
+    let displayMetricsResizeTimer = null;
+    const scheduleDisplayMetrics = reason => {
+        window.clearTimeout(displayMetricsResizeTimer);
+        displayMetricsResizeTimer = window.setTimeout(() => logDisplayMetrics(reason), 250);
+    };
+    window.addEventListener('resize', () => scheduleDisplayMetrics('window resize'));
+    window.addEventListener('orientationchange', () => scheduleDisplayMetrics('orientation change'));
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', () => scheduleDisplayMetrics('visual viewport resize'));
     window.addEventListener('error', event => tideLog('WINDOW ERROR', (event.message || 'unknown') + ' @ ' + (event.filename || '') + ':' + (event.lineno || 0) + ':' + (event.colno || 0)));
     window.addEventListener('unhandledrejection', event => tideLog('UNHANDLED REJECTION', event.reason?.stack || event.reason?.message || String(event.reason)));
     window.addEventListener('online', () => tideLog('NETWORK ONLINE'));
