@@ -7596,3 +7596,124 @@ body.gaugeiq-menu-open{overflow:hidden}
     text-align:right;
   }
 }
+
+
+/* Moon & Tide: use the same navy glass card system as Temperature, Wind and Forecast. */
+.moon-tide-hud-card{
+  --mth-bg:#071629;
+  --mth-panel:rgba(1,10,24,.24);
+  --mth-line:rgba(117,164,211,.2);
+  --mth-cyan:#7db9ff;
+  --mth-green:#7db9ff;
+  --mth-amber:#ffc184;
+  --mth-dim:#9cb6d5;
+  color:#edf6ff;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;
+}
+.moon-tide-hud-card .mth-header{border-bottom-color:rgba(117,164,211,.2)}
+.moon-tide-hud-card .mth-kicker{font-family:inherit;color:#9cb6d5;font-size:10px;letter-spacing:.12em}
+.moon-tide-hud-card .mth-header h2{font-family:inherit;color:#edf6ff;font-size:22px;font-weight:750;letter-spacing:normal}
+.moon-tide-hud-card .mth-subtitle{font-family:inherit;color:#9cb6d5;font-size:11px;letter-spacing:.04em}
+.moon-tide-hud-card .mth-subtitle span{color:#7db9ff}
+.moon-tide-hud-card .mth-live{font-family:inherit;color:#7db9ff;border-color:rgba(125,185,255,.28);background:rgba(53,196,235,.07);border-radius:999px;letter-spacing:.04em}
+.moon-tide-hud-card .mth-live i{background:#35c4eb;box-shadow:0 0 8px rgba(53,196,235,.55)}
+.moon-tide-hud-card .mth-section{border-bottom-color:rgba(117,164,211,.2)}
+.moon-tide-hud-card .mth-index{font-family:inherit;color:#7db9ff;border-right-color:rgba(125,185,255,.3)}
+.moon-tide-hud-card .mth-section-head strong{font-family:inherit;font-size:13px;line-height:1.2;font-weight:800;color:#edf6ff;letter-spacing:.025em}
+.moon-tide-hud-card .mth-section-head small{font-family:inherit;font-size:10px;line-height:1.3;font-weight:600;color:#9cb6d5;letter-spacing:.045em}
+.moon-tide-hud-card .mth-section-state{font-family:inherit;font-size:10px;line-height:1.2;font-weight:700;color:#7db9ff;letter-spacing:.02em}
+.moon-tide-hud-card .mth-state-pending{color:#ffc184}
+.moon-tide-hud-card .mth-lunar-readouts>div,
+.moon-tide-hud-card .mth-solar-readouts>div,
+.moon-tide-hud-card .mth-tide-events>div,
+.moon-tide-hud-card .mth-tracker-readouts>div,
+.moon-tide-hud-card .mth-time-control,
+.moon-tide-hud-card .mth-mechanic,
+.moon-tide-hud-card .mth-mechanic-visual,
+.moon-tide-hud-card .mth-graph-readout>div{
+  background:rgba(1,10,24,.24);
+  border:1px solid rgba(117,164,211,.2);
+  border-radius:12px;
+}
+.moon-tide-hud-card .mth-lunar-readouts small,
+.moon-tide-hud-card .mth-solar-readouts small,
+.moon-tide-hud-card .mth-tide-events small,
+.moon-tide-hud-card .mth-tracker-readouts small,
+.moon-tide-hud-card .mth-graph-readout small{font-family:inherit;font-size:10px;line-height:1.3;font-weight:700;color:#9cb6d5;letter-spacing:.045em}
+.moon-tide-hud-card .mth-lunar-readouts strong,
+.moon-tide-hud-card .mth-solar-readouts strong,
+.moon-tide-hud-card .mth-tide-events strong,
+.moon-tide-hud-card .mth-tracker-readouts strong,
+.moon-tide-hud-card .mth-graph-readout strong{font-family:inherit;color:#edf6ff;font-weight:800;font-variant-numeric:tabular-nums}
+.moon-tide-hud-card .mth-tide-panel{background:rgba(255,193,132,.07);border:1px solid rgba(255,193,132,.22);border-radius:12px}
+.moon-tide-hud-card .mth-tide-status-mark{border-color:rgba(255,193,132,.35);color:#ffc184;border-radius:9px}
+.moon-tide-hud-card .mth-tide-panel strong{font-family:inherit;font-size:12px;line-height:1.3;font-weight:800;color:#ffc184;letter-spacing:.025em}
+.moon-tide-hud-card .mth-tide-panel p,
+.moon-tide-hud-card .mth-note,
+.moon-tide-hud-card .mth-mechanic p{color:#9cb6d5;font-family:inherit}
+.moon-tide-hud-card .mth-tide-baseline{font-family:inherit;font-size:10px;line-height:1.4;font-weight:700}
+.moon-tide-hud-card .mth-tide-baseline span{font-family:inherit;color:#9cb6d5;letter-spacing:.035em}
+.moon-tide-hud-card .mth-tide-baseline strong{color:#7db9ff}
+.moon-tide-hud-card .mth-orbit-display,
+.moon-tide-hud-card .mth-tracker-display{border:1px solid rgba(117,164,211,.2);border-radius:14px;background:radial-gradient(ellipse at 50% 48%,rgba(24,91,145,.2),transparent 65%),linear-gradient(145deg,#071629,#030d1b)}
+.moon-tide-hud-card .mth-orbit-legend,
+.moon-tide-hud-card .mth-moon-caption,
+.moon-tide-hud-card .mth-earth-label,
+.moon-tide-hud-card .mth-moon-label,
+.moon-tide-hud-card .mth-time-heading strong,
+.moon-tide-hud-card .mth-time-heading span,
+.moon-tide-hud-card .mth-time-labels,
+.moon-tide-hud-card .mth-graph-legend,
+.moon-tide-hud-card .mth-graph-source{font-family:inherit;letter-spacing:.035em}
+.moon-tide-hud-card .mth-orbit-legend,
+.moon-tide-hud-card .mth-time-labels,
+.moon-tide-hud-card .mth-graph-legend{color:#9cb6d5}
+.moon-tide-hud-card .mth-time-heading strong{color:#edf6ff;font-size:11px}
+.moon-tide-hud-card .mth-time-heading span{color:#ffc184;font-size:11px}
+.moon-tide-hud-card .mth-time-control input{accent-color:#38bdf8}
+.moon-tide-hud-card .mth-graph-readout span,
+.moon-tide-hud-card .mth-graph-loading{font-family:inherit;color:#9cb6d5}
+.moon-tide-hud-card .mth-tide-graph-wrap{border:1px solid rgba(117,164,211,.2);border-radius:12px;background:linear-gradient(180deg,rgba(1,10,24,.55),rgba(7,23,46,.55))}
+.moon-tide-hud-card .mth-graph-gridline{stroke:rgba(125,185,255,.18)}
+.moon-tide-hud-card .mth-graph-tick{stroke:rgba(125,185,255,.12)}
+.moon-tide-hud-card .mth-graph-axis-label{fill:#9cb6d5;font-family:inherit}
+.moon-tide-hud-card .mth-graph-line{stroke:#38bdf8;filter:drop-shadow(0 0 4px rgba(56,189,248,.25))}
+.moon-tide-hud-card .mth-graph-area{opacity:.8}
+.moon-tide-hud-card .mth-graph-now-line{stroke:#ffc184}
+.moon-tide-hud-card .mth-graph-now-label,
+.moon-tide-hud-card .mth-graph-extreme-label{fill:#ffc184;font-family:inherit}
+.moon-tide-hud-card .mth-graph-extreme-dot{fill:#ffc184;stroke:#071629}
+.moon-tide-hud-card .mth-legend-curve{background:#38bdf8}
+.moon-tide-hud-card .mth-legend-now,
+.moon-tide-hud-card .mth-legend-extreme{background:#ffc184}
+.moon-tide-hud-card .mth-graph-source{border-top-color:rgba(117,164,211,.2)}
+.moon-tide-hud-card .mth-graph-source span{color:#9cb6d5}
+.moon-tide-hud-card .mth-graph-source strong{color:#7db9ff}
+.moon-tide-hud-card .mth-mechanic-visual-head strong,
+.moon-tide-hud-card .mth-mechanic strong{font-family:inherit;color:#edf6ff}
+.moon-tide-hud-card .mth-mechanic-visual-head span{font-family:inherit;color:#9cb6d5}
+.moon-tide-hud-card .mth-mechanic strong{font-size:11px;letter-spacing:.025em}
+.moon-tide-hud-card .mth-alignment{font-family:inherit;color:#ffc184}
+.moon-tide-hud-card .mth-alignment-neap{color:#7db9ff}
+.moon-tide-hud-card .mth-footer{font-family:inherit;color:#819fc2;letter-spacing:.06em}
+.moon-tide-hud-card .mth-moon-reticle{border-color:rgba(125,185,255,.32);background:repeating-conic-gradient(from 0deg,rgba(125,185,255,.2) 0deg 1deg,transparent 1deg 15deg)}
+.moon-tide-hud-card .mth-moon-reticle:before,
+.moon-tide-hud-card .mth-moon-reticle:after{border-color:rgba(125,185,255,.2)}
+.moon-tide-hud-card .mth-reticle-tick{border-top-color:#38bdf8;border-bottom-color:#38bdf8}
+.moon-tide-hud-card .mth-moon-caption{color:#7db9ff}
+.moon-tide-hud-card .mth-orbit-ring{border-color:rgba(125,185,255,.3)}
+.moon-tide-hud-card .mth-tidal-bulge{border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.09);box-shadow:0 0 15px rgba(56,189,248,.12)}
+.moon-tide-hud-card .mth-tidal-axis{border-top-color:rgba(255,193,132,.55)}
+.moon-tide-hud-card .mth-note{font-size:12px;line-height:1.5}
+@media(max-width:480px){
+  .moon-tide-hud-card{padding:16px}
+  .moon-tide-hud-card .mth-header h2{font-size:21px}
+  .moon-tide-hud-card .mth-kicker{font-size:9px}
+  .moon-tide-hud-card .mth-section-head strong{font-size:12px}
+  .moon-tide-hud-card .mth-section-head small{font-size:9px}
+  .moon-tide-hud-card .mth-lunar-readouts strong{font-size:13px}
+}
