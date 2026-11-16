@@ -205,6 +205,30 @@ const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
 // Keep the iOS permission grant separate from the user's on/off preference.
 // Disabling the compass must not make the next Enable action request permission again.
 const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
+
+// Wind HUD and Rain Radar share one iOS motion-sensor permission grant.
+// Remember a successful grant so enabling either compass does not prompt again.
+async function requestCompassPermission() {
+    if (typeof DeviceOrientationEvent === 'undefined') return false;
+    if (typeof DeviceOrientationEvent.requestPermission !== 'function') return true;
+
+    try {
+        if (localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true') return true;
+    } catch {
+        // Continue with the native permission request when storage is unavailable.
+    }
+
+    const permission = await DeviceOrientationEvent.requestPermission();
+    if (permission !== 'granted') return false;
+
+    try {
+        localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+    } catch {
+        // The permission remains valid for this session even without storage.
+    }
+    return true;
+}
+
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
@@ -346,19 +370,9 @@ async function enableWindCompass() {
     }
 
     try {
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // Call from this Enable-button gesture every time. Once iOS has
-            // granted access, it should return "granted" without showing the
-            // native prompt again, while still activating sensor delivery.
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Compass permission was not granted.');
-            }
-            try {
-                localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
-            } catch {
-                // Compass can still work for this session if storage is unavailable.
-            }
+        const permissionGranted = await requestCompassPermission();
+        if (!permissionGranted) {
+            throw new Error('Compass permission was not granted.');
         }
 
         windCompassEnabled = true;
@@ -2243,10 +2257,8 @@ updateNetworkDiagnostics();
             return;
         }
         try {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission !== 'granted') throw new Error('Compass permission was not granted.');
-            }
+            const permissionGranted = await requestCompassPermission();
+            if (!permissionGranted) throw new Error('Compass permission was not granted.');
             enabled = true;
             try { localStorage.setItem(storageKey, 'true'); } catch {}
             nativeHeadingSeen = false;
