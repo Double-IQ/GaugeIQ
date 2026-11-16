@@ -231,12 +231,20 @@
                 cache: 'no-store',
                 signal: controller.signal
             });
+            let payload;
+            try {
+                payload = await response.json();
+            } catch {
+                throw new Error('Tide ' + mode + ' request returned an invalid JSON response (HTTP ' + response.status + ').');
+            }
             if (!response.ok) {
-                let detail = '';
-                try { detail = (await response.json()).message || ''; } catch { /* Non-JSON error. */ }
+                const details = Array.isArray(payload?.errors)
+                    ? payload.errors.map(item => [item?.path, item?.message].filter(Boolean).join(': ')).filter(Boolean).join('; ')
+                    : '';
+                const detail = [payload?.message, details].filter(Boolean).join(' — ');
                 throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
             }
-            return response.json();
+            return payload;
         })();
         const deadlinePromise = new Promise((resolve, reject) => {
             timeoutId = window.setTimeout(() => {
