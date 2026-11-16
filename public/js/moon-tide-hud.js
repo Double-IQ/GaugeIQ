@@ -215,11 +215,11 @@
         } catch { /* Ignore unavailable or invalid session cache. */ }
         const controller = new AbortController();
         let timedOut = false;
-        const timeoutId = window.setTimeout(() => {
-            timedOut = true;
-            controller.abort();
-        }, timeoutMs);
-        try {
+        let timeoutId;
+        // Race the whole request (including response parsing) against a hard
+        // deadline. Some mobile browsers can leave an aborted fetch pending;
+        // the independent rejection guarantees the HUD always leaves loading.
+        const requestPromise = (async () => {
             const response = await fetch(tideUrl(mode, start, end, stationId), {
                 headers: { Accept: 'application/json' },
                 cache: 'no-store',
@@ -230,7 +230,17 @@
                 try { detail = (await response.json()).message || ''; } catch { /* Non-JSON error. */ }
                 throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
             }
-            const payload = await response.json();
+            return response.json();
+        })();
+        const deadlinePromise = new Promise((resolve, reject) => {
+            timeoutId = window.setTimeout(() => {
+                timedOut = true;
+                controller.abort();
+                reject(new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.'));
+            }, timeoutMs);
+        });
+        try {
+            const payload = await Promise.race([requestPromise, deadlinePromise]);
             try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
             return payload;
         } catch (error) {
