@@ -46,7 +46,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         form.addEventListener('submit', event => {
             if (!window.confirm('Install this verified GaugeIQ release now?')) {
                 event.preventDefault();
+                return;
             }
+
+            // Keep the current page visible while the server performs the
+            // update. The progress indicator is intentionally indeterminate:
+            // the updater does not expose reliable percentage milestones.
+            event.preventDefault();
+            const overlay = document.getElementById('gaugeiqUpdateLoadingScreen');
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+            }
+            if (overlay) {
+                overlay.hidden = false;
+                document.body.classList.add('gaugeiq-update-running');
+            }
+            window.setTimeout(() => HTMLFormElement.prototype.submit.call(form), 80);
         });
     }
 
