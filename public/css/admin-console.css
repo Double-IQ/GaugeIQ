@@ -64,3 +64,16 @@
 }
 @media(max-width:380px){.admin-module-grid{grid-auto-rows:180px}.admin-module{height:180px}.admin-console-header{grid-template-columns:52px minmax(0,1fr);gap:9px}.admin-brand{width:48px;height:48px}.admin-brand img{width:48px;height:48px}.admin-console-heading h1{font-size:20px}.admin-module{min-height:180px;padding:12px}.admin-module h2{font-size:15px}.admin-metric strong{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.admin-console *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* Full-screen GaugeIQ identity while a release is being installed. */
+.gaugeiq-update-loading-screen{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:#07131d;color:#f3f4f6;text-align:center}
+.gaugeiq-update-loading-screen[hidden]{display:none!important}
+.gaugeiq-update-loading-screen img{display:block;width:min(300px,76vw);height:auto;object-fit:contain}
+.gaugeiq-update-loading-screen p{margin:0;color:#e8f7fb;font-size:15px;font-weight:750;letter-spacing:.04em}
+.gaugeiq-update-loading-screen small{max-width:300px;color:#9fb2bd;font-size:12px;line-height:1.5}
+.gaugeiq-update-progress{position:relative;width:min(280px,76vw);height:6px;overflow:hidden;border:1px solid rgba(54,223,255,.28);border-radius:999px;background:rgba(255,255,255,.09);box-shadow:0 0 12px rgba(54,223,255,.08)}
+.gaugeiq-update-progress span{position:absolute;top:0;bottom:0;left:-38%;width:38%;border-radius:inherit;background:linear-gradient(90deg,rgba(34,211,238,.55),#36dfff);box-shadow:0 0 12px rgba(54,223,255,.65);animation:gaugeiq-update-progress 1.35s ease-in-out infinite}
+@keyframes gaugeiq-update-progress{0%{left:-38%}100%{left:100%}}
+body.gaugeiq-update-running{overflow:hidden}
+@media(prefers-reduced-motion:reduce){.gaugeiq-update-progress span{animation:none;left:0;width:100%;opacity:.75}}
