@@ -77,7 +77,7 @@ function weatherMapProxyEnsureDirectory(string $directory): void
 function weatherMapProxyCleanupOldCache(string $cacheRoot, string $blockDirectory, string $metadataDirectory): void
 {
     $lockPath = rtrim($cacheRoot, '/') . '/.cleanup.lock';
-    $lock = @fopen($lockPath, 'c');
+    $lock = @fopen($lockPath, 'c+');
     if ($lock === false) {
         return;
     }
