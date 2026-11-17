@@ -7803,3 +7803,38 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .moon-tide-hud-card .mth-lunar-readouts small,
 :root[data-theme="light"] .moon-tide-hud-card .mth-solar-readouts small,
 :root[data-theme="light"] .moon-tide-hud-card .mth-tide-baseline span{color:#657487}
+
+
+/* Header Admin action uses the same compact instrument-button styling as
+   Enable Compass. Show a green confirmation while the button is pressed. */
+.header-actions .menu-button{
+  min-width:0;
+  height:auto;
+  min-height:30px;
+  padding:6px 11px;
+  border:1px solid rgba(53,196,235,.7);
+  border-radius:7px;
+  background:rgba(53,196,235,.16);
+  color:#35c4eb;
+  font:800 10px/1.2 inherit;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.header-actions .menu-button:hover{
+  background:rgba(53,196,235,.24);
+}
+.header-actions .menu-button:active{
+  border-color:rgba(67,214,164,.85);
+  background:rgba(67,214,164,.22);
+  color:#43d6a4;
+}
+.header-actions .menu-button:focus-visible{
+  outline:2px solid #43d6a4;
+  outline-offset:3px;
+}
+@media(max-width:420px){
+  .header-actions .menu-button{min-height:29px;padding:5px 8px;font-size:9px}
+}
