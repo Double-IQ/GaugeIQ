@@ -140,9 +140,11 @@ final class GaugeIQUpdater
 
         $this->prepareWorkspace();
         $stage = $this->storage . '/stage';
-        try {
         $zipPath = $this->storage . '/GaugeIQ-' . $version . '.zip';
         $checksumPath = $zipPath . '.sha256';
+        $backup = null;
+        $preserveBackup = false;
+        try {
         $this->download($packageUrl, $zipPath);
         $this->download($checksumUrl, $checksumPath);
 
@@ -225,25 +227,39 @@ final class GaugeIQUpdater
             $this->runDatabaseMigration();
             $this->healthCheck($version);
         } catch (Throwable $e) {
+            $rollbackSucceeded = true;
             try {
                 $this->restoreApplication($backup);
             } catch (Throwable $rollbackError) {
+                $rollbackSucceeded = false;
                 error_log('GaugeIQ application rollback failed: ' . $rollbackError->getMessage());
             }
             if (is_array($databaseBackup)) {
                 try {
                     $this->restoreDatabase($databaseBackup);
                 } catch (Throwable $databaseRollbackError) {
+                    $rollbackSucceeded = false;
                     error_log('GaugeIQ database rollback failed: ' . $databaseRollbackError->getMessage());
                 }
             }
+            // Keep the recovery snapshot only if rollback itself failed. It may
+            // be needed for manual recovery; otherwise it is safe to discard.
+            $preserveBackup = !$rollbackSucceeded;
             throw $e;
         }
 
-        $this->pruneBackups(3);
+        // The new release has passed its health check; the rollback snapshot
+        // is no longer needed and must not accumulate between updates.
+        $this->removeTree($backup);
+        $backup = null;
         return ['version' => $version];
         } finally {
             $this->removeTree($stage);
+            @unlink($zipPath);
+            @unlink($checksumPath);
+            if (is_string($backup) && !$preserveBackup) {
+                $this->removeTree($backup);
+            }
             $this->releaseLock();
         }
     }
@@ -549,19 +565,6 @@ final class GaugeIQUpdater
     }
 
 
-
-    private function pruneBackups(int $keep): void
-    {
-        try {
-            $backups = glob($this->storage . '/backup-*', GLOB_ONLYDIR) ?: [];
-            rsort($backups, SORT_STRING);
-            foreach (array_slice($backups, max(0, $keep)) as $oldBackup) {
-                $this->removeTree($oldBackup);
-            }
-        } catch (Throwable $e) {
-            error_log('GaugeIQ could not prune old update backups: ' . $e->getMessage());
-        }
-    }
 
     private function backupDatabase(string $backup): ?array
     {
