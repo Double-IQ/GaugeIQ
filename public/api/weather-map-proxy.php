@@ -69,6 +69,57 @@ function weatherMapProxyEnsureDirectory(string $directory): void
     }
 }
 
+/**
+ * Remove obsolete cached map ranges and metadata. The sweep is throttled to
+ * once per hour so normal map requests do not repeatedly scan the cache.
+ * Temporary files are removed only after an hour, avoiding active downloads.
+ */
+function weatherMapProxyCleanupOldCache(string $cacheRoot, string $blockDirectory, string $metadataDirectory): void
+{
+    $lockPath = rtrim($cacheRoot, '/') . '/.cleanup.lock';
+    $lock = @fopen($lockPath, 'c+');
+    if ($lock === false) {
+        return;
+    }
+
+    try {
+        if (!flock($lock, LOCK_EX | LOCK_NB)) {
+            return;
+        }
+
+        rewind($lock);
+        $lastRun = (int)trim((string)stream_get_contents($lock));
+        if ($lastRun > 0 && (time() - $lastRun) < 3600) {
+            return;
+        }
+
+        $expiredBefore = time() - 86400;
+        $abandonedBefore = time() - 3600;
+        foreach ([$blockDirectory, $metadataDirectory] as $directory) {
+            foreach (glob($directory . '/*') ?: [] as $path) {
+                if (!is_file($path)) {
+                    continue;
+                }
+                $modified = (int)(filemtime($path) ?: time());
+                $isTemporary = str_ends_with($path, '.tmp');
+                if (($isTemporary && $modified < $abandonedBefore) ||
+                    (!$isTemporary && $modified < $expiredBefore)) {
+                    @unlink($path);
+                }
+            }
+        }
+        ftruncate($lock, 0);
+        rewind($lock);
+        fwrite($lock, (string)time());
+        fflush($lock);
+    } catch (Throwable $error) {
+        error_log('GaugeIQ weather-map cache cleanup failed: ' . $error->getMessage());
+    } finally {
+        @flock($lock, LOCK_UN);
+        @fclose($lock);
+    }
+}
+
 function weatherMapProxyEvict(string $directory, int $maxBytes, int $incomingBytes): void
 {
     $files = glob($directory . '/*.bin') ?: [];
@@ -134,6 +185,7 @@ try {
     $metadataDirectory = rtrim($cacheRoot, '/') . '/metadata';
     weatherMapProxyEnsureDirectory($blockDirectory);
     weatherMapProxyEnsureDirectory($metadataDirectory);
+    weatherMapProxyCleanupOldCache($cacheRoot, $blockDirectory, $metadataDirectory);
 
     $metadataPath = $metadataDirectory . '/' . hash('sha256', $canonicalUrl) . '.json';
     $metadata = null;
