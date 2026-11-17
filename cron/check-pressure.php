@@ -8,6 +8,7 @@ require __DIR__ . '/../app/PushService.php';
 require __DIR__ . '/../app/Schema.php';
 require __DIR__ . '/../app/AlertRuleService.php';
 require __DIR__ . '/../app/WeatherMapCacheService.php';
+require __DIR__ . '/../app/HistoricalRetentionService.php';
 
 date_default_timezone_set($config['app']['timezone']);
 
@@ -340,6 +341,7 @@ function evaluateEcmwfRainfallOutlookAlert(PDO $pdo, array $config, int $locatio
 // the other location from being checked.
 $successfulLocations = 0;
 $failedLocations = 0;
+$retentionLocations = [];
 foreach ($monitorLocationIds as $locationId) {
     $statusSuffix = $locationId === 2 ? '_location_2' : '';
     $service = new PressureService($config, $pdo, $locationId);
@@ -459,6 +461,7 @@ foreach ($monitorLocationIds as $locationId) {
         }
 
         $successfulLocations++;
+        $retentionLocations[] = ['id' => $locationId, 'timezone' => $locationTimezone];
     } catch (Throwable $e) {
         $failedLocations++;
         try {
@@ -468,6 +471,31 @@ foreach ($monitorLocationIds as $locationId) {
         }
         error_log('GaugeIQ monitoring failed for ' . $locationName . ': ' . $e->getMessage());
         fwrite(STDERR, "Weather monitoring failed for {$locationName}: " . $e->getMessage() . "\n");
+    }
+}
+
+// Apply retention only after a location's live monitoring run succeeded.
+// A failed location is left untouched so a transient provider/database issue
+// cannot cause its history to be pruned as part of an incomplete cron cycle.
+$retentionService = new HistoricalRetentionService($pdo, (string)($config['app']['timezone'] ?? 'UTC'), 35);
+foreach ($retentionLocations as $retentionLocation) {
+    try {
+        $pruned = $retentionService->pruneLocation(
+            (int)$retentionLocation['id'],
+            (string)$retentionLocation['timezone']
+        );
+        printf(
+            "Historical retention Location %d: removed %d old readings and %d old forecast records (cutoff %s; keep %d days).\\n",
+            (int)$retentionLocation['id'],
+            (int)$pruned['readings_deleted'],
+            (int)$pruned['forecasts_deleted'],
+            (string)$pruned['cutoff'],
+            35
+        );
+    } catch (Throwable $retentionError) {
+        error_log('GaugeIQ historical retention failed for Location ' . (int)$retentionLocation['id'] . ': ' . $retentionError->getMessage());
+        fwrite(STDERR, "Historical retention failed for Location " . (int)$retentionLocation['id'] . ": " . $retentionError->getMessage() . "\\n");
+        $failedLocations++;
     }
 }
 
