@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261116-section04-fixed-sun-v1">
+<link rel="stylesheet" href="css/app.css?v=20261117-wind-card-alignment-v1">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
