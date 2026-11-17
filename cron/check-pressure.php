@@ -485,7 +485,7 @@ foreach ($retentionLocations as $retentionLocation) {
             (string)$retentionLocation['timezone']
         );
         printf(
-            "Historical retention Location %d: removed %d old readings and %d old forecast records (cutoff %s; keep %d days).\\n",
+            "Historical retention Location %d: removed %d old readings and %d old forecast records (cutoff %s; keep %d days).\n",
             (int)$retentionLocation['id'],
             (int)$pruned['readings_deleted'],
             (int)$pruned['forecasts_deleted'],
