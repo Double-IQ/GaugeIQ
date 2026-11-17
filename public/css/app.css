@@ -1,4 +1,4 @@
-:root {
+:root{
     --theme-color: #f3f4f6;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
     color-scheme: light dark;
@@ -14,8 +14,8 @@
     color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+@media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
         --text: #f3f4f6;
         --muted: #9ca3af;
         --background: #0b1120;
@@ -28,17 +28,17 @@
     }
 }
 
-* { box-sizing: border-box; }
+*{ box-sizing: border-box; }
 
-body { margin: 0; min-height: 100vh; background: var(--background); color: var(--text); }
+body{ margin: 0; min-height: 100vh; background: var(--background); color: var(--text); }
 
-.shell {
+.shell{
     width: min(760px, 100%);
     margin: 0 auto;
     padding: max(24px, env(safe-area-inset-top)) 18px 40px;
 }
 
-header {
+header{
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -46,17 +46,17 @@ header {
     margin-bottom: 24px;
 }
 
-.eyebrow {
+.eyebrow{
     margin: 0 0 4px;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: .16em;
 }
 
-h1 { margin: 0; font-size: 32px; }
-.muted { color: var(--muted); }
+h1{ margin: 0; font-size: 32px; }
+.muted{ color: var(--muted); }
 
-.card {
+.card{
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 22px;
@@ -65,22 +65,22 @@ h1 { margin: 0; font-size: 32px; }
     box-shadow: 0 8px 30px rgba(17,24,39,.06);
 }
 
-.hero { text-align: center; padding: 34px 22px; }
-.label { color: #6b7280; margin: 0 0 8px; }
-.pressure { font-size: clamp(54px, 15vw, 88px); font-weight: 800; letter-spacing: -.05em; }
-.pressure span { font-size: 20px; letter-spacing: normal; font-weight: 600; }
-.rise { color: #047857; }
-.fall { color: #b91c1c; }
-.steady { color: #6b7280; }
+.hero{ text-align: center; padding: 34px 22px; }
+.label{ color: #6b7280; margin: 0 0 8px; }
+.pressure{ font-size: clamp(54px, 15vw, 88px); font-weight: 800; letter-spacing: -.05em; }
+.pressure span{ font-size: 20px; letter-spacing: normal; font-weight: 600; }
+.rise{ color: #047857; }
+.fall{ color: #b91c1c; }
+.steady{ color: #6b7280; }
 
-.row {
+.row{
     display: flex;
     justify-content: space-between;
     gap: 20px;
     padding: 8px 0;
 }
 
-button {
+button{
     border: 0;
     border-radius: 12px;
     padding: 11px 15px;
@@ -89,20 +89,20 @@ button {
     cursor: pointer;
 }
 
-.secondary { background: var(--accent); color: white; }
-button:disabled { opacity: .55; cursor: default; }
-.status { text-align: center; color: #6b7280; font-size: 14px; }
+.secondary{ background: var(--accent); color: white; }
+button:disabled{ opacity: .55; cursor: default; }
+.status{ text-align: center; color: #6b7280; font-size: 14px; }
 
-.test-button {
+.test-button{
     display: inline-flex;
     width: auto;
     margin: 0;
 }
 
-@media (max-width: 560px) {
-    header { align-items: flex-start; }
-    header .secondary { white-space: nowrap; }
-    h1 { font-size: 28px; }
+@media (max-width: 560px){
+    header{ align-items: flex-start; }
+    header .secondary{ white-space: nowrap; }
+    h1{ font-size: 28px; }
 }
 
 .measurement-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:16px}
@@ -221,8 +221,8 @@ button:disabled { opacity: .55; cursor: default; }
 @media(max-width:700px){.wind-gauge-card{padding:18px}.wind-gauge{width:min(100%,350px)}}
 
 
-.climate-gauge-card{margin-top:16px;overflow:hidden;padding-top:14px}
-.climate-gauge-card .section-heading{margin-bottom:0}
+
+
 .climate-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-top:4px}
 .climate-triple-gauge{position:relative;width:min(100%,430px);aspect-ratio:25/11;margin:auto}
 .climate-triple-gauge svg{display:block;width:100%;height:100%;overflow:visible}
@@ -443,40 +443,29 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 /* Environmental bars: green baseline, yellow one-hour change, grey unfilled */
-.climate-gauge-card{overflow:hidden}
-.climate-bars{display:flex;flex-direction:column;gap:16px;margin-top:18px}
-.climate-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 58px 68px;align-items:center;gap:9px;min-width:0}
-.climate-bar-label{grid-column:1 / -1;font-size:13px;font-weight:750;color:var(--text);line-height:1.2;margin-bottom:-4px}
-.climate-segment-track{display:grid;grid-template-columns:repeat(100,minmax(0,1fr));gap:1px;min-width:0;align-items:center;padding:3px;border:1px solid color-mix(in srgb,var(--muted) 20%,transparent);border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,var(--muted) 9%,transparent),color-mix(in srgb,var(--muted) 3%,transparent));box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
-.climate-segment{display:block;height:12px;min-width:0;border-radius:0;background:color-mix(in srgb,var(--muted) 20%,transparent);transition:background-color .2s ease,box-shadow .2s ease}
-.climate-segment.active{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-segment.change{background:#ffc184;box-shadow:inset 0 1px 0 rgba(255,255,255,.38)}
-.climate-segment.warning-zone{background:linear-gradient(180deg,#ff7777,#d91e36);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
-.climate-segment.warning-zone:first-of-type{margin-left:1px}
-.climate-bar-change,.climate-bar-value{min-width:0;font-size:13px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
-.climate-bar-change.rise{color:#eab308}
-.climate-bar-change.fall{color:#eab308}
-.climate-bar-change.unavailable{color:var(--muted)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Air pressure stays green unless it falls by at least 0.8 hPa in an hour. */
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.active,
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.change{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-bar-change:not(.unavailable){color:#4fbd31}
-.climate-bar-air-pressure.pressure-drop-warning .climate-segment.active,
-.climate-bar-air-pressure.pressure-drop-warning .climate-segment.change{background:linear-gradient(180deg,#ffad55,#ed7b24);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-air-pressure.pressure-drop-warning .climate-bar-change{color:#ed7b24}
+
+
+
+
 /* Dew point gap is favourable above 3°C and warning-level at 3°C or below. */
-.climate-bar-dew-point-gap:not(.dew-point-gap-warning) .climate-segment.active,
-.climate-bar-dew-point-gap:not(.dew-point-gap-warning) .climate-segment.change{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-dew-point-gap.dew-point-gap-warning .climate-segment.active,
-.climate-bar-dew-point-gap.dew-point-gap-warning .climate-segment.change{background:linear-gradient(180deg,#ffad55,#ed7b24);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-@media(max-width:560px){
-  .climate-bars{gap:15px;margin-top:14px}
-  .climate-bar-row{grid-template-columns:minmax(0,1fr) 38px 48px;gap:6px}
-  .climate-bar-label{font-size:10px}
-  .climate-segment-track{gap:1px}
-  .climate-segment{height:11px}
-  .climate-bar-change,.climate-bar-value{font-size:11px}
-}
+
+
+
 
 
 
@@ -530,14 +519,14 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 /* Focused sign-in layout: keep the admin entry point balanced on desktop and mobile. */
-.auth-page {
+.auth-page{
     min-height: 100vh;
     min-height: 100svh;
     background:
         radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%),
         var(--background);
 }
-.auth-shell {
+.auth-shell{
     width: min(100% - 32px, 440px);
     min-height: 100vh;
     min-height: 100svh;
@@ -546,38 +535,38 @@ button:disabled { opacity: .55; cursor: default; }
     justify-content: center;
     padding: max(24px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
 }
-.admin-auth {
+.admin-auth{
     width: 100%;
     margin: 0;
     padding: clamp(22px, 5vw, 34px);
     border-radius: 22px;
 }
-.admin-auth .eyebrow {
+.admin-auth .eyebrow{
     color: var(--accent);
     overflow-wrap: anywhere;
 }
-.admin-auth h1 {
+.admin-auth h1{
     font-size: clamp(25px, 6vw, 32px);
     line-height: 1.15;
     letter-spacing: -.035em;
     overflow-wrap: anywhere;
 }
-.admin-auth > .muted {
+.admin-auth > .muted{
     margin: 10px 0 24px;
     line-height: 1.55;
 }
-.admin-auth form {
+.admin-auth form{
     display: grid;
     gap: 16px;
 }
-.admin-auth form label {
+.admin-auth form label{
     display: grid;
     gap: 7px;
     color: var(--text);
     font-size: 14px;
     font-weight: 750;
 }
-.admin-auth input:not([type="hidden"]) {
+.admin-auth input:not([type="hidden"]){
     display: block;
     width: 100%;
     min-width: 0;
@@ -591,12 +580,12 @@ button:disabled { opacity: .55; cursor: default; }
     font-weight: 500;
     box-shadow: none;
 }
-.admin-auth input:not([type="hidden"]):focus-visible {
+.admin-auth input:not([type="hidden"]):focus-visible{
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 .admin-auth .auth-submit,
-.admin-auth .admin-auth-back {
+.admin-auth .admin-auth-back{
     display: inline-flex;
     width: 100%;
     min-height: 48px;
@@ -618,41 +607,41 @@ button:disabled { opacity: .55; cursor: default; }
     -webkit-tap-highlight-color: transparent;
 }
 .admin-auth .auth-submit:hover,
-.admin-auth .admin-auth-back:hover {
+.admin-auth .admin-auth-back:hover{
     filter: brightness(1.08);
 }
 .admin-auth .auth-submit:focus-visible,
-.admin-auth .admin-auth-back:focus-visible {
+.admin-auth .admin-auth-back:focus-visible{
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
-.admin-auth .admin-auth-back {
+.admin-auth .admin-auth-back{
     margin-top: 10px;
     border-color: var(--border);
     background: var(--surface);
     color: var(--text);
 }
-.admin-auth .monitor-warning {
+.admin-auth .monitor-warning{
     line-height: 1.5;
     overflow-wrap: anywhere;
 }
-@media (max-width: 560px) {
-    .auth-shell {
+@media (max-width: 560px){
+    .auth-shell{
         width: 100%;
         padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
         align-items: center;
     }
-    .admin-auth {
+    .admin-auth{
         padding: 24px 20px;
         border-radius: 18px;
     }
-    .admin-auth > .muted {
+    .admin-auth > .muted{
         margin-bottom: 22px;
     }
 }
-@media (max-width: 360px) {
-    .auth-shell { padding-left: 10px; padding-right: 10px; }
-    .admin-auth { padding: 21px 16px; }
+@media (max-width: 360px){
+    .auth-shell{ padding-left: 10px; padding-right: 10px; }
+    .admin-auth{ padding: 21px 16px; }
 }
 
 /* Dashboard header update timestamp and notification confirmation */
@@ -693,10 +682,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.header-actions{flex-direction:column;align-items:stretch;gap:8px}.header-actions .menu-button{min-width:76px;width:100%;height:40px;padding:0 14px}.header-actions #notifyButton{min-width:0;width:100%;padding:11px 12px}.gaugeiq-menu{left:12px}}
 
 
-.rainfall-forecast-track .insight-meter-fill {
+.rainfall-forecast-track .insight-meter-fill{
     min-width: 0;
 }
-.observed-rainfall-meta {
+.observed-rainfall-meta{
     padding-top: 9px;
     border-top: 1px solid var(--border);
 }
@@ -1104,18 +1093,18 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}.pressure-dial-column{align-self:start;align-items:flex-start}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
 
 /* Match Atmospheric Monitor's card shell and heading to Air pressure. */
-.climate-gauge-card{padding:26px 30px 24px;background:radial-gradient(ellipse at 30% 48%,rgba(0,74,160,.12),transparent 44%),linear-gradient(115deg,#031126 0%,#061a36 60%,#03132b 100%);border:2px solid #073f80;border-radius:20px;box-shadow:none;color:#f4f7ff}
-.climate-gauge-card .section-heading{margin-bottom:18px}
-.climate-gauge-card .section-heading .label{font-size:clamp(32px,4.4vw,58px);font-weight:800;letter-spacing:-.035em;color:#f4f7ff;line-height:1.1;margin:0}
-.climate-gauge-card .climate-bar-label{color:#b9d5ff}
-.climate-gauge-card .climate-bar-value{color:#f4f7ff}
-@media(max-width:560px){.climate-gauge-card{padding:16px 14px;border-radius:16px}.climate-gauge-card .section-heading{margin-bottom:14px}.climate-gauge-card .section-heading .label{font-size:24px}}
-@media(min-width:561px) and (max-width:760px){.climate-gauge-card{padding:20px}}
+
+
+
+
+
+
+
 
 /* Atmospheric Monitor colours matched to the pressure gauge. */
-.climate-gauge-card .climate-segment.active{background:#35c4eb}
-.climate-gauge-card .climate-segment.change{background:#ffc184}
-.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
+
+
+
 
 /* Compact the Conditions trend card vertically. */
 .conditions-trend-card{padding-top:14px;padding-bottom:14px}
@@ -1295,34 +1284,28 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-vector-labels .wind-hud-from{fill:#ffc184;font-size:13px;letter-spacing:.2px}
 .wind-hud-vector-labels .wind-hud-to{fill:#68d2ff;font-size:13px;letter-spacing:.2px}
 .wind-hud-card .wind-hud-speed-scale{margin-top:8px}
-.wind-hud-card .climate-segment{border-radius:2px}
+
 @media(max-width:420px){.wind-hud-vector svg{max-height:190px}}
 
 /* Atmospheric Monitor: compact glass telemetry rows with restrained luminous bars. */
-.climate-gauge-card{padding:22px 24px 20px;background:radial-gradient(ellipse at 18% 0%,rgba(43,118,183,.18),transparent 52%),linear-gradient(145deg,#10294a 0%,#07172e 56%,#041126 100%);border:1px solid rgba(104,163,218,.34);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 12px 30px rgba(2,8,23,.12)}
-.climate-gauge-card .section-heading{margin-bottom:14px}
-.climate-gauge-card .section-heading .label{font-size:clamp(25px,3.8vw,34px);font-weight:750;letter-spacing:-.025em}
-.climate-gauge-card .climate-bars{gap:8px;margin-top:0}
-.climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 48px 70px;gap:8px 10px;padding:11px 12px;border:1px solid rgba(117,164,211,.12);border-radius:10px;background:linear-gradient(110deg,rgba(19,43,70,.66),rgba(5,18,37,.56));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
-.climate-gauge-card .climate-bar-label{font-size:12px;font-weight:750;letter-spacing:.015em;color:#b9d5ff;grid-column:1;align-self:center;margin:0}
-.climate-gauge-card .climate-bar-value{grid-column:3;grid-row:1;font-size:14px;color:#f4f7ff}
-.climate-gauge-card .climate-bar-change{grid-column:2;grid-row:1;font-size:12px;color:#829fc1}
-.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
-.climate-gauge-card .climate-segment-track{grid-column:1 / -1;grid-row:2;display:grid;grid-template-columns:repeat(100,minmax(0,1fr));gap:1px;align-items:center;min-width:0;height:auto!important;min-height:0;padding:3px!important;overflow:hidden;border:1px solid rgba(118,145,174,.24);border-radius:3px;background:linear-gradient(180deg,rgba(118,145,174,.09),rgba(118,145,174,.03));box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
-.climate-gauge-card .climate-segment{height:10px;border-radius:0}
-.climate-gauge-card .climate-bar-sparkline{grid-column:1 / -1;grid-row:3;display:block;width:100%;height:28px;overflow:visible;opacity:.95}
-.climate-gauge-card .climate-bar-sparkline polyline{fill:none;stroke:#ffc184;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px rgba(255,193,132,.22))}
-.climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:1 / -1;grid-row:3;min-height:20px;font-size:10px;color:#829fc1;line-height:1.5}
 
 
 
-@media(max-width:560px){
- .climate-gauge-card{padding:16px 12px;border-radius:16px}
- .climate-gauge-card .section-heading .label{font-size:24px}
- .climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 34px 54px;gap:7px;padding:10px 9px}
- .climate-gauge-card .climate-bar-label{font-size:11px}
- .climate-gauge-card .climate-bar-value{font-size:12px}
- .climate-gauge-card .climate-bar-change{font-size:11px}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Keep the wind arrow comfortably inside the panel and explain it plainly. */
@@ -1354,19 +1337,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Match Temperature and Atmospheric Monitor headings to the Wind card heading. */
-.temperature-card-heading .label,
-.climate-gauge-card .section-heading .label{
-  font-size:22px;
-  font-weight:750;
-  letter-spacing:normal;
-  line-height:normal;
-}
-@media(max-width:560px){
-  .temperature-card-heading .label,
-  .climate-gauge-card .section-heading .label{
-    font-size:21px;
-  }
-}
+
+
 
 
 /* Show the active location and stored-reading timestamp in the temperature card heading. */
@@ -1391,36 +1363,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor and network diagnostics: refined instrument-panel layout */
-.climate-gauge-card{
-  padding:18px;
-  border:1px solid color-mix(in srgb,#1689df 38%,var(--border));
-  border-radius:18px;
-  background:linear-gradient(145deg,color-mix(in srgb,#08234a 94%,var(--card)),color-mix(in srgb,#03132e 96%,var(--card)));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 26px rgba(0,0,0,.12);
-}
-.climate-gauge-card .section-heading{margin-bottom:14px}
-.climate-gauge-card #climateGaugeTitle{font-size:clamp(20px,2.3vw,26px);font-weight:800;letter-spacing:-.025em}
-.climate-bars{gap:10px;margin-top:0}
-.climate-bar-row{
-  display:grid;
-  grid-template-columns:minmax(112px,150px) minmax(100px,1fr) 54px minmax(120px, min(25%,220px));
-  grid-template-rows:26px 24px;
-  align-items:center;
-  column-gap:14px;
-  row-gap:0;
-  min-width:0;
-  padding:12px 14px;
-  border:1px solid rgba(31,125,205,.32);
-  border-radius:15px;
-  background:linear-gradient(105deg,rgba(4,30,63,.82),rgba(3,22,49,.7));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-.climate-bar-label{grid-column:1;grid-row:1;font-size:15px;font-weight:800;line-height:1.2;margin:0;align-self:end}
-.climate-bar-value{grid-column:1;grid-row:2;text-align:left;font-size:16px;font-weight:650;color:#a9caff;align-self:start;padding-top:3px}
-.climate-segment-track{grid-column:2;grid-row:1 / span 2;width:100%;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;gap:2px}
-.climate-segment{height:16px}
-.climate-bar-change{grid-column:3;grid-row:1 / span 2;text-align:center;font-size:17px;color:#ffc184}
-.climate-bar-change.rise,.climate-bar-change.fall{color:#ffc184}
+
+
+
+
+
+
+
+
+
+
+
 .climate-bar-sparkline,.climate-bar-sparkline-unavailable{grid-column:4;grid-row:1 / span 2;width:100%;height:42px;min-width:0;align-self:center}
 .climate-bar-sparkline{overflow:visible;border-bottom:1px solid rgba(79,157,231,.28);background:linear-gradient(180deg,transparent 75%,rgba(30,103,171,.08))}
 .climate-bar-sparkline polyline{stroke:#ff9e38;stroke-width:1.25;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px rgba(255,158,56,.15))}
@@ -1446,24 +1399,24 @@ body.gaugeiq-menu-open{overflow:hidden}
 .network-diagnostics #networkPingStatus::before{content:"◷"}
 .network-diagnostics .network-uplink-status:last-child::before{content:"▤"}
 @media(max-width:760px){
- .climate-bar-row{grid-template-columns:minmax(95px,120px) minmax(70px,1fr) 42px;grid-template-rows:22px 20px 34px;column-gap:9px;padding:10px}
- .climate-bar-label{font-size:13px}
- .climate-bar-value{font-size:14px}
- .climate-segment-track{grid-column:2;grid-row:1 / span 2}
- .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:14px}
+ 
+ 
+ 
+ 
+ 
  .climate-bar-sparkline,.climate-bar-sparkline-unavailable{grid-column:1 / -1;grid-row:3;height:30px;margin-top:5px}
  .network-diagnostics-readings{grid-template-columns:repeat(2,minmax(0,1fr))}
  .network-diagnostics .network-uplink-status:nth-child(2){border-right:0}
  .network-diagnostics .network-uplink-status:nth-child(-n+2){border-bottom:1px solid rgba(31,125,205,.3)}
 }
 @media(max-width:420px){
- .climate-gauge-card{padding:12px}
- .climate-bar-row{grid-template-columns:minmax(78px,94px) minmax(0,1fr) 36px;column-gap:7px;padding:9px 7px}
- .climate-bar-label{font-size:11px}
- .climate-bar-value{font-size:12px}
- .climate-segment{height:12px}
- .climate-segment-track{gap:1px}
- .climate-bar-change{font-size:12px}
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  .network-diagnostics{padding:12px}
  .network-diagnostics .network-uplink-status{padding:8px;font-size:11px}
  .network-diagnostics .network-uplink-status strong{font-size:14px}
@@ -1471,279 +1424,57 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor: aligned readings, compact segmented gauges and restrained trend plots. */
-.climate-gauge-card .climate-bars{gap:7px}
-.climate-gauge-card .climate-bar-row{
-  grid-template-columns:minmax(100px,124px) minmax(76px,.82fr) 48px minmax(128px,1fr);
-  grid-template-rows:22px 22px;
-  column-gap:9px;
-  row-gap:0;
-  padding:8px 10px;
-  border:1px solid rgba(65,126,185,.22);
-  border-radius:10px;
-  background:linear-gradient(105deg,rgba(7,30,57,.68),rgba(3,19,41,.54));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-.climate-gauge-card .climate-bar-label{
-  grid-column:1;grid-row:1;align-self:end;margin:0;
-  color:#b9d5ff;font-size:12px;font-weight:750;line-height:1.2;letter-spacing:.01em
-}
-.climate-gauge-card .climate-bar-value{
-  grid-column:1;grid-row:2;align-self:start;padding-top:2px;
-  color:#f4f7ff;font-size:14px;font-weight:700;line-height:1.2;
-  font-variant-numeric:tabular-nums
-}
-.climate-gauge-card .climate-segment-track{
-  grid-column:2;grid-row:1 / span 2;display:grid;
-  grid-template-columns:repeat(60,minmax(0,1fr));gap:1px;
-  align-items:center;width:100%;height:12px!important;min-height:0;
-  padding:0!important;overflow:hidden;border:0;border-radius:0;
-  background:transparent;box-shadow:none
-}
-.climate-gauge-card .climate-segment{height:12px;min-width:0;border-radius:0}
-.climate-gauge-card .climate-segment.active{background:#a3e635}
-.climate-gauge-card .climate-segment.change{background:#ffc184}
-.climate-gauge-card .climate-segment.warning-zone{background:#a3e635}
-.climate-gauge-card .climate-bar-change{
-  grid-column:3;grid-row:1 / span 2;align-self:center;text-align:right;
-  padding:0;font-size:12px;font-weight:750;line-height:1.15;
-  font-variant-numeric:tabular-nums;white-space:nowrap;color:#ffc184
-}
-.climate-gauge-card .climate-bar-change.steady{color:#9cb6d5}
-.climate-gauge-card .climate-bar-sparkline,
-.climate-gauge-card .climate-bar-sparkline-unavailable{
-  grid-column:4;grid-row:1 / span 2;align-self:center;
-  width:100%;height:34px;min-width:0;margin:0;display:block
-}
-.climate-gauge-card .climate-bar-sparkline{
-  overflow:visible;border:0;background:none;opacity:1
-}
-.climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{
-  stroke:rgba(139,170,207,.22);stroke-width:.55;vector-effect:non-scaling-stroke
-}
-.climate-gauge-card .climate-bar-sparkline polyline{
-  fill:none;stroke:#ffc184;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;
-  vector-effect:non-scaling-stroke;filter:none
-}
-.climate-gauge-card .climate-bar-sparkline .climate-sparkline-endpoint{
-  fill:#ffc184;stroke:#06172d;stroke-width:.7;vector-effect:non-scaling-stroke
-}
-.climate-gauge-card .climate-bar-sparkline-unavailable{
-  display:flex;align-items:center;justify-content:center;
-  color:#829fc1;font-size:10px;line-height:1.3;text-align:center
-}
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(60px,1fr) 42px;
-    grid-template-rows:20px 20px 28px;
-    column-gap:8px;padding:8px 9px
-  }
-  .climate-gauge-card .climate-bar-label{grid-column:1;grid-row:1;font-size:12px}
-  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:2;font-size:13px}
-  .climate-gauge-card .climate-segment-track{grid-column:2;grid-row:1 / span 2;height:11px!important}
-  .climate-gauge-card .climate-segment{height:11px}
-  .climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:12px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:2 / 4;grid-row:3;height:26px;margin:2px 0 0
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    column-gap:7px;padding:7px 8px
-  }
-  .climate-gauge-card .climate-bar-label{font-size:11px}
-  .climate-gauge-card .climate-bar-value{font-size:12px}
-  .climate-gauge-card .climate-bar-change{font-size:11px}
-  .climate-gauge-card .climate-segment-track{gap:1px}
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Mobile Atmospheric Monitor: use compact arc gauges instead of segmented bars. */
-.climate-gauge-card .climate-mobile-gauge{display:none}
-.climate-gauge-card .climate-sparkline-area{fill:rgba(255,193,132,.095);stroke:none}
-.climate-gauge-card .climate-sparkline-current-guide{stroke:rgba(255,193,132,.42);stroke-width:.65;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke}
-.climate-gauge-card .climate-sparkline-startpoint{fill:#9cb6d5;opacity:.72}
-.climate-gauge-card .climate-sparkline-endpoint{r:1.7;filter:drop-shadow(0 0 1.6px rgba(255,193,132,.45))}
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(54px,1fr) 42px;
-    grid-template-rows:20px 20px 31px;
-    column-gap:8px;
-    row-gap:1px;
-    padding:8px 9px 7px;
-  }
-  .climate-gauge-card .climate-segment-track{display:none}
-  .climate-gauge-card .climate-mobile-gauge{
-    display:block;
-    grid-column:2;
-    grid-row:1 / span 2;
-    align-self:center;
-    width:100%;
-    height:30px;
-    overflow:visible;
-  }
-  .climate-gauge-card .climate-mobile-gauge-track{
-    fill:none;
-    stroke:rgba(118,157,199,.24);
-    stroke-width:7;
-    stroke-linecap:round;
-  }
-  .climate-gauge-card .climate-mobile-gauge-value{
-    fill:none;
-    stroke:#a3e635;
-    stroke-width:7;
-    stroke-linecap:round;
-    filter:drop-shadow(0 0 1.5px rgba(163,230,53,.22));
-  }
-  .climate-gauge-card .climate-mobile-gauge-endpoint{
-    fill:#ffc184;
-    stroke:#06172d;
-    stroke-width:1.1;
-  }
-  .climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:12px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1 / -1;
-    grid-row:3;
-    height:29px;
-    margin:1px 0 0;
-    padding:0 2px;
-  }
-  .climate-gauge-card .climate-bar-sparkline{overflow:visible}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    column-gap:7px;
-    padding:7px 8px 6px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{height:28px}
-  .climate-gauge-card .climate-mobile-gauge-track,
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:6.5}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{height:27px}
-}
+
+
+
+
+
+
+
 
 
 /* Phone layout: label and value first, gauge directly beneath, trend uses remaining width. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(0,1fr) 42px;
-    grid-template-rows:18px 19px 27px 30px;
-    column-gap:8px;
-    row-gap:0;
-    align-items:center;
-    padding:8px 9px 7px;
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:1;
-    grid-row:1;
-    align-self:end;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:1;
-    grid-row:2;
-    align-self:start;
-    padding-top:1px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:1;
-    grid-row:3;
-    width:100%;
-    height:27px;
-    align-self:center;
-    margin-top:1px;
-  }
-  .climate-gauge-card .climate-bar-change{
-    grid-column:3;
-    grid-row:1 / span 2;
-    justify-self:end;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:2 / 4;
-    grid-row:1 / span 4;
-    align-self:stretch;
-    width:100%;
-    height:100%;
-    min-height:70px;
-    margin:0;
-    padding:0 2px 0 4px;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    grid-template-rows:17px 18px 26px 29px;
-    column-gap:7px;
-    padding:7px 8px 6px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{height:26px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{min-height:67px}
-}
+
+
 
 
 /* Atmospheric Monitor polish: calmer graph framing and tighter mobile instrument styling. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    border-color:rgba(117,164,211,.17);
-    background:linear-gradient(112deg,rgba(16,39,65,.76),rgba(5,18,37,.68));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
-  }
-  .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(156,182,213,.2);stroke-width:6}
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:6;filter:drop-shadow(0 0 2px rgba(163,230,53,.18))}
-  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#a3e635;stroke:#07182b;stroke-width:1.25}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    min-height:70px;
-    border-left:1px solid rgba(117,164,211,.12);
-    padding-left:7px;
-    background:linear-gradient(90deg,rgba(20,51,80,.12),rgba(20,51,80,.025));
-  }
-  .climate-gauge-card .climate-bar-sparkline{overflow:visible}
-  .climate-gauge-card .climate-bar-sparkline polyline{stroke:#ffc184;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1.5px rgba(255,193,132,.2))}
-  .climate-gauge-card .climate-sparkline-area{fill:rgba(255,193,132,.07)}
-  .climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{stroke:rgba(156,182,213,.23);stroke-width:.55;stroke-dasharray:1.2 1.8;vector-effect:non-scaling-stroke}
-  .climate-gauge-card .climate-sparkline-startpoint{r:1.2;fill:#9cb6d5;opacity:.85}
-  .climate-gauge-card .climate-sparkline-endpoint{r:2;fill:#ffc184;stroke:#07182b;stroke-width:.8}
-}
+
 
 
 /* Keep mobile Atmospheric Monitor arcs circular and vertically aligned beneath readings. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 19px 40px 30px}
-  .climate-gauge-card .climate-mobile-gauge{height:40px;align-self:center;justify-self:start;overflow:visible}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 18px 38px 29px}
-  .climate-gauge-card .climate-mobile-gauge{height:38px}
-}
+
+
 
 
 /* Atmospheric Monitor mobile gauges: green indicator, clear heading gap, centred readout. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 5px 32px 19px}
-  .climate-gauge-card .climate-mobile-gauge{grid-column:1;grid-row:3;height:32px;align-self:center;justify-self:stretch}
-  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:4;align-self:start;justify-self:stretch;padding-top:0;text-align:center}
-  .climate-gauge-card .climate-mobile-gauge-value{stroke:#35c4eb;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))}
-  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#a3e635;stroke:#07182b;stroke-width:1.25}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:2 / 4;grid-row:1 / span 4;min-height:0;height:64px;align-self:center}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 4px 30px 18px}
-  .climate-gauge-card .climate-mobile-gauge{height:30px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{height:60px}
-}
+
+
 
 /* Visible green needles on mobile Atmospheric Monitor gauges. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-needle{fill:#a3e635;stroke:none;filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))}
-  .climate-gauge-card .climate-mobile-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
-}
+
 
 /* Normalize forecast icon boxes so different SVG artwork aligns consistently. */
 .forecast-icon img{
@@ -1777,15 +1508,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){.wind-hud-card .wind-hud-compass-switch{min-height:29px;padding:5px 8px;font-size:9px}}
 
 /* Atmospheric Monitor mobile gauges: move the dial and readout down one spacing step. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 13px 40px 27px}
-  .climate-gauge-card .climate-mobile-gauge{height:40px}
-  .climate-gauge-card .climate-bar-value{padding-top:8px}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 12px 38px 26px}
-  .climate-gauge-card .climate-mobile-gauge{height:38px}
-}
+
+
 
 /* Wind card: use the Atmospheric Monitor gauge and 24-hour graph styling. */
 .wind-hud-speed-history{
@@ -1826,45 +1550,13 @@ body.gaugeiq-menu-open{overflow:hidden}
   height:66px;
   overflow:visible;
 }
-.wind-hud-speed-history-gauge .climate-mobile-gauge-track{
-  fill:none;
-  stroke:rgba(156,182,213,.2);
-  stroke-width:6;
-  stroke-linecap:round;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-value{
-  fill:none;
-  stroke:#a3e635;
-  stroke-width:7;
-  stroke-linecap:round;
-  filter:drop-shadow(0 0 2px rgba(53,196,235,.25));
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-ticks line{
-  fill:none;
-  stroke:rgba(156,182,213,.72);
-  stroke-width:.8;
-  stroke-linecap:round;
-  vector-effect:non-scaling-stroke;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-ticks line.major{
-  stroke:rgba(190,211,235,.88);
-  stroke-width:1.15;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-needle{
-  fill:#a3e635;
-  stroke:none;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45));
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-endpoint{
-  fill:#ffc184;
-  stroke:#07182b;
-  stroke-width:1.25;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-pivot{
-  fill:#a3e635;
-  stroke:#07182b;
-  stroke-width:1.2;
-}
+
+
+
+
+
+
+
 .wind-hud-speed-history-graph{
   display:flex;
   flex-direction:column;
@@ -1884,22 +1576,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   border:0;
   background:none;
 }
-.wind-hud-speed-history-graph .climate-sparkline-area{
-  fill:rgba(255,193,132,.07);
-  stroke:none;
-}
-.wind-hud-speed-history-graph .climate-bar-sparkline .climate-sparkline-baseline{
-  stroke:rgba(156,182,213,.23);
-  stroke-width:.55;
-  stroke-dasharray:1.2 1.8;
-  vector-effect:non-scaling-stroke;
-}
-.wind-hud-speed-history-graph .climate-sparkline-current-guide{
-  stroke:rgba(255,193,132,.42);
-  stroke-width:.65;
-  stroke-dasharray:1.2 1.4;
-  vector-effect:non-scaling-stroke;
-}
+
+
+
 .wind-hud-speed-history-graph .climate-bar-sparkline polyline{
   fill:none;
   stroke:#ffc184;
@@ -1909,17 +1588,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   vector-effect:non-scaling-stroke;
   filter:none;
 }
-.wind-hud-speed-history-graph .climate-sparkline-startpoint{
-  fill:#9cb6d5;
-  opacity:.85;
-}
-.wind-hud-speed-history-graph .climate-sparkline-endpoint{
-  r:1.6;
-  fill:#ffc184;
-  stroke:#07182b;
-  stroke-width:.8;
-  vector-effect:non-scaling-stroke;
-}
+
+
 .wind-hud-speed-history-graph .climate-bar-sparkline-unavailable{
   display:flex;
   align-items:center;
@@ -1958,7 +1628,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     stroke-linejoin:round;
     filter:drop-shadow(0 0 1.5px rgba(255,193,132,.2));
   }
-  .wind-hud-speed-history-graph .climate-sparkline-area{fill:rgba(255,193,132,.07)}
+  
 }
 @media(max-width:420px){
   .wind-hud-speed-history{padding:9px 9px 7px}
@@ -1970,141 +1640,26 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Atmospheric Monitor gauge graduations: fine minor marks and stronger quarter marks. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-ticks line{
-    fill:none;
-    stroke:rgba(156,182,213,.72);
-    stroke-width:.8;
-    stroke-linecap:round;
-    vector-effect:non-scaling-stroke;
-  }
-  .climate-gauge-card .climate-mobile-gauge-ticks line.major{
-    stroke:rgba(190,211,235,.88);
-    stroke-width:1.15;
-  }
-}
+
 
 /* Keep the Atmospheric Monitor change figure clear of the trend graph. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-change{
-    align-self:center;
-    transform:translateY(-5px);
-  }
-}
+
 
 /* Atmospheric Monitor: lower only the history sparklines. */
-.climate-gauge-card .climate-bar-sparkline{transform:translateY(5px)}
+
 
 /* Atmospheric Monitor: swap the mobile gauge and history graph columns. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(90px,112px) 42px;
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:2;
-    grid-row:1;
-    align-self:end;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:2;
-    grid-row:3;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:4;
-    text-align:center;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1;
-    grid-row:1 / span 4;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(82px,100px) 38px;
-  }
-}
+
+
 
 /* Atmospheric Monitor: put each metric heading and last-hour change above its graph. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(90px,112px);
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:1;
-    grid-row:1;
-    justify-self:start;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-change{
-    grid-column:1;
-    grid-row:1;
-    justify-self:end;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1;
-    grid-row:2 / span 3;
-    align-self:center;
-    height:64px;
-    min-height:0;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:2;
-    grid-row:3;
-    justify-self:end;
-    transform:translateX(4px);
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:4;
-    justify-self:end;
-    transform:translateX(4px);
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(82px,100px);
-  }
-}
+
+
 
 
 /* Atmospheric Monitor: align label, current value and one-hour change on the top line. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-rows:18px 13px 40px;
-  }
-  .climate-gauge-card .climate-bar-change{
-    transform:none;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:1;
-    justify-self:end;
-    align-self:start;
-    padding-top:0;
-    text-align:right;
-    transform:translateX(4px);
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-row:2 / span 2;
-    height:42px;
-    min-height:0;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-rows:17px 12px 38px;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    height:39px;
-  }
-}
+
+
 
 
 /* Top card: reduce only the High/Low labels and temperature readings one step. */
@@ -2118,10 +1673,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   flex-direction:column;
   align-items:stretch;
 }
-.wind-hud-speed-history-gauge .climate-mobile-gauge-value{
-  stroke:#a3e635;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.22));
-}
+
 .wind-hud-speed-readouts{
   display:flex;
   align-items:baseline;
@@ -2177,7 +1729,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-speed-readouts .wind-hud-speed-change.fall{color:#eab308}
 .wind-hud-speed-readouts .wind-hud-speed-change.steady{color:#829fc1}
 .wind-hud-speed-readouts .wind-hud-speed-change.unavailable{color:#829fc1}
-.wind-hud-speed-history-graph .climate-sparkline-area{fill:rgba(255,193,132,.095)}
+
 .wind-hud-speed-history-graph .climate-bar-sparkline polyline{
   stroke:#ffc184;
   stroke-width:1.7;
@@ -2185,10 +1737,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   stroke-linejoin:round;
   filter:drop-shadow(0 0 2px rgba(255,193,132,.22));
 }
-.wind-hud-speed-history-graph .climate-sparkline-endpoint{
-  fill:#ffc184;
-  filter:drop-shadow(0 0 1.6px rgba(255,193,132,.45));
-}
+
 @media(max-width:760px){
   .wind-hud-speed-readouts{gap:6px;margin-top:-2px}
   .wind-hud-speed-readouts .wind-hud-speed-value{font-size:11px}
@@ -2196,10 +1745,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Atmospheric Monitor: increase mobile gauge arc thickness by 1px. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-track,
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:7px}
-}
+
 
 /* Match the Interactive Weather Maps card to the Wind card's glass treatment. */
 .satellite-map-heading{
@@ -2271,7 +1817,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 .climate-graph-selector-menu label:hover{background:rgba(95,157,215,.12)}
 .climate-graph-selector-menu input{width:15px;height:15px;margin:0;accent-color:#8fcf54;flex:0 0 auto}
-.climate-gauge-card .climate-bar-row[hidden]{display:none!important}
+
 /* WVI card: score and ten-step level sit beneath the description. */
 .weather-change-card .weather-change-heading{display:block;align-items:initial}
 .weather-change-card .weather-change-heading>div:first-child{width:100%;text-align:left}
@@ -2312,16 +1858,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor header: title anchored top-left, graph selector top-right. */
-.climate-gauge-card .section-heading.climate-monitor-heading{
-  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;
-  width:100%;text-align:left!important;gap:12px
-}
-.climate-gauge-card .climate-monitor-heading>div:first-child{
-  flex:1 1 auto;min-width:0;text-align:left!important;align-self:flex-start
-}
-.climate-gauge-card .climate-monitor-heading .label,
-.climate-gauge-card .climate-monitor-heading .wind-hud-subtitle{text-align:left!important}
-.climate-gauge-card .climate-graph-selector{align-self:flex-start;margin-left:auto}
+
+
+
+
 
 /* WVI detail rows separate total movement from its six-hour equivalent. */
 .weather-change-reasons .weather-change-summary{order:0;margin:0 0 3px}
@@ -2366,26 +1906,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* WVI uses one clear two-band colour rule: blue below 6, orange at 6 and above. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-value{
-  stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))
-}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-value{
-  stroke:#ffc184!important;filter:drop-shadow(0 0 2px rgba(255,193,132,.25))
-}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-area{fill:rgba(53,196,235,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-area{fill:rgba(255,193,132,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
 .weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
 .weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
@@ -2403,24 +1937,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* WVI gauge segments follow its blue-below-6 / orange-at-6-and-above rule. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-segment.active{background:#35c4eb;box-shadow:none}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-segment.active{background:#ffc184;box-shadow:none}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-value{stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-value{stroke:#ffc184!important;filter:drop-shadow(0 0 2px rgba(255,193,132,.25))}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-area{fill:rgba(53,196,235,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-area{fill:rgba(255,193,132,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
 .weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
 .weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
@@ -2525,36 +2055,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* WVI needle remains the same lime green as the other instrument needles.
    The score arc, segments and readout retain the blue/orange threshold colours. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{
-  fill:#a3e635!important;
-  stroke:none!important;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
-}
+
 
 /* Keep the graph selector in the Atmospheric Monitor title row. */
-.climate-gauge-card .section-heading.climate-monitor-heading{
-  display:flex!important;
-  flex-direction:row!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:10px;
-}
-.climate-gauge-card .climate-monitor-heading>div:first-child{
-  flex:1 1 auto;
-  min-width:0;
-}
-.climate-gauge-card .climate-monitor-heading .climate-graph-selector{
-  flex:0 0 auto;
-  align-self:center;
-  margin:0 0 0 auto;
-}
-@media(max-width:560px){
-  .climate-gauge-card .climate-monitor-heading .label{
-    font-size:clamp(18px,6.2vw,24px);
-    white-space:nowrap;
-  }
-}
+
+
+
+
 
 
 /* Conditions trend: description first, then the directional icon and label,
@@ -2578,11 +2085,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* WVI centre pivot is always lime green, independent of the score band. */
-.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge .climate-mobile-gauge-pivot{
-  fill:#a3e635!important;
-  stroke:#07182b!important;
-  stroke-width:1.2!important;
-}
+
 
 
 /* Centre the Conditions trend More information control. */
@@ -2698,88 +2201,58 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Wind speed change: falling is blue, rising is orange. */
-.wind-speed-instrument-row .climate-bar-change.fall{color:#35c4eb!important}
-.wind-speed-instrument-row .climate-bar-change.rise{color:#ffc184!important}
+
+
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue polyline{stroke:#35c4eb!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-endpoint{fill:#35c4eb!important}
+
+
+
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange polyline{stroke:#ffc184!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
 
 /* WVI graph, gauge and change indicator follow the one-hour direction. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-change{color:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-change{color:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-value{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-segment.active{background:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-endpoint{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-value{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-needle{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-segment.active{background:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Air-pressure history graph and one-hour change follow the pressure direction. */
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-change:not(.unavailable){
-  color:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-change{
-  color:#ffc184!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-sparkline polyline{
-  stroke:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-area{
-  fill:rgba(53,196,235,.09)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-current-guide{
-  stroke:rgba(53,196,235,.48)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-endpoint{
-  fill:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-sparkline polyline{
-  stroke:#ffc184!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-area{
-  fill:rgba(255,193,132,.09)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-current-guide{
-  stroke:rgba(255,193,132,.48)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-endpoint{
-  fill:#ffc184!important;
-}
+
+
+
+
+
+
+
+
+
+
 
 
 /* Keep the WVI gauge needle green; graph direction colours do not affect it. */
-.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle{
-  fill:#a3e635!important;
-  stroke:none!important;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
-}
+
 
 
 /* Dew point graph zone colours are rendered per-value in its SVG gradient. */
-.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.fall{
-  color:#35c4eb!important;
-}
-.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.rise{
-  color:#ffc184!important;
-}
+
+
 
 
 /* The WVI direction selector has higher class specificity; pin the needle
@@ -2815,36 +2288,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#26313f;border:1px solid #c3cad3;
   box-shadow:0 2px 5px rgba(38,49,63,.12),inset 0 1px 0 #fff;
 }
-:root[data-theme="light"] .pressure-card,
-:root[data-theme="light"] .climate-gauge-card,
-:root[data-theme="light"] .temperature-summary-card,
-:root[data-theme="light"] .wind-hud-card,
-:root[data-theme="light"] .satellite-map-card,
-:root[data-theme="light"] .weather-change-card.wind-hud-card,
-:root[data-theme="light"] .conditions-trend-card{
-  color:#26313f!important;
-  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
-  border:1px solid #c3cbd5!important;
-  border-radius:18px;
-  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
-}
-:root[data-theme="light"] .pressure-card .label,
-:root[data-theme="light"] .pressure-card-title .label,
-:root[data-theme="light"] .temperature-card-heading .label,
-:root[data-theme="light"] .satellite-map-heading,
-:root[data-theme="light"] .satellite-map-copy h2,
-:root[data-theme="light"] .climate-gauge-card .section-heading .label,
-:root[data-theme="light"] .wind-hud-card .section-heading .label,
-:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-summary,
-:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-reason,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-heading h2,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-label,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-summary,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details p,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details summary{
-  color:#26313f!important;
-}
+
+
 :root[data-theme="light"] .pressure-showcase-value,
 :root[data-theme="light"] .pressure-showcase-value span,
 :root[data-theme="light"] .pressure-insight-label,
@@ -2877,41 +2322,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .pressure-card .steady{color:#687586}
 :root[data-theme="light"] .pressure-range-outer-ring{stroke:#9aa8b8;filter:drop-shadow(0 0 2px rgba(71,85,105,.22))}
 :root[data-theme="light"] .pressure-range-hub{fill:#fff;stroke:#718198}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
-:root[data-theme="light"] .wind-hud-speed-history{
-  background:linear-gradient(110deg,rgba(255,255,255,.88),rgba(225,230,236,.92))!important;
-  border-color:#cbd2db!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 2px 5px rgba(38,49,63,.05)!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-label,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-value,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-change.steady,
-:root[data-theme="light"] .wind-hud-speed-history-heading,
-:root[data-theme="light"] .wind-hud-speed-readouts,
-:root[data-theme="light"] .satellite-map-copy p,
-:root[data-theme="light"] .satellite-map-card-footer,
-:root[data-theme="light"] .satellite-map-card-footer>span:first-child,
-:root[data-theme="light"] .satellite-map-external,
-:root[data-theme="light"] .temperature-summary-card .temperature-feels-like-direct,
-:root[data-theme="light"] .temperature-summary-card .temperature-summary-range span{
-  color:#586779!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline-unavailable{
-  background:linear-gradient(90deg,rgba(148,163,184,.13),rgba(148,163,184,.035))!important;
-  border-left-color:rgba(100,116,139,.22)!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-baseline{stroke:rgba(100,116,139,.35)!important}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-startpoint{fill:#718096!important}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-endpoint{stroke:#f5f6f8!important}
-:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(100,116,139,.25)}
-:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-endpoint{stroke:#e7eaee}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary{
-  color:#344256;background:linear-gradient(180deg,#f8f9fa,#e1e6eb);
-  border-color:#c3ccd6;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary span{color:#52718d}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector[open]>summary{background:#dce3ea}
+
+
+
+
+
+
+
+
+
+
+
 :root[data-theme="light"] .climate-graph-selector-menu{
   background:linear-gradient(145deg,#f8f9fa,#e2e7ec);
   border-color:#c3ccd6;box-shadow:0 12px 28px rgba(38,49,63,.2);
@@ -2972,7 +2393,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{color:#16834f!important}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="steady"]) .conditions-trend-score{color:#687586!important}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="worsening"]) .conditions-trend-score{color:#c56b25!important}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline polyline{filter:none}
+
 :root[data-theme="light"] .pressure-card .pressure-sparkline-line{filter:none}
 :root[data-theme="light"] .wind-hud-card .wind-hud-compass-switch{
   color:#344256;background:linear-gradient(180deg,#f8f9fa,#e0e5eb);
@@ -3090,17 +2511,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   border-color:#aeb7c2!important;
   box-shadow:0 6px 18px rgba(32,43,56,.14),inset 0 1px 0 rgba(255,255,255,.72)!important;
 }
-:root[data-theme="light"] .pressure-card,
-:root[data-theme="light"] .climate-gauge-card,
-:root[data-theme="light"] .temperature-summary-card,
-:root[data-theme="light"] .wind-hud-card,
-:root[data-theme="light"] .satellite-map-card,
-:root[data-theme="light"] .weather-change-card.wind-hud-card,
-:root[data-theme="light"] .conditions-trend-card{
-  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.62),transparent 52%),linear-gradient(145deg,#e7ebef 0%,#d1d7df 58%,#c5ccd5 100%)!important;
-  border-color:#aab4c0!important;
-  box-shadow:0 8px 22px rgba(32,43,56,.16),inset 0 1px 0 rgba(255,255,255,.78)!important;
-}
+
 :root[data-theme="light"] .card,
 :root[data-theme="light"] .card p,
 :root[data-theme="light"] .card label,
@@ -3130,15 +2541,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   border-color:#aab4c0;
   box-shadow:0 2px 5px rgba(32,43,56,.12),inset 0 1px 0 rgba(255,255,255,.72);
 }
-:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
-:root[data-theme="light"] .wind-hud-speed-history,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
-:root[data-theme="light"] .climate-graph-selector-menu,
-:root[data-theme="light"] .weather-change-reason,
-:root[data-theme="light"] .conditions-trend-score{
-  background:linear-gradient(145deg,#e1e5ea,#cbd2da)!important;
-  border-color:#b0bac5!important;
-}
+
 
 
 /* Historical graphs card: match the Wind HUD glass palette. */
@@ -3380,7 +2783,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .gaugeiq-weather-map-timeline button{
   color:#26384b;background:linear-gradient(180deg,#e7ebf0,#cbd2da);border-color:#aab4c0;
 }
-:root {
+:root{
     --theme-color: #f3f4f6;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
     color-scheme: light dark;
@@ -3396,8 +2799,8 @@ body.gaugeiq-menu-open{overflow:hidden}
     color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+@media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
         --text: #f3f4f6;
         --muted: #9ca3af;
         --background: #0b1120;
@@ -3410,17 +2813,17 @@ body.gaugeiq-menu-open{overflow:hidden}
     }
 }
 
-* { box-sizing: border-box; }
+*{ box-sizing: border-box; }
 
-body { margin: 0; min-height: 100vh; background: var(--background); color: var(--text); }
+body{ margin: 0; min-height: 100vh; background: var(--background); color: var(--text); }
 
-.shell {
+.shell{
     width: min(760px, 100%);
     margin: 0 auto;
     padding: max(24px, env(safe-area-inset-top)) 18px 40px;
 }
 
-header {
+header{
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3428,17 +2831,17 @@ header {
     margin-bottom: 24px;
 }
 
-.eyebrow {
+.eyebrow{
     margin: 0 0 4px;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: .16em;
 }
 
-h1 { margin: 0; font-size: 32px; }
-.muted { color: var(--muted); }
+h1{ margin: 0; font-size: 32px; }
+.muted{ color: var(--muted); }
 
-.card {
+.card{
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 22px;
@@ -3447,22 +2850,22 @@ h1 { margin: 0; font-size: 32px; }
     box-shadow: 0 8px 30px rgba(17,24,39,.06);
 }
 
-.hero { text-align: center; padding: 34px 22px; }
-.label { color: #6b7280; margin: 0 0 8px; }
-.pressure { font-size: clamp(54px, 15vw, 88px); font-weight: 800; letter-spacing: -.05em; }
-.pressure span { font-size: 20px; letter-spacing: normal; font-weight: 600; }
-.rise { color: #047857; }
-.fall { color: #b91c1c; }
-.steady { color: #6b7280; }
+.hero{ text-align: center; padding: 34px 22px; }
+.label{ color: #6b7280; margin: 0 0 8px; }
+.pressure{ font-size: clamp(54px, 15vw, 88px); font-weight: 800; letter-spacing: -.05em; }
+.pressure span{ font-size: 20px; letter-spacing: normal; font-weight: 600; }
+.rise{ color: #047857; }
+.fall{ color: #b91c1c; }
+.steady{ color: #6b7280; }
 
-.row {
+.row{
     display: flex;
     justify-content: space-between;
     gap: 20px;
     padding: 8px 0;
 }
 
-button {
+button{
     border: 0;
     border-radius: 12px;
     padding: 11px 15px;
@@ -3471,20 +2874,20 @@ button {
     cursor: pointer;
 }
 
-.secondary { background: var(--accent); color: white; }
-button:disabled { opacity: .55; cursor: default; }
-.status { text-align: center; color: #6b7280; font-size: 14px; }
+.secondary{ background: var(--accent); color: white; }
+button:disabled{ opacity: .55; cursor: default; }
+.status{ text-align: center; color: #6b7280; font-size: 14px; }
 
-.test-button {
+.test-button{
     display: inline-flex;
     width: auto;
     margin: 0;
 }
 
-@media (max-width: 560px) {
-    header { align-items: flex-start; }
-    header .secondary { white-space: nowrap; }
-    h1 { font-size: 28px; }
+@media (max-width: 560px){
+    header{ align-items: flex-start; }
+    header .secondary{ white-space: nowrap; }
+    h1{ font-size: 28px; }
 }
 
 .measurement-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:16px}
@@ -3603,8 +3006,8 @@ button:disabled { opacity: .55; cursor: default; }
 @media(max-width:700px){.wind-gauge-card{padding:18px}.wind-gauge{width:min(100%,350px)}}
 
 
-.climate-gauge-card{margin-top:16px;overflow:hidden;padding-top:14px}
-.climate-gauge-card .section-heading{margin-bottom:0}
+
+
 .climate-gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-top:4px}
 .climate-triple-gauge{position:relative;width:min(100%,430px);aspect-ratio:25/11;margin:auto}
 .climate-triple-gauge svg{display:block;width:100%;height:100%;overflow:visible}
@@ -3825,40 +3228,29 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 /* Environmental bars: green baseline, yellow one-hour change, grey unfilled */
-.climate-gauge-card{overflow:hidden}
-.climate-bars{display:flex;flex-direction:column;gap:16px;margin-top:18px}
-.climate-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 58px 68px;align-items:center;gap:9px;min-width:0}
-.climate-bar-label{grid-column:1 / -1;font-size:13px;font-weight:750;color:var(--text);line-height:1.2;margin-bottom:-4px}
-.climate-segment-track{display:grid;grid-template-columns:repeat(100,minmax(0,1fr));gap:1px;min-width:0;align-items:center;padding:3px;border:1px solid color-mix(in srgb,var(--muted) 20%,transparent);border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,var(--muted) 9%,transparent),color-mix(in srgb,var(--muted) 3%,transparent));box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
-.climate-segment{display:block;height:12px;min-width:0;border-radius:0;background:color-mix(in srgb,var(--muted) 20%,transparent);transition:background-color .2s ease,box-shadow .2s ease}
-.climate-segment.active{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-segment.change{background:#ffc184;box-shadow:inset 0 1px 0 rgba(255,255,255,.38)}
-.climate-segment.warning-zone{background:linear-gradient(180deg,#ff7777,#d91e36);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
-.climate-segment.warning-zone:first-of-type{margin-left:1px}
-.climate-bar-change,.climate-bar-value{min-width:0;font-size:13px;font-weight:850;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--text)}
-.climate-bar-change.rise{color:#eab308}
-.climate-bar-change.fall{color:#eab308}
-.climate-bar-change.unavailable{color:var(--muted)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Air pressure stays green unless it falls by at least 0.8 hPa in an hour. */
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.active,
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-segment.change{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-air-pressure:not(.pressure-drop-warning) .climate-bar-change:not(.unavailable){color:#4fbd31}
-.climate-bar-air-pressure.pressure-drop-warning .climate-segment.active,
-.climate-bar-air-pressure.pressure-drop-warning .climate-segment.change{background:linear-gradient(180deg,#ffad55,#ed7b24);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-air-pressure.pressure-drop-warning .climate-bar-change{color:#ed7b24}
+
+
+
+
 /* Dew point gap is favourable above 3°C and warning-level at 3°C or below. */
-.climate-bar-dew-point-gap:not(.dew-point-gap-warning) .climate-segment.active,
-.climate-bar-dew-point-gap:not(.dew-point-gap-warning) .climate-segment.change{background:linear-gradient(180deg,#a3ff32,#4fbd31);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.climate-bar-dew-point-gap.dew-point-gap-warning .climate-segment.active,
-.climate-bar-dew-point-gap.dew-point-gap-warning .climate-segment.change{background:linear-gradient(180deg,#ffad55,#ed7b24);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-@media(max-width:560px){
-  .climate-bars{gap:15px;margin-top:14px}
-  .climate-bar-row{grid-template-columns:minmax(0,1fr) 38px 48px;gap:6px}
-  .climate-bar-label{font-size:10px}
-  .climate-segment-track{gap:1px}
-  .climate-segment{height:11px}
-  .climate-bar-change,.climate-bar-value{font-size:11px}
-}
+
+
+
 
 
 
@@ -3912,14 +3304,14 @@ button:disabled { opacity: .55; cursor: default; }
 
 
 /* Focused sign-in layout: keep the admin entry point balanced on desktop and mobile. */
-.auth-page {
+.auth-page{
     min-height: 100vh;
     min-height: 100svh;
     background:
         radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%),
         var(--background);
 }
-.auth-shell {
+.auth-shell{
     width: min(100% - 32px, 440px);
     min-height: 100vh;
     min-height: 100svh;
@@ -3928,38 +3320,38 @@ button:disabled { opacity: .55; cursor: default; }
     justify-content: center;
     padding: max(24px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
 }
-.admin-auth {
+.admin-auth{
     width: 100%;
     margin: 0;
     padding: clamp(22px, 5vw, 34px);
     border-radius: 22px;
 }
-.admin-auth .eyebrow {
+.admin-auth .eyebrow{
     color: var(--accent);
     overflow-wrap: anywhere;
 }
-.admin-auth h1 {
+.admin-auth h1{
     font-size: clamp(25px, 6vw, 32px);
     line-height: 1.15;
     letter-spacing: -.035em;
     overflow-wrap: anywhere;
 }
-.admin-auth > .muted {
+.admin-auth > .muted{
     margin: 10px 0 24px;
     line-height: 1.55;
 }
-.admin-auth form {
+.admin-auth form{
     display: grid;
     gap: 16px;
 }
-.admin-auth form label {
+.admin-auth form label{
     display: grid;
     gap: 7px;
     color: var(--text);
     font-size: 14px;
     font-weight: 750;
 }
-.admin-auth input:not([type="hidden"]) {
+.admin-auth input:not([type="hidden"]){
     display: block;
     width: 100%;
     min-width: 0;
@@ -3973,12 +3365,12 @@ button:disabled { opacity: .55; cursor: default; }
     font-weight: 500;
     box-shadow: none;
 }
-.admin-auth input:not([type="hidden"]):focus-visible {
+.admin-auth input:not([type="hidden"]):focus-visible{
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 .admin-auth .auth-submit,
-.admin-auth .admin-auth-back {
+.admin-auth .admin-auth-back{
     display: inline-flex;
     width: 100%;
     min-height: 48px;
@@ -4000,41 +3392,41 @@ button:disabled { opacity: .55; cursor: default; }
     -webkit-tap-highlight-color: transparent;
 }
 .admin-auth .auth-submit:hover,
-.admin-auth .admin-auth-back:hover {
+.admin-auth .admin-auth-back:hover{
     filter: brightness(1.08);
 }
 .admin-auth .auth-submit:focus-visible,
-.admin-auth .admin-auth-back:focus-visible {
+.admin-auth .admin-auth-back:focus-visible{
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
-.admin-auth .admin-auth-back {
+.admin-auth .admin-auth-back{
     margin-top: 10px;
     border-color: var(--border);
     background: var(--surface);
     color: var(--text);
 }
-.admin-auth .monitor-warning {
+.admin-auth .monitor-warning{
     line-height: 1.5;
     overflow-wrap: anywhere;
 }
-@media (max-width: 560px) {
-    .auth-shell {
+@media (max-width: 560px){
+    .auth-shell{
         width: 100%;
         padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
         align-items: center;
     }
-    .admin-auth {
+    .admin-auth{
         padding: 24px 20px;
         border-radius: 18px;
     }
-    .admin-auth > .muted {
+    .admin-auth > .muted{
         margin-bottom: 22px;
     }
 }
-@media (max-width: 360px) {
-    .auth-shell { padding-left: 10px; padding-right: 10px; }
-    .admin-auth { padding: 21px 16px; }
+@media (max-width: 360px){
+    .auth-shell{ padding-left: 10px; padding-right: 10px; }
+    .admin-auth{ padding: 21px 16px; }
 }
 
 /* Dashboard header update timestamp and notification confirmation */
@@ -4075,10 +3467,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.header-actions{flex-direction:column;align-items:stretch;gap:8px}.header-actions .menu-button{min-width:76px;width:100%;height:40px;padding:0 14px}.header-actions #notifyButton{min-width:0;width:100%;padding:11px 12px}.gaugeiq-menu{left:12px}}
 
 
-.rainfall-forecast-track .insight-meter-fill {
+.rainfall-forecast-track .insight-meter-fill{
     min-width: 0;
 }
-.observed-rainfall-meta {
+.observed-rainfall-meta{
     padding-top: 9px;
     border-top: 1px solid var(--border);
 }
@@ -4483,18 +3875,18 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:560px){.pressure-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}.pressure-dial-column{align-self:start;align-items:flex-start}.pressure-range-gauge{width:100%!important;flex-basis:100%;transform:none}}
 
 /* Match Atmospheric Monitor's card shell and heading to Air pressure. */
-.climate-gauge-card{padding:26px 30px 24px;background:radial-gradient(ellipse at 30% 48%,rgba(0,74,160,.12),transparent 44%),linear-gradient(115deg,#031126 0%,#061a36 60%,#03132b 100%);border:2px solid #073f80;border-radius:20px;box-shadow:none;color:#f4f7ff}
-.climate-gauge-card .section-heading{margin-bottom:18px}
-.climate-gauge-card .section-heading .label{font-size:clamp(32px,4.4vw,58px);font-weight:800;letter-spacing:-.035em;color:#f4f7ff;line-height:1.1;margin:0}
-.climate-gauge-card .climate-bar-label{color:#b9d5ff}
-.climate-gauge-card .climate-bar-value{color:#f4f7ff}
-@media(max-width:560px){.climate-gauge-card{padding:16px 14px;border-radius:16px}.climate-gauge-card .section-heading{margin-bottom:14px}.climate-gauge-card .section-heading .label{font-size:24px}}
-@media(min-width:561px) and (max-width:760px){.climate-gauge-card{padding:20px}}
+
+
+
+
+
+
+
 
 /* Atmospheric Monitor colours matched to the pressure gauge. */
-.climate-gauge-card .climate-segment.active{background:#35c4eb}
-.climate-gauge-card .climate-segment.change{background:#ffc184}
-.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
+
+
+
 
 /* Compact the Conditions trend card vertically. */
 .conditions-trend-card{padding-top:14px;padding-bottom:14px}
@@ -4674,34 +4066,28 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-vector-labels .wind-hud-from{fill:#ffc184;font-size:13px;letter-spacing:.2px}
 .wind-hud-vector-labels .wind-hud-to{fill:#68d2ff;font-size:13px;letter-spacing:.2px}
 .wind-hud-card .wind-hud-speed-scale{margin-top:8px}
-.wind-hud-card .climate-segment{border-radius:2px}
+
 @media(max-width:420px){.wind-hud-vector svg{max-height:190px}}
 
 /* Atmospheric Monitor: compact glass telemetry rows with restrained luminous bars. */
-.climate-gauge-card{padding:22px 24px 20px;background:radial-gradient(ellipse at 18% 0%,rgba(43,118,183,.18),transparent 52%),linear-gradient(145deg,#10294a 0%,#07172e 56%,#041126 100%);border:1px solid rgba(104,163,218,.34);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 12px 30px rgba(2,8,23,.12)}
-.climate-gauge-card .section-heading{margin-bottom:14px}
-.climate-gauge-card .section-heading .label{font-size:clamp(25px,3.8vw,34px);font-weight:750;letter-spacing:-.025em}
-.climate-gauge-card .climate-bars{gap:8px;margin-top:0}
-.climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 48px 70px;gap:8px 10px;padding:11px 12px;border:1px solid rgba(117,164,211,.12);border-radius:10px;background:linear-gradient(110deg,rgba(19,43,70,.66),rgba(5,18,37,.56));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
-.climate-gauge-card .climate-bar-label{font-size:12px;font-weight:750;letter-spacing:.015em;color:#b9d5ff;grid-column:1;align-self:center;margin:0}
-.climate-gauge-card .climate-bar-value{grid-column:3;grid-row:1;font-size:14px;color:#f4f7ff}
-.climate-gauge-card .climate-bar-change{grid-column:2;grid-row:1;font-size:12px;color:#829fc1}
-.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
-.climate-gauge-card .climate-segment-track{grid-column:1 / -1;grid-row:2;display:grid;grid-template-columns:repeat(100,minmax(0,1fr));gap:1px;align-items:center;min-width:0;height:auto!important;min-height:0;padding:3px!important;overflow:hidden;border:1px solid rgba(118,145,174,.24);border-radius:3px;background:linear-gradient(180deg,rgba(118,145,174,.09),rgba(118,145,174,.03));box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
-.climate-gauge-card .climate-segment{height:10px;border-radius:0}
-.climate-gauge-card .climate-bar-sparkline{grid-column:1 / -1;grid-row:3;display:block;width:100%;height:28px;overflow:visible;opacity:.95}
-.climate-gauge-card .climate-bar-sparkline polyline{fill:none;stroke:#ffc184;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px rgba(255,193,132,.22))}
-.climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:1 / -1;grid-row:3;min-height:20px;font-size:10px;color:#829fc1;line-height:1.5}
 
 
 
-@media(max-width:560px){
- .climate-gauge-card{padding:16px 12px;border-radius:16px}
- .climate-gauge-card .section-heading .label{font-size:24px}
- .climate-gauge-card .climate-bar-row{grid-template-columns:minmax(0,1fr) 34px 54px;gap:7px;padding:10px 9px}
- .climate-gauge-card .climate-bar-label{font-size:11px}
- .climate-gauge-card .climate-bar-value{font-size:12px}
- .climate-gauge-card .climate-bar-change{font-size:11px}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Keep the wind arrow comfortably inside the panel and explain it plainly. */
@@ -4733,19 +4119,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Match Temperature and Atmospheric Monitor headings to the Wind card heading. */
-.temperature-card-heading .label,
-.climate-gauge-card .section-heading .label{
-  font-size:22px;
-  font-weight:750;
-  letter-spacing:normal;
-  line-height:normal;
-}
-@media(max-width:560px){
-  .temperature-card-heading .label,
-  .climate-gauge-card .section-heading .label{
-    font-size:21px;
-  }
-}
+
+
 
 
 /* Show the active location and stored-reading timestamp in the temperature card heading. */
@@ -4770,36 +4145,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor and network diagnostics: refined instrument-panel layout */
-.climate-gauge-card{
-  padding:18px;
-  border:1px solid color-mix(in srgb,#1689df 38%,var(--border));
-  border-radius:18px;
-  background:linear-gradient(145deg,color-mix(in srgb,#08234a 94%,var(--card)),color-mix(in srgb,#03132e 96%,var(--card)));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 26px rgba(0,0,0,.12);
-}
-.climate-gauge-card .section-heading{margin-bottom:14px}
-.climate-gauge-card #climateGaugeTitle{font-size:clamp(20px,2.3vw,26px);font-weight:800;letter-spacing:-.025em}
-.climate-bars{gap:10px;margin-top:0}
-.climate-bar-row{
-  display:grid;
-  grid-template-columns:minmax(112px,150px) minmax(100px,1fr) 54px minmax(120px, min(25%,220px));
-  grid-template-rows:26px 24px;
-  align-items:center;
-  column-gap:14px;
-  row-gap:0;
-  min-width:0;
-  padding:12px 14px;
-  border:1px solid rgba(31,125,205,.32);
-  border-radius:15px;
-  background:linear-gradient(105deg,rgba(4,30,63,.82),rgba(3,22,49,.7));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-.climate-bar-label{grid-column:1;grid-row:1;font-size:15px;font-weight:800;line-height:1.2;margin:0;align-self:end}
-.climate-bar-value{grid-column:1;grid-row:2;text-align:left;font-size:16px;font-weight:650;color:#a9caff;align-self:start;padding-top:3px}
-.climate-segment-track{grid-column:2;grid-row:1 / span 2;width:100%;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;gap:2px}
-.climate-segment{height:16px}
-.climate-bar-change{grid-column:3;grid-row:1 / span 2;text-align:center;font-size:17px;color:#ffc184}
-.climate-bar-change.rise,.climate-bar-change.fall{color:#ffc184}
+
+
+
+
+
+
+
+
+
+
+
 .climate-bar-sparkline,.climate-bar-sparkline-unavailable{grid-column:4;grid-row:1 / span 2;width:100%;height:42px;min-width:0;align-self:center}
 .climate-bar-sparkline{overflow:visible;border-bottom:1px solid rgba(79,157,231,.28);background:linear-gradient(180deg,transparent 75%,rgba(30,103,171,.08))}
 .climate-bar-sparkline polyline{stroke:#ff9e38;stroke-width:1.25;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px rgba(255,158,56,.15))}
@@ -4825,24 +4181,24 @@ body.gaugeiq-menu-open{overflow:hidden}
 .network-diagnostics #networkPingStatus::before{content:"◷"}
 .network-diagnostics .network-uplink-status:last-child::before{content:"▤"}
 @media(max-width:760px){
- .climate-bar-row{grid-template-columns:minmax(95px,120px) minmax(70px,1fr) 42px;grid-template-rows:22px 20px 34px;column-gap:9px;padding:10px}
- .climate-bar-label{font-size:13px}
- .climate-bar-value{font-size:14px}
- .climate-segment-track{grid-column:2;grid-row:1 / span 2}
- .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:14px}
+ 
+ 
+ 
+ 
+ 
  .climate-bar-sparkline,.climate-bar-sparkline-unavailable{grid-column:1 / -1;grid-row:3;height:30px;margin-top:5px}
  .network-diagnostics-readings{grid-template-columns:repeat(2,minmax(0,1fr))}
  .network-diagnostics .network-uplink-status:nth-child(2){border-right:0}
  .network-diagnostics .network-uplink-status:nth-child(-n+2){border-bottom:1px solid rgba(31,125,205,.3)}
 }
 @media(max-width:420px){
- .climate-gauge-card{padding:12px}
- .climate-bar-row{grid-template-columns:minmax(78px,94px) minmax(0,1fr) 36px;column-gap:7px;padding:9px 7px}
- .climate-bar-label{font-size:11px}
- .climate-bar-value{font-size:12px}
- .climate-segment{height:12px}
- .climate-segment-track{gap:1px}
- .climate-bar-change{font-size:12px}
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  .network-diagnostics{padding:12px}
  .network-diagnostics .network-uplink-status{padding:8px;font-size:11px}
  .network-diagnostics .network-uplink-status strong{font-size:14px}
@@ -4850,279 +4206,57 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor: aligned readings, compact segmented gauges and restrained trend plots. */
-.climate-gauge-card .climate-bars{gap:7px}
-.climate-gauge-card .climate-bar-row{
-  grid-template-columns:minmax(100px,124px) minmax(76px,.82fr) 48px minmax(128px,1fr);
-  grid-template-rows:22px 22px;
-  column-gap:9px;
-  row-gap:0;
-  padding:8px 10px;
-  border:1px solid rgba(65,126,185,.22);
-  border-radius:10px;
-  background:linear-gradient(105deg,rgba(7,30,57,.68),rgba(3,19,41,.54));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-.climate-gauge-card .climate-bar-label{
-  grid-column:1;grid-row:1;align-self:end;margin:0;
-  color:#b9d5ff;font-size:12px;font-weight:750;line-height:1.2;letter-spacing:.01em
-}
-.climate-gauge-card .climate-bar-value{
-  grid-column:1;grid-row:2;align-self:start;padding-top:2px;
-  color:#f4f7ff;font-size:14px;font-weight:700;line-height:1.2;
-  font-variant-numeric:tabular-nums
-}
-.climate-gauge-card .climate-segment-track{
-  grid-column:2;grid-row:1 / span 2;display:grid;
-  grid-template-columns:repeat(60,minmax(0,1fr));gap:1px;
-  align-items:center;width:100%;height:12px!important;min-height:0;
-  padding:0!important;overflow:hidden;border:0;border-radius:0;
-  background:transparent;box-shadow:none
-}
-.climate-gauge-card .climate-segment{height:12px;min-width:0;border-radius:0}
-.climate-gauge-card .climate-segment.active{background:#a3e635}
-.climate-gauge-card .climate-segment.change{background:#ffc184}
-.climate-gauge-card .climate-segment.warning-zone{background:#a3e635}
-.climate-gauge-card .climate-bar-change{
-  grid-column:3;grid-row:1 / span 2;align-self:center;text-align:right;
-  padding:0;font-size:12px;font-weight:750;line-height:1.15;
-  font-variant-numeric:tabular-nums;white-space:nowrap;color:#ffc184
-}
-.climate-gauge-card .climate-bar-change.steady{color:#9cb6d5}
-.climate-gauge-card .climate-bar-sparkline,
-.climate-gauge-card .climate-bar-sparkline-unavailable{
-  grid-column:4;grid-row:1 / span 2;align-self:center;
-  width:100%;height:34px;min-width:0;margin:0;display:block
-}
-.climate-gauge-card .climate-bar-sparkline{
-  overflow:visible;border:0;background:none;opacity:1
-}
-.climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{
-  stroke:rgba(139,170,207,.22);stroke-width:.55;vector-effect:non-scaling-stroke
-}
-.climate-gauge-card .climate-bar-sparkline polyline{
-  fill:none;stroke:#ffc184;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;
-  vector-effect:non-scaling-stroke;filter:none
-}
-.climate-gauge-card .climate-bar-sparkline .climate-sparkline-endpoint{
-  fill:#ffc184;stroke:#06172d;stroke-width:.7;vector-effect:non-scaling-stroke
-}
-.climate-gauge-card .climate-bar-sparkline-unavailable{
-  display:flex;align-items:center;justify-content:center;
-  color:#829fc1;font-size:10px;line-height:1.3;text-align:center
-}
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(60px,1fr) 42px;
-    grid-template-rows:20px 20px 28px;
-    column-gap:8px;padding:8px 9px
-  }
-  .climate-gauge-card .climate-bar-label{grid-column:1;grid-row:1;font-size:12px}
-  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:2;font-size:13px}
-  .climate-gauge-card .climate-segment-track{grid-column:2;grid-row:1 / span 2;height:11px!important}
-  .climate-gauge-card .climate-segment{height:11px}
-  .climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:12px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:2 / 4;grid-row:3;height:26px;margin:2px 0 0
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    column-gap:7px;padding:7px 8px
-  }
-  .climate-gauge-card .climate-bar-label{font-size:11px}
-  .climate-gauge-card .climate-bar-value{font-size:12px}
-  .climate-gauge-card .climate-bar-change{font-size:11px}
-  .climate-gauge-card .climate-segment-track{gap:1px}
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Mobile Atmospheric Monitor: use compact arc gauges instead of segmented bars. */
-.climate-gauge-card .climate-mobile-gauge{display:none}
-.climate-gauge-card .climate-sparkline-area{fill:rgba(255,193,132,.095);stroke:none}
-.climate-gauge-card .climate-sparkline-current-guide{stroke:rgba(255,193,132,.42);stroke-width:.65;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke}
-.climate-gauge-card .climate-sparkline-startpoint{fill:#9cb6d5;opacity:.72}
-.climate-gauge-card .climate-sparkline-endpoint{r:1.7;filter:drop-shadow(0 0 1.6px rgba(255,193,132,.45))}
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(54px,1fr) 42px;
-    grid-template-rows:20px 20px 31px;
-    column-gap:8px;
-    row-gap:1px;
-    padding:8px 9px 7px;
-  }
-  .climate-gauge-card .climate-segment-track{display:none}
-  .climate-gauge-card .climate-mobile-gauge{
-    display:block;
-    grid-column:2;
-    grid-row:1 / span 2;
-    align-self:center;
-    width:100%;
-    height:30px;
-    overflow:visible;
-  }
-  .climate-gauge-card .climate-mobile-gauge-track{
-    fill:none;
-    stroke:rgba(118,157,199,.24);
-    stroke-width:7;
-    stroke-linecap:round;
-  }
-  .climate-gauge-card .climate-mobile-gauge-value{
-    fill:none;
-    stroke:#a3e635;
-    stroke-width:7;
-    stroke-linecap:round;
-    filter:drop-shadow(0 0 1.5px rgba(163,230,53,.22));
-  }
-  .climate-gauge-card .climate-mobile-gauge-endpoint{
-    fill:#ffc184;
-    stroke:#06172d;
-    stroke-width:1.1;
-  }
-  .climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:12px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1 / -1;
-    grid-row:3;
-    height:29px;
-    margin:1px 0 0;
-    padding:0 2px;
-  }
-  .climate-gauge-card .climate-bar-sparkline{overflow:visible}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    column-gap:7px;
-    padding:7px 8px 6px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{height:28px}
-  .climate-gauge-card .climate-mobile-gauge-track,
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:6.5}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{height:27px}
-}
+
+
+
+
+
+
+
 
 
 /* Phone layout: label and value first, gauge directly beneath, trend uses remaining width. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(90px,112px) minmax(0,1fr) 42px;
-    grid-template-rows:18px 19px 27px 30px;
-    column-gap:8px;
-    row-gap:0;
-    align-items:center;
-    padding:8px 9px 7px;
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:1;
-    grid-row:1;
-    align-self:end;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:1;
-    grid-row:2;
-    align-self:start;
-    padding-top:1px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:1;
-    grid-row:3;
-    width:100%;
-    height:27px;
-    align-self:center;
-    margin-top:1px;
-  }
-  .climate-gauge-card .climate-bar-change{
-    grid-column:3;
-    grid-row:1 / span 2;
-    justify-self:end;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:2 / 4;
-    grid-row:1 / span 4;
-    align-self:stretch;
-    width:100%;
-    height:100%;
-    min-height:70px;
-    margin:0;
-    padding:0 2px 0 4px;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(82px,100px) minmax(0,1fr) 38px;
-    grid-template-rows:17px 18px 26px 29px;
-    column-gap:7px;
-    padding:7px 8px 6px;
-  }
-  .climate-gauge-card .climate-mobile-gauge{height:26px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{min-height:67px}
-}
+
+
 
 
 /* Atmospheric Monitor polish: calmer graph framing and tighter mobile instrument styling. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    border-color:rgba(117,164,211,.17);
-    background:linear-gradient(112deg,rgba(16,39,65,.76),rgba(5,18,37,.68));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
-  }
-  .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(156,182,213,.2);stroke-width:6}
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:6;filter:drop-shadow(0 0 2px rgba(163,230,53,.18))}
-  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#a3e635;stroke:#07182b;stroke-width:1.25}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    min-height:70px;
-    border-left:1px solid rgba(117,164,211,.12);
-    padding-left:7px;
-    background:linear-gradient(90deg,rgba(20,51,80,.12),rgba(20,51,80,.025));
-  }
-  .climate-gauge-card .climate-bar-sparkline{overflow:visible}
-  .climate-gauge-card .climate-bar-sparkline polyline{stroke:#ffc184;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1.5px rgba(255,193,132,.2))}
-  .climate-gauge-card .climate-sparkline-area{fill:rgba(255,193,132,.07)}
-  .climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{stroke:rgba(156,182,213,.23);stroke-width:.55;stroke-dasharray:1.2 1.8;vector-effect:non-scaling-stroke}
-  .climate-gauge-card .climate-sparkline-startpoint{r:1.2;fill:#9cb6d5;opacity:.85}
-  .climate-gauge-card .climate-sparkline-endpoint{r:2;fill:#ffc184;stroke:#07182b;stroke-width:.8}
-}
+
 
 
 /* Keep mobile Atmospheric Monitor arcs circular and vertically aligned beneath readings. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 19px 40px 30px}
-  .climate-gauge-card .climate-mobile-gauge{height:40px;align-self:center;justify-self:start;overflow:visible}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 18px 38px 29px}
-  .climate-gauge-card .climate-mobile-gauge{height:38px}
-}
+
+
 
 
 /* Atmospheric Monitor mobile gauges: green indicator, clear heading gap, centred readout. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 5px 32px 19px}
-  .climate-gauge-card .climate-mobile-gauge{grid-column:1;grid-row:3;height:32px;align-self:center;justify-self:stretch}
-  .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:4;align-self:start;justify-self:stretch;padding-top:0;text-align:center}
-  .climate-gauge-card .climate-mobile-gauge-value{stroke:#35c4eb;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))}
-  .climate-gauge-card .climate-mobile-gauge-endpoint{fill:#a3e635;stroke:#07182b;stroke-width:1.25}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:2 / 4;grid-row:1 / span 4;min-height:0;height:64px;align-self:center}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 4px 30px 18px}
-  .climate-gauge-card .climate-mobile-gauge{height:30px}
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{height:60px}
-}
+
+
 
 /* Visible green needles on mobile Atmospheric Monitor gauges. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-needle{fill:#a3e635;stroke:none;filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))}
-  .climate-gauge-card .climate-mobile-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
-}
+
 
 /* Normalize forecast icon boxes so different SVG artwork aligns consistently. */
 .forecast-icon img{
@@ -5156,15 +4290,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){.wind-hud-card .wind-hud-compass-switch{min-height:29px;padding:5px 8px;font-size:9px}}
 
 /* Atmospheric Monitor mobile gauges: move the dial and readout down one spacing step. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:18px 13px 40px 27px}
-  .climate-gauge-card .climate-mobile-gauge{height:40px}
-  .climate-gauge-card .climate-bar-value{padding-top:8px}
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{grid-template-rows:17px 12px 38px 26px}
-  .climate-gauge-card .climate-mobile-gauge{height:38px}
-}
+
+
 
 /* Wind card: use the Atmospheric Monitor gauge and 24-hour graph styling. */
 .wind-hud-speed-history{
@@ -5205,45 +4332,13 @@ body.gaugeiq-menu-open{overflow:hidden}
   height:66px;
   overflow:visible;
 }
-.wind-hud-speed-history-gauge .climate-mobile-gauge-track{
-  fill:none;
-  stroke:rgba(156,182,213,.2);
-  stroke-width:6;
-  stroke-linecap:round;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-value{
-  fill:none;
-  stroke:#a3e635;
-  stroke-width:7;
-  stroke-linecap:round;
-  filter:drop-shadow(0 0 2px rgba(53,196,235,.25));
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-ticks line{
-  fill:none;
-  stroke:rgba(156,182,213,.72);
-  stroke-width:.8;
-  stroke-linecap:round;
-  vector-effect:non-scaling-stroke;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-ticks line.major{
-  stroke:rgba(190,211,235,.88);
-  stroke-width:1.15;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-needle{
-  fill:#a3e635;
-  stroke:none;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45));
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-endpoint{
-  fill:#ffc184;
-  stroke:#07182b;
-  stroke-width:1.25;
-}
-.wind-hud-speed-history-gauge .climate-mobile-gauge-pivot{
-  fill:#a3e635;
-  stroke:#07182b;
-  stroke-width:1.2;
-}
+
+
+
+
+
+
+
 .wind-hud-speed-history-graph{
   display:flex;
   flex-direction:column;
@@ -5263,22 +4358,9 @@ body.gaugeiq-menu-open{overflow:hidden}
   border:0;
   background:none;
 }
-.wind-hud-speed-history-graph .climate-sparkline-area{
-  fill:rgba(255,193,132,.07);
-  stroke:none;
-}
-.wind-hud-speed-history-graph .climate-bar-sparkline .climate-sparkline-baseline{
-  stroke:rgba(156,182,213,.23);
-  stroke-width:.55;
-  stroke-dasharray:1.2 1.8;
-  vector-effect:non-scaling-stroke;
-}
-.wind-hud-speed-history-graph .climate-sparkline-current-guide{
-  stroke:rgba(255,193,132,.42);
-  stroke-width:.65;
-  stroke-dasharray:1.2 1.4;
-  vector-effect:non-scaling-stroke;
-}
+
+
+
 .wind-hud-speed-history-graph .climate-bar-sparkline polyline{
   fill:none;
   stroke:#ffc184;
@@ -5288,17 +4370,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   vector-effect:non-scaling-stroke;
   filter:none;
 }
-.wind-hud-speed-history-graph .climate-sparkline-startpoint{
-  fill:#9cb6d5;
-  opacity:.85;
-}
-.wind-hud-speed-history-graph .climate-sparkline-endpoint{
-  r:1.6;
-  fill:#ffc184;
-  stroke:#07182b;
-  stroke-width:.8;
-  vector-effect:non-scaling-stroke;
-}
+
+
 .wind-hud-speed-history-graph .climate-bar-sparkline-unavailable{
   display:flex;
   align-items:center;
@@ -5337,7 +4410,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     stroke-linejoin:round;
     filter:drop-shadow(0 0 1.5px rgba(255,193,132,.2));
   }
-  .wind-hud-speed-history-graph .climate-sparkline-area{fill:rgba(255,193,132,.07)}
+  
 }
 @media(max-width:420px){
   .wind-hud-speed-history{padding:9px 9px 7px}
@@ -5349,141 +4422,26 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Atmospheric Monitor gauge graduations: fine minor marks and stronger quarter marks. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-ticks line{
-    fill:none;
-    stroke:rgba(156,182,213,.72);
-    stroke-width:.8;
-    stroke-linecap:round;
-    vector-effect:non-scaling-stroke;
-  }
-  .climate-gauge-card .climate-mobile-gauge-ticks line.major{
-    stroke:rgba(190,211,235,.88);
-    stroke-width:1.15;
-  }
-}
+
 
 /* Keep the Atmospheric Monitor change figure clear of the trend graph. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-change{
-    align-self:center;
-    transform:translateY(-5px);
-  }
-}
+
 
 /* Atmospheric Monitor: lower only the history sparklines. */
-.climate-gauge-card .climate-bar-sparkline{transform:translateY(5px)}
+
 
 /* Atmospheric Monitor: swap the mobile gauge and history graph columns. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(90px,112px) 42px;
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:2;
-    grid-row:1;
-    align-self:end;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:2;
-    grid-row:3;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:4;
-    text-align:center;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1;
-    grid-row:1 / span 4;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(82px,100px) 38px;
-  }
-}
+
+
 
 /* Atmospheric Monitor: put each metric heading and last-hour change above its graph. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(90px,112px);
-  }
-  .climate-gauge-card .climate-bar-label{
-    grid-column:1;
-    grid-row:1;
-    justify-self:start;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-change{
-    grid-column:1;
-    grid-row:1;
-    justify-self:end;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-column:1;
-    grid-row:2 / span 3;
-    align-self:center;
-    height:64px;
-    min-height:0;
-  }
-  .climate-gauge-card .climate-mobile-gauge{
-    grid-column:2;
-    grid-row:3;
-    justify-self:end;
-    transform:translateX(4px);
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:4;
-    justify-self:end;
-    transform:translateX(4px);
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-columns:minmax(0,1fr) minmax(82px,100px);
-  }
-}
+
+
 
 
 /* Atmospheric Monitor: align label, current value and one-hour change on the top line. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-rows:18px 13px 40px;
-  }
-  .climate-gauge-card .climate-bar-change{
-    transform:none;
-    align-self:start;
-  }
-  .climate-gauge-card .climate-bar-value{
-    grid-column:2;
-    grid-row:1;
-    justify-self:end;
-    align-self:start;
-    padding-top:0;
-    text-align:right;
-    transform:translateX(4px);
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    grid-row:2 / span 2;
-    height:42px;
-    min-height:0;
-  }
-}
-@media(max-width:420px){
-  .climate-gauge-card .climate-bar-row{
-    grid-template-rows:17px 12px 38px;
-  }
-  .climate-gauge-card .climate-bar-sparkline,
-  .climate-gauge-card .climate-bar-sparkline-unavailable{
-    height:39px;
-  }
-}
+
+
 
 
 /* Top card: reduce only the High/Low labels and temperature readings one step. */
@@ -5497,10 +4455,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   flex-direction:column;
   align-items:stretch;
 }
-.wind-hud-speed-history-gauge .climate-mobile-gauge-value{
-  stroke:#a3e635;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.22));
-}
+
 .wind-hud-speed-readouts{
   display:flex;
   align-items:baseline;
@@ -5556,7 +4511,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .wind-hud-speed-readouts .wind-hud-speed-change.fall{color:#eab308}
 .wind-hud-speed-readouts .wind-hud-speed-change.steady{color:#829fc1}
 .wind-hud-speed-readouts .wind-hud-speed-change.unavailable{color:#829fc1}
-.wind-hud-speed-history-graph .climate-sparkline-area{fill:rgba(255,193,132,.095)}
+
 .wind-hud-speed-history-graph .climate-bar-sparkline polyline{
   stroke:#ffc184;
   stroke-width:1.7;
@@ -5564,10 +4519,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   stroke-linejoin:round;
   filter:drop-shadow(0 0 2px rgba(255,193,132,.22));
 }
-.wind-hud-speed-history-graph .climate-sparkline-endpoint{
-  fill:#ffc184;
-  filter:drop-shadow(0 0 1.6px rgba(255,193,132,.45));
-}
+
 @media(max-width:760px){
   .wind-hud-speed-readouts{gap:6px;margin-top:-2px}
   .wind-hud-speed-readouts .wind-hud-speed-value{font-size:11px}
@@ -5575,10 +4527,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Atmospheric Monitor: increase mobile gauge arc thickness by 1px. */
-@media(max-width:760px){
-  .climate-gauge-card .climate-mobile-gauge-track,
-  .climate-gauge-card .climate-mobile-gauge-value{stroke-width:7px}
-}
+
 
 /* Match the Interactive Weather Maps card to the Wind card's glass treatment. */
 .satellite-map-heading{
@@ -5650,7 +4599,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 .climate-graph-selector-menu label:hover{background:rgba(95,157,215,.12)}
 .climate-graph-selector-menu input{width:15px;height:15px;margin:0;accent-color:#8fcf54;flex:0 0 auto}
-.climate-gauge-card .climate-bar-row[hidden]{display:none!important}
+
 /* WVI card: score and ten-step level sit beneath the description. */
 .weather-change-card .weather-change-heading{display:block;align-items:initial}
 .weather-change-card .weather-change-heading>div:first-child{width:100%;text-align:left}
@@ -5691,16 +4640,10 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Atmospheric Monitor header: title anchored top-left, graph selector top-right. */
-.climate-gauge-card .section-heading.climate-monitor-heading{
-  display:flex!important;align-items:flex-start!important;justify-content:space-between!important;
-  width:100%;text-align:left!important;gap:12px
-}
-.climate-gauge-card .climate-monitor-heading>div:first-child{
-  flex:1 1 auto;min-width:0;text-align:left!important;align-self:flex-start
-}
-.climate-gauge-card .climate-monitor-heading .label,
-.climate-gauge-card .climate-monitor-heading .wind-hud-subtitle{text-align:left!important}
-.climate-gauge-card .climate-graph-selector{align-self:flex-start;margin-left:auto}
+
+
+
+
 
 /* WVI detail rows separate total movement from its six-hour equivalent. */
 .weather-change-reasons .weather-change-summary{order:0;margin:0 0 3px}
@@ -5745,26 +4688,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* WVI uses one clear two-band colour rule: blue below 6, orange at 6 and above. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-value{
-  stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))
-}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-value{
-  stroke:#ffc184!important;filter:drop-shadow(0 0 2px rgba(255,193,132,.25))
-}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-area{fill:rgba(53,196,235,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-area{fill:rgba(255,193,132,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
 .weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
 .weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
@@ -5782,24 +4719,20 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* WVI gauge segments follow its blue-below-6 / orange-at-6-and-above rule. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-segment.active{background:#35c4eb;box-shadow:none}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-segment.active{background:#ffc184;box-shadow:none}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-value{stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-value{stroke:#ffc184!important;filter:drop-shadow(0 0 2px rgba(255,193,132,.25))}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-area{fill:rgba(53,196,235,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-area{fill:rgba(255,193,132,.08)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .weather-change-level[data-level="high"] span.is-active{background:#35c4eb;border-color:#35c4eb}
 .weather-change-level[data-level="moderate"] span.is-active{background:#ffc184;border-color:#ffc184}
 .weather-change-level[data-level="low"] span.is-active{background:#ffc184;border-color:#ffc184}
@@ -5904,36 +4837,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* WVI needle remains the same lime green as the other instrument needles.
    The score arc, segments and readout retain the blue/orange threshold colours. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-mobile-gauge-needle,
-.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-mobile-gauge-needle{
-  fill:#a3e635!important;
-  stroke:none!important;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
-}
+
 
 /* Keep the graph selector in the Atmospheric Monitor title row. */
-.climate-gauge-card .section-heading.climate-monitor-heading{
-  display:flex!important;
-  flex-direction:row!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:10px;
-}
-.climate-gauge-card .climate-monitor-heading>div:first-child{
-  flex:1 1 auto;
-  min-width:0;
-}
-.climate-gauge-card .climate-monitor-heading .climate-graph-selector{
-  flex:0 0 auto;
-  align-self:center;
-  margin:0 0 0 auto;
-}
-@media(max-width:560px){
-  .climate-gauge-card .climate-monitor-heading .label{
-    font-size:clamp(18px,6.2vw,24px);
-    white-space:nowrap;
-  }
-}
+
+
+
+
 
 
 /* Conditions trend: description first, then the directional icon and label,
@@ -5957,11 +4867,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* WVI centre pivot is always lime green, independent of the score band. */
-.climate-gauge-card .climate-bar-row.climate-bar-wvi .climate-mobile-gauge .climate-mobile-gauge-pivot{
-  fill:#a3e635!important;
-  stroke:#07182b!important;
-  stroke-width:1.2!important;
-}
+
 
 
 /* Centre the Conditions trend More information control. */
@@ -6077,88 +4983,58 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* Wind speed change: falling is blue, rising is orange. */
-.wind-speed-instrument-row .climate-bar-change.fall{color:#35c4eb!important}
-.wind-speed-instrument-row .climate-bar-change.rise{color:#ffc184!important}
+
+
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue polyline{stroke:#35c4eb!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-blue .climate-sparkline-endpoint{fill:#35c4eb!important}
+
+
+
 .wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange polyline{stroke:#ffc184!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.wind-speed-instrument-row .climate-bar-sparkline.wind-speed-band-orange .climate-sparkline-endpoint{fill:#ffc184!important}
+
+
+
 
 /* WVI graph, gauge and change indicator follow the one-hour direction. */
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-change{color:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-change{color:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-sparkline polyline{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-area{fill:rgba(53,196,235,.09)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-current-guide{stroke:rgba(53,196,235,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-sparkline-endpoint{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-value{stroke:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-needle{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-mobile-gauge-pivot{fill:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-segment.active{background:#35c4eb!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-sparkline polyline{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-area{fill:rgba(255,193,132,.09)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-current-guide{stroke:rgba(255,193,132,.48)!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-sparkline-endpoint{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-value{stroke:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-needle{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-endpoint,
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-mobile-gauge-pivot{fill:#ffc184!important}
-.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-segment.active{background:#ffc184!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Air-pressure history graph and one-hour change follow the pressure direction. */
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-change:not(.unavailable){
-  color:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-change{
-  color:#ffc184!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-sparkline polyline{
-  stroke:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-area{
-  fill:rgba(53,196,235,.09)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-current-guide{
-  stroke:rgba(53,196,235,.48)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-sparkline-endpoint{
-  fill:#35c4eb!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-sparkline polyline{
-  stroke:#ffc184!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-area{
-  fill:rgba(255,193,132,.09)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-current-guide{
-  stroke:rgba(255,193,132,.48)!important;
-}
-.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-sparkline-endpoint{
-  fill:#ffc184!important;
-}
+
+
+
+
+
+
+
+
+
+
 
 
 /* Keep the WVI gauge needle green; graph direction colours do not affect it. */
-.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle{
-  fill:#a3e635!important;
-  stroke:none!important;
-  filter:drop-shadow(0 0 1.5px rgba(163,230,53,.45))!important;
-}
+
 
 
 /* Dew point graph zone colours are rendered per-value in its SVG gradient. */
-.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.fall{
-  color:#35c4eb!important;
-}
-.climate-gauge-card [data-climate-graph="dew_point_c"] .climate-bar-change.rise{
-  color:#ffc184!important;
-}
+
+
 
 
 /* The WVI direction selector has higher class specificity; pin the needle
@@ -6194,36 +5070,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   color:#26313f;border:1px solid #c3cad3;
   box-shadow:0 2px 5px rgba(38,49,63,.12),inset 0 1px 0 #fff;
 }
-:root[data-theme="light"] .pressure-card,
-:root[data-theme="light"] .climate-gauge-card,
-:root[data-theme="light"] .temperature-summary-card,
-:root[data-theme="light"] .wind-hud-card,
-:root[data-theme="light"] .satellite-map-card,
-:root[data-theme="light"] .weather-change-card.wind-hud-card,
-:root[data-theme="light"] .conditions-trend-card{
-  color:#26313f!important;
-  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
-  border:1px solid #c3cbd5!important;
-  border-radius:18px;
-  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
-}
-:root[data-theme="light"] .pressure-card .label,
-:root[data-theme="light"] .pressure-card-title .label,
-:root[data-theme="light"] .temperature-card-heading .label,
-:root[data-theme="light"] .satellite-map-heading,
-:root[data-theme="light"] .satellite-map-copy h2,
-:root[data-theme="light"] .climate-gauge-card .section-heading .label,
-:root[data-theme="light"] .wind-hud-card .section-heading .label,
-:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-summary,
-:root[data-theme="light"] .weather-change-card.wind-hud-card .weather-change-reason,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-heading h2,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-label,
-:root[data-theme="light"] .conditions-trend-card .conditions-trend-summary,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details p,
-:root[data-theme="light"] .conditions-trend-card .algorithm-details summary{
-  color:#26313f!important;
-}
+
+
 :root[data-theme="light"] .pressure-showcase-value,
 :root[data-theme="light"] .pressure-showcase-value span,
 :root[data-theme="light"] .pressure-insight-label,
@@ -6256,41 +5104,17 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .pressure-card .steady{color:#687586}
 :root[data-theme="light"] .pressure-range-outer-ring{stroke:#9aa8b8;filter:drop-shadow(0 0 2px rgba(71,85,105,.22))}
 :root[data-theme="light"] .pressure-range-hub{fill:#fff;stroke:#718198}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
-:root[data-theme="light"] .wind-hud-speed-history{
-  background:linear-gradient(110deg,rgba(255,255,255,.88),rgba(225,230,236,.92))!important;
-  border-color:#cbd2db!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 2px 5px rgba(38,49,63,.05)!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-label,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-value,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-change.steady,
-:root[data-theme="light"] .wind-hud-speed-history-heading,
-:root[data-theme="light"] .wind-hud-speed-readouts,
-:root[data-theme="light"] .satellite-map-copy p,
-:root[data-theme="light"] .satellite-map-card-footer,
-:root[data-theme="light"] .satellite-map-card-footer>span:first-child,
-:root[data-theme="light"] .satellite-map-external,
-:root[data-theme="light"] .temperature-summary-card .temperature-feels-like-direct,
-:root[data-theme="light"] .temperature-summary-card .temperature-summary-range span{
-  color:#586779!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline-unavailable{
-  background:linear-gradient(90deg,rgba(148,163,184,.13),rgba(148,163,184,.035))!important;
-  border-left-color:rgba(100,116,139,.22)!important;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-baseline{stroke:rgba(100,116,139,.35)!important}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-startpoint{fill:#718096!important}
-:root[data-theme="light"] .climate-gauge-card .climate-sparkline-endpoint{stroke:#f5f6f8!important}
-:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(100,116,139,.25)}
-:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-endpoint{stroke:#e7eaee}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary{
-  color:#344256;background:linear-gradient(180deg,#f8f9fa,#e1e6eb);
-  border-color:#c3ccd6;
-}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector>summary span{color:#52718d}
-:root[data-theme="light"] .climate-gauge-card .climate-graph-selector[open]>summary{background:#dce3ea}
+
+
+
+
+
+
+
+
+
+
+
 :root[data-theme="light"] .climate-graph-selector-menu{
   background:linear-gradient(145deg,#f8f9fa,#e2e7ec);
   border-color:#c3ccd6;box-shadow:0 12px 28px rgba(38,49,63,.2);
@@ -6351,7 +5175,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="improving"]) .conditions-trend-score{color:#16834f!important}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="steady"]) .conditions-trend-score{color:#687586!important}
 :root[data-theme="light"] .conditions-trend-card:has(.conditions-trend-label[data-trend="worsening"]) .conditions-trend-score{color:#c56b25!important}
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline polyline{filter:none}
+
 :root[data-theme="light"] .pressure-card .pressure-sparkline-line{filter:none}
 :root[data-theme="light"] .wind-hud-card .wind-hud-compass-switch{
   color:#344256;background:linear-gradient(180deg,#f8f9fa,#e0e5eb);
@@ -6469,17 +5293,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   border-color:#aeb7c2!important;
   box-shadow:0 6px 18px rgba(32,43,56,.14),inset 0 1px 0 rgba(255,255,255,.72)!important;
 }
-:root[data-theme="light"] .pressure-card,
-:root[data-theme="light"] .climate-gauge-card,
-:root[data-theme="light"] .temperature-summary-card,
-:root[data-theme="light"] .wind-hud-card,
-:root[data-theme="light"] .satellite-map-card,
-:root[data-theme="light"] .weather-change-card.wind-hud-card,
-:root[data-theme="light"] .conditions-trend-card{
-  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.62),transparent 52%),linear-gradient(145deg,#e7ebef 0%,#d1d7df 58%,#c5ccd5 100%)!important;
-  border-color:#aab4c0!important;
-  box-shadow:0 8px 22px rgba(32,43,56,.16),inset 0 1px 0 rgba(255,255,255,.78)!important;
-}
+
 :root[data-theme="light"] .card,
 :root[data-theme="light"] .card p,
 :root[data-theme="light"] .card label,
@@ -6509,15 +5323,7 @@ body.gaugeiq-menu-open{overflow:hidden}
   border-color:#aab4c0;
   box-shadow:0 2px 5px rgba(32,43,56,.12),inset 0 1px 0 rgba(255,255,255,.72);
 }
-:root[data-theme="light"] .climate-gauge-card .climate-bar-row,
-:root[data-theme="light"] .wind-hud-speed-history,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline,
-:root[data-theme="light"] .climate-graph-selector-menu,
-:root[data-theme="light"] .weather-change-reason,
-:root[data-theme="light"] .conditions-trend-score{
-  background:linear-gradient(145deg,#e1e5ea,#cbd2da)!important;
-  border-color:#b0bac5!important;
-}
+
 
 
 /* Historical graphs card: match the Wind HUD glass palette. */
@@ -6886,8 +5692,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* WVI gauge fill stays blue regardless of the score band. */
-.climate-gauge-card .climate-bar-wvi .climate-segment.active{background:#35c4eb!important;box-shadow:none!important}
-.climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value{stroke:#35c4eb!important;filter:drop-shadow(0 0 2px rgba(53,196,235,.25))!important}
+
+
 
 
 /* Match the Trend card's green text, score ring and outer card ring exactly. */
@@ -6909,24 +5715,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 }
 
 /* WVI gauge fill is blue in both themes and every score/change state. */
-:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-segment.active,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-segment.active {
-  background: #35c4eb !important;
-  box-shadow: none !important;
-}
-:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-value {
-  stroke: #35c4eb !important;
-  filter: drop-shadow(0 0 2px rgba(53,196,235,.25)) !important;
-}
-:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle,
-:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-endpoint,
-:root[data-theme="dark"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-pivot,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-needle,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-endpoint,
-:root[data-theme="light"] .climate-gauge-card .climate-bar-wvi .climate-mobile-gauge-pivot {
-  fill: #35c4eb !important;
-}
+
+
+
 
 
 
@@ -7302,13 +6093,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-card .rainfall-radar-time-step{border-top-color:var(--border)}
 
 /* Compact selector for switching between independently monitored locations. */
-.location-switcher {
+.location-switcher{
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin: 10px 0 16px;
 }
-.location-switcher .active {
+.location-switcher .active{
     font-weight: 700;
     outline: 2px solid currentColor;
     outline-offset: 1px;
@@ -7838,3 +6629,72 @@ body.gaugeiq-menu-open{overflow:hidden}
 @media(max-width:420px){
   .header-actions .menu-button{min-height:29px;padding:5px 8px;font-size:9px}
 }
+
+/* Atmospheric Monitor — one source of truth for gauge layouts. */
+.climate-gauge-card{overflow:hidden;padding:18px;border:1px solid rgba(65,126,185,.32);border-radius:18px;color:#f4f7ff;background:linear-gradient(145deg,#10294a 0%,#07172e 56%,#041126 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 26px rgba(0,0,0,.12)}
+.climate-gauge-card .section-heading{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.climate-gauge-card #climateGaugeTitle{margin:0;color:#f4f7ff;font-size:clamp(20px,2.3vw,26px);font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.climate-gauge-card .wind-hud-subtitle{margin-top:4px;color:#9cb6d5;font-size:11px}
+.climate-gauge-card .climate-bars{display:flex;flex-direction:column;gap:8px;margin:0}
+.climate-gauge-card .climate-bar-row{display:grid;grid-template-columns:minmax(112px,1fr) minmax(90px,1.1fr) 48px minmax(120px,1.2fr);grid-template-rows:22px 22px;align-items:center;gap:0 10px;min-width:0;padding:9px 11px;border:1px solid rgba(117,164,211,.16);border-radius:10px;background:linear-gradient(112deg,rgba(16,39,65,.76),rgba(5,18,37,.68))}
+.climate-gauge-card .climate-bar-label{grid-column:1;grid-row:1;align-self:end;margin:0;color:#b9d5ff;font-size:12px;font-weight:750;line-height:1.2}
+.climate-gauge-card .climate-bar-value{grid-column:1;grid-row:2;align-self:start;padding-top:2px;color:#f4f7ff;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.climate-gauge-card .climate-segment-track{grid-column:2;grid-row:1 / span 2;display:grid;grid-template-columns:repeat(60,minmax(0,1fr));gap:1px;align-items:center;width:100%;height:12px;min-width:0;padding:0;overflow:hidden;border:0;border-radius:2px;background:rgba(156,182,213,.12)}
+.climate-gauge-card .climate-segment{display:block;height:12px;min-width:0;border-radius:0;background:rgba(156,182,213,.12)}
+.climate-gauge-card .climate-segment.active{background:#35c4eb}
+.climate-gauge-card .climate-segment.change{background:#ffc184}
+.climate-gauge-card .climate-segment.warning-zone{background:#ffc184}
+.climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;align-self:center;text-align:right;color:#9cb6d5;font-size:12px;font-weight:750;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+.climate-gauge-card .climate-bar-change.rise,.climate-gauge-card .climate-bar-change.fall{color:#ffc184}
+.climate-gauge-card .climate-bar-change.steady{color:#9cb6d5}
+.climate-gauge-card .climate-bar-change.unavailable{color:#829fc1}
+.climate-gauge-card .climate-bar-sparkline,.climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:4;grid-row:1 / span 2;align-self:center;width:100%;height:34px;min-width:0;margin:0;display:block}
+.climate-gauge-card .climate-bar-sparkline{overflow:visible;border:0;background:none}
+.climate-gauge-card .climate-bar-sparkline .climate-sparkline-baseline{stroke:rgba(156,182,213,.23);stroke-width:.55;stroke-dasharray:1.2 1.8;vector-effect:non-scaling-stroke}
+.climate-gauge-card .climate-bar-sparkline polyline{fill:none;stroke:#ffc184;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.climate-gauge-card .climate-sparkline-area{fill:rgba(255,193,132,.07);stroke:none}
+.climate-gauge-card .climate-sparkline-current-guide{stroke:rgba(255,193,132,.42);stroke-width:.65;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke}
+.climate-gauge-card .climate-sparkline-startpoint{fill:#9cb6d5;opacity:.8}
+.climate-gauge-card .climate-sparkline-endpoint{fill:#ffc184;stroke:#07182b;stroke-width:.8}
+.climate-gauge-card .climate-bar-sparkline-unavailable{display:flex;align-items:center;justify-content:center;color:#829fc1;font-size:10px;line-height:1.3;text-align:center}
+.climate-gauge-card .climate-mobile-gauge{display:none}
+.climate-gauge-card .climate-bar-row[hidden]{display:none!important}
+.climate-gauge-card .climate-bar-air-pressure.pressure-falling .climate-bar-change,.climate-gauge-card .climate-bar-air-pressure.pressure-drop-warning .climate-bar-change{color:#ffc184}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="blue"] .climate-segment.active{background:#35c4eb}
+.climate-gauge-card .climate-bar-wvi[data-wvi-band="orange"] .climate-segment.active{background:#ffc184}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="fall"] .climate-bar-change{color:#35c4eb}
+.climate-gauge-card .climate-bar-wvi[data-wvi-change="rise"] .climate-bar-change{color:#ffc184}
+.climate-gauge-card .climate-bar-air-pressure:not(.pressure-falling) .climate-bar-change:not(.unavailable){color:#35c4eb}
+.climate-gauge-card .climate-graph-selector{align-self:flex-start;margin-left:auto}
+@media(max-width:760px){
+.climate-gauge-card{padding:14px}
+.climate-gauge-card .climate-bar-row{grid-template-columns:minmax(82px,100px) minmax(0,1fr) 40px;grid-template-rows:18px 19px 36px 28px;column-gap:8px;row-gap:0;padding:8px}
+.climate-gauge-card .climate-bar-label{grid-column:1;grid-row:1;font-size:11px}
+.climate-gauge-card .climate-bar-value{grid-column:1;grid-row:2;font-size:12px;padding-top:1px}
+.climate-gauge-card .climate-mobile-gauge{display:block;grid-column:1;grid-row:3;width:100%;height:36px;align-self:center;overflow:visible}
+.climate-gauge-card .climate-mobile-gauge-track{fill:none;stroke:rgba(156,182,213,.22);stroke-width:6;stroke-linecap:round}
+.climate-gauge-card .climate-mobile-gauge-value{fill:none;stroke:#35c4eb;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(53,196,235,.2))}
+.climate-gauge-card .climate-mobile-gauge-ticks line{stroke:rgba(156,182,213,.65);stroke-width:.8;stroke-linecap:round}
+.climate-gauge-card .climate-mobile-gauge-ticks line.major{stroke:#22d3ee;stroke-width:1.2}
+.climate-gauge-card .climate-mobile-gauge-needle{fill:#a3e635;stroke:none}
+.climate-gauge-card .climate-mobile-gauge-endpoint,.climate-gauge-card .climate-mobile-gauge-pivot{fill:#a3e635;stroke:#07182b;stroke-width:1.2}
+.climate-gauge-card .climate-bar-change{grid-column:3;grid-row:1 / span 2;font-size:11px}
+.climate-gauge-card .climate-segment-track{display:none}
+.climate-gauge-card .climate-bar-sparkline,.climate-gauge-card .climate-bar-sparkline-unavailable{grid-column:2 / 4;grid-row:1 / span 4;align-self:center;width:100%;height:64px;min-height:0;margin:0;padding:0 2px 0 5px;border-left:1px solid rgba(117,164,211,.12)}
+}
+@media(max-width:420px){
+.climate-gauge-card{padding:12px}
+.climate-gauge-card .climate-bar-row{grid-template-columns:minmax(76px,92px) minmax(0,1fr) 36px;grid-template-rows:17px 18px 34px 27px;column-gap:7px;padding:7px}
+.climate-gauge-card .climate-mobile-gauge{height:34px}
+.climate-gauge-card .climate-bar-sparkline,.climate-gauge-card .climate-bar-sparkline-unavailable{height:60px}
+}
+:root[data-theme="light"] .climate-gauge-card{color:#243449;background:linear-gradient(145deg,#f8fbff,#e9f0f7);border-color:rgba(80,115,150,.28);box-shadow:0 8px 22px rgba(31,52,76,.08)}
+:root[data-theme="light"] .climate-gauge-card #climateGaugeTitle{color:#243449}
+:root[data-theme="light"] .climate-gauge-card .wind-hud-subtitle,:root[data-theme="light"] .climate-gauge-card .climate-bar-label{color:#526b85}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-value{color:#243449}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-row{background:linear-gradient(112deg,#f2f7fc,#e8eff6);border-color:rgba(100,125,150,.2)}
+:root[data-theme="light"] .climate-gauge-card .climate-segment-track{background:rgba(100,116,139,.12)}
+:root[data-theme="light"] .climate-gauge-card .climate-segment{background:rgba(100,116,139,.14)}
+:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(100,116,139,.25)}
+:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-pivot,:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-endpoint{stroke:#e7eaee}
+:root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline-unavailable{color:#718096}
