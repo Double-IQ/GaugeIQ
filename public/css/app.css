@@ -7770,3 +7770,36 @@ body.gaugeiq-menu-open{overflow:hidden}
   .moon-tide-hud-card{padding:16px;border-radius:16px}
   .moon-tide-hud-card .mth-header h2{font-size:22px}
 }
+
+
+/* Use the same Wind HUD surface on Rain Radar; leave the radar scope and
+   precipitation echo palette untouched for contrast and data readability. */
+.rainfall-radar-card{
+  background:radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
+}
+:root[data-theme="light"] .rainfall-radar-card{
+  color:#26313f!important;
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
+  border:1px solid #c3cbd5!important;
+  border-radius:18px;
+  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+:root[data-theme="light"] .moon-tide-hud-card{
+  --mth-bg:#f8f9fa;
+  --mth-panel:#e7eaee;
+  --mth-line:rgba(91,111,134,.22);
+  --mth-dim:#657487;
+  color:#26313f!important;
+  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
+  border:1px solid #c3cbd5!important;
+  border-radius:18px;
+  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+:root[data-theme="light"] .moon-tide-hud-card .mth-header h2,
+:root[data-theme="light"] .moon-tide-hud-card .mth-section-head strong{color:#26313f}
+:root[data-theme="light"] .moon-tide-hud-card .mth-kicker,
+:root[data-theme="light"] .moon-tide-hud-card .mth-subtitle,
+:root[data-theme="light"] .moon-tide-hud-card .mth-section-head small,
+:root[data-theme="light"] .moon-tide-hud-card .mth-lunar-readouts small,
+:root[data-theme="light"] .moon-tide-hud-card .mth-solar-readouts small,
+:root[data-theme="light"] .moon-tide-hud-card .mth-tide-baseline span{color:#657487}
