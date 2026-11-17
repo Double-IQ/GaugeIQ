@@ -7725,3 +7725,48 @@ body.gaugeiq-menu-open{overflow:hidden}
   .mth-tracker-system{transform:translate(-50%,-50%) scale(.88)}
   .mth-tracker-display .mth-sun-vector{left:130px;top:6px}
 }
+
+
+/* GaugeIQ dashboard card alignment — Moon & Tide follows the Wind HUD shell.
+   Keep the lunar/orbital/tide instruments and their data visualisation colours intact. */
+.moon-tide-hud-card{
+  --mth-bg:#030d1b;
+  --mth-panel:#071629;
+  --mth-line:rgba(104,163,218,.20);
+  --mth-cyan:#72e5e0;
+  --mth-green:#86e8cc;
+  --mth-amber:#9bb8d8;
+  --mth-dim:#819fc2;
+  color:#edf6ff;
+  background:
+    radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),
+    linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
+  border:1px solid rgba(104,163,218,.34);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
+  padding:18px;
+}
+.moon-tide-hud-card .mth-header{border-bottom-color:rgba(104,163,218,.22)}
+.moon-tide-hud-card .mth-kicker{color:#86bce8}
+.moon-tide-hud-card .mth-header h2{color:#edf6ff}
+.moon-tide-hud-card .mth-subtitle{color:#819fc2}
+.moon-tide-hud-card .mth-live{
+  border-color:rgba(67,210,177,.25);
+  background:rgba(23,169,133,.08);
+  color:#86e8cc;
+  border-radius:6px;
+}
+.moon-tide-hud-card .mth-live i{background:#43d6a4;box-shadow:0 0 9px rgba(67,214,164,.55)}
+.moon-tide-hud-card .mth-section{border-bottom-color:rgba(104,163,218,.20)}
+.moon-tide-hud-card .mth-index{color:#9bb8d8;border-right-color:rgba(155,184,216,.35)}
+.moon-tide-hud-card .mth-section-head strong{color:#edf6ff}
+.moon-tide-hud-card .mth-section-head small,
+.moon-tide-hud-card .mth-lunar-readouts small,
+.moon-tide-hud-card .mth-solar-readouts small,
+.moon-tide-hud-card .mth-tide-baseline span{color:#819fc2}
+.moon-tide-hud-card .mth-section-state{color:#72e5e0}
+.moon-tide-hud-card .mth-state-pending{color:#e9b66a}
+@media (max-width:560px){
+  .moon-tide-hud-card{padding:16px;border-radius:16px}
+  .moon-tide-hud-card .mth-header h2{font-size:22px}
+}
