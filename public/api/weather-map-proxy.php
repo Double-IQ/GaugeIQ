@@ -87,8 +87,9 @@ function weatherMapProxyCleanupOldCache(string $cacheRoot, string $blockDirector
             return;
         }
 
-        clearstatcache(true, $lockPath);
-        if (is_file($lockPath) && (time() - (int)filemtime($lockPath)) < 3600) {
+        rewind($lock);
+        $lastRun = (int)trim((string)stream_get_contents($lock));
+        if ($lastRun > 0 && (time() - $lastRun) < 3600) {
             return;
         }
 
@@ -107,7 +108,10 @@ function weatherMapProxyCleanupOldCache(string $cacheRoot, string $blockDirector
                 }
             }
         }
-        @touch($lockPath);
+        ftruncate($lock, 0);
+        rewind($lock);
+        fwrite($lock, (string)time());
+        fflush($lock);
     } catch (Throwable $error) {
         error_log('GaugeIQ weather-map cache cleanup failed: ' . $error->getMessage());
     } finally {
