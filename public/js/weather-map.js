@@ -1076,7 +1076,7 @@ protocolOptions.fileReaderConfig = {
             const gestureHint = document.getElementById('weather-map-gesture-hint');
             if (gestureHint && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
                 requestAnimationFrame(() => gestureHint.classList.add('is-visible'));
-                setTimeout(() => gestureHint.classList.remove('is-visible'), 6000);
+                setTimeout(() => gestureHint.classList.remove('is-visible'), 9000);
             }
 
             // Keep the latest single weather layer visible while the five-frame
