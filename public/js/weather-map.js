@@ -310,12 +310,16 @@ protocolOptions.fileReaderConfig = {
         mapCanvas.style.touchAction = 'none';
         let lastMapTap = null;
         let touchPanActive = false;
+        let touchPanArmed = false;
+        let touchPanMoved = false;
         let lastTouchPanPoint = null;
         const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
         mapCanvas.addEventListener('touchstart', event => {
             if (event.touches.length !== 1 || !event.changedTouches.length) {
                 lastMapTap = null;
                 touchPanActive = false;
+                touchPanArmed = false;
+                touchPanMoved = false;
                 lastTouchPanPoint = null;
                 return;
             }
@@ -327,33 +331,57 @@ protocolOptions.fileReaderConfig = {
 
             const point = getTouchPoint(event.changedTouches[0]);
             const now = Date.now();
+
+            // A double-tap arms panning. Support both common gestures: dragging
+            // immediately after the second tap, or lifting and then dragging.
+            if (touchPanArmed) {
+                touchPanActive = true;
+                touchPanArmed = false;
+                touchPanMoved = false;
+                lastTouchPanPoint = point;
+                lastMapTap = null;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+
             const isSecondTap = lastMapTap && now - lastMapTap.time < 450 &&
                 Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 32;
 
             if (isSecondTap) {
                 touchPanActive = true;
+                touchPanArmed = true;
+                touchPanMoved = false;
                 lastTouchPanPoint = point;
                 lastMapTap = null;
                 event.preventDefault();
                 event.stopImmediatePropagation();
             } else {
                 touchPanActive = false;
+                touchPanMoved = false;
                 lastTouchPanPoint = null;
                 lastMapTap = { ...point, time: now };
             }
         }, { capture: true, passive: false });
 
         mapCanvas.addEventListener('touchmove', event => {
-            if (event.touches.length > 1) return; // Preserve native pinch-to-zoom.
+            if (event.touches.length > 1) {
+                // Preserve native pinch-to-zoom and cancel any pending pan gesture.
+                touchPanActive = false;
+                touchPanArmed = false;
+                touchPanMoved = false;
+                lastTouchPanPoint = null;
+                return;
+            }
             if (touchPanActive && event.touches.length === 1) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
                 const point = getTouchPoint(event.touches[0]);
                 if (lastTouchPanPoint) {
-                    map.panBy([
-                        point.x - lastTouchPanPoint.x,
-                        point.y - lastTouchPanPoint.y
-                    ], { animate: false });
+                    const deltaX = point.x - lastTouchPanPoint.x;
+                    const deltaY = point.y - lastTouchPanPoint.y;
+                    if (deltaX !== 0 || deltaY !== 0) touchPanMoved = true;
+                    map.panBy([deltaX, deltaY], { animate: false });
                 }
                 lastTouchPanPoint = point;
                 return;
@@ -373,7 +401,11 @@ protocolOptions.fileReaderConfig = {
                 event.preventDefault();
                 event.stopImmediatePropagation();
             }
+            // If the second tap was only a tap, retain the armed state so the
+            // following one-finger drag pans. A completed pan consumes it.
+            if (touchPanMoved) touchPanArmed = false;
             touchPanActive = false;
+            touchPanMoved = false;
             lastTouchPanPoint = null;
             map.dragPan.enable();
         };
