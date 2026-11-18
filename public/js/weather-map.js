@@ -378,35 +378,18 @@ protocolOptions.fileReaderConfig = {
                 return;
             }
             if (touchPanActive && event.touches.length === 1) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
                 const point = getTouchPoint(event.touches[0]);
-                const totalX = point.x - touchStartPoint.x;
-                const totalY = point.y - touchStartPoint.y;
-                if (!touchGestureAxis && Math.hypot(totalX, totalY) >= 8) {
-                    touchGestureAxis = Math.abs(totalX) > Math.abs(totalY) ? 'horizontal' : 'vertical';
+                if (lastTouchPanPoint) {
+                    const deltaX = point.x - lastTouchPanPoint.x;
+                    const deltaY = point.y - lastTouchPanPoint.y;
+                    if (deltaX !== 0 || deltaY !== 0) touchPanMoved = true;
+                    // MapLibre's panBy offset is opposite the visual map
+                    // movement; negate the finger delta so the map follows it.
+                    map.panBy([-deltaX, -deltaY], { animate: false });
                 }
-                // Vertical movement belongs to the page. Keep deliberate map
-                // dragging horizontal so a swipe down can always scroll.
-                if (touchGestureAxis === 'vertical') {
-                    touchPanActive = false;
-                    touchPanArmed = false;
-                    touchPanMoved = false;
-                    lastTouchPanPoint = null;
-                    lastMapTap = null;
-                    return;
-                }
-                if (touchGestureAxis === 'horizontal') {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
-                    if (lastTouchPanPoint) {
-                        const deltaX = point.x - lastTouchPanPoint.x;
-                        const deltaY = point.y - lastTouchPanPoint.y;
-                        if (deltaX !== 0 || deltaY !== 0) touchPanMoved = true;
-                        // MapLibre's panBy offset is opposite the visual map
-                        // movement; negate the finger delta so the map follows it.
-                        map.panBy([-deltaX, -deltaY], { animate: false });
-                    }
-                    lastTouchPanPoint = point;
-                }
+                lastTouchPanPoint = point;
                 return;
             }
 
