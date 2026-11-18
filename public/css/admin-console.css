@@ -77,3 +77,19 @@
 @keyframes gaugeiq-update-progress{0%{left:-38%}100%{left:100%}}
 body.gaugeiq-update-running{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.gaugeiq-update-progress span{animation:none;left:0;width:100%;opacity:.75}}
+
+
+/* Keep update progress visibly moving on iOS when Reduce Motion is enabled.
+   This is a slow, steady sweep rather than a flashing or pulsing effect. */
+@media(prefers-reduced-motion:reduce){
+    .gaugeiq-update-progress span{
+        left:-38%;
+        width:38%;
+        opacity:.85;
+        animation:gaugeiq-update-progress-accessible 3.2s linear infinite;
+    }
+}
+@keyframes gaugeiq-update-progress-accessible{
+    0%{left:-38%}
+    100%{left:100%}
+}
