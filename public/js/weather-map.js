@@ -309,7 +309,7 @@ protocolOptions.fileReaderConfig = {
         const mapCanvas = map.getCanvas();
         // Let ordinary vertical swipes scroll the page; gesture handling below
         // claims horizontal drags and deliberate double-tap map pans.
-        mapCanvas.style.touchAction = 'auto';
+        mapCanvas.style.touchAction = 'pan-y pinch-zoom';
         let lastMapTap = null;
         let touchPanActive = false;
         let touchPanArmed = false;
@@ -348,8 +348,6 @@ protocolOptions.fileReaderConfig = {
                 touchPanMoved = false;
                 lastTouchPanPoint = point;
                 lastMapTap = null;
-                event.preventDefault();
-                event.stopImmediatePropagation();
                 return;
             }
 
@@ -362,8 +360,6 @@ protocolOptions.fileReaderConfig = {
                 touchPanMoved = false;
                 lastTouchPanPoint = point;
                 lastMapTap = null;
-                event.preventDefault();
-                event.stopImmediatePropagation();
             } else {
                 touchPanActive = false;
                 touchPanMoved = false;
@@ -389,7 +385,9 @@ protocolOptions.fileReaderConfig = {
                     const deltaX = point.x - lastTouchPanPoint.x;
                     const deltaY = point.y - lastTouchPanPoint.y;
                     if (deltaX !== 0 || deltaY !== 0) touchPanMoved = true;
-                    map.panBy([deltaX, deltaY], { animate: false });
+                    // MapLibre's panBy offset is opposite the visual map
+                    // movement; negate the finger delta so the map follows it.
+                    map.panBy([-deltaX, -deltaY], { animate: false });
                 }
                 lastTouchPanPoint = point;
                 return;
@@ -405,6 +403,7 @@ protocolOptions.fileReaderConfig = {
                 const deltaY = point.y - touchStartPoint.y;
                 if (!touchGestureAxis && Math.hypot(deltaX, deltaY) >= 8) {
                     touchGestureAxis = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+                    lastMapTap = null;
                 }
                 if (touchGestureAxis === 'vertical') return;
                 if (touchGestureAxis === 'horizontal') {
@@ -1072,11 +1071,19 @@ protocolOptions.fileReaderConfig = {
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
 
-            // Briefly explain the touch-only pan gesture once the map is ready.
+            // Keep the short touch instructions available on mobile, and
+            // bring them back whenever the user returns to the map.
             const gestureHint = document.getElementById('weather-map-gesture-hint');
-            if (gestureHint && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
-                requestAnimationFrame(() => gestureHint.classList.add('is-visible'));
-                setTimeout(() => gestureHint.classList.remove('is-visible'), 9000);
+            let gestureHintTimer = null;
+            const showGestureHint = () => {
+                if (!gestureHint || !window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+                gestureHint.classList.add('is-visible');
+                if (gestureHintTimer !== null) clearTimeout(gestureHintTimer);
+                gestureHintTimer = setTimeout(() => gestureHint.classList.remove('is-visible'), 5000);
+            };
+            if (gestureHint) {
+                requestAnimationFrame(showGestureHint);
+                mapCanvas.addEventListener('touchstart', showGestureHint, { passive: true });
             }
 
             // Keep the latest single weather layer visible while the five-frame
