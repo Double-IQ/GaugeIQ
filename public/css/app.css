@@ -2757,15 +2757,22 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:rgba(6,22,72,.88);color:#dbeafe;font-size:12px;pointer-events:none;
 }
 .weather-map-gesture-hint{
-  position:absolute;z-index:2;left:50%;bottom:52px;transform:translate(-50%,6px);
-  width:max-content;max-width:calc(100% - 28px);padding:9px 13px;
-  border:1px solid rgba(148,163,184,.28);border-radius:999px;
-  background:rgba(6,22,72,.88);color:#e5efff;font-size:12px;font-weight:600;
-  text-align:center;pointer-events:none;opacity:0;visibility:hidden;
+  position:absolute;z-index:20;left:50%;top:50%;bottom:auto;
+  transform:translate(-50%,calc(-50% + 8px));
+  display:flex;align-items:center;justify-content:center;
+  width:max-content;max-width:calc(100% - 32px);min-height:64px;
+  padding:16px 22px;border:1px solid rgba(125,211,252,.72);border-radius:16px;
+  background:rgba(3,15,38,.96);color:#fff;
+  box-shadow:0 12px 34px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.1);
+  font-size:15px;font-weight:750;line-height:1.45;letter-spacing:.01em;
+  text-align:center;text-wrap:balance;pointer-events:none;
+  opacity:0;visibility:hidden;
   transition:opacity .25s ease,transform .25s ease,visibility .25s ease;
 }
-.weather-map-gesture-hint.is-visible{opacity:1;visibility:visible;transform:translate(-50%,0)}
-@media (hover:none) and (pointer:coarse){.weather-map-gesture-hint{display:block}}
+.weather-map-gesture-hint.is-visible{
+  opacity:1;visibility:visible;transform:translate(-50%,-50%);
+}
+@media (hover:none) and (pointer:coarse){.weather-map-gesture-hint{display:flex}}
 @media (prefers-reduced-motion:reduce){.weather-map-gesture-hint{transition:none}}
 .gaugeiq-weather-map-canvas .maplibregl-ctrl-group{border-radius:10px!important;overflow:hidden}
 :root[data-theme="light"] .weather-map-dashboard-card{
