@@ -307,12 +307,16 @@ protocolOptions.fileReaderConfig = {
         // remains handled by MapLibre's touchZoomRotate interaction.
         map.doubleClickZoom.disable();
         const mapCanvas = map.getCanvas();
-        mapCanvas.style.touchAction = 'none';
+        // Let ordinary vertical swipes scroll the page; gesture handling below
+        // claims horizontal drags and deliberate double-tap map pans.
+        mapCanvas.style.touchAction = 'auto';
         let lastMapTap = null;
         let touchPanActive = false;
         let touchPanArmed = false;
         let touchPanMoved = false;
         let lastTouchPanPoint = null;
+        let touchStartPoint = null;
+        let touchGestureAxis = null;
         const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
         mapCanvas.addEventListener('touchstart', event => {
             if (event.touches.length !== 1 || !event.changedTouches.length) {
@@ -321,6 +325,8 @@ protocolOptions.fileReaderConfig = {
                 touchPanArmed = false;
                 touchPanMoved = false;
                 lastTouchPanPoint = null;
+                touchStartPoint = null;
+                touchGestureAxis = null;
                 return;
             }
 
@@ -330,6 +336,8 @@ protocolOptions.fileReaderConfig = {
             map.dragPan.disable();
 
             const point = getTouchPoint(event.changedTouches[0]);
+            touchStartPoint = point;
+            touchGestureAxis = null;
             const now = Date.now();
 
             // A double-tap arms panning. Support both common gestures: dragging
@@ -387,11 +395,22 @@ protocolOptions.fileReaderConfig = {
                 return;
             }
 
-            // Suppress an ordinary one-finger drag rather than allowing it to
-            // pan the map or scroll the page while the map is being touched.
+            // Let a vertical one-finger swipe pass through to the page.
+            // Claim horizontal movement so it neither scrolls the page sideways
+            // nor triggers MapLibre's default one-finger pan.
             if (event.touches.length === 1) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
+                const point = getTouchPoint(event.touches[0]);
+                if (!touchStartPoint) touchStartPoint = point;
+                const deltaX = point.x - touchStartPoint.x;
+                const deltaY = point.y - touchStartPoint.y;
+                if (!touchGestureAxis && Math.hypot(deltaX, deltaY) >= 8) {
+                    touchGestureAxis = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+                }
+                if (touchGestureAxis === 'vertical') return;
+                if (touchGestureAxis === 'horizontal') {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                }
             }
         }, { capture: true, passive: false });
 
@@ -407,6 +426,8 @@ protocolOptions.fileReaderConfig = {
             touchPanActive = false;
             touchPanMoved = false;
             lastTouchPanPoint = null;
+            touchStartPoint = null;
+            touchGestureAxis = null;
             map.dragPan.enable();
         };
         mapCanvas.addEventListener('touchend', finishTouchPan, { capture: true, passive: false });
