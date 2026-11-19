@@ -1031,7 +1031,12 @@ if ($current && !empty($current['observed_at'])) {
                             <stop offset="0%" stop-color="#75d8ff"></stop>
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
+                        <linearGradient id="windHudGlass" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#102741" stop-opacity=".72"></stop>
+                            <stop offset="100%" stop-color="#051225" stop-opacity=".62"></stop>
+                        </linearGradient>
                     </defs>
+                    <rect class="wind-hud-vector-panel" x="1" y="1" width="338" height="178" rx="11" fill="url(#windHudGlass)" stroke="#75a4d3" stroke-opacity=".16"></rect>
                     <g class="wind-hud-vector-grid" aria-hidden="true">
                         <path d="M18 90H322 M170 12V168" stroke-dasharray="2 7"></path>
                         <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
