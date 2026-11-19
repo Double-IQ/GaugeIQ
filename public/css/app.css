@@ -2345,10 +2345,6 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:rgba(255,255,255,.58);border-color:#cbd2db;color:#344256;
 }
 :root[data-theme="light"] .wind-hud-speed-history-heading{color:#526174!important}
-:root[data-theme="light"] .wind-hud-card .wind-hud-vector{
-  background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(220,226,233,.62));
-  border-color:#cbd2db;box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
-}
 :root[data-theme="light"] .wind-hud-card .wind-strip-glass{fill:rgba(255,255,255,.34);stroke:rgba(71,85,105,.2)}
 :root[data-theme="light"] .wind-hud-card .wind-compass-ring{fill:rgba(100,116,139,.06);stroke:rgba(71,85,105,.24)}
 :root[data-theme="light"] .wind-hud-card .wind-speed-ticks text{fill:#344256;stroke:#e9edf1}
