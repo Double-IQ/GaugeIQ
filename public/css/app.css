@@ -6706,3 +6706,31 @@ body.gaugeiq-menu-open{overflow:hidden}
 :root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-track{stroke:rgba(100,116,139,.25)}
 :root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-pivot,:root[data-theme="light"] .climate-gauge-card .climate-mobile-gauge-endpoint{stroke:#e7eaee}
 :root[data-theme="light"] .climate-gauge-card .climate-bar-sparkline-unavailable{color:#718096}
+
+
+/* Keep the main Atmospheric Monitor card heading anchored to the left on mobile. */
+@media(max-width:760px){
+  .climate-gauge-card .climate-monitor-heading{
+    display:flex;
+    flex-direction:row;
+    justify-content:space-between!important;
+    align-items:flex-start;
+    text-align:left!important;
+  }
+  .climate-gauge-card .climate-monitor-heading>div:first-child{
+    flex:1 1 auto;
+    min-width:0;
+    margin-right:auto;
+    text-align:left!important;
+  }
+  .climate-gauge-card .climate-monitor-heading #climateGaugeTitle{
+    display:block;
+    width:100%;
+    margin:0;
+    text-align:left!important;
+  }
+  .climate-gauge-card .climate-monitor-heading .climate-graph-selector{
+    flex:0 0 auto;
+    margin-left:12px;
+  }
+}
