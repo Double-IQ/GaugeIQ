@@ -6682,8 +6682,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .climate-gauge-card .climate-bar-label{grid-column:2 / 4;grid-row:1;align-self:end;justify-self:stretch;width:100%;margin:0;text-align:left!important}
 .climate-gauge-card .climate-bar-value{grid-column:1;grid-row:1;align-self:end;font-size:12px;padding-top:0}
 .climate-gauge-card .climate-mobile-gauge{display:block;grid-column:1;grid-row:3;width:100%;height:46px;align-self:center;overflow:visible}
-.climate-gauge-card .climate-mobile-gauge-track{fill:none;stroke:rgba(156,182,213,.22);stroke-width:6;stroke-linecap:round}
-.climate-gauge-card .climate-mobile-gauge-value{fill:none;stroke:#35c4eb;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(53,196,235,.2))}
+.climate-gauge-card .climate-mobile-gauge-track{fill:none;stroke:rgba(156,182,213,.22);stroke-width:10;stroke-linecap:round}
+.climate-gauge-card .climate-mobile-gauge-value{fill:none;stroke:#35c4eb;stroke-width:10;stroke-linecap:round;filter:drop-shadow(0 0 2px rgba(53,196,235,.2))}
 .climate-gauge-card .climate-mobile-gauge-ticks line{stroke:rgba(156,182,213,.65);stroke-width:.8;stroke-linecap:round}
 .climate-gauge-card .climate-mobile-gauge-ticks line.major{stroke:#22d3ee;stroke-width:1.2}
 .climate-gauge-card .climate-mobile-gauge-needle{fill:#a3e635;stroke:none}

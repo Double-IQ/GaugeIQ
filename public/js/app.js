@@ -1333,7 +1333,7 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         const endY = 48 - (46 * Math.sin(angle));
         const needleX = 50 + (36 * Math.cos(angle));
         const needleY = 48 - (36 * Math.sin(angle));
-        const halfWidth = 2.8;
+        const halfWidth = 3.9;
         const perpX = halfWidth * Math.sin(angle);
         const perpY = halfWidth * Math.cos(angle);
         gaugeValue.setAttribute('d', 'M ' + (50 + 46 * Math.cos(startAngle)).toFixed(2) + ' ' + (48 - 46 * Math.sin(startAngle)).toFixed(2) +
