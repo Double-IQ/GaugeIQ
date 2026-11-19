@@ -2,14 +2,14 @@
 declare(strict_types=1);
 
 /**
- * Maintains three concrete past ECMWF IFS 0.25° map frames used by GaugeIQ: Binary map data is deliberately kept
+ * Maintains four concrete past ECMWF IFS 0.25° map frames used by GaugeIQ: Binary map data is deliberately kept
  * out of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
 {
     private const MODEL_PATH = 'ecmwf_ifs025';
     private const METADATA_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/latest.json';
-    private const PAST_FRAME_COUNT = 3;
+    private const PAST_FRAME_COUNT = 4;
     private const HOUR_MS = 3600000;
     private const SIX_HOURS_MS = 21600000;
 
