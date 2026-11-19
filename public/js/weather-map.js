@@ -539,7 +539,7 @@ protocolOptions.fileReaderConfig = {
             frameTimeLabel.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + label;
             if (frameProgressBar) {
                 frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
-                frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 5 · ' + label);
+                frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 3 · ' + label);
                 Array.from(frameProgressBar.children).forEach((step, stepIndex) => {
                     step.classList.toggle('is-complete', stepIndex < index);
                     step.classList.toggle('is-current', stepIndex === index);
@@ -662,7 +662,7 @@ protocolOptions.fileReaderConfig = {
                 // Open-Meteo requires delta_time_hours for accumulated variables
                 // such as precipitation. Derive it from the preceding valid time
                 // between past timestamps; native IFS 0.25° steps change
-                // from 3-hourly to 6-hourly after forecast hour 144.
+                // from the native three-hourly cadence in the past schedule.
                 pastFrames.sort((a, b) => a.time - b.time);
                 const chronologicalFrames = [...pastFrames]
                     .sort((a, b) => a.time - b.time);
@@ -1084,7 +1084,7 @@ protocolOptions.fileReaderConfig = {
                 mapCanvas.addEventListener('touchstart', showGestureHint, { passive: true });
             }
 
-            // Keep the latest single weather layer visible while the five-frame
+            // Keep the latest single weather layer visible while the three-frame
             // animation is prepared sequentially. Once every frame is ready,
             // prepareAnimation() starts playback automatically. Sequential loading
             // limits cold-cache network/decode bursts on mobile browsers.
