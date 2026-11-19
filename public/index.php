@@ -832,7 +832,7 @@ if ($current && !empty($current['observed_at'])) {
                         </g>
                         <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($needlePath, ENT_QUOTES) ?>"></path>
                         <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($gaugeEndX, 2, '.', '') ?>" cy="<?= number_format($gaugeEndY, 2, '.', '') ?>" r="2"></circle>
-                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                        <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="6.2"></circle>
                     </svg>
                     <strong class="climate-bar-change <?= $deltaClass ?>"><?= htmlspecialchars($bar['deltaDisplay'], ENT_QUOTES) ?></strong>
                     <strong class="climate-bar-value"><?= htmlspecialchars($bar['display'], ENT_QUOTES) ?></strong>
@@ -900,7 +900,7 @@ if ($current && !empty($current['observed_at'])) {
                     </g>
                     <path class="climate-mobile-gauge-needle" id="climateWviNeedle" d="M 50 48 L 50 12"></path>
                     <circle class="climate-mobile-gauge-endpoint" id="climateWviEndpoint" cx="4" cy="48" r="2"></circle>
-                    <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                    <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="6.2"></circle>
                 </svg>
                 <strong class="climate-bar-change" id="climateWviChange">—</strong>
                 <strong class="climate-bar-value" id="climateWviValue">—</strong>
@@ -1084,7 +1084,7 @@ if ($current && !empty($current['observed_at'])) {
                             </g>
                             <path class="climate-mobile-gauge-needle" d="<?= htmlspecialchars($windSpeedNeedlePath, ENT_QUOTES) ?>"></path>
                             <circle class="climate-mobile-gauge-endpoint" cx="<?= number_format($windSpeedGaugeEndX, 2, '.', '') ?>" cy="<?= number_format($windSpeedGaugeEndY, 2, '.', '') ?>" r="2"></circle>
-                            <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="4.5"></circle>
+                            <circle class="climate-mobile-gauge-pivot" cx="50" cy="48" r="6.2"></circle>
                         </svg>
                         <strong class="climate-bar-change <?= $windSpeedChangeClass ?>"><?= htmlspecialchars($windSpeedChangeDisplay, ENT_QUOTES) ?></strong>
                         <strong class="climate-bar-value"><?= htmlspecialchars($windSpeedDisplay, ENT_QUOTES) ?></strong>
