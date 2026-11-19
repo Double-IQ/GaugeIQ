@@ -880,11 +880,11 @@ if ($current && !empty($current['observed_at'])) {
                 <div class="climate-bar-label">Weather Volatility Index</div>
                 <div class="climate-segment-track" role="img" aria-label="Weather Volatility Index segmented gauge"><?php for ($segment = 0; $segment < 60; $segment++): ?><span class="climate-segment"></span><?php endfor; ?></div>
                 <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather Volatility Index gauge">
-                    <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                    <path class="climate-mobile-gauge-track" d="M 6.71 63.74 A 46 46 0 1 1 93.29 63.74"></path>
                     <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
                     <g class="climate-mobile-gauge-ticks" aria-hidden="true">
                         <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
-                            $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                            $tickAngle = $windGaugeStartAngle - (($tickIndex / 12) * $windGaugeSweepAngle);
                             $tickIsMajor = $tickIndex % 3 === 0;
                             $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
                             $tickOuterRadius = 43.2;
@@ -970,10 +970,11 @@ if ($current && !empty($current['observed_at'])) {
 
         // Use the same 220-degree GaugeIQ instrument geometry as every
         // Atmospheric Monitor dial, including the WVI gauge.
+        // Match the shared 220-degree GaugeIQ mobile instrument.
         $windSpeedRatio = $current ? max(0.0, min(1.0, $windSpeed / 60.0)) : 0.0;
-        $windSpeedGaugeStartAngle = deg2rad(200);
-        $windSpeedGaugeSweepAngle = deg2rad(220);
-        $windSpeedGaugeAngle = $windSpeedGaugeStartAngle - ($windSpeedGaugeSweepAngle * $windSpeedRatio);
+        $windGaugeStartAngle = deg2rad(200);
+        $windGaugeSweepAngle = deg2rad(220);
+        $windSpeedGaugeAngle = $windGaugeStartAngle - ($windGaugeSweepAngle * $windSpeedRatio);
         $windSpeedGaugeEndX = 50.0 + (46.0 * cos($windSpeedGaugeAngle));
         $windSpeedGaugeEndY = 48.0 - (46.0 * sin($windSpeedGaugeAngle));
         $windSpeedNeedleEndX = 50.0 + (36.0 * cos($windSpeedGaugeAngle));
@@ -984,8 +985,9 @@ if ($current && !empty($current['observed_at'])) {
         $windSpeedNeedlePath = 'M ' . number_format(50 + $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 + $windNeedlePerpY, 2, '.', '') .
             ' L ' . number_format($windSpeedNeedleEndX, 2, '.', '') . ' ' . number_format($windSpeedNeedleEndY, 2, '.', '') .
             ' L ' . number_format(50 - $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 - $windNeedlePerpY, 2, '.', '') . ' Z';
-        $windSpeedGaugePath = 'M ' . number_format(50 + (46.0 * cos($windSpeedGaugeStartAngle)), 2, '.', '') . ' ' . number_format(48.0 - (46.0 * sin($windSpeedGaugeStartAngle)), 2, '.', '') .
-            ' A 46 46 0 ' . (($windSpeedGaugeSweepAngle * $windSpeedRatio) > M_PI ? '1' : '0') . ' 1 ' . number_format($windSpeedGaugeEndX, 2, '.', '') . ' ' . number_format($windSpeedGaugeEndY, 2, '.', '');
+        $windSpeedGaugePath = 'M ' . number_format(50 + (46 * cos($windGaugeStartAngle)), 2, '.', '') . ' ' . number_format(48 - (46 * sin($windGaugeStartAngle)), 2, '.', '') .
+            ' A 46 46 0 ' . (($windGaugeSweepAngle * $windSpeedRatio) > M_PI ? '1' : '0') . ' 1 ' .
+            number_format($windSpeedGaugeEndX, 2, '.', '') . ' ' . number_format($windSpeedGaugeEndY, 2, '.', '');
 
         $windSpeedTrendValues = [];
         foreach ($climateHistory as $windHistoryRow) {
