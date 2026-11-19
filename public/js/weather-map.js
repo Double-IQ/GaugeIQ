@@ -661,7 +661,7 @@ protocolOptions.fileReaderConfig = {
 
                 // Open-Meteo requires delta_time_hours for accumulated variables
                 // such as precipitation. Derive it from the preceding valid time
-                // across the past/forecast boundary; native IFS 0.25° steps change
+                // between past timestamps; native IFS 0.25° steps change
                 // from 3-hourly to 6-hourly after forecast hour 144.
                 pastFrames.sort((a, b) => a.time - b.time);
                 const chronologicalFrames = [...pastFrames]
