@@ -1032,9 +1032,8 @@ if ($current && !empty($current['observed_at'])) {
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
                         <linearGradient id="windHudGlass" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#071629"></stop>
-                            <stop offset="52%" stop-color="#030d1b"></stop>
-                            <stop offset="100%" stop-color="#010711"></stop>
+                            <stop offset="0%" stop-color="#102741" stop-opacity=".72"></stop>
+                            <stop offset="100%" stop-color="#051225" stop-opacity=".62"></stop>
                         </linearGradient>
                         <radialGradient id="windHudGlow" cx="50%" cy="-20%" r="54%">
                             <stop offset="0%" stop-color="#125b91" stop-opacity=".10"></stop>
@@ -1128,6 +1127,7 @@ if ($current && !empty($current['observed_at'])) {
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
         $radarLocalAmount = !$nowcastIsStale && is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'])) : null;
         $radarLocalHasRain = $radarLocalAmount !== null && $radarLocalAmount > 0.0;
+        $radarHasRainForecast = $radarCells !== [] || ($radarNearestAmount !== null && $radarNearestAmount > 0.0);
         $forecastScanAmounts = [];
         foreach (array_slice($nowcastFrames, 0, 2) as $forecastScanFrame) {
             $forecastScanValue = $forecastScanFrame['local_precipitation_mm_per_hour'] ?? $forecastScanFrame['local_precipitation_mm'] ?? null;
@@ -1243,10 +1243,12 @@ if ($current && !empty($current['observed_at'])) {
                         <strong><?= $radarLocalAmount !== null ? number_format($radarLocalAmount, 1) : '—' ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
                     </div>
                     <?php endif; ?>
+                    <?php if ($radarHasRainForecast): ?>
                     <div class="rainfall-radar-readout-grid">
                         <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
                         <div><span>RAIN MOVEMENT</span><strong><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php if ($showForecastScan): ?>
@@ -1267,10 +1269,12 @@ if ($current && !empty($current['observed_at'])) {
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+            <?php if ($radarHasRainForecast): ?>
             <div class="rainfall-radar-consistency">
                 <span class="rainfall-radar-consistency-dot" data-consistency="<?= htmlspecialchars($consistency, ENT_QUOTES) ?>"></span>
                 <div><strong>Forecast consistency · <?= htmlspecialchars($consistencyLabel, ENT_QUOTES) ?></strong><small>How the rain signal changes between the two model steps — not a probability.</small></div>
             </div>
+            <?php endif; ?>
             <p class="rainfall-nowcast-footnote">
                 <?= $nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
                 ECMWF IFS forecast via Open-Meteo · not live radar · 25 km grid
