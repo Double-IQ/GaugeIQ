@@ -1031,12 +1031,18 @@ if ($current && !empty($current['observed_at'])) {
                             <stop offset="0%" stop-color="#75d8ff"></stop>
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
-                        <radialGradient id="windHudGlass" cx="50%" cy="30%" r="80%">
-                            <stop offset="0%" stop-color="#3975a8" stop-opacity=".16"></stop>
-                            <stop offset="100%" stop-color="#06152a" stop-opacity=".02"></stop>
+                        <linearGradient id="windHudGlass" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#071629"></stop>
+                            <stop offset="52%" stop-color="#030d1b"></stop>
+                            <stop offset="100%" stop-color="#010711"></stop>
+                        </linearGradient>
+                        <radialGradient id="windHudGlow" cx="50%" cy="-20%" r="54%">
+                            <stop offset="0%" stop-color="#125b91" stop-opacity=".10"></stop>
+                            <stop offset="100%" stop-color="#125b91" stop-opacity="0"></stop>
                         </radialGradient>
                     </defs>
-                    <rect x="1" y="1" width="338" height="178" rx="12" fill="url(#windHudGlass)" stroke="#75a4d3" stroke-opacity=".12"></rect>
+                    <rect class="wind-hud-vector-panel" x="1" y="1" width="338" height="178" rx="11" fill="url(#windHudGlass)" stroke="#75a4d3" stroke-opacity=".16"></rect>
+                    <rect x="1" y="1" width="338" height="178" rx="11" fill="url(#windHudGlow)" pointer-events="none"></rect>
                     <g class="wind-hud-vector-grid" aria-hidden="true">
                         <path d="M18 90H322 M170 12V168" stroke-dasharray="2 7"></path>
                         <path d="M55 24L285 156 M55 156L285 24" stroke-dasharray="2 9" opacity=".45"></path>
