@@ -879,12 +879,12 @@ if ($current && !empty($current['observed_at'])) {
             <div class="climate-bar-row climate-bar-wvi" data-climate-graph="wvi">
                 <div class="climate-bar-label">Weather Volatility Index</div>
                 <div class="climate-segment-track" role="img" aria-label="Weather Volatility Index segmented gauge"><?php for ($segment = 0; $segment < 60; $segment++): ?><span class="climate-segment"></span><?php endfor; ?></div>
-                <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather Volatility Index gauge">
-                    <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                <svg class="climate-mobile-gauge" viewBox="0 0 100 68" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weather Volatility Index gauge">
+                    <path class="climate-mobile-gauge-track" d="M 6.71 63.74 A 46 46 0 1 1 93.29 63.74"></path>
                     <path class="climate-mobile-gauge-value" id="climateWviGaugeValue" d="M 4 48"></path>
                     <g class="climate-mobile-gauge-ticks" aria-hidden="true">
                         <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
-                            $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                            $tickAngle = deg2rad(200) - (($tickIndex / 12) * deg2rad(220));
                             $tickIsMajor = $tickIndex % 3 === 0;
                             $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
                             $tickOuterRadius = 43.2;
@@ -970,8 +970,11 @@ if ($current && !empty($current['observed_at'])) {
 
         // Match the Atmospheric Monitor's semicircular gauge and use the same
         // stored 24-hour readings for the wind-speed trend graph.
+        // Match the shared 220-degree GaugeIQ mobile instrument.
         $windSpeedRatio = $current ? max(0.0, min(1.0, $windSpeed / 60.0)) : 0.0;
-        $windSpeedGaugeAngle = M_PI - (M_PI * $windSpeedRatio);
+        $windGaugeStartAngle = deg2rad(200);
+        $windGaugeSweepAngle = deg2rad(220);
+        $windSpeedGaugeAngle = $windGaugeStartAngle - ($windGaugeSweepAngle * $windSpeedRatio);
         $windSpeedGaugeEndX = 50.0 + (46.0 * cos($windSpeedGaugeAngle));
         $windSpeedGaugeEndY = 48.0 - (46.0 * sin($windSpeedGaugeAngle));
         $windSpeedNeedleEndX = 50.0 + (36.0 * cos($windSpeedGaugeAngle));
@@ -982,7 +985,9 @@ if ($current && !empty($current['observed_at'])) {
         $windSpeedNeedlePath = 'M ' . number_format(50 + $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 + $windNeedlePerpY, 2, '.', '') .
             ' L ' . number_format($windSpeedNeedleEndX, 2, '.', '') . ' ' . number_format($windSpeedNeedleEndY, 2, '.', '') .
             ' L ' . number_format(50 - $windNeedlePerpX, 2, '.', '') . ' ' . number_format(48 - $windNeedlePerpY, 2, '.', '') . ' Z';
-        $windSpeedGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($windSpeedGaugeEndX, 2, '.', '') . ' ' . number_format($windSpeedGaugeEndY, 2, '.', '');
+        $windSpeedGaugePath = 'M ' . number_format(50 + (46 * cos($windGaugeStartAngle)), 2, '.', '') . ' ' . number_format(48 - (46 * sin($windGaugeStartAngle)), 2, '.', '') .
+            ' A 46 46 0 ' . (($windGaugeSweepAngle * $windSpeedRatio) > M_PI ? '1' : '0') . ' 1 ' .
+            number_format($windSpeedGaugeEndX, 2, '.', '') . ' ' . number_format($windSpeedGaugeEndY, 2, '.', '');
 
         $windSpeedTrendValues = [];
         foreach ($climateHistory as $windHistoryRow) {
@@ -1058,12 +1063,12 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="climate-bar-row wind-speed-instrument-row">
                         <div class="climate-bar-label">WIND SPEED</div>
                         <div class="climate-segment-track" role="img" aria-label="<?= htmlspecialchars('Wind speed segmented gauge, ' . number_format($windSpeed, 1) . ' km/h', ENT_QUOTES) ?>"><?php for ($segment = 0; $segment < 60; $segment++): ?><span class="climate-segment<?= $current && $segment < (int)round($windSpeedRatio * 60) ? ' active' : '' ?>"></span><?php endfor; ?></div>
-                        <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
-                            <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                        <svg class="climate-mobile-gauge" viewBox="0 0 100 68" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= $current ? htmlspecialchars('Wind speed ' . number_format($windSpeed, 1) . ' kilometres per hour', ENT_QUOTES) : 'Wind speed unavailable' ?>">
+                            <path class="climate-mobile-gauge-track" d="M 6.71 63.74 A 46 46 0 1 1 93.29 63.74"></path>
                             <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($windSpeedGaugePath, ENT_QUOTES) ?>"></path>
                             <g class="climate-mobile-gauge-ticks" aria-hidden="true">
                                 <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
-                                    $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                                    $tickAngle = $windGaugeStartAngle - (($tickIndex / 12) * $windGaugeSweepAngle);
                                     $tickIsMajor = $tickIndex % 3 === 0;
                                     $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
                                     $tickOuterRadius = 43.2;

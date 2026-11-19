@@ -1321,20 +1321,23 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         changeElement.setAttribute('aria-label', delta === null ? 'WVI change over the last hour unavailable' : 'WVI change over the last hour ' + delta.toFixed(1));
     }
     if (score === null) {
-        gaugeValue.setAttribute('d', 'M 4 48');
-        needle.setAttribute('d', 'M 50 48 L 50 12');
-        gaugeEndpoint.setAttribute('cx', '4');
-        gaugeEndpoint.setAttribute('cy', '48');
+        gaugeValue.setAttribute('d', 'M 6.71 63.74');
+        needle.setAttribute('d', 'M 50 48 L 16.17 60.31');
+        gaugeEndpoint.setAttribute('cx', '6.71');
+        gaugeEndpoint.setAttribute('cy', '63.74');
     } else {
-        const angle = Math.PI - (Math.PI * score / 10);
+        const startAngle = 200 * Math.PI / 180;
+        const sweepAngle = 220 * Math.PI / 180;
+        const angle = startAngle - (sweepAngle * score / 10);
         const endX = 50 + (46 * Math.cos(angle));
         const endY = 48 - (46 * Math.sin(angle));
-        const needleX = 50 + (35 * Math.cos(angle));
-        const needleY = 48 - (35 * Math.sin(angle));
+        const needleX = 50 + (36 * Math.cos(angle));
+        const needleY = 48 - (36 * Math.sin(angle));
         const halfWidth = 2.8;
         const perpX = halfWidth * Math.sin(angle);
         const perpY = halfWidth * Math.cos(angle);
-        gaugeValue.setAttribute('d', 'M 4 48 A 46 46 0 0 1 ' + endX.toFixed(2) + ' ' + endY.toFixed(2));
+        gaugeValue.setAttribute('d', 'M ' + (50 + 46 * Math.cos(startAngle)).toFixed(2) + ' ' + (48 - 46 * Math.sin(startAngle)).toFixed(2) +
+            ' A 46 46 0 ' + (sweepAngle * score / 10 > Math.PI ? '1' : '0') + ' 1 ' + endX.toFixed(2) + ' ' + endY.toFixed(2));
         gaugeEndpoint.setAttribute('cx', endX.toFixed(2));
         gaugeEndpoint.setAttribute('cy', endY.toFixed(2));
         needle.setAttribute('d',
