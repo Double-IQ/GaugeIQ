@@ -1053,6 +1053,8 @@ if ($current && !empty($current['observed_at'])) {
                         <text x="18" y="38" class="wind-hud-from"><?= htmlspecialchars($windDirection, ENT_QUOTES) ?></text>
                         <text x="322" y="22" text-anchor="end">TOWARDS</text>
                         <text x="322" y="38" text-anchor="end" class="wind-hud-to"><?= htmlspecialchars(PressureService::directionLabel($windToDegrees), ENT_QUOTES) ?></text>
+                        <text x="170" y="22" text-anchor="middle">HEADING</text>
+                        <text x="170" y="38" text-anchor="middle" class="wind-hud-compass-heading" visibility="hidden">—</text>
                         <text x="170" y="169" text-anchor="middle">ARROW SHOWS WHERE WIND IS TRAVELLING</text>
                     </g>
                 </svg>
