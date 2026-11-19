@@ -1321,10 +1321,10 @@ function updateAtmosphericWvi(result, readings, referenceTime) {
         changeElement.setAttribute('aria-label', delta === null ? 'WVI change over the last hour unavailable' : 'WVI change over the last hour ' + delta.toFixed(1));
     }
     if (score === null) {
-        gaugeValue.setAttribute('d', 'M 4 48');
-        needle.setAttribute('d', 'M 50 48 L 50 12');
-        gaugeEndpoint.setAttribute('cx', '4');
-        gaugeEndpoint.setAttribute('cy', '48');
+        gaugeValue.setAttribute('d', 'M 6.71 63.74');
+        needle.setAttribute('d', 'M 50 48 L 16.17 60.31');
+        gaugeEndpoint.setAttribute('cx', '6.71');
+        gaugeEndpoint.setAttribute('cy', '63.74');
     } else {
         const startAngle = 200 * Math.PI / 180;
         const sweepAngle = 220 * Math.PI / 180;
