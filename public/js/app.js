@@ -200,6 +200,7 @@ initClimateGraphSelector();
 const windGauge = document.querySelector('.wind-hud-vector');
 const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
+const windCompassHeadingDisplay = windGauge?.querySelector('.wind-hud-compass-heading');
 
 const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
 // Keep the iOS permission grant separate from the user's on/off preference.
@@ -292,8 +293,14 @@ function applyWindCompassHeading(heading) {
                 }
             }
 
+            const headingText = Math.round(windCompassHeading) + '° · ' + compassDirectionLabel(windCompassHeading);
+            if (windCompassHeadingDisplay) {
+                windCompassHeadingDisplay.textContent = headingText;
+                windCompassHeadingDisplay.setAttribute('visibility', 'visible');
+            }
+
             if (windCompassStatus) {
-                windCompassStatus.textContent = 'Heading ' + Math.round(windCompassHeading) + '° · ' + compassDirectionLabel(windCompassHeading);
+                windCompassStatus.textContent = 'Heading ' + headingText;
             }
 
             windCompassAnimationFrame = requestAnimationFrame(animate);
@@ -371,6 +378,10 @@ async function enableWindCompass() {
         }
 
         updateWindCompassButton();
+        if (windCompassHeadingDisplay) {
+            windCompassHeadingDisplay.textContent = '—';
+            windCompassHeadingDisplay.setAttribute('visibility', 'visible');
+        }
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
             windCompassStatus.textContent = 'Finding heading…';
@@ -413,6 +424,7 @@ function disableWindCompass() {
         }
     }
 
+    if (windCompassHeadingDisplay) windCompassHeadingDisplay.setAttribute('visibility', 'hidden');
     if (windCompassStatus) windCompassStatus.hidden = true;
     updateWindCompassButton();
 }
