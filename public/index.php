@@ -767,7 +767,11 @@ if ($current && !empty($current['observed_at'])) {
                 $changeSegments = min($fillSegments, (int)round(min(1.0, max(0.0, (float)$bar['deltaRatio'])) * $segmentCount));
                 $changeStartSegment = $fillSegments - $changeSegments;
                 $gaugeRatio = min(1.0, max(0.0, (float)$bar['ratio']));
-                $gaugeAngle = M_PI - (M_PI * $gaugeRatio);
+                // Extend the mobile instrument sweep beyond a semicircle so it
+                // follows the broader, open-bottom arc used by the GaugeIQ logo.
+                $gaugeStartAngle = deg2rad(200);
+                $gaugeSweepAngle = deg2rad(220);
+                $gaugeAngle = $gaugeStartAngle - ($gaugeSweepAngle * $gaugeRatio);
                 $gaugeEndX = 50 + (46 * cos($gaugeAngle));
                 $gaugeEndY = 48 - (46 * sin($gaugeAngle));
                 $needleEndX = 50 + (36 * cos($gaugeAngle));
@@ -780,7 +784,8 @@ if ($current && !empty($current['observed_at'])) {
                 $needlePath = 'M ' . number_format($needleBaseX + $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY + $needlePerpY, 2, '.', '') .
                     ' L ' . number_format($needleEndX, 2, '.', '') . ' ' . number_format($needleEndY, 2, '.', '') .
                     ' L ' . number_format($needleBaseX - $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY - $needlePerpY, 2, '.', '') . ' Z';
-                $mobileGaugePath = 'M 4 48 A 46 46 0 0 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
+                $mobileGaugePath = 'M ' . number_format(50 + (46 * cos($gaugeStartAngle)), 2, '.', '') . ' ' . number_format(48 - (46 * sin($gaugeStartAngle)), 2, '.', '') .
+                    ' A 46 46 0 1 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
                 // A pressure drop of 0.8 hPa or more over the last hour is the
                 // threshold for switching the pressure graph and change indicator to orange.
@@ -806,12 +811,12 @@ if ($current && !empty($current['observed_at'])) {
                             <span class="climate-segment<?= $segmentClass !== '' ? ' ' . $segmentClass : '' ?>"></span>
                         <?php endfor; ?>
                     </div>
-                    <svg class="climate-mobile-gauge" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
-                        <path class="climate-mobile-gauge-track" d="M 4 48 A 46 46 0 0 1 96 48"></path>
+                    <svg class="climate-mobile-gauge" viewBox="0 0 100 68" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<?= htmlspecialchars($bar['label'] . ': ' . $bar['display'], ENT_QUOTES) ?>">
+                        <path class="climate-mobile-gauge-track" d="M 6.71 63.74 A 46 46 0 1 1 93.29 63.74"></path>
                         <path class="climate-mobile-gauge-value" d="<?= htmlspecialchars($mobileGaugePath, ENT_QUOTES) ?>"></path>
                         <g class="climate-mobile-gauge-ticks" aria-hidden="true">
                             <?php for ($tickIndex = 0; $tickIndex <= 12; $tickIndex++):
-                                $tickAngle = M_PI - (($tickIndex / 12) * M_PI);
+                                $tickAngle = $gaugeStartAngle - (($tickIndex / 12) * $gaugeSweepAngle);
                                 $tickIsMajor = $tickIndex % 3 === 0;
                                 $tickInnerRadius = $tickIsMajor ? 36.8 : 39.8;
                                 $tickOuterRadius = 43.2;
