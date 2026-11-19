@@ -785,7 +785,7 @@ if ($current && !empty($current['observed_at'])) {
                     ' L ' . number_format($needleEndX, 2, '.', '') . ' ' . number_format($needleEndY, 2, '.', '') .
                     ' L ' . number_format($needleBaseX - $needlePerpX, 2, '.', '') . ' ' . number_format($needleBaseY - $needlePerpY, 2, '.', '') . ' Z';
                 $mobileGaugePath = 'M ' . number_format(50 + (46 * cos($gaugeStartAngle)), 2, '.', '') . ' ' . number_format(48 - (46 * sin($gaugeStartAngle)), 2, '.', '') .
-                    ' A 46 46 0 1 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
+                    ' A 46 46 0 ' . (($gaugeSweepAngle * $gaugeRatio) > M_PI ? '1' : '0') . ' 1 ' . number_format($gaugeEndX, 2, '.', '') . ' ' . number_format($gaugeEndY, 2, '.', '');
                 $deltaClass = $bar['delta'] === null ? 'unavailable' : ($bar['delta'] > 0 ? 'rise' : ($bar['delta'] < 0 ? 'fall' : 'steady'));
                 // A pressure drop of 0.8 hPa or more over the last hour is the
                 // threshold for switching the pressure graph and change indicator to orange.
