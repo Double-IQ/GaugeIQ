@@ -1032,8 +1032,8 @@ if ($current && !empty($current['observed_at'])) {
                             <stop offset="100%" stop-color="#249bff"></stop>
                         </linearGradient>
                         <linearGradient id="windHudGlass" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#102741" stop-opacity=".72"></stop>
-                            <stop offset="100%" stop-color="#051225" stop-opacity=".62"></stop>
+                            <stop offset="0%" stop-color="#102741" stop-opacity=".70"></stop>
+                            <stop offset="100%" stop-color="#051225" stop-opacity=".60"></stop>
                         </linearGradient>
                         <radialGradient id="windHudGlow" cx="50%" cy="-20%" r="54%">
                             <stop offset="0%" stop-color="#125b91" stop-opacity=".10"></stop>
