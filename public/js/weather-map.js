@@ -621,7 +621,7 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 1900);
+            }, 1100);
         }
 
         async function prepareAnimation(autoStart = true) {
@@ -664,7 +664,6 @@ protocolOptions.fileReaderConfig = {
                 // across the past/forecast boundary; native IFS 0.25° steps change
                 // from 3-hourly to 6-hourly after forecast hour 144.
                 pastFrames.sort((a, b) => a.time - b.time);
-                futureFrames.sort((a, b) => a.time - b.time);
                 const chronologicalFrames = [...pastFrames]
                     .sort((a, b) => a.time - b.time);
                 chronologicalFrames.forEach((frame, index) => {
@@ -753,7 +752,7 @@ protocolOptions.fileReaderConfig = {
                         : loadedSources + '/' + totalSources + ' sources ready';
                     const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
                     const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
-                    setStatus('Loading frame ' + (index + 1) + '/5 · ' + phase + ' · ' + phaseDetail + transfer + failed);
+                    setStatus('Loading frame ' + (index + 1) + '/3 · ' + phase + ' · ' + phaseDetail + transfer + failed);
                 };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
@@ -819,7 +818,7 @@ protocolOptions.fileReaderConfig = {
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
-                        setStatus('Weather frame ' + (index + 1) + '/5 ready…');
+                        setStatus('Weather frame ' + (index + 1) + '/3 ready…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
                         });
