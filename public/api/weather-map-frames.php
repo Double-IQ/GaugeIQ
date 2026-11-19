@@ -36,7 +36,7 @@ try {
     // Heal a stale schedule during a normal map request. This is especially
     // important when a deployment changes the ECMWF model path: the old rows
     // must be replaced before the strict public response validation runs.
-    // The cache service skips the metadata request when all five current-model
+    // The cache service skips the metadata request when all three past-frame
     // rows were refreshed within the configured interval.
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
     // An authenticated diagnostic request explicitly bypasses the normal
@@ -70,8 +70,8 @@ try {
         ];
     }
 
-    if (count($frames) !== 5) {
-        throw new RuntimeException('The scheduled weather map does not contain all 5 frames (3 past + 2 forecast).');
+    if (count($frames) !== 3 || array_filter($frames, static fn(array $frame): bool => $frame['type'] !== 'past') !== []) {
+        throw new RuntimeException('The scheduled weather map does not contain exactly 3 past frames.');
     }
 
     echo json_encode([

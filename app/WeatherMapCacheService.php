@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Maintains five concrete ECMWF IFS 0.25° map frames used by GaugeIQ:
- * three past and two forecast timestamps. Binary map data is deliberately kept
+ * Maintains three concrete past ECMWF IFS 0.25° map frames used by GaugeIQ: Binary map data is deliberately kept
  * out of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
@@ -11,7 +10,6 @@ final class WeatherMapCacheService
     private const MODEL_PATH = 'ecmwf_ifs025';
     private const METADATA_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/latest.json';
     private const PAST_FRAME_COUNT = 3;
-    private const FUTURE_FRAME_COUNT = 2;
     private const HOUR_MS = 3600000;
     private const SIX_HOURS_MS = 21600000;
 
@@ -41,8 +39,8 @@ final class WeatherMapCacheService
             $existingModelFrameCount = 0;
         }
         if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds &&
-            $existingCounts['past'] === self::PAST_FRAME_COUNT && $existingCounts['future'] === self::FUTURE_FRAME_COUNT &&
-            $existingModelFrameCount === self::PAST_FRAME_COUNT + self::FUTURE_FRAME_COUNT) {
+            $existingCounts['past'] === self::PAST_FRAME_COUNT && $existingCounts['future'] === 0 &&
+            $existingModelFrameCount === self::PAST_FRAME_COUNT) {
             return false;
         }
 
@@ -74,13 +72,11 @@ final class WeatherMapCacheService
                 $timestamps = array_values(array_unique($timestamps));
 
                 $pastIndex = -1;
-                $futureIndex = -1;
                 foreach ($timestamps as $index => $timestamp) {
                     if ($timestamp <= $now) $pastIndex = $index;
-                    if ($futureIndex === -1 && $timestamp > $now) $futureIndex = $index;
                 }
-                if ($futureIndex < 0 || $futureIndex + self::FUTURE_FRAME_COUNT > count($timestamps)) {
-                    $metadataErrors[] = $metadataFile . ' has fewer than two future timestamps';
+                if ($pastIndex < 0) {
+                    $metadataErrors[] = $metadataFile . ' has no elapsed timestamps for past frames';
                     continue;
                 }
 
@@ -93,9 +89,7 @@ final class WeatherMapCacheService
                     'metadata' => array_merge($metadata, ['_source' => $metadataFile]),
                     'timestamps' => $timestamps,
                     'past_index' => $pastIndex,
-                    'future_index' => $futureIndex,
                     'reference_timestamp' => $referenceTimestamp,
-                    'future_count' => count($timestamps) - $futureIndex,
                 ];
             } catch (Throwable $error) {
                 $metadataErrors[] = $metadataFile . ': ' . $error->getMessage();
@@ -104,78 +98,17 @@ final class WeatherMapCacheService
 
         if ($candidates === []) {
             throw new RuntimeException(
-                'Neither latest nor in-progress ECMWF IFS 0.25° metadata has two future timestamps. ' .
+                'Neither latest nor in-progress ECMWF IFS 0.25° metadata contains elapsed timestamps for past frames. ' .
                 implode('; ', $metadataErrors)
             );
         }
 
-        // Prefer the newest run. If both files describe the same run, prefer
-        // the metadata snapshot containing the greatest forecast horizon.
-        usort($candidates, static function (array $a, array $b): int {
-            $runOrder = $b['reference_timestamp'] <=> $a['reference_timestamp'];
-            return $runOrder !== 0 ? $runOrder : ($b['future_count'] <=> $a['future_count']);
-        });
-        // Metadata can advertise a timestamp before its .om object has been
-        // finished uploading. Validate the actual S3 range object before
-        // publishing any frame URL to the browser.
-        $selected = null;
-        $futureRunFolder = '';
-        $futureFrames = [];
-        foreach ($candidates as $candidate) {
-            $candidateRunDate = new DateTimeImmutable(
-                (string)$candidate['metadata']['reference_time'],
-                new DateTimeZone('UTC')
-            );
-            $candidateRunFolder = $candidateRunDate->format('Y/m/d/H') . '00Z';
-            $availableFutureFrames = [];
-            $checkedFutureTimes = 0;
-            $futureCadenceValid = true;
-            $previousFutureTimestamp = null;
-
-            // Keep the forecast horizon strictly to the next two 3-hourly
-            // timestamps (+3h and +6h). Do not skip a missing object and pull
-            // in a later frame, which would silently extend the forecast window.
-            foreach (array_slice($candidate['timestamps'], $candidate['future_index'], self::FUTURE_FRAME_COUNT) as $timestamp) {
-                if ($previousFutureTimestamp !== null &&
-                    $timestamp - $previousFutureTimestamp !== 3 * self::HOUR_MS) {
-                    $futureCadenceValid = false;
-                    break;
-                }
-                $previousFutureTimestamp = $timestamp;
-                $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))
-                    ->setTimezone(new DateTimeZone('UTC'));
-                $fileName = $validDate->format('Y-m-d\\THi') . '.om';
-                $fileUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH .
-                    '/' . $candidateRunFolder . '/' . $fileName;
-                $checkedFutureTimes++;
-                if (!$this->upstreamObjectHasRange($fileUrl)) {
-                    $futureCadenceValid = false;
-                    break;
-                }
-                $availableFutureFrames[] = [
-                    'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
-                    'file_url' => $fileUrl,
-                    'model_run_time' => $candidateRunDate->format('Y-m-d\\TH:i:s\\Z'),
-                ];
-            }
-
-            if (count($availableFutureFrames) === self::FUTURE_FRAME_COUNT && $futureCadenceValid) {
-                $selected = $candidate;
-                $futureRunFolder = $candidateRunFolder;
-                $futureFrames = $availableFutureFrames;
-                break;
-            }
-            $metadataErrors[] = basename((string)($candidate['metadata']['_source'] ?? 'ECMWF metadata')) .
-                ' did not have both immediate 3-hourly forecast objects published within the +6h window';
-        }
-
-        if ($selected === null) {
-            throw new RuntimeException(
-                'ECMWF IFS 0.25° metadata is available, but two forecast .om objects are not yet published. ' .
-                implode('; ', $metadataErrors)
-            );
-        }
-
+        // Use the newest available model run. Only elapsed timestamps are
+        // scheduled; forecast timestamps are not part of the weather-map loop.
+        usort($candidates, static fn(array $a, array $b): int =>
+            $b['reference_timestamp'] <=> $a['reference_timestamp']
+        );
+        $selected = $candidates[0];
         $metadata = $selected['metadata'];
         $timestamps = $selected['timestamps'];
         $pastIndex = $selected['past_index'];
@@ -240,16 +173,8 @@ final class WeatherMapCacheService
                 'model_run_time' => $frame['model_run_time'],
             ];
         }
-        foreach ($futureFrames as $offset => $frame) {
-            $frames[] = [
-                'slot_id' => self::PAST_FRAME_COUNT + $offset,
-                'frame_type' => 'future',
-                'frame_time' => $frame['frame_time'],
-                'file_url' => $frame['file_url'],
-                'model_run_time' => $frame['model_run_time'],
-            ];
-        }
-
+        // The weather-map animation uses past frames only. Rainfall radar has
+        // its own independently stored nowcast payload and forecast timeline.
         $previousUrlQuery = $this->pdo->query('SELECT file_url FROM gaugeiq_weather_map_frames');
         $previousUrls = [];
         foreach ($previousUrlQuery->fetchAll(PDO::FETCH_COLUMN) as $previousUrl) {

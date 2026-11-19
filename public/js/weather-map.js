@@ -539,7 +539,7 @@ protocolOptions.fileReaderConfig = {
             frameTimeLabel.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + label;
             if (frameProgressBar) {
                 frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
-                frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 5 · ' + label);
+                frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 3 · ' + label);
                 Array.from(frameProgressBar.children).forEach((step, stepIndex) => {
                     step.classList.toggle('is-complete', stepIndex < index);
                     step.classList.toggle('is-current', stepIndex === index);
@@ -615,13 +615,13 @@ protocolOptions.fileReaderConfig = {
 
                 // Cross-fade between already-loaded raster layers. Both opacity changes
                 // are applied in the same render turn: the outgoing frame fades
-                // down while the incoming frame fades up. Keep all five sources
+                // down while the incoming frame fades up. Keep all three sources
                 // alive so the outgoing image remains underneath during the fade.
                 animationCurrentFrame = nextIndex;
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 1900);
+            }, 1100);
         }
 
         async function prepareAnimation(autoStart = true) {
@@ -629,7 +629,7 @@ protocolOptions.fileReaderConfig = {
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
-            setStatus('Preparing five weather frames (3 past + 2 forecast)…');
+            setStatus('Preparing three past weather frames…');
 
             try {
                 const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
@@ -637,8 +637,8 @@ protocolOptions.fileReaderConfig = {
                 const schedule = await scheduleResponse.json();
                 if (token !== animationToken) return;
 
-                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 5) {
-                    throw new Error('The server has not supplied all 5 scheduled weather frames.');
+                if (!Array.isArray(schedule.frames) || schedule.frames.length !== 3) {
+                    throw new Error('The server has not supplied all 3 scheduled past weather frames.');
                 }
 
                 const scheduledFrames = schedule.frames.map(item => ({
@@ -655,18 +655,16 @@ protocolOptions.fileReaderConfig = {
                 }
 
                 const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
-                const futureFrames = scheduledFrames.filter(frame => frame.type === 'future');
-                if (pastFrames.length !== 3 || futureFrames.length !== 2) {
-                    throw new Error('The server schedule must contain three past and two forecast frames.');
+                if (pastFrames.length !== 3 || scheduledFrames.some(frame => frame.type !== 'past')) {
+                    throw new Error('The server schedule must contain exactly three past frames.');
                 }
 
                 // Open-Meteo requires delta_time_hours for accumulated variables
                 // such as precipitation. Derive it from the preceding valid time
-                // across the past/forecast boundary; native IFS 0.25° steps change
-                // from 3-hourly to 6-hourly after forecast hour 144.
+                // between past timestamps; native IFS 0.25° steps change
+                // from the native three-hourly cadence in the past schedule.
                 pastFrames.sort((a, b) => a.time - b.time);
-                futureFrames.sort((a, b) => a.time - b.time);
-                const chronologicalFrames = [...pastFrames, ...futureFrames]
+                const chronologicalFrames = [...pastFrames]
                     .sort((a, b) => a.time - b.time);
                 chronologicalFrames.forEach((frame, index) => {
                     const neighbour = index === 0
@@ -682,7 +680,7 @@ protocolOptions.fileReaderConfig = {
                 });
 
                 const variables = weatherVariables(layerSelect.value);
-                animationFrames = [...pastFrames, ...futureFrames].map(frame => ({
+                animationFrames = [...pastFrames].map(frame => ({
                     ...frame,
                     layerIds: [],
                     sourceIds: []
@@ -733,8 +731,8 @@ protocolOptions.fileReaderConfig = {
                 const initialNextFrame = () => selectedAnimationFrames()[(animationCurrentFrame + 1) % selectedAnimationFrames().length];
                 // Load one frame at a time. In Combined mode that means only
                 // two new raster sources are introduced per step. This limits
-                // cold-cache network/decode bursts while still having all five
-                // frames ready before playback begins.
+                // cold-cache network/decode bursts while still having all three
+                // past frames ready before playback begins.
                 const requiredFrames = selectedAnimationFrames();
                 const isFrameLoaded = frame => isAnimationFrameLoaded(frame);
                 const formatBytes = bytes => bytes >= 1024 * 1024
@@ -754,7 +752,7 @@ protocolOptions.fileReaderConfig = {
                         : loadedSources + '/' + totalSources + ' sources ready';
                     const transfer = network.bytes ? ' · ' + formatBytes(network.bytes) : '';
                     const failed = network.failed ? ' · ' + network.failed + ' request errors' : '';
-                    setStatus('Loading frame ' + (index + 1) + '/5 · ' + phase + ' · ' + phaseDetail + transfer + failed);
+                    setStatus('Loading frame ' + (index + 1) + '/3 · ' + phase + ' · ' + phaseDetail + transfer + failed);
                 };
                 animationLoadTimeout = setTimeout(() => {
                     if (token !== animationToken) return;
@@ -820,7 +818,7 @@ protocolOptions.fileReaderConfig = {
                         if (animationLoadPoll === poll) animationLoadPoll = null;
                         // Give MapLibre a render turn before adding the next
                         // frame's sources, rather than stacking source creation.
-                        setStatus('Weather frame ' + (index + 1) + '/5 ready…');
+                        setStatus('Weather frame ' + (index + 1) + '/3 ready…');
                         map.once('render', () => {
                             if (token === animationToken) loadFrame(index + 1);
                         });
@@ -845,7 +843,7 @@ protocolOptions.fileReaderConfig = {
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 5) throw new Error('The server has not supplied all 5 scheduled weather frames.');
+            if (frames.length !== 3) throw new Error('The server has not supplied all 3 scheduled past weather frames.');
 
             const now = Date.now();
             const currentFrame = frames
@@ -1086,7 +1084,7 @@ protocolOptions.fileReaderConfig = {
                 mapCanvas.addEventListener('touchstart', showGestureHint, { passive: true });
             }
 
-            // Keep the latest single weather layer visible while the five-frame
+            // Keep the latest single weather layer visible while the three-frame
             // animation is prepared sequentially. Once every frame is ready,
             // prepareAnimation() starts playback automatically. Sequential loading
             // limits cold-cache network/decode bursts on mobile browsers.
