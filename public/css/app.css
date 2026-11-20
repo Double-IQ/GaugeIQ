@@ -6870,3 +6870,81 @@ body.gaugeiq-menu-open{overflow:hidden}
     align-items:flex-end;
   }
 }
+
+
+/* Rain Radar controls: tactile scan and range buttons, with range below scan.
+   Keep ONLINE pinned to the top-right of the controls area. */
+.rainfall-radar-card .rainfall-radar-compass-controls{
+  align-items:flex-start;
+}
+.rainfall-radar-card .rainfall-radar-scan-controls{
+  flex:0 0 auto;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+}
+.rainfall-radar-card .rainfall-radar-status-controls{
+  align-items:flex-end;
+  flex-direction:column;
+  gap:7px;
+  margin-left:auto;
+}
+.rainfall-radar-card .rainfall-radar-system-status{
+  order:-1;
+  align-self:flex-end;
+  margin:0;
+}
+.rainfall-radar-card .rainfall-radar-selector-button{
+  position:relative;
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid rgba(104,210,255,.48);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(53,196,235,.17),rgba(12,49,75,.48));
+  color:#d7f3ff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 2px 5px rgba(0,0,0,.18);
+  transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .1s ease;
+}
+.rainfall-radar-card .rainfall-radar-selector-button::after{
+  content:"⌄";
+  display:inline-block;
+  margin-left:9px;
+  color:#8bdcff;
+  font-size:12px;
+  line-height:1;
+}
+.rainfall-radar-card .rainfall-radar-selector-button.is-active{
+  border-color:rgba(104,210,255,.9);
+  background:linear-gradient(180deg,rgba(53,196,235,.30),rgba(12,49,75,.68));
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 1px rgba(53,196,235,.10),0 3px 8px rgba(0,0,0,.2);
+}
+.rainfall-radar-card .rainfall-radar-selector-button:active{
+  transform:translateY(1px);
+  background:rgba(53,196,235,.32);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.22);
+}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    align-items:flex-start;
+    flex-wrap:nowrap;
+  }
+  .rainfall-radar-card .rainfall-radar-scan-controls{
+    flex:0 1 auto;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex:0 0 auto;
+    flex-direction:column;
+    align-items:flex-end;
+  }
+  .rainfall-radar-card .rainfall-radar-system-status{
+    align-self:flex-end;
+  }
+  .rainfall-radar-card .rainfall-radar-selector-button{
+    min-height:32px;
+    padding:0 10px;
+    font-size:9px;
+  }
+}
