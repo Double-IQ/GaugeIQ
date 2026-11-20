@@ -8,8 +8,8 @@
 .admin-console-heading h1{margin:0;color:var(--text);font-size:clamp(23px,4vw,32px);line-height:1.1;letter-spacing:-.035em}
 .admin-user,.admin-muted{color:var(--muted);font-size:13px;line-height:1.5}.admin-user{margin:6px 0 0}
 .admin-console-nav{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:132px}
-.admin-console-link{display:inline-flex;justify-content:center;align-items:center;min-height:40px;padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);text-decoration:none;font:inherit;font-size:13px;font-weight:700}
-.admin-console-link.admin-signout{color:var(--muted)}
+.admin-console-link{display:inline-flex;justify-content:center;align-items:center;min-height:40px;padding:10px 14px;border:0;border-radius:12px;background:var(--accent);color:#fff;text-decoration:none;font:inherit;font-size:13px;font-weight:700;box-shadow:none}
+.admin-console-link.admin-signout{color:#fff}
 .admin-notice{margin:0 0 16px;padding:14px 16px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--text);font-size:14px;box-shadow:0 8px 30px rgba(17,24,39,.06)}
 .admin-notice p{margin:5px 0 0;color:var(--muted)}.admin-notice-success{border-color:#86c9a4}.admin-notice-error{border-color:#e5a1a1}
 .admin-panel,.admin-module{position:relative;min-width:0;overflow:hidden;border:1px solid var(--border);border-radius:22px;background:var(--card);color:var(--text);box-shadow:0 8px 30px rgba(17,24,39,.06)}
@@ -39,7 +39,10 @@
 .admin-module h2{font-size:18px}
 .admin-module.appearance-card{margin-top:0}
 .admin-module-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:auto}
-.admin-console-button{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:10px 14px;border:0!important;border-radius:12px;background:var(--accent)!important;color:#fff!important;box-shadow:none!important;text-decoration:none;font:inherit;font-size:13px;font-weight:700}
+.admin-console-button{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:10px 14px;border:0!important;border-radius:12px;background:var(--accent)!important;color:#fff!important;box-shadow:none!important;text-decoration:none;font:inherit;font-size:13px;font-weight:700;position:relative;overflow:hidden;isolation:isolate}
+.admin-console-nav .admin-console-link{position:relative;overflow:hidden;isolation:isolate}
+.admin-console-button.gaugeiq-is-loading::after,.admin-console-nav .admin-console-link.gaugeiq-is-loading::after{content:"";position:absolute;z-index:0;top:-35%;bottom:-35%;left:0;width:48%;pointer-events:none;background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.08) 25%,rgba(255,255,255,.48) 50%,rgba(255,255,255,.08) 75%,transparent 100%);transform:translateX(-150%);animation:gaugeiq-button-shine 1.25s ease-in-out infinite}
+@keyframes gaugeiq-button-shine{0%{transform:translateX(-150%)}100%{transform:translateX(260%)}}
 .admin-console-button span{color:inherit;font-size:16px}
 .admin-console-button:hover{filter:brightness(1.12)}
 .admin-theme-label{display:block;margin:0 0 7px;color:var(--muted);font-size:12px;font-weight:700}
@@ -63,7 +66,7 @@
  .admin-updates-panel{align-items:flex-start;flex-wrap:wrap;padding:16px}.admin-update-details{width:100%;padding-left:57px}
 }
 @media(max-width:380px){.admin-module-grid{grid-auto-rows:180px}.admin-module{height:180px}.admin-console-header{grid-template-columns:52px minmax(0,1fr);gap:9px}.admin-brand{width:48px;height:48px}.admin-brand img{width:48px;height:48px}.admin-console-heading h1{font-size:20px}.admin-module{min-height:180px;padding:12px}.admin-module h2{font-size:15px}.admin-metric strong{font-size:17px}}
-@media(prefers-reduced-motion:reduce){.admin-console *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){.admin-console *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.admin-console-button.gaugeiq-is-loading::after,.admin-console-nav .admin-console-link.gaugeiq-is-loading::after{animation:none;transform:translateX(0);opacity:.25}}
 
 
 /* Full-screen GaugeIQ identity while a release is being installed. */
