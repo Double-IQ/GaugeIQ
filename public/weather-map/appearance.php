@@ -131,6 +131,23 @@ try {
         </div>
     </section>
 
+    <section class="panel" aria-labelledby="interpolation-heading">
+        <h2 id="interpolation-heading">Weather map smoothing</h2>
+        <p class="description">Choose how weather values are interpolated between model grid points. Rendering cost is approximate relative to Nearest; higher-cost methods may take longer to render.</p>
+        <div class="opacity-row">
+            <label for="map-interpolation">Interpolation method</label>
+            <div class="opacity-control">
+                <select id="map-interpolation" aria-label="Weather map interpolation" style="width:100%;min-height:40px;padding:0 10px;border:1px solid rgba(148,163,184,.4);border-radius:9px;background:#102b68;color:#fff;font:inherit;font-size:13px">
+                    <option value="nearest">Nearest (1× · sharp)</option>
+                    <option value="cubic">Cubic (1.6× · smooth)</option>
+                    <option value="linear">Linear (2.1× · blended)</option>
+                    <option value="monotone">Monotone (2.4× · smooth, no overshoot)</option>
+                </select>
+            </div>
+        </div>
+        <p class="note">Colour blending remains enabled independently of this setting. Cubic is the default.</p>
+    </section>
+
     <section class="panel" aria-labelledby="region-heading">
         <h2 id="region-heading">Weather coverage area</h2>
         <p class="description">Choose the rectangular area used to generate precipitation and cloud-cover overlays. The initial area is centred on your selected GaugeIQ location.</p>
@@ -216,6 +233,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     const defaults = {
         mapStyle: 'dark',
         mapProjection: 'mercator',
+        interpolation: 'cubic',
         precipitationOpacity: 100,
         cloudOpacity: 100,
         precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899', '#be123c'],
@@ -564,6 +582,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     function render() {
         document.getElementById('map-style').value = settings.mapStyle === 'light' ? 'light' : 'dark';
         document.getElementById('map-projection').value = settings.mapProjection === 'globe' ? 'globe' : 'mercator';
+        document.getElementById('map-interpolation').value = ['nearest', 'linear', 'cubic', 'monotone'].includes(settings.interpolation) ? settings.interpolation : 'cubic';
         ['precipitation', 'cloud'].forEach(type => {
             const key = type === 'precipitation' ? 'precipitationOpacity' : 'cloudOpacity';
             const prefix = type === 'precipitation' ? 'precip' : 'cloud';
@@ -591,6 +610,10 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
     });
     document.getElementById('map-projection').addEventListener('change', event => {
         settings.mapProjection = event.target.value === 'globe' ? 'globe' : 'mercator';
+    });
+    document.getElementById('map-interpolation').addEventListener('change', event => {
+        const method = event.target.value;
+        settings.interpolation = ['nearest', 'linear', 'cubic', 'monotone'].includes(method) ? method : 'cubic';
     });
 
     ['precipitation', 'cloud'].forEach(type => {

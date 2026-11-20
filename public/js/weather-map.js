@@ -5,6 +5,7 @@ const OMWeatherMapLayer = await import('https://unpkg.com/@openmeteo/weather-map
 const appearanceDefaults = {
             mapStyle: 'dark',
             mapProjection: 'mercator',
+            interpolation: 'cubic',
             precipitationOpacity: 100,
             cloudOpacity: 100,
             precipitationColors: ['#7dd3fc', '#2563eb', '#7c3aed', '#ec4899', '#be123c'],
@@ -34,6 +35,8 @@ const appearanceDefaults = {
         // The map can be restored from the browser back/forward cache after
         // changing Appearance. Re-read saved settings on restoration so the
         // protocol's colour scale (including per-colour cloud alpha) is rebuilt.
+        const supportedInterpolations = ['nearest', 'linear', 'cubic', 'monotone'];
+        if (!supportedInterpolations.includes(appearance.interpolation)) appearance.interpolation = 'cubic';
         const initialAppearanceSnapshot = JSON.stringify(appearance);
         window.addEventListener('pageshow', event => {
             if (!event.persisted) return;
@@ -696,7 +699,7 @@ protocolOptions.fileReaderConfig = {
                         const dataUrl = new URL(frame.url);
                         dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                         dataUrl.searchParams.set('variable', item.variable);
-                        dataUrl.searchParams.set('interpolation', 'cubic');
+                        dataUrl.searchParams.set('interpolation', appearance.interpolation);
                         dataUrl.searchParams.set('color_blend', 'true');
                         dataUrl.searchParams.set('tile_size', '256');
 
@@ -871,7 +874,7 @@ protocolOptions.fileReaderConfig = {
                 const url = new URL(currentFrame.url);
                 url.searchParams.set('delta_time_hours', String(deltaTimeHours));
                 url.searchParams.set('variable', item.variable);
-                url.searchParams.set('interpolation', 'cubic');
+                url.searchParams.set('interpolation', appearance.interpolation);
                 // Blend colour stops and their alpha channels for smooth transitions.
                 url.searchParams.set('color_blend', 'true');
                 url.searchParams.set('tile_size', '256');
