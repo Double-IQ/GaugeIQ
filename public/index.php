@@ -1203,13 +1203,17 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="wind-hud-subtitle">6 HOUR OUTLOOK</div>
                 </div>
                 <div class="rainfall-radar-compass-controls">
-                    <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
-                        <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
-                    </span>
-                    <button type="button" class="rainfall-radar-selector-button is-active" id="rainfallRadarScanButton" data-scan-mode="forecast" aria-pressed="false">FORECAST SCAN · +3H</button>
-                    <button type="button" class="rainfall-radar-selector-button" id="rainfallRadarRangeButton" data-range-km="100" aria-label="Change radar range">100 KM</button>
-                    <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
-                    <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
+                    <div class="rainfall-radar-scan-controls">
+                        <button type="button" class="rainfall-radar-selector-button is-active" id="rainfallRadarScanButton" data-scan-mode="forecast" aria-pressed="false">FORECAST SCAN · +3H</button>
+                        <button type="button" class="rainfall-radar-selector-button" id="rainfallRadarRangeButton" data-range-km="100" aria-label="Change radar range">100 KM</button>
+                    </div>
+                    <div class="rainfall-radar-status-controls">
+                        <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
+                            <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
+                        </span>
+                        <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
+                        <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
+                    </div>
                 </div>
             </div>
             <div class="rainfall-radar-layout">
