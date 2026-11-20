@@ -7038,3 +7038,14 @@ body.gaugeiq-menu-open{overflow:hidden}
     align-items:center;
   }
 }
+
+
+/* Match Rain Radar information panels to the three-day forecast tiles. */
+.rainfall-radar-card .rainfall-radar-readout-primary,
+.rainfall-radar-card .rainfall-radar-readout-grid > div,
+.rainfall-radar-card .rainfall-radar-timeline,
+.rainfall-radar-card .rainfall-radar-consistency{
+  background:rgba(1,10,24,.24);
+  border:1px solid rgba(117,164,211,.2);
+  border-radius:14px;
+}
