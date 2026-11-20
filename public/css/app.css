@@ -7050,3 +7050,36 @@ body.gaugeiq-menu-open{overflow:hidden}
   border:1px solid rgba(117,164,211,.2);
   border-radius:14px;
 }
+
+
+/* Centre the weather-frame indicators and anchor the timestamp to the active step. */
+.gaugeiq-weather-map-timeline{
+  justify-content:center;
+}
+.gaugeiq-weather-map-progress-wrap{
+  position:relative;
+  flex:0 1 360px;
+  width:min(100%,360px);
+  margin-inline:auto;
+  padding-top:19px;
+  gap:0;
+}
+.gaugeiq-weather-map-progress-wrap #map-frame-time{
+  position:absolute;
+  top:0;
+  left:50%;
+  width:max-content;
+  max-width:110px;
+  transform:translateX(-50%);
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.gaugeiq-weather-map-progress{
+  width:100%;
+}
+@media(max-width:680px){
+  .gaugeiq-weather-map-progress-wrap{flex:1 1 100%;width:100%;padding-top:18px}
+  .gaugeiq-weather-map-progress-wrap #map-frame-time{max-width:100px}
+}
