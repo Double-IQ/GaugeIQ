@@ -305,135 +305,12 @@ protocolOptions.fileReaderConfig = {
             cooperativeGestures: false,
             attributionControl: false
         });
-        // Touch navigation is deliberate: a single-finger drag must not move
-        // the map. Double-tap, then drag with that finger to pan. Pinch zoom
-        // remains handled by MapLibre's touchZoomRotate interaction.
+        // Keep the weather map fixed in place. Users can still scroll the page
+        // with one finger and zoom with the map controls or a two-finger pinch.
+        map.dragPan.disable();
         map.doubleClickZoom.disable();
         const mapCanvas = map.getCanvas();
-        // Let ordinary vertical swipes scroll the page; gesture handling below
-        // claims horizontal drags and deliberate double-tap map pans.
         mapCanvas.style.touchAction = 'pan-y pinch-zoom';
-        let lastMapTap = null;
-        let touchPanActive = false;
-        let touchPanArmed = false;
-        let touchPanMoved = false;
-        let lastTouchPanPoint = null;
-        let touchStartPoint = null;
-        let touchGestureAxis = null;
-        const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
-        mapCanvas.addEventListener('touchstart', event => {
-            if (event.touches.length !== 1 || !event.changedTouches.length) {
-                lastMapTap = null;
-                touchPanActive = false;
-                touchPanArmed = false;
-                touchPanMoved = false;
-                lastTouchPanPoint = null;
-                touchStartPoint = null;
-                touchGestureAxis = null;
-                return;
-            }
-
-            // Disable MapLibre's one-finger drag before its own touch handlers
-            // see this event; restore it after the touch sequence so desktop
-            // mouse dragging continues to work normally.
-            map.dragPan.disable();
-
-            const point = getTouchPoint(event.changedTouches[0]);
-            touchStartPoint = point;
-            touchGestureAxis = null;
-            const now = Date.now();
-
-            // A double-tap arms panning. Support both common gestures: dragging
-            // immediately after the second tap, or lifting and then dragging.
-            if (touchPanArmed) {
-                touchPanActive = true;
-                touchPanArmed = false;
-                touchPanMoved = false;
-                lastTouchPanPoint = point;
-                lastMapTap = null;
-                return;
-            }
-
-            const isSecondTap = lastMapTap && now - lastMapTap.time < 450 &&
-                Math.hypot(point.x - lastMapTap.x, point.y - lastMapTap.y) < 32;
-
-            if (isSecondTap) {
-                touchPanActive = true;
-                touchPanArmed = true;
-                touchPanMoved = false;
-                lastTouchPanPoint = point;
-                lastMapTap = null;
-            } else {
-                touchPanActive = false;
-                touchPanMoved = false;
-                lastTouchPanPoint = null;
-                lastMapTap = { ...point, time: now };
-            }
-        }, { capture: true, passive: false });
-
-        mapCanvas.addEventListener('touchmove', event => {
-            if (event.touches.length > 1) {
-                // Preserve native pinch-to-zoom and cancel any pending pan gesture.
-                touchPanActive = false;
-                touchPanArmed = false;
-                touchPanMoved = false;
-                lastTouchPanPoint = null;
-                return;
-            }
-            if (touchPanActive && event.touches.length === 1) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                const point = getTouchPoint(event.touches[0]);
-                if (lastTouchPanPoint) {
-                    const deltaX = point.x - lastTouchPanPoint.x;
-                    const deltaY = point.y - lastTouchPanPoint.y;
-                    if (deltaX !== 0 || deltaY !== 0) touchPanMoved = true;
-                    // MapLibre's panBy offset is opposite the visual map
-                    // movement; negate the finger delta so the map follows it.
-                    map.panBy([-deltaX, -deltaY], { animate: false });
-                }
-                lastTouchPanPoint = point;
-                return;
-            }
-
-            // Let a vertical one-finger swipe pass through to the page.
-            // Claim horizontal movement so it neither scrolls the page sideways
-            // nor triggers MapLibre's default one-finger pan.
-            if (event.touches.length === 1) {
-                const point = getTouchPoint(event.touches[0]);
-                if (!touchStartPoint) touchStartPoint = point;
-                const deltaX = point.x - touchStartPoint.x;
-                const deltaY = point.y - touchStartPoint.y;
-                if (!touchGestureAxis && Math.hypot(deltaX, deltaY) >= 8) {
-                    touchGestureAxis = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
-                    lastMapTap = null;
-                }
-                if (touchGestureAxis === 'vertical') return;
-                if (touchGestureAxis === 'horizontal') {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
-                }
-            }
-        }, { capture: true, passive: false });
-
-        const finishTouchPan = event => {
-            if (event.touches && event.touches.length > 0) return;
-            if (touchPanActive) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-            }
-            // If the second tap was only a tap, retain the armed state so the
-            // following one-finger drag pans. A completed pan consumes it.
-            if (touchPanMoved) touchPanArmed = false;
-            touchPanActive = false;
-            touchPanMoved = false;
-            lastTouchPanPoint = null;
-            touchStartPoint = null;
-            touchGestureAxis = null;
-            map.dragPan.enable();
-        };
-        mapCanvas.addEventListener('touchend', finishTouchPan, { capture: true, passive: false });
-        mapCanvas.addEventListener('touchcancel', finishTouchPan, { capture: true, passive: false });
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         const locationMarker = document.createElement('div');
         locationMarker.className = 'gaugeiq-map-location-marker';
@@ -541,6 +418,9 @@ protocolOptions.fileReaderConfig = {
             });
             frameTimeLabel.textContent = label;
             if (frameProgressBar) {
+                const frameCount = Math.max(1, frameProgressBar.children.length);
+                const indicatorPosition = ((index + 0.5) / frameCount) * 100;
+                frameTimeLabel.style.left = indicatorPosition + '%';
                 frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
                 frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 4 · ' + label);
                 Array.from(frameProgressBar.children).forEach((step, stepIndex) => {
@@ -1071,21 +951,6 @@ protocolOptions.fileReaderConfig = {
 
         map.on('load', () => {
             map.setProjection({ type: appearance.mapProjection === 'globe' ? 'globe' : 'mercator' });
-
-            // Keep the short touch instructions available on mobile, and
-            // bring them back whenever the user returns to the map.
-            const gestureHint = document.getElementById('weather-map-gesture-hint');
-            let gestureHintTimer = null;
-            const showGestureHint = () => {
-                if (!gestureHint || !window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
-                gestureHint.classList.add('is-visible');
-                if (gestureHintTimer !== null) clearTimeout(gestureHintTimer);
-                gestureHintTimer = setTimeout(() => gestureHint.classList.remove('is-visible'), 5000);
-            };
-            if (gestureHint) {
-                requestAnimationFrame(showGestureHint);
-                mapCanvas.addEventListener('touchstart', showGestureHint, { passive: true });
-            }
 
             // Keep the latest single weather layer visible while the four-frame
             // animation is prepared sequentially. Once every frame is ready,

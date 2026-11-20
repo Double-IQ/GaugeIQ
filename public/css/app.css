@@ -6025,9 +6025,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Only forecast echoes rotate for compass mode; the radar housing and sweep stay fixed. */
 .rainfall-radar-cells{transition:none}
 .rainfall-radar-cell{stroke:rgba(222,248,255,.28);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.035;transform-box:fill-box;transform-origin:center;animation:rainfall-echo-sweep 7s linear infinite;animation-delay:var(--rainfall-radar-phase,0s)}
-/* The sweep sector spans 59 degrees, so keep echoes bright for the same 59/360 of its 7-second rotation. */
-/* Keep each echo illuminated for five seconds of the seven-second sweep cycle, then fade it away. */
-@keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}71.4%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}82%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
+/* Match the 59-degree sweep sector exactly: 59/360 of the seven-second rotation is about 1.15 seconds. */
+@keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}16.4%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}19%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
 @media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.72;filter:url(#rainfallRadarGlow)}.rainfall-radar-cells{transition:none}}
 /* The ECMWF raster rotates beneath the fixed scope overlay in compass mode. */
 @media(prefers-reduced-motion:reduce){.rainfall-radar-map{transition:none}}
@@ -7049,4 +7048,37 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:rgba(1,10,24,.24);
   border:1px solid rgba(117,164,211,.2);
   border-radius:14px;
+}
+
+
+/* Centre the weather-frame indicators and anchor the timestamp to the active step. */
+.gaugeiq-weather-map-timeline{
+  justify-content:center;
+}
+.gaugeiq-weather-map-progress-wrap{
+  position:relative;
+  flex:0 1 360px;
+  width:min(100%,360px);
+  margin-inline:auto;
+  padding-top:19px;
+  gap:0;
+}
+.gaugeiq-weather-map-progress-wrap #map-frame-time{
+  position:absolute;
+  top:0;
+  left:50%;
+  width:max-content;
+  max-width:110px;
+  transform:translateX(-50%);
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.gaugeiq-weather-map-progress{
+  width:100%;
+}
+@media(max-width:680px){
+  .gaugeiq-weather-map-progress-wrap{flex:1 1 100%;width:100%;padding-top:18px}
+  .gaugeiq-weather-map-progress-wrap #map-frame-time{max-width:100px}
 }

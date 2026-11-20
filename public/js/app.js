@@ -2261,6 +2261,18 @@ updateNetworkDiagnostics();
     let scanMode = 'forecast';
     const svgNs = 'http://www.w3.org/2000/svg';
     const byId = id => document.getElementById(id);
+    const getSweepElapsedSeconds = () => {
+        const sweep = document.querySelector('.rainfall-radar-sweep');
+        const animation = sweep?.getAnimations().find(item => item.playState !== 'idle');
+        const currentTime = Number(animation?.currentTime);
+        return Number.isFinite(currentTime) ? ((currentTime / 1000) % 7 + 7) % 7 : 0;
+    };
+    const echoDelayForBearing = bearing => {
+        const untilSweep = ((((Number(bearing) - 59) % 360) + 360) % 360) / 360 * 7;
+        const elapsedSincePass = (getSweepElapsedSeconds() - untilSweep + 7) % 7;
+        return -elapsedSincePass;
+    };
+    window.gaugeIQRadarEchoDelay = echoDelayForBearing;
     const amountOf = frame => Number(frame?.local_precipitation_mm_per_hour ?? frame?.local_precipitation_mm);
     const displayTime = value => {
         const date = new Date(value);
@@ -2281,7 +2293,8 @@ updateNetworkDiagnostics();
             const radians = bearing * Math.PI / 180;
             const spot = document.createElementNS(svgNs, 'circle');
             const radius = Math.max(4, Math.min(7, 4 + Math.log10(1 + Math.max(0, amount)) * 2));
-            const phase = (((bearing - 59 + 360) % 360) / 360 * 7);
+            // Synchronize newly rendered echoes to the sweep's actual animation clock.
+            const phase = echoDelayForBearing(bearing);
             spot.setAttribute('class', 'rainfall-radar-cell rainfall-radar-grid-cell');
             spot.setAttribute('data-bearing', bearing.toFixed(2));
             spot.setAttribute('data-distance', distance.toFixed(1));
@@ -2292,7 +2305,7 @@ updateNetworkDiagnostics();
             spot.setAttribute('fill', amount >= 5 ? '#E7C84B' : (amount >= 1 ? '#45D69D' : '#36B9D6'));
             spot.setAttribute('fill-opacity', '0.82');
             spot.setAttribute('filter', 'url(#rainfallRadarGlow)');
-            spot.style.setProperty('--rainfall-radar-phase', phase.toFixed(3) + 's');
+            spot.style.animationDelay = phase.toFixed(3) + 's';
             const title = document.createElementNS(svgNs, 'title');
             title.textContent = amount.toFixed(2) + ' mm/h at ' + distance.toFixed(1) + ' km';
             spot.appendChild(title);
@@ -2428,8 +2441,9 @@ updateNetworkDiagnostics();
 
     function syncEchoSweepPhases(heading) {
         radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
-            const bearing = normalize(Number(cell.dataset.bearing) - heading - 59);
-            if (bearing !== null) cell.style.animationDelay = (bearing / 360 * 7).toFixed(3) + 's';
+            const bearing = normalize(Number(cell.dataset.bearing) - heading);
+            const delay = bearing === null ? null : window.gaugeIQRadarEchoDelay?.(bearing);
+            if (Number.isFinite(delay)) cell.style.animationDelay = delay.toFixed(3) + 's';
         });
     }
 
