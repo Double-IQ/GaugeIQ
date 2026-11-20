@@ -74,9 +74,11 @@ final class WeatherMapRainfallNowcastService
         }
         usort($scheduledFrames, static fn(array $a, array $b): int => $a['timestamp'] <=> $b['timestamp']);
 
-        // Match the map renderer: use the gap to the previous valid time,
-        // except for the first frame, which uses the next valid time.
+        // Reuse the newest already-scheduled past frame for Current Scan,
+        // and retain the future frames for Forecast Scan. No new model run or
+        // separate data request is scheduled by the selector.
         $futureFrames = [];
+        $currentFrame = null;
         foreach ($scheduledFrames as $index => $frame) {
             $neighbour = $index === 0
                 ? ($scheduledFrames[1] ?? null)
@@ -85,10 +87,15 @@ final class WeatherMapRainfallNowcastService
                 ? 3.0
                 : abs((int)$frame['timestamp'] - (int)$neighbour['timestamp']) / 3600.0;
             if (!is_finite($deltaTimeHours) || $deltaTimeHours <= 0.0) {
-                throw new RuntimeException('The scheduled ECMWF forecast-step duration is invalid.');
+                throw new RuntimeException('The scheduled ECMWF frame-step duration is invalid.');
             }
-            if (($frame['frame_type'] ?? '') !== 'future' || (int)$frame['timestamp'] < $now) continue;
-            $futureFrames[] = $frame + ['delta_time_hours' => $deltaTimeHours];
+            if (($frame['frame_type'] ?? '') === 'past' && (int)$frame['timestamp'] <= $now) {
+                $currentFrame = $frame + ['delta_time_hours' => $deltaTimeHours, 'scan_type' => 'current'];
+                continue;
+            }
+            if (($frame['frame_type'] ?? '') === 'future' && (int)$frame['timestamp'] >= $now) {
+                $futureFrames[] = $frame + ['delta_time_hours' => $deltaTimeHours, 'scan_type' => 'forecast'];
+            }
         }
         if ($futureFrames === []) {
             throw new RuntimeException('No future ECMWF precipitation frames are scheduled yet.');
@@ -102,8 +109,10 @@ final class WeatherMapRainfallNowcastService
 
 
         $frameResults = [];
+        $currentFrameResult = null;
         $encodingInfo = null;
-        foreach ($futureFrames as $frame) {
+        $framesToDecode = $currentFrame === null ? $futureFrames : array_merge([$currentFrame], $futureFrames);
+        foreach ($framesToDecode as $frame) {
             $url = (string)($frame['file_url'] ?? '');
             $this->validateFrameUrl($url);
             $fileSize = $this->fetchFileSize($baseUrl, $url);
@@ -195,8 +204,9 @@ final class WeatherMapRainfallNowcastService
                 ];
             }
 
-            $frameResults[] = [
+            $decodedFrame = [
                 'time' => gmdate('c', (int)$frame['timestamp']),
+                'scan_type' => (string)($frame['scan_type'] ?? 'forecast'),
                 // Preserve the exact scheduled source for the matching weather-map raster.
                 'frame_url' => $url,
                 'step_duration_hours' => round($stepDurationHours, 2),
@@ -210,6 +220,11 @@ final class WeatherMapRainfallNowcastService
                 'wet_cells' => $wetCount,
                 'rain_cells' => $radarCells,
             ];
+            if (($frame['scan_type'] ?? 'forecast') === 'current') {
+                $currentFrameResult = $decodedFrame;
+            } else {
+                $frameResults[] = $decodedFrame;
+            }
         }
 
         $wetDistanceFrames = array_values(array_filter(
@@ -306,7 +321,8 @@ final class WeatherMapRainfallNowcastService
             'encoding' => $encodingInfo,
             'updated_at' => gmdate('c'),
             'frames' => $frameResults,
-            'note' => 'Model forecast derived from decoded ECMWF precipitation grid values and normalised to mm per hour; not live radar.',
+            'current_frame' => $currentFrameResult,
+            'note' => 'Current Scan reuses the latest past ECMWF map frame; Forecast Scan uses scheduled future ECMWF frames. Model-derived, not live radar.',
         ];
         if ($persist) {
             $this->saveSetting($this->locationSettingKey('weather_map_rainfall_nowcast'), json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));

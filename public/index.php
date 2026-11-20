@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261120-radar-wind-gradient-gap20">
+<link rel="stylesheet" href="css/app.css?v=20261120-radar-scan-range">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -1122,6 +1122,7 @@ if ($current && !empty($current['observed_at'])) {
         $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? array_values(array_filter($rainfallNowcast['frames'], 'is_array')) : [];
         $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
         $radarFrame = $nowcastFrames[0] ?? [];
+        $radarCurrentFrame = is_array($rainfallNowcast['current_frame'] ?? null) && $rainfallNowcast['current_frame'] !== [] ? $rainfallNowcast['current_frame'] : null;
         $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
@@ -1179,7 +1180,7 @@ if ($current && !empty($current['observed_at'])) {
                 $cellRadius = max(4.0, min(7.0, 4.0 + log10(1.0 + max(0.0, $amount)) * 2.0));
                 $cellBearing = fmod((float)$radarCell['bearing_degrees'] + 360.0, 360.0);
                 $cellSweepPhase = (fmod($cellBearing - 59.0 + 360.0, 360.0) / 360.0 * 7.0);
-                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" data-bearing="' . number_format($cellBearing, 2, '.', '') . '" style="--rainfall-radar-phase:' . number_format($cellSweepPhase, 3, '.', '') . 's" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
+                $radarCellMarkup .= '<circle class="rainfall-radar-cell rainfall-radar-grid-cell" data-bearing="' . number_format($cellBearing, 2, '.', '') . '" data-distance="' . number_format((float)$radarCell['distance_km'], 1, '.', '') . '" style="--rainfall-radar-phase:' . number_format($cellSweepPhase, 3, '.', '') . 's" cx="' . number_format($cellX, 2, '.', '') . '" cy="' . number_format($cellY, 2, '.', '') . '" r="' . number_format($cellRadius, 2, '.', '') . '" fill="' . $cellColour . '" fill-opacity="0.82" filter="url(#rainfallRadarGlow)" data-rainfall="' . number_format($amount, 2, '.', '') . '"><title>' . htmlspecialchars($cellTitle, ENT_QUOTES, 'UTF-8') . '</title></circle>';
             } else {
                 // Legacy payloads lack grid coordinates; retain their original
                 // point marker until the next scheduled refresh writes schema v2.
@@ -1205,13 +1206,15 @@ if ($current && !empty($current['observed_at'])) {
                     <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
                         <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
                     </span>
+                    <button type="button" class="rainfall-radar-selector-button is-active" id="rainfallRadarScanButton" data-scan-mode="forecast" aria-pressed="false">FORECAST SCAN · +3H</button>
+                    <button type="button" class="rainfall-radar-selector-button" id="rainfallRadarRangeButton" data-range-km="100" aria-label="Change radar range">100 KM</button>
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
                     <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
                 </div>
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
-                    <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span class="rainfall-radar-range">100 KM RANGE</span></div>
+                    
                     <div class="rainfall-radar-plot">
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
@@ -1223,9 +1226,9 @@ if ($current && !empty($current['observed_at'])) {
                         <circle cx="160" cy="160" r="143" fill="#0A202B" stroke="#315263" stroke-width="1.5"/>
                         <g clip-path="url(#rainfallRadarClip)">
                             <circle cx="160" cy="160" r="140" fill="url(#rainfallRadarBackground)"/>
-                            <circle cx="160" cy="160" r="21" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
-                            <circle cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
-                            <circle cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <circle class="rainfall-radar-range-ring" data-ring-km="15" cx="160" cy="160" r="21" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <circle class="rainfall-radar-range-ring" data-ring-km="50" cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
+                            <circle class="rainfall-radar-range-ring" data-ring-km="100" cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
                             <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
                             <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)"><?= $radarCellMarkup ?></g>
                             <g class="rainfall-radar-sweep">
@@ -1235,10 +1238,11 @@ if ($current && !empty($current['observed_at'])) {
                         </g>
                         <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
                             <text x="160" y="12" text-anchor="middle">N</text><text x="309" y="163" text-anchor="end">E</text><text x="160" y="316" text-anchor="middle">S</text><text x="11" y="163">W</text>
-                            <text x="168" y="140">15 km</text><text x="168" y="94">50 km</text><text x="168" y="29">100 km</text>
+                            <text class="rainfall-radar-range-label" data-ring-km="15" x="168" y="140">15 km</text><text class="rainfall-radar-range-label" data-ring-km="50" x="168" y="94">50 km</text><text class="rainfall-radar-range-label" data-ring-km="100" x="168" y="29">100 km</text>
                         </g>
                     </svg>
                     </div>
+                    <script type="application/json" id="rainfallRadarScanData"><?= json_encode(['current' => $radarCurrentFrame, 'forecast' => $radarFrame], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?></script>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
@@ -1247,18 +1251,14 @@ if ($current && !empty($current['observed_at'])) {
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
-                    <?php if ($radarLocalHasRain): ?>
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
-                        <strong><?= $radarLocalAmount !== null ? number_format($radarLocalAmount, 1) : '—' ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
+                        <strong id="rainfallRadarLocalAmount"><?= $radarLocalAmount !== null ? number_format($radarLocalAmount, 1) : '—' ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
                     </div>
-                    <?php endif; ?>
-                    <?php if ($radarHasRainForecast): ?>
                     <div class="rainfall-radar-readout-grid">
-                        <div><span>NEAREST RAIN</span><strong><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><?php if ($radarNearestAmount !== null): ?><small><?= number_format($radarNearestAmount, 2) ?> <?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?> at cell</small><?php endif; ?></div>
-                        <div><span>RAIN MOVEMENT</span><strong><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
+                        <div><span>NEAREST RAIN</span><strong id="rainfallRadarNearestDistance"><?= $radarNearestKm === null ? '—' : number_format($radarNearestKm, 0) . ' km' ?></strong><small id="rainfallRadarNearestAmount"><?= $radarNearestAmount === null ? 'No wet cells' : number_format($radarNearestAmount, 2) . ' ' . $rainfallDisplayUnit . ' at cell' ?></small></div>
+                        <div><span id="rainfallRadarTrendLabel">RAIN MOVEMENT</span><strong id="rainfallRadarTrendValue"><?= htmlspecialchars($radarTrendLabel, ENT_QUOTES) ?></strong></div>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
             <?php if ($showForecastScan): ?>
@@ -1597,7 +1597,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261116-compass-flow-restore"></script>
+<script src="js/app.js?v=20261120-radar-scan-range"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261116-section04-fixed-sun-v1"></script>
 </body>
