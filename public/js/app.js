@@ -360,19 +360,18 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // Ask only until this site has successfully received permission.
-            // The native iOS grant and this shared flag are reused by both compasses.
-            if (!windCompassPermissionPreviouslyGranted) {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission !== 'granted') {
-                    throw new Error('Compass permission was not granted.');
-                }
-                try {
-                    localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
-                    windCompassPermissionPreviouslyGranted = true;
-                } catch {
-                    // Compass can still work for this session if storage is unavailable.
-                }
+            // iOS requires this call from each user-initiated Enable tap to
+            // activate sensor delivery. A previous grant is returned silently
+            // by iOS; it does not show the permission prompt again.
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Compass permission was not granted.');
+            }
+            try {
+                localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+                windCompassPermissionPreviouslyGranted = true;
+            } catch {
+                // Compass can still work for this session if storage is unavailable.
             }
         }
 
@@ -2394,12 +2393,11 @@ updateNetworkDiagnostics();
             return;
         }
         try {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function' && !permissionPreviouslyGranted) {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // Reinvoke from the Enable-button gesture so iOS activates
+                // sensor delivery. An existing native grant is reused silently.
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission !== 'granted') throw new Error('Compass permission was not granted.');
-                // iOS keeps the native grant for this site. Remember our own
-                // successful request so toggling the radar compass does not
-                // call requestPermission() again on every enable.
                 try {
                     localStorage.setItem(permissionStorageKey, 'true');
                     localStorage.setItem(legacyPermissionStorageKey, 'true');
