@@ -6805,3 +6805,68 @@ body.gaugeiq-menu-open{overflow:hidden}
     text-align:center;
   }
 }
+
+/* Rain Radar controls: scan/range stay at the left; online and compass
+   actions are grouped at the far right of the available row. */
+.rainfall-radar-card .rainfall-radar-compass-controls{
+  display:flex;
+  width:100%;
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0;
+}
+.rainfall-radar-card .rainfall-radar-scan-controls,
+.rainfall-radar-card .rainfall-radar-status-controls{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  min-width:0;
+}
+.rainfall-radar-card .rainfall-radar-scan-controls{justify-content:flex-start}
+.rainfall-radar-card .rainfall-radar-status-controls{
+  justify-content:flex-end;
+  margin-left:auto;
+}
+.rainfall-radar-card .rainfall-radar-system-status{white-space:nowrap}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-nowcast-heading{
+    flex-wrap:wrap;
+    align-items:flex-start;
+    row-gap:10px;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    width:100%;
+    flex:1 1 100%;
+    flex-wrap:nowrap;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .rainfall-radar-card .rainfall-radar-scan-controls{
+    flex:0 1 auto;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex:0 0 auto;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    margin-left:auto;
+  }
+  .rainfall-radar-card .rainfall-radar-selector-button,
+  .rainfall-radar-card .rainfall-radar-compass-button{
+    min-height:31px;
+    padding:0 8px;
+    font-size:9px;
+  }
+}
+@media(max-width:390px){
+  .rainfall-radar-card .rainfall-radar-compass-controls{align-items:flex-start}
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex-direction:column;
+    align-items:flex-end;
+  }
+}
