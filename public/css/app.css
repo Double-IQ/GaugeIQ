@@ -7138,8 +7138,8 @@ body.gaugeiq-menu-open{overflow:hidden}
   margin:0;
 }
 .weather-map-dashboard-card .gaugeiq-weather-map-progress{
-  display:flex;
-  justify-content:center;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
   width:100%;
 }
 @media(max-width:680px){
