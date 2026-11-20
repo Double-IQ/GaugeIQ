@@ -2,14 +2,16 @@
 declare(strict_types=1);
 
 /**
- * Maintains four concrete past ECMWF IFS 0.25° map frames used by GaugeIQ: Binary map data is deliberately kept
- * out of SQL; the public proxy stores requested HTTP range blocks on disk.
+ * Maintains four past ECMWF frames for the visible map and two separate future
+ * frames for the Rain Radar forecast decoder. Binary map data is deliberately
+ * kept out of SQL; the public proxy stores requested HTTP range blocks on disk.
  */
 final class WeatherMapCacheService
 {
     private const MODEL_PATH = 'ecmwf_ifs025';
     private const METADATA_URL = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH . '/latest.json';
     private const PAST_FRAME_COUNT = 4;
+    private const FUTURE_FRAME_COUNT = 2;
     private const HOUR_MS = 3600000;
     private const SIX_HOURS_MS = 21600000;
 
@@ -39,8 +41,9 @@ final class WeatherMapCacheService
             $existingModelFrameCount = 0;
         }
         if ($lastTimestamp !== false && $lastTimestamp > time() - $intervalSeconds &&
-            $existingCounts['past'] === self::PAST_FRAME_COUNT && $existingCounts['future'] === 0 &&
-            $existingModelFrameCount === self::PAST_FRAME_COUNT) {
+            $existingCounts['past'] === self::PAST_FRAME_COUNT &&
+            $existingCounts['future'] === self::FUTURE_FRAME_COUNT &&
+            $existingModelFrameCount === self::PAST_FRAME_COUNT + self::FUTURE_FRAME_COUNT) {
             return false;
         }
 
@@ -80,6 +83,15 @@ final class WeatherMapCacheService
                     continue;
                 }
 
+                $futureTimestampCount = count(array_filter(
+                    $timestamps,
+                    static fn(int $timestamp): bool => $timestamp > $now
+                ));
+                if ($futureTimestampCount < self::FUTURE_FRAME_COUNT) {
+                    $metadataErrors[] = $metadataFile . ' does not yet contain two future forecast timestamps';
+                    continue;
+                }
+
                 $referenceTimestamp = strtotime($referenceTime);
                 if ($referenceTimestamp === false) {
                     $metadataErrors[] = $metadataFile . ' has an unreadable reference_time';
@@ -103,8 +115,9 @@ final class WeatherMapCacheService
             );
         }
 
-        // Use the newest available model run. Only elapsed timestamps are
-        // scheduled; forecast timestamps are not part of the weather-map loop.
+        // Use the newest available model run. The visible weather-map API
+        // exposes only past frames; two future frames remain scheduled separately
+        // for the Rain Radar decoder and are never returned to the animation.
         usort($candidates, static fn(array $a, array $b): int =>
             $b['reference_timestamp'] <=> $a['reference_timestamp']
         );
@@ -173,8 +186,74 @@ final class WeatherMapCacheService
                 'model_run_time' => $frame['model_run_time'],
             ];
         }
-        // The weather-map animation uses past frames only. Rainfall radar has
-        // its own independently stored nowcast payload and forecast timeline.
+
+        // Keep two published future source objects in the shared schedule.
+        // The public weather-map endpoint filters these out; RainfallNowcastService
+        // consumes them to build its independent forecast payload.
+        $futureTimes = array_slice(
+            array_values(array_filter(
+                $timestamps,
+                static fn(int $timestamp): bool => $timestamp > $now
+            )),
+            0,
+            self::FUTURE_FRAME_COUNT
+        );
+        if (count($futureTimes) !== self::FUTURE_FRAME_COUNT) {
+            throw new RuntimeException(
+                'The selected ECMWF IFS model run does not yet publish two future forecast timestamps.'
+            );
+        }
+
+        $futureFrames = [];
+        $runIntervalSeconds = (int)(self::SIX_HOURS_MS / 1000);
+        $initialFutureRunTimestamp = (int)(
+            floor($selected['reference_timestamp'] / $runIntervalSeconds) * $runIntervalSeconds
+        );
+        foreach ($futureTimes as $timestamp) {
+            $validDate = (new DateTimeImmutable('@' . (int)floor($timestamp / 1000)))
+                ->setTimezone(new DateTimeZone('UTC'));
+            $availableFutureFrame = null;
+            $sourceRunTimestamp = $initialFutureRunTimestamp;
+
+            // Prefer the exact run whose metadata supplied these future steps.
+            // Fall back to older six-hour runs only if its object is not published.
+            for ($attempt = 0; $attempt < 8; $attempt++) {
+                $sourceRunDate = (new DateTimeImmutable('@' . $sourceRunTimestamp))
+                    ->setTimezone(new DateTimeZone('UTC'));
+                $sourceRunFolder = $sourceRunDate->format('Y/m/d/H') . '00Z';
+                $fileName = $validDate->format('Y-m-d\\THi') . '.om';
+                $fileUrl = 'https://openmeteo.s3.amazonaws.com/data_spatial/' . self::MODEL_PATH .
+                    '/' . $sourceRunFolder . '/' . $fileName;
+
+                if ($this->upstreamObjectHasRange($fileUrl)) {
+                    $availableFutureFrame = [
+                        'frame_time' => $validDate->format('Y-m-d\\TH:i:s\\Z'),
+                        'file_url' => $fileUrl,
+                        'model_run_time' => $sourceRunDate->format('Y-m-d\\TH:i:s\\Z'),
+                    ];
+                    break;
+                }
+                $sourceRunTimestamp -= $runIntervalSeconds;
+            }
+
+            if ($availableFutureFrame === null) {
+                throw new RuntimeException(
+                    'No published ECMWF IFS 0.25° source object was found for future frame ' .
+                    $validDate->format('Y-m-d\\TH:i:s\\Z') . '.'
+                );
+            }
+            $futureFrames[] = $availableFutureFrame;
+        }
+
+        foreach ($futureFrames as $offset => $frame) {
+            $frames[] = [
+                'slot_id' => self::PAST_FRAME_COUNT + $offset,
+                'frame_type' => 'future',
+                'frame_time' => $frame['frame_time'],
+                'file_url' => $frame['file_url'],
+                'model_run_time' => $frame['model_run_time'],
+            ];
+        }
         $previousUrlQuery = $this->pdo->query('SELECT file_url FROM gaugeiq_weather_map_frames');
         $previousUrls = [];
         foreach ($previousUrlQuery->fetchAll(PDO::FETCH_COLUMN) as $previousUrl) {
