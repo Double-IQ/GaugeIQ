@@ -1598,6 +1598,13 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
      data-weather-latest="<?= htmlspecialchars($historyWeatherLatest, ENT_QUOTES) ?>"
      data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES) ?>"
      data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES) ?>"></div>
+<details id="compassDiagnosticsPanel" style="margin:16px 0;padding:12px;border:1px solid var(--border-color, #64748b);border-radius:12px;">
+    <summary style="cursor:pointer;font-weight:600;">Compass diagnostics (temporary)</summary>
+    <p style="margin:10px 0;font-size:0.9rem;">Open this after testing the compass, then copy the log and paste it into our chat. The log stays on this iPhone and is not uploaded.</p>
+    <button type="button" id="copyCompassDiagnostics" class="secondary" style="margin-bottom:8px;">Copy diagnostics</button>
+    <span id="compassDiagnosticsCopyStatus" role="status" aria-live="polite" style="margin-left:8px;font-size:0.85rem;"></span>
+    <textarea id="compassDiagnosticsOutput" readonly rows="8" aria-label="Compass diagnostic log" style="display:block;width:100%;box-sizing:border-box;font:12px/1.4 monospace;white-space:pre;overflow:auto;"></textarea>
+</details>
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
