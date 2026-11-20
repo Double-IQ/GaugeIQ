@@ -227,6 +227,45 @@ initClimateGraphSelector();
             && typeof DeviceOrientationEvent.requestPermission === 'function'
     });
     window.gaugeIQRecordCompassDiagnostic = record;
+
+    const panel = document.getElementById('compassDiagnosticsPanel');
+    const output = document.getElementById('compassDiagnosticsOutput');
+    const copyButton = document.getElementById('copyCompassDiagnostics');
+    const copyStatus = document.getElementById('compassDiagnosticsCopyStatus');
+    const refreshOutput = () => {
+        if (output) output.value = JSON.stringify(read(), null, 2);
+    };
+    if (panel && output) {
+        panel.addEventListener('toggle', () => {
+            if (panel.open) refreshOutput();
+        });
+    }
+    if (copyButton && output) {
+        copyButton.addEventListener('click', async () => {
+            refreshOutput();
+            const value = output.value;
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(value);
+                    if (copyStatus) copyStatus.textContent = 'Copied — paste it into our chat.';
+                    return;
+                }
+            } catch {
+                // Use the selection fallback below on browsers without clipboard access.
+            }
+            output.focus();
+            output.select();
+            output.setSelectionRange(0, output.value.length);
+            let copied = false;
+            try { copied = document.execCommand('copy'); } catch {}
+            if (copyStatus) {
+                copyStatus.textContent = copied
+                    ? 'Copied — paste it into our chat.'
+                    : 'Log selected — tap and hold, then choose Copy.';
+            }
+        });
+    }
+    refreshOutput();
 })();
 
 const windGauge = document.querySelector('.wind-hud-vector');
