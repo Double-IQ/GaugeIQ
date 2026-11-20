@@ -6026,7 +6026,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-cells{transition:none}
 .rainfall-radar-cell{stroke:rgba(222,248,255,.28);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.035;transform-box:fill-box;transform-origin:center;animation:rainfall-echo-sweep 7s linear infinite;animation-delay:var(--rainfall-radar-phase,0s)}
 /* The sweep sector spans 59 degrees, so keep echoes bright for the same 59/360 of its 7-second rotation. */
-@keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}16.4%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}24%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
+/* Keep each echo illuminated for five seconds of the seven-second sweep cycle, then fade it away. */
+@keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}71.4%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}82%{opacity:.12;filter:url(#rainfallRadarGlow) brightness(.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
 @media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.72;filter:url(#rainfallRadarGlow)}.rainfall-radar-cells{transition:none}}
 /* The ECMWF raster rotates beneath the fixed scope overlay in compass mode. */
 @media(prefers-reduced-motion:reduce){.rainfall-radar-map{transition:none}}
