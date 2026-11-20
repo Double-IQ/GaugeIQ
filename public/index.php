@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261120-radar-wind-gradient-gap20">
+<link rel="stylesheet" href="css/app.css?v=20261120-radar-scan-range">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -1122,7 +1122,7 @@ if ($current && !empty($current['observed_at'])) {
         $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? array_values(array_filter($rainfallNowcast['frames'], 'is_array')) : [];
         $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
         $radarFrame = $nowcastFrames[0] ?? [];
-        $radarCurrentFrame = is_array($rainfallNowcast['current_frame'] ?? null) ? $rainfallNowcast['current_frame'] : [];
+        $radarCurrentFrame = is_array($rainfallNowcast['current_frame'] ?? null) && $rainfallNowcast['current_frame'] !== [] ? $rainfallNowcast['current_frame'] : null;
         $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
@@ -1214,7 +1214,6 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
-                    <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
                     <div class="rainfall-radar-plot">
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
@@ -1246,9 +1245,7 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
-                    <?php if ($radarCells === []): ?>
-                        <p class="rainfall-radar-empty"><?= !empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.') ?></p>
-                    <?php endif; ?>
+                    <p class="rainfall-radar-empty" id="rainfallRadarEmpty" <?= $radarCells !== [] ? 'hidden' : '' ?>><?= !empty($radarFrame) && array_key_exists('rain_cells', $radarFrame) ? 'No wet grid cells forecast within 100 km at this step.' : (!empty($radarFrame) ? 'Spatial radar detail will appear after the next scheduled ECMWF refresh.' : 'Waiting for the next scheduled ECMWF forecast scan.') ?></p>
                 </div>
                 <div class="rainfall-radar-readouts">
                     <div class="rainfall-radar-readout-primary">
@@ -1597,7 +1594,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261116-compass-flow-restore"></script>
+<script src="js/app.js?v=20261120-radar-scan-range"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261116-section04-fixed-sun-v1"></script>
 </body>
