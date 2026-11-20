@@ -536,7 +536,7 @@ protocolOptions.fileReaderConfig = {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            frameTimeLabel.textContent = (frame.type === 'past' ? 'Past' : 'Forecast') + ' · ' + label;
+            frameTimeLabel.textContent = label;
             if (frameProgressBar) {
                 frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
                 frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 4 · ' + label);
