@@ -6948,3 +6948,61 @@ body.gaugeiq-menu-open{overflow:hidden}
     font-size:9px;
   }
 }
+
+
+/* Place ONLINE in the actual Rain Radar title row, not alongside the lower
+   scan/compass controls. This keeps it at the card's upper-right on mobile. */
+.rainfall-radar-card .rainfall-nowcast-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  column-gap:12px;
+  row-gap:9px;
+}
+.rainfall-radar-card .rainfall-radar-title{
+  flex:1 1 auto;
+  min-width:0;
+}
+.rainfall-radar-card > .wind-hud-heading > .rainfall-radar-system-status{
+  order:0;
+  flex:0 0 auto;
+  align-self:flex-start;
+  margin:0 0 0 auto;
+  white-space:nowrap;
+}
+.rainfall-radar-card .rainfall-radar-compass-controls{
+  order:1;
+  flex:1 1 100%;
+  width:100%;
+  margin:0;
+}
+.rainfall-radar-card .rainfall-radar-status-controls{
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-end;
+}
+.rainfall-radar-card .rainfall-radar-status-controls #rainfallRadarCompassStatus{
+  white-space:nowrap;
+}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-nowcast-heading{
+    align-items:flex-start;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .rainfall-radar-card > .wind-hud-heading > .rainfall-radar-system-status{
+    align-self:flex-start;
+    margin-left:auto;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    flex:1 1 100%;
+    width:100%;
+    flex-wrap:nowrap;
+    justify-content:space-between;
+  }
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex-direction:column;
+    align-items:flex-end;
+  }
+}
