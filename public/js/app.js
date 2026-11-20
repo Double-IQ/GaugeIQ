@@ -2281,7 +2281,9 @@ updateNetworkDiagnostics();
             const radians = bearing * Math.PI / 180;
             const spot = document.createElementNS(svgNs, 'circle');
             const radius = Math.max(4, Math.min(7, 4 + Math.log10(1 + Math.max(0, amount)) * 2));
-            const phase = (((bearing - 59 + 360) % 360) / 360 * 7);
+            // Use a negative delay so each echo is already at the correct point in its cycle
+            // when the rotating sweep reaches its bearing (rather than waiting for a positive delay).
+            const phase = -((((bearing - 59 + 360) % 360) / 360) * 7);
             spot.setAttribute('class', 'rainfall-radar-cell rainfall-radar-grid-cell');
             spot.setAttribute('data-bearing', bearing.toFixed(2));
             spot.setAttribute('data-distance', distance.toFixed(1));
@@ -2429,7 +2431,8 @@ updateNetworkDiagnostics();
     function syncEchoSweepPhases(heading) {
         radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
             const bearing = normalize(Number(cell.dataset.bearing) - heading - 59);
-            if (bearing !== null) cell.style.animationDelay = (bearing / 360 * 7).toFixed(3) + 's';
+            if (bearing !== null) // Keep compass-adjusted echoes on the same sweep phase as north-up echoes.
+            cell.style.animationDelay = (-bearing / 360 * 7).toFixed(3) + 's';
         });
     }
 
