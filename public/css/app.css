@@ -6723,3 +6723,55 @@ body.gaugeiq-menu-open{overflow:hidden}
   }
 }
 .wind-hud-vector-labels .wind-hud-compass-heading{fill:#8bdcff;font-size:13px;letter-spacing:.2px}
+
+
+/* Keep Rain Radar scan/range selectors beside the compass control. */
+.rainfall-radar-compass-controls{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:0;
+}
+.rainfall-radar-selector-button{
+  appearance:none;
+  -webkit-appearance:none;
+  min-height:32px;
+  padding:0 9px;
+  border:1px solid rgba(104,210,255,.34);
+  border-radius:7px;
+  background:rgba(53,196,235,.08);
+  color:#bfeaff;
+  font:inherit;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.04em;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.rainfall-radar-selector-button.is-active{
+  background:rgba(53,196,235,.2);
+  border-color:rgba(104,210,255,.8);
+  color:#fff;
+}
+.rainfall-radar-selector-button:focus-visible,
+.rainfall-radar-compass-button:focus-visible{
+  outline:2px solid #68d2ff;
+  outline-offset:2px;
+}
+.rainfall-radar-range-ring,
+.rainfall-radar-range-label{transition:opacity .15s ease}
+.rainfall-radar-timeline[hidden],
+.rainfall-radar-consistency[hidden]{display:none!important}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    width:100%;
+    justify-content:flex-start;
+    gap:7px;
+    margin-top:2px;
+  }
+  .rainfall-radar-selector-button,
+  .rainfall-radar-compass-button{min-height:31px;padding:0 8px;font-size:9px}
+}
