@@ -6015,7 +6015,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-card .rainfall-nowcast-source{padding:6px 8px;border:1px solid rgba(104,210,255,.25);border-radius:6px;background:rgba(53,196,235,.08);color:#9bd0ff;font-size:9px;font-weight:800;letter-spacing:.1em}
 .rainfall-radar-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(150px,.88fr);gap:16px;align-items:center;margin-top:14px}
 .rainfall-radar-scope-wrap{min-width:0;display:flex;flex-direction:column;align-items:center}
-.rainfall-radar-topline,.rainfall-radar-section-label{width:100%;display:flex;justify-content:space-between;gap:8px;color:#83a8bd;font-size:9px;font-weight:800;letter-spacing:.1em}
+.rainfall-radar-topline{width:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:3px;color:#83a8bd;font-size:9px;font-weight:800;letter-spacing:.1em}.rainfall-radar-topline .rainfall-radar-range{display:block}.rainfall-radar-section-label{width:100%;display:flex;justify-content:space-between;gap:8px;color:#83a8bd;font-size:9px;font-weight:800;letter-spacing:.1em}
 .rainfall-radar-plot{position:relative;width:min(100%,350px);aspect-ratio:1;margin:4px auto 0;overflow:visible}
 .rainfall-radar-plot>.rainfall-radar-map.maplibregl-map{position:absolute;z-index:0;left:6.25%;top:6.25%;width:87.5%;height:87.5%;overflow:hidden;border-radius:50%;background:radial-gradient(circle at 50% 50%,#102E3B 0%,#07131D 100%);transform:rotate(0deg);transform-origin:50% 50%;transition:transform 180ms ease-out;will-change:transform}
 .rainfall-radar-map .maplibregl-canvas-container,.rainfall-radar-map .maplibregl-canvas{border-radius:50%}
@@ -6110,7 +6110,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Device compass control for the circular rainfall outlook radar. */
-.rainfall-radar-compass-controls{display:flex;flex-direction:column;align-items:flex-end;gap:20px;flex-wrap:nowrap;justify-content:flex-start}
+.rainfall-radar-compass-controls{display:flex;flex-direction:column;align-items:flex-end;gap:20px;flex-wrap:nowrap;justify-content:flex-start;margin-top:8px}
 .rainfall-radar-compass-button{appearance:none;-webkit-appearance:none;min-height:32px;padding:0 9px;border:1px solid rgba(104,210,255,.34);border-radius:7px;background:rgba(53,196,235,.08);color:#bfeaff;font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .rainfall-radar-compass-button.is-enabled{background:rgba(53,196,235,.2);border-color:rgba(104,210,255,.8);color:#fff}
 .rainfall-radar-compass-button:disabled{opacity:.5;cursor:not-allowed}
