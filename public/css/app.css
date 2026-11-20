@@ -6008,6 +6008,13 @@ body.gaugeiq-menu-open{overflow:hidden}
   box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
 }
 .rainfall-radar-card .rainfall-nowcast-heading{align-items:center}
+.rainfall-radar-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.rainfall-radar-title-row .label{margin:0}
+.rainfall-radar-system-status{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.08em;line-height:1.2;white-space:nowrap}
+.rainfall-radar-system-status i{display:block;width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
+.rainfall-radar-system-status.is-online{color:#42d392;background:rgba(66,211,146,.09);border-color:rgba(66,211,146,.32)}
+.rainfall-radar-system-status.is-no-data{color:#e7b84d;background:rgba(231,184,77,.09);border-color:rgba(231,184,77,.32)}
+.rainfall-radar-system-status.is-offline{color:#f07878;background:rgba(240,120,120,.09);border-color:rgba(240,120,120,.32)}
 .rainfall-radar-card .rainfall-nowcast-heading h2,.rainfall-radar-card .rainfall-nowcast-heading .label{color:var(--text);font-size:22px;font-weight:750;letter-spacing:-.02em}
 .rainfall-radar-card .rainfall-nowcast-source{padding:6px 8px;border:1px solid rgba(104,210,255,.25);border-radius:6px;background:rgba(53,196,235,.08);color:#9bd0ff;font-size:9px;font-weight:800;letter-spacing:.1em}
 .rainfall-radar-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(150px,.88fr);gap:16px;align-items:center;margin-top:14px}
