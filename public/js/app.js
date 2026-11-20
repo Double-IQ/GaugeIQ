@@ -2283,10 +2283,15 @@ updateNetworkDiagnostics();
     if (!radarEchoes || !radarCompassButton) return;
 
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
+    const permissionStorageKey = 'gaugeiq-rain-radar-compass-permission-granted-v1';
     const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
         && typeof DeviceOrientationEvent.requestPermission === 'function';
+    let permissionPreviouslyGranted = false;
     let enabled = false;
-    try { enabled = !permissionApi && localStorage.getItem(storageKey) === 'true'; } catch {}
+    try {
+        permissionPreviouslyGranted = localStorage.getItem(permissionStorageKey) === 'true';
+        enabled = !permissionApi && localStorage.getItem(storageKey) === 'true';
+    } catch {}
     let listening = false;
     let nativeHeadingSeen = false;
     let currentHeading = null;
@@ -2376,9 +2381,18 @@ updateNetworkDiagnostics();
             return;
         }
         try {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function' && !permissionPreviouslyGranted) {
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission !== 'granted') throw new Error('Compass permission was not granted.');
+                // iOS keeps the native grant for this site. Remember our own
+                // successful request so toggling the radar compass does not
+                // call requestPermission() again on every enable.
+                try {
+                    localStorage.setItem(permissionStorageKey, 'true');
+                    permissionPreviouslyGranted = true;
+                } catch {
+                    // Permission remains valid for this session if storage is unavailable.
+                }
             }
             enabled = true;
             try { localStorage.setItem(storageKey, 'true'); } catch {}
