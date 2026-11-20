@@ -83,6 +83,15 @@ final class WeatherMapCacheService
                     continue;
                 }
 
+                $futureTimestampCount = count(array_filter(
+                    $timestamps,
+                    static fn(int $timestamp): bool => $timestamp > $now
+                ));
+                if ($futureTimestampCount < self::FUTURE_FRAME_COUNT) {
+                    $metadataErrors[] = $metadataFile . ' does not yet contain two future forecast timestamps';
+                    continue;
+                }
+
                 $referenceTimestamp = strtotime($referenceTime);
                 if ($referenceTimestamp === false) {
                     $metadataErrors[] = $metadataFile . ' has an unreadable reference_time';
