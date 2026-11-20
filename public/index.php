@@ -1198,15 +1198,13 @@ if ($current && !empty($current['observed_at'])) {
         <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
             <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
-                    <div class="rainfall-radar-title-row">
-                        <p class="label">Rain Radar</p>
-                        <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
-                            <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
-                        </span>
-                    </div>
+                    <p class="label">Rain Radar</p>
                     <div class="wind-hud-subtitle">6 HOUR OUTLOOK</div>
                 </div>
                 <div class="rainfall-radar-compass-controls">
+                    <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
+                        <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
+                    </span>
                     <button type="button" class="rainfall-radar-compass-button" id="rainfallRadarCompassButton" aria-pressed="false">Enable Compass</button>
                     <span id="rainfallRadarCompassStatus" role="status" aria-live="polite">North-up</span>
                 </div>
