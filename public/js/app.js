@@ -206,6 +206,12 @@ const WIND_COMPASS_STORAGE_KEY = 'gaugeiq-compass-enabled-v2';
 // Keep the iOS permission grant separate from the user's on/off preference.
 // Disabling the compass must not make the next Enable action request permission again.
 const WIND_COMPASS_PERMISSION_KEY = 'gaugeiq-compass-permission-granted-v1';
+let windCompassPermissionPreviouslyGranted = false;
+try {
+    windCompassPermissionPreviouslyGranted = localStorage.getItem(WIND_COMPASS_PERMISSION_KEY) === 'true';
+} catch {
+    // Permission can still be requested for this session if storage is unavailable.
+}
 const WIND_COMPASS_SMOOTHING = 0.18;
 const WIND_COMPASS_NORTH_BUFFER = 6;
 
@@ -354,17 +360,19 @@ async function enableWindCompass() {
 
     try {
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // Call from this Enable-button gesture every time. Once iOS has
-            // granted access, it should return "granted" without showing the
-            // native prompt again, while still activating sensor delivery.
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Compass permission was not granted.');
-            }
-            try {
-                localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
-            } catch {
-                // Compass can still work for this session if storage is unavailable.
+            // Ask only until this site has successfully received permission.
+            // The native iOS grant and this shared flag are reused by both compasses.
+            if (!windCompassPermissionPreviouslyGranted) {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    throw new Error('Compass permission was not granted.');
+                }
+                try {
+                    localStorage.setItem(WIND_COMPASS_PERMISSION_KEY, 'true');
+                    windCompassPermissionPreviouslyGranted = true;
+                } catch {
+                    // Compass can still work for this session if storage is unavailable.
+                }
             }
         }
 
@@ -2283,10 +2291,20 @@ updateNetworkDiagnostics();
     if (!radarEchoes || !radarCompassButton) return;
 
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
+    const permissionStorageKey = 'gaugeiq-compass-permission-granted-v1';
+    const legacyPermissionStorageKey = 'gaugeiq-rain-radar-compass-permission-granted-v1';
     const permissionApi = typeof DeviceOrientationEvent !== 'undefined'
         && typeof DeviceOrientationEvent.requestPermission === 'function';
+    let permissionPreviouslyGranted = false;
     let enabled = false;
-    try { enabled = !permissionApi && localStorage.getItem(storageKey) === 'true'; } catch {}
+    try {
+        permissionPreviouslyGranted = localStorage.getItem(permissionStorageKey) === 'true'
+            || localStorage.getItem(legacyPermissionStorageKey) === 'true';
+        if (permissionPreviouslyGranted) {
+            localStorage.setItem(permissionStorageKey, 'true');
+        }
+        enabled = !permissionApi && localStorage.getItem(storageKey) === 'true';
+    } catch {}
     let listening = false;
     let nativeHeadingSeen = false;
     let currentHeading = null;
@@ -2376,9 +2394,19 @@ updateNetworkDiagnostics();
             return;
         }
         try {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function' && !permissionPreviouslyGranted) {
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission !== 'granted') throw new Error('Compass permission was not granted.');
+                // iOS keeps the native grant for this site. Remember our own
+                // successful request so toggling the radar compass does not
+                // call requestPermission() again on every enable.
+                try {
+                    localStorage.setItem(permissionStorageKey, 'true');
+                    localStorage.setItem(legacyPermissionStorageKey, 'true');
+                    permissionPreviouslyGranted = true;
+                } catch {
+                    // Permission remains valid for this session if storage is unavailable.
+                }
             }
             enabled = true;
             try { localStorage.setItem(storageKey, 'true'); } catch {}

@@ -7006,3 +7006,35 @@ body.gaugeiq-menu-open{overflow:hidden}
     align-items:flex-end;
   }
 }
+
+
+/* Keep the Rain Radar scan-mode toggle on the same lower control row as
+   Enable Compass; the range selector remains stacked at the left. */
+.rainfall-radar-card .rainfall-radar-status-controls{
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.rainfall-radar-card .rainfall-radar-status-controls #rainfallRadarScanButton{
+  align-self:center;
+}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:nowrap;
+    gap:6px;
+  }
+  .rainfall-radar-card .rainfall-radar-status-controls #rainfallRadarCompassStatus{
+    display:none;
+  }
+}
+@media(max-width:390px){
+  .rainfall-radar-card .rainfall-radar-status-controls{
+    flex-direction:row;
+    align-items:center;
+  }
+}
