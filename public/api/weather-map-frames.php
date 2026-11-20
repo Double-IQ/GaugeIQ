@@ -36,8 +36,8 @@ try {
     // Heal a stale schedule during a normal map request. This is especially
     // important when a deployment changes the ECMWF model path: the old rows
     // must be replaced before the strict public response validation runs.
-    // The cache service skips the metadata request when all four past-frame
-    // rows were refreshed within the configured interval.
+    // The cache service maintains four past frames for this animation and
+    // two future frames for Rain Radar. Only past frames are exposed here.
     $weatherMapCache = new WeatherMapCacheService($pdo, $config);
     // An authenticated diagnostic request explicitly bypasses the normal
     // hourly schedule cache so operators can verify newly deployed scheduler
@@ -45,9 +45,10 @@ try {
     $weatherMapCache->refreshScheduleIfDue($diagnosticAuthorized ? 0 : 3600);
 
     $stmt = $pdo->query(
-        'SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
+        "SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
          FROM gaugeiq_weather_map_frames
-         ORDER BY slot_id ASC'
+         WHERE frame_type = 'past'
+         ORDER BY slot_id ASC"
     );
     $frames = [];
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
