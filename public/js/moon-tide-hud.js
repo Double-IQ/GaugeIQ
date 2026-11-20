@@ -28,13 +28,95 @@
     $('mthMoonDistance').textContent = Math.round(distance).toLocaleString() + ' KM';
     $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {timeZone:zone,day:'2-digit',month:'short'});
     const disc = $('mthMoonDisc');
-    if (disc) {
-        disc.style.setProperty('--mth-phase', String(phase));
-        disc.style.setProperty('--mth-illumination', String(illumination));
-        disc.style.setProperty('--mth-shadow-width', (50 * (1 - illumination)).toFixed(1) + '%');
-        disc.style.setProperty('--mth-shadow-x', (phase < 0.02 || phase > 0.98) ? '50%' : (phase < 0.5 ? '0%' : '100%'));
-        disc.dataset.phase = phase.toFixed(4);
+    function renderLunarDisc(target, lunarPhase, litFraction) {
+        // Render the visible lunar hemisphere as a shaded sphere. The light
+        // vector follows the synodic phase; waxing illumination is on the
+        // left in the Southern Hemisphere, waning illumination on the right.
+        const size = 320;
+        let canvas = target.querySelector('canvas');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            canvas.setAttribute('aria-hidden', 'true');
+            Object.assign(canvas.style, {
+                position: 'absolute', inset: '0', width: '100%', height: '100%',
+                display: 'block', borderRadius: '50%'
+            });
+            target.replaceChildren(canvas);
+        }
+        const context = canvas.getContext('2d', { alpha: true });
+        if (!context) return;
+        const image = context.createImageData(size, size);
+        const pixels = image.data;
+        const centre = (size - 1) / 2;
+        const radius = size * 0.485;
+
+        // Stable, deterministic crater positions keep the lunar surface
+        // recognisable and prevent texture flicker when the phase changes.
+        let seed = 73129;
+        const random = () => {
+            seed = (seed * 16807) % 2147483647;
+            return (seed - 1) / 2147483646;
+        };
+        const craters = [];
+        for (let i = 0; i < 42; i++) {
+            const x = (random() * 1.5) - 0.75;
+            const y = (random() * 1.5) - 0.75;
+            if (x * x + y * y < 0.78) {
+                craters.push({ x, y, r: 0.018 + random() * 0.065 });
+            }
+        }
+
+        const angle = Math.PI * 2 * lunarPhase;
+        const lightX = -Math.sin(angle);
+        const lightZ = -Math.cos(angle);
+        for (let y = 0; y < size; y++) {
+            const ny = (y - centre) / radius;
+            for (let x = 0; x < size; x++) {
+                const nx = (x - centre) / radius;
+                const radial = nx * nx + ny * ny;
+                if (radial > 1) continue;
+                const nz = Math.sqrt(Math.max(0, 1 - radial));
+                const diffuse = Math.max(0, nx * lightX + nz * lightZ);
+                const limb = 0.78 + 0.22 * nz;
+                const ambient = 0.035;
+                const light = (ambient + (1 - ambient) * diffuse) * limb;
+
+                const mare = 0.035 * Math.sin(nx * 17 + ny * 9)
+                    + 0.025 * Math.sin(nx * 31 - ny * 23)
+                    + 0.018 * Math.cos(ny * 39 + nx * 7);
+                let craterTone = 0;
+                for (const crater of craters) {
+                    const dx = (nx - crater.x) / crater.r;
+                    const dy = (ny - crater.y) / crater.r;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 1.25) {
+                        const bowl = Math.exp(-Math.pow(distance / 0.58, 2));
+                        const rim = Math.exp(-Math.pow((distance - 0.78) / 0.12, 2));
+                        craterTone += -0.16 * bowl + 0.13 * rim;
+                    }
+                }
+                craterTone = Math.max(-0.28, Math.min(0.2, craterTone));
+                const albedo = Math.max(0.58, Math.min(1.08, 0.91 + mare + craterTone));
+                const index = (y * size + x) * 4;
+                pixels[index] = Math.round(202 * albedo * light);
+                pixels[index + 1] = Math.round(205 * albedo * light);
+                pixels[index + 2] = Math.round(194 * albedo * light);
+                pixels[index + 3] = 255;
+            }
+        }
+        context.putImageData(image, 0, 0);
+        target.style.setProperty('--mth-phase', String(lunarPhase));
+        target.style.setProperty('--mth-illumination', String(litFraction));
+        // Disable the old flat CSS shadow mask; the canvas now draws the
+        // actual curved terminator and the illuminated surface together.
+        target.style.setProperty('--mth-shadow-width', '0%');
+        target.dataset.phase = lunarPhase.toFixed(4);
+        target.setAttribute('role', 'img');
+        target.setAttribute('aria-label', phaseName + ', ' + (litFraction * 100).toFixed(1) + '% illuminated');
     }
+    if (disc) renderLunarDisc(disc, phase, illumination);
     function solarEvent(day, latitude, longitude, sunrise) {
         const n = Math.floor((Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate()) - Date.UTC(day.getUTCFullYear(),0,0)) / 86400000);
         const lngHour = longitude / 15;
