@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261120-radar-sweep-alignment">
+<link rel="stylesheet" href="css/app.css?v=20261120-radar-trail-fade">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -1223,7 +1223,7 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
-                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#26D9F8" stop-opacity="0.22"/><stop offset="55%" stop-color="#26D9F8" stop-opacity="0.07"/><stop offset="100%" stop-color="#26D9F8" stop-opacity="0.005"/></linearGradient>
+                            <linearGradient id="rainfallRadarSweepGradient" gradientUnits="userSpaceOnUse" x1="160" y1="20" x2="280" y2="88"><stop offset="0%" stop-color="#26D9F8" stop-opacity="0.008"/><stop offset="28%" stop-color="#26D9F8" stop-opacity="0.025"/><stop offset="58%" stop-color="#26D9F8" stop-opacity="0.075"/><stop offset="82%" stop-color="#26D9F8" stop-opacity="0.145"/><stop offset="100%" stop-color="#26D9F8" stop-opacity="0.2"/></linearGradient>
                             <linearGradient id="rainfallRadarSweepLine" gradientUnits="userSpaceOnUse" x1="160" y1="160" x2="280" y2="88"><stop offset="0%" stop-color="#B8F5FF" stop-opacity="0.95"/><stop offset="62%" stop-color="#42DDF8" stop-opacity="0.28"/><stop offset="100%" stop-color="#42DDF8" stop-opacity="0.02"/></linearGradient>
                             <filter id="rainfallRadarSweepGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
                             <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
