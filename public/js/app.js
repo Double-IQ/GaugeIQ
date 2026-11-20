@@ -2527,6 +2527,9 @@ updateNetworkDiagnostics();
         currentHeading = null;
         targetHeading = null;
         radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
+        // Restore the default north-up sweep timing as well as the map rotation.
+        // Otherwise each dot keeps the animation delay from the last compass heading.
+        syncEchoSweepPhases(0);
         setStatus('North-up');
         updateButton();
     }
