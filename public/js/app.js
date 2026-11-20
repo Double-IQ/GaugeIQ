@@ -2181,6 +2181,7 @@ updateNetworkDiagnostics();
     function renderCells(frame) {
         const range = ranges[rangeIndex];
         const cells = Array.isArray(frame?.rain_cells) ? frame.rain_cells : [];
+        let visibleCount = 0;
         echoes.replaceChildren();
         cells.forEach(cell => {
             const distance = Number(cell.distance_km);
@@ -2207,7 +2208,15 @@ updateNetworkDiagnostics();
             title.textContent = amount.toFixed(2) + ' mm/h at ' + distance.toFixed(1) + ' km';
             spot.appendChild(title);
             echoes.appendChild(spot);
+            visibleCount++;
         });
+        const empty = byId('rainfallRadarEmpty');
+        if (empty) {
+            empty.textContent = scanMode === 'current'
+                ? 'No wet grid cells in the latest past ECMWF frame within ' + range + ' km.'
+                : 'No wet grid cells forecast within ' + range + ' km at this step.';
+            empty.hidden = visibleCount > 0;
+        }
     }
 
     function updateRange() {
@@ -2243,12 +2252,6 @@ updateNetworkDiagnostics();
         document.querySelectorAll('.rainfall-radar-timeline,.rainfall-radar-consistency').forEach(el => {
             el.hidden = current;
         });
-        const empty = byId('rainfallRadarEmpty');
-        if (empty) {
-            const hasCells = Array.isArray(frame?.rain_cells) && frame.rain_cells.length > 0;
-            empty.textContent = current ? 'No wet grid cells in the latest past ECMWF frame.' : 'No wet grid cells forecast at this step.';
-            empty.hidden = hasCells;
-        }
         renderCells(frame);
     }
 
