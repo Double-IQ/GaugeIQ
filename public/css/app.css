@@ -6775,3 +6775,33 @@ body.gaugeiq-menu-open{overflow:hidden}
   .rainfall-radar-selector-button,
   .rainfall-radar-compass-button{min-height:31px;padding:0 8px;font-size:9px}
 }
+
+/* Rain Radar mobile header: keep all controls in a horizontal, wrapping row
+   below the title instead of inheriting the older vertical compass stack. */
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-nowcast-heading{
+    flex-wrap:wrap;
+    align-items:flex-start;
+    justify-content:flex-start;
+    row-gap:10px;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-controls{
+    display:flex;
+    flex:1 1 100%;
+    width:100%;
+    flex-direction:row;
+    align-items:center;
+    align-content:flex-start;
+    justify-content:flex-start;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:0;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-controls > *{
+    align-self:center;
+  }
+  .rainfall-radar-card .rainfall-radar-compass-button,
+  .rainfall-radar-card #rainfallRadarCompassStatus{
+    text-align:center;
+  }
+}
