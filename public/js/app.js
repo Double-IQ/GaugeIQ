@@ -197,6 +197,38 @@ function initClimateGraphSelector() {
 initClimateGraphSelector();
 
 
+// Local-only compass diagnostics for investigating iOS Home Screen permission persistence.
+// Entries stay in this browser's localStorage and are exposed for manual inspection.
+(() => {
+    const key = 'gaugeiq-compass-diagnostics-v1';
+    const read = () => {
+        try {
+            const value = JSON.parse(localStorage.getItem(key) || '[]');
+            return Array.isArray(value) ? value : [];
+        } catch { return []; }
+    };
+    const record = (event, details = {}) => {
+        try {
+            const entries = read();
+            entries.push({ at: new Date().toISOString(), event, ...details });
+            localStorage.setItem(key, JSON.stringify(entries.slice(-60)));
+        } catch { /* Diagnostics must never interfere with compass operation. */ }
+    };
+    window.GaugeIQCompassDiagnostics = {
+        get: read,
+        clear: () => { try { localStorage.removeItem(key); } catch {} }
+    };
+    const standalone = window.matchMedia?.('(display-mode: standalone)').matches === true
+        || window.navigator.standalone === true;
+    record('app-launch', {
+        standalone,
+        displayMode: standalone ? 'standalone' : 'browser',
+        requestPermissionAvailable: typeof DeviceOrientationEvent !== 'undefined'
+            && typeof DeviceOrientationEvent.requestPermission === 'function'
+    });
+    window.gaugeIQRecordCompassDiagnostic = record;
+})();
+
 const windGauge = document.querySelector('.wind-hud-vector');
 const windCompassStatus = document.getElementById('windCompassStatus');
 const windCompassButton = document.getElementById('windCompassButton');
@@ -318,6 +350,14 @@ function applyWindCompassHeading(heading) {
 
 function handleWindDeviceOrientation(event) {
     if (!windCompassEnabled) return;
+    if (!window.__gaugeIQWindOrientationSeen) {
+        window.__gaugeIQWindOrientationSeen = true;
+        window.gaugeIQRecordCompassDiagnostic?.('wind-orientation-first-event', {
+            absolute: event.absolute === true,
+            nativeHeadingAvailable: Number.isFinite(event.webkitCompassHeading),
+            alphaAvailable: Number.isFinite(event.alpha)
+        });
+    }
 
     let heading = null;
 
@@ -363,7 +403,9 @@ async function enableWindCompass() {
             // iOS requires this call from each user-initiated Enable tap to
             // activate sensor delivery. A previous grant is returned silently
             // by iOS; it does not show the permission prompt again.
+            window.gaugeIQRecordCompassDiagnostic?.('wind-permission-request');
             const permission = await DeviceOrientationEvent.requestPermission();
+            window.gaugeIQRecordCompassDiagnostic?.('wind-permission-result', { result: permission });
             if (permission !== 'granted') {
                 throw new Error('Compass permission was not granted.');
             }
@@ -394,6 +436,7 @@ async function enableWindCompass() {
             windCompassStatus.textContent = 'Finding heading…';
         }
     } catch (error) {
+        window.gaugeIQRecordCompassDiagnostic?.('wind-enable-error', { message: error instanceof Error ? error.message : String(error) });
         if (windCompassStatus) {
             windCompassStatus.hidden = false;
             windCompassStatus.textContent = error instanceof Error ? error.message : 'Compass unavailable';
@@ -2361,6 +2404,14 @@ updateNetworkDiagnostics();
 
     function handleOrientation(event) {
         if (!enabled) return;
+        if (!window.__gaugeIQRadarOrientationSeen) {
+            window.__gaugeIQRadarOrientationSeen = true;
+            window.gaugeIQRecordCompassDiagnostic?.('radar-orientation-first-event', {
+                absolute: event.absolute === true,
+                nativeHeadingAvailable: Number.isFinite(event.webkitCompassHeading),
+                alphaAvailable: Number.isFinite(event.alpha)
+            });
+        }
         let heading = null;
         if (Number.isFinite(event.webkitCompassHeading)) {
             nativeHeadingSeen = true;
@@ -2396,7 +2447,9 @@ updateNetworkDiagnostics();
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
                 // Reinvoke from the Enable-button gesture so iOS activates
                 // sensor delivery. An existing native grant is reused silently.
+                window.gaugeIQRecordCompassDiagnostic?.('radar-permission-request');
                 const permission = await DeviceOrientationEvent.requestPermission();
+                window.gaugeIQRecordCompassDiagnostic?.('radar-permission-result', { result: permission });
                 if (permission !== 'granted') throw new Error('Compass permission was not granted.');
                 try {
                     localStorage.setItem(permissionStorageKey, 'true');
@@ -2415,6 +2468,7 @@ updateNetworkDiagnostics();
             setStatus('Finding heading…');
             updateButton();
         } catch (error) {
+            window.gaugeIQRecordCompassDiagnostic?.('radar-enable-error', { message: error instanceof Error ? error.message : String(error) });
             setStatus(error instanceof Error ? error.message : 'Compass unavailable');
             updateButton();
         }
