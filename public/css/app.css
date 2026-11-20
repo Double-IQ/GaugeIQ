@@ -1317,7 +1317,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Match the forecast preview card to the temperature card's dark blue glass styling. */
 .forecast-preview-card{
   color:#edf6ff;
-  background:radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
   border:1px solid rgba(104,163,218,.34);
   border-radius:18px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
@@ -6567,13 +6567,6 @@ body.gaugeiq-menu-open{overflow:hidden}
    precipitation echo palette untouched for contrast and data readability. */
 .rainfall-radar-card{
   background:radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
-}
-:root[data-theme="light"] .rainfall-radar-card{
-  color:#26313f!important;
-  background:radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.96),transparent 52%),linear-gradient(145deg,#f8f9fa 0%,#e7eaee 58%,#dce1e7 100%)!important;
-  border:1px solid #c3cbd5!important;
-  border-radius:18px;
-  box-shadow:0 9px 25px rgba(38,49,63,.11),inset 0 1px 0 rgba(255,255,255,.95)!important;
 }
 :root[data-theme="light"] .moon-tide-hud-card{
   --mth-bg:#f8f9fa;
