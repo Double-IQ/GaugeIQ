@@ -1317,7 +1317,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Match the forecast preview card to the temperature card's dark blue glass styling. */
 .forecast-preview-card{
   color:#edf6ff;
-  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%);
+  background:radial-gradient(ellipse at 50% -20%,rgba(18,91,145,.10),transparent 54%),linear-gradient(145deg,#071629 0%,#030d1b 52%,#010711 100%);
   border:1px solid rgba(104,163,218,.34);
   border-radius:18px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17);
@@ -6107,7 +6107,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 
 /* Device compass control for the circular rainfall outlook radar. */
-.rainfall-radar-compass-controls{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-wrap:nowrap;justify-content:flex-start}
+.rainfall-radar-compass-controls{display:flex;flex-direction:column;align-items:flex-end;gap:15px;flex-wrap:nowrap;justify-content:flex-start}
 .rainfall-radar-compass-button{appearance:none;-webkit-appearance:none;min-height:32px;padding:0 9px;border:1px solid rgba(104,210,255,.34);border-radius:7px;background:rgba(53,196,235,.08);color:#bfeaff;font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .rainfall-radar-compass-button.is-enabled{background:rgba(53,196,235,.2);border-color:rgba(104,210,255,.8);color:#fff}
 .rainfall-radar-compass-button:disabled{opacity:.5;cursor:not-allowed}
@@ -6361,7 +6361,7 @@ body.gaugeiq-menu-open{overflow:hidden}
     align-items:flex-end;
     justify-content:flex-start;
     flex-wrap:nowrap;
-    gap:10px;
+    gap:15px;
   }
   .rainfall-radar-card .rainfall-radar-compass-button,
   .rainfall-radar-card #rainfallRadarCompassStatus{
