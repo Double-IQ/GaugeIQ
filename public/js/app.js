@@ -2156,6 +2156,120 @@ async function updateNetworkDiagnostics() {
 updateNetworkDiagnostics();
 
 
+// Rain Radar selectors reuse the scheduled ECMWF payload: the current mode
+// uses the most recent past map frame, while forecast mode uses the +3h frame.
+(() => {
+    const dataNode = document.getElementById('rainfallRadarScanData');
+    const echoes = document.getElementById('rainfallRadarEchoes');
+    const scanButton = document.getElementById('rainfallRadarScanButton');
+    const rangeButton = document.getElementById('rainfallRadarRangeButton');
+    if (!dataNode || !echoes || !scanButton || !rangeButton) return;
+
+    let scans;
+    try { scans = JSON.parse(dataNode.textContent || '{}'); } catch { return; }
+    const ranges = [25, 50, 100];
+    let rangeIndex = 2;
+    let scanMode = 'forecast';
+    const svgNs = 'http://www.w3.org/2000/svg';
+    const byId = id => document.getElementById(id);
+    const amountOf = frame => Number(frame?.local_precipitation_mm_per_hour ?? frame?.local_precipitation_mm);
+    const displayTime = value => {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    };
+
+    function renderCells(frame) {
+        const range = ranges[rangeIndex];
+        const cells = Array.isArray(frame?.rain_cells) ? frame.rain_cells : [];
+        echoes.replaceChildren();
+        cells.forEach(cell => {
+            const distance = Number(cell.distance_km);
+            const bearing = Number(cell.bearing_degrees);
+            const amount = Number(cell.precipitation_mm_per_hour ?? cell.precipitation_mm ?? 0);
+            if (!Number.isFinite(distance) || !Number.isFinite(bearing) || !Number.isFinite(amount) || distance > range) return;
+            const ratio = Math.max(0, Math.min(1, distance / range));
+            const radians = bearing * Math.PI / 180;
+            const spot = document.createElementNS(svgNs, 'circle');
+            const radius = Math.max(4, Math.min(7, 4 + Math.log10(1 + Math.max(0, amount)) * 2));
+            const phase = (((bearing - 59 + 360) % 360) / 360 * 7);
+            spot.setAttribute('class', 'rainfall-radar-cell rainfall-radar-grid-cell');
+            spot.setAttribute('data-bearing', bearing.toFixed(2));
+            spot.setAttribute('data-distance', distance.toFixed(1));
+            spot.setAttribute('data-rainfall', amount.toFixed(2));
+            spot.setAttribute('cx', (160 + Math.sin(radians) * 136 * ratio).toFixed(2));
+            spot.setAttribute('cy', (160 - Math.cos(radians) * 136 * ratio).toFixed(2));
+            spot.setAttribute('r', radius.toFixed(2));
+            spot.setAttribute('fill', amount >= 5 ? '#E7C84B' : (amount >= 1 ? '#45D69D' : '#36B9D6'));
+            spot.setAttribute('fill-opacity', '0.82');
+            spot.setAttribute('filter', 'url(#rainfallRadarGlow)');
+            spot.style.setProperty('--rainfall-radar-phase', phase.toFixed(3) + 's');
+            const title = document.createElementNS(svgNs, 'title');
+            title.textContent = amount.toFixed(2) + ' mm/h at ' + distance.toFixed(1) + ' km';
+            spot.appendChild(title);
+            echoes.appendChild(spot);
+        });
+    }
+
+    function updateRange() {
+        const range = ranges[rangeIndex];
+        rangeButton.textContent = range + ' KM';
+        rangeButton.dataset.rangeKm = String(range);
+        byId('rainfallRadarRangeLabel').textContent = range + ' KM RANGE';
+        document.querySelectorAll('.rainfall-radar-range-label').forEach(label => {
+            const fraction = Number(label.dataset.ringKm);
+            label.textContent = (range * fraction / 100).toLocaleString(undefined, {maximumFractionDigits:1}) + ' km';
+        });
+        renderCells(scans[scanMode]);
+    }
+
+    function updateScan() {
+        const frame = scans[scanMode];
+        const current = scanMode === 'current';
+        scanButton.textContent = current ? 'CURRENT SCAN' : 'FORECAST SCAN · +3H';
+        scanButton.dataset.scanMode = scanMode;
+        scanButton.classList.toggle('is-active', current);
+        scanButton.setAttribute('aria-pressed', current ? 'true' : 'false');
+        const time = displayTime(frame?.time);
+        byId('rainfallRadarScanLabel').textContent = current
+            ? 'CURRENT SCAN' + (time ? ' · ' + time : '')
+            : 'FORECAST SCAN · +3 HOURS';
+        const local = amountOf(frame);
+        byId('rainfallRadarLocalAmount').innerHTML =
+            (Number.isFinite(local) ? local.toFixed(1) : '—') + ' <small>mm/h</small>';
+        const nearest = Number(frame?.nearest_rain_km);
+        const nearestAmount = Number(frame?.nearest_rain_precipitation_mm_per_hour);
+        byId('rainfallRadarNearestDistance').textContent =
+            Number.isFinite(nearest) ? Math.round(nearest) + ' km' : '—';
+        byId('rainfallRadarNearestAmount').textContent =
+            Number.isFinite(nearestAmount) ? nearestAmount.toFixed(2) + ' mm/h at cell' : 'No wet cells';
+        byId('rainfallRadarTrendLabel').textContent = current ? 'SCAN TIME' : 'RAIN MOVEMENT';
+        byId('rainfallRadarTrendValue').textContent = current ? (time || 'Latest available') : 'Forecast trend';
+        document.querySelectorAll('.rainfall-radar-timeline,.rainfall-radar-consistency').forEach(el => {
+            el.hidden = current;
+        });
+        const empty = document.querySelector('.rainfall-radar-empty');
+        if (empty) empty.textContent = Array.isArray(frame?.rain_cells) && frame.rain_cells.length
+            ? '' : (current ? 'No wet grid cells in the latest past ECMWF frame.' : 'No wet grid cells forecast at this step.');
+        renderCells(frame);
+    }
+
+    scanButton.addEventListener('click', () => {
+        if (!scans.current) {
+            scanButton.title = 'Current scan is unavailable until the latest past ECMWF frame has been processed.';
+            return;
+        }
+        scanMode = scanMode === 'forecast' ? 'current' : 'forecast';
+        updateScan();
+    });
+    rangeButton.addEventListener('click', () => {
+        rangeIndex = (rangeIndex + 1) % ranges.length;
+        updateRange();
+    });
+    updateRange();
+    updateScan();
+})();
+
+
 // Rainfall radar compass: rotate only the forecast echo layer. The radar
 // housing, range rings, labels and independently animated sweep stay fixed.
 (() => {
