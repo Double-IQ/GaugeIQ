@@ -1211,7 +1211,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="rainfall-radar-layout">
                 <div class="rainfall-radar-scope-wrap">
-                    <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span>100 KM RANGE</span></div>
+                    <div class="rainfall-radar-topline"><span>FORECAST SCAN · +3 HOURS</span><span class="rainfall-radar-range">100 KM RANGE</span></div>
                     <div class="rainfall-radar-plot">
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
