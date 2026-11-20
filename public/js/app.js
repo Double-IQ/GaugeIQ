@@ -2214,7 +2214,6 @@ updateNetworkDiagnostics();
         const range = ranges[rangeIndex];
         rangeButton.textContent = range + ' KM';
         rangeButton.dataset.rangeKm = String(range);
-        byId('rainfallRadarRangeLabel').textContent = range + ' KM RANGE';
         document.querySelectorAll('.rainfall-radar-range-label').forEach(label => {
             const fraction = Number(label.dataset.ringKm);
             label.textContent = (range * fraction / 100).toLocaleString(undefined, {maximumFractionDigits:1}) + ' km';
@@ -2230,9 +2229,6 @@ updateNetworkDiagnostics();
         scanButton.classList.toggle('is-active', current);
         scanButton.setAttribute('aria-pressed', current ? 'true' : 'false');
         const time = displayTime(frame?.time);
-        byId('rainfallRadarScanLabel').textContent = current
-            ? 'CURRENT SCAN' + (time ? ' · ' + time : '')
-            : 'FORECAST SCAN · +3 HOURS';
         const local = amountOf(frame);
         byId('rainfallRadarLocalAmount').innerHTML =
             (Number.isFinite(local) ? local.toFixed(1) : '—') + ' <small>mm/h</small>';
@@ -2247,12 +2243,17 @@ updateNetworkDiagnostics();
         document.querySelectorAll('.rainfall-radar-timeline,.rainfall-radar-consistency').forEach(el => {
             el.hidden = current;
         });
-        const empty = document.querySelector('.rainfall-radar-empty');
-        if (empty) empty.textContent = Array.isArray(frame?.rain_cells) && frame.rain_cells.length
-            ? '' : (current ? 'No wet grid cells in the latest past ECMWF frame.' : 'No wet grid cells forecast at this step.');
+        const empty = byId('rainfallRadarEmpty');
+        if (empty) {
+            const hasCells = Array.isArray(frame?.rain_cells) && frame.rain_cells.length > 0;
+            empty.textContent = current ? 'No wet grid cells in the latest past ECMWF frame.' : 'No wet grid cells forecast at this step.';
+            empty.hidden = hasCells;
+        }
         renderCells(frame);
     }
 
+    scanButton.disabled = !scans.current;
+    if (!scans.current) scanButton.title = 'Current scan will be available after the next scheduled ECMWF refresh.';
     scanButton.addEventListener('click', () => {
         if (!scans.current) {
             scanButton.title = 'Current scan is unavailable until the latest past ECMWF frame has been processed.';
