@@ -7082,3 +7082,73 @@ body.gaugeiq-menu-open{overflow:hidden}
   .gaugeiq-weather-map-progress-wrap{flex:1 1 100%;width:100%;padding-top:18px}
   .gaugeiq-weather-map-progress-wrap #map-frame-time{max-width:100px}
 }
+
+
+/* Final Rain Radar control layout: scan toggle beside compass; range below. */
+.rainfall-radar-card .rainfall-radar-compass-controls{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:7px;
+  width:100%;
+}
+.rainfall-radar-card .rainfall-radar-status-controls{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:nowrap;
+  gap:7px;
+  width:100%;
+  margin:0;
+}
+.rainfall-radar-card .rainfall-radar-scan-controls{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  margin:0;
+}
+.rainfall-radar-card .rainfall-radar-status-controls #rainfallRadarScanButton{align-self:center}
+@media(max-width:560px){
+  .rainfall-radar-card .rainfall-radar-compass-controls{align-items:flex-start;gap:7px}
+  .rainfall-radar-card .rainfall-radar-status-controls{justify-content:flex-start;flex-wrap:nowrap}
+  .rainfall-radar-card .rainfall-radar-scan-controls{justify-content:flex-start}
+}
+
+/* Keep the four frame indicators centred in the full timeline, independent of Play. */
+.weather-map-dashboard-card .gaugeiq-weather-map-timeline{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,360px) minmax(0,1fr);
+  align-items:center;
+  column-gap:12px;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-timeline > #map-animation-toggle{
+  grid-column:1;
+  justify-self:start;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-progress-wrap{
+  grid-column:2;
+  justify-self:stretch;
+  width:100%;
+  max-width:360px;
+  min-width:0;
+  margin:0;
+}
+.weather-map-dashboard-card .gaugeiq-weather-map-progress{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+@media(max-width:680px){
+  .weather-map-dashboard-card .gaugeiq-weather-map-timeline{
+    grid-template-columns:minmax(0,1fr) minmax(0,360px) minmax(0,1fr);
+    column-gap:6px;
+  }
+  .weather-map-dashboard-card .gaugeiq-weather-map-progress-wrap{
+    width:100%;
+    max-width:360px;
+  }
+}
