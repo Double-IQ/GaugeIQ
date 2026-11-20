@@ -418,6 +418,9 @@ protocolOptions.fileReaderConfig = {
             });
             frameTimeLabel.textContent = label;
             if (frameProgressBar) {
+                const frameCount = Math.max(1, frameProgressBar.children.length);
+                const indicatorPosition = ((index + 0.5) / frameCount) * 100;
+                frameTimeLabel.style.left = indicatorPosition + '%';
                 frameProgressBar.setAttribute('aria-valuenow', String(index + 1));
                 frameProgressBar.setAttribute('aria-valuetext', 'Frame ' + (index + 1) + ' of 4 · ' + label);
                 Array.from(frameProgressBar.children).forEach((step, stepIndex) => {
