@@ -1608,7 +1608,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261120-radar-scan-range"></script>
+<script src="js/app.js?v=20261120-compass-diagnostics"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261116-section04-fixed-sun-v1"></script>
 </body>
