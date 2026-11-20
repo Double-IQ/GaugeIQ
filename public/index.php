@@ -1223,8 +1223,8 @@ if ($current && !empty($current['observed_at'])) {
                     <svg class="rainfall-radar-scope" viewBox="0 0 320 320" role="img" aria-label="ECMWF forecast rainfall cells around your location, plotted by distance and bearing">
                         <defs>
                             <radialGradient id="rainfallRadarBackground"><stop offset="0%" stop-color="#102E3B"/><stop offset="100%" stop-color="#07131D"/></radialGradient>
-                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#26D9F8" stop-opacity="0.005"/><stop offset="55%" stop-color="#26D9F8" stop-opacity="0.07"/><stop offset="100%" stop-color="#26D9F8" stop-opacity="0.22"/></linearGradient>
-                            <linearGradient id="rainfallRadarSweepLine" gradientUnits="userSpaceOnUse" x1="160" y1="160" x2="280" y2="88"><stop offset="0%" stop-color="#42DDF8" stop-opacity="0.02"/><stop offset="62%" stop-color="#42DDF8" stop-opacity="0.28"/><stop offset="100%" stop-color="#B8F5FF" stop-opacity="0.95"/></linearGradient>
+                            <linearGradient id="rainfallRadarSweepGradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#26D9F8" stop-opacity="0.22"/><stop offset="55%" stop-color="#26D9F8" stop-opacity="0.07"/><stop offset="100%" stop-color="#26D9F8" stop-opacity="0.005"/></linearGradient>
+                            <linearGradient id="rainfallRadarSweepLine" gradientUnits="userSpaceOnUse" x1="160" y1="160" x2="280" y2="88"><stop offset="0%" stop-color="#B8F5FF" stop-opacity="0.95"/><stop offset="62%" stop-color="#42DDF8" stop-opacity="0.28"/><stop offset="100%" stop-color="#42DDF8" stop-opacity="0.02"/></linearGradient>
                             <filter id="rainfallRadarSweepGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
                             <clipPath id="rainfallRadarClip"><circle cx="160" cy="160" r="140"/></clipPath>
                             <filter id="rainfallRadarGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -1611,7 +1611,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/local-weather.js?v=20261009-location-refresh"></script>
 <script src="js/openmeteo-history.js?v=20261111-location-history"></script>
 <script src="js/loading-screen.js?v=20261029-loading-screen-restored"></script>
-<script src="js/app.js?v=20261120-radar-dot-phase-reset"></script>
+<script src="js/app.js?v=20261120-radar-sweep-fade-5s"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261116-section04-fixed-sun-v1"></script>
 </body>
