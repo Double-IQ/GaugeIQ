@@ -1137,7 +1137,14 @@ if ($current && !empty($current['observed_at'])) {
         }
         $forecastScanHasData = $forecastScanAmounts !== [];
         $forecastScanHasRain = array_filter($forecastScanAmounts, static fn(float $amount): bool => $amount > 0.0) !== [];
-        $showForecastScan = !$forecastScanHasData || $forecastScanHasRain;
+        $radarHasUsableReadings = $radarLocalAmount !== null || $radarNearestAmount !== null || $forecastScanHasData;
+        $radarSystemStatus = $nowcastIsStale ? 'offline' : ($radarHasUsableReadings ? 'online' : 'no-data');
+        $radarSystemStatusLabel = match ($radarSystemStatus) {
+            'online' => 'ONLINE',
+            'no-data' => 'NO DATA',
+            default => 'OFFLINE',
+        };
+        $showForecastScan = $forecastScanHasRain;
         $rainfallDisplayUnit = (int)($rainfallNowcast['schema_version'] ?? 1) >= 2 ? 'mm/h' : 'mm';
         $radarTrend = (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed');
         $radarTrendLabel = match ($radarTrend) {
@@ -1191,7 +1198,12 @@ if ($current && !empty($current['observed_at'])) {
         <article class="card wind-hud-card rainfall-nowcast-card rainfall-radar-card" data-status="<?= htmlspecialchars($nowcastStatus, ENT_QUOTES) ?>">
             <div class="wind-hud-heading rainfall-nowcast-heading">
                 <div>
-                    <p class="label">Rain Radar</p>
+                    <div class="rainfall-radar-title-row">
+                        <p class="label">Rain Radar</p>
+                        <span class="rainfall-radar-system-status is-<?= htmlspecialchars($radarSystemStatus, ENT_QUOTES) ?>" role="status" aria-live="polite">
+                            <i aria-hidden="true"></i><?= htmlspecialchars($radarSystemStatusLabel, ENT_QUOTES) ?>
+                        </span>
+                    </div>
                     <div class="wind-hud-subtitle">6 HOUR OUTLOOK</div>
                 </div>
                 <div class="rainfall-radar-compass-controls">
@@ -1237,7 +1249,7 @@ if ($current && !empty($current['observed_at'])) {
                     <?php endif; ?>
                 </div>
                 <div class="rainfall-radar-readouts">
-                    <?php if ($radarLocalAmount === null || $radarLocalHasRain): ?>
+                    <?php if ($radarLocalHasRain): ?>
                     <div class="rainfall-radar-readout-primary">
                         <span>AT YOUR LOCATION</span>
                         <strong><?= $radarLocalAmount !== null ? number_format($radarLocalAmount, 1) : '—' ?> <small><?= htmlspecialchars($rainfallDisplayUnit, ENT_QUOTES) ?></small></strong>
