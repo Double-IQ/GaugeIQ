@@ -29,9 +29,9 @@
     $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {timeZone:zone,day:'2-digit',month:'short'});
     const disc = $('mthMoonDisc');
     function renderLunarDisc(target, lunarPhase, litFraction) {
-        // Render the visible lunar hemisphere as a shaded sphere. The light
-        // vector follows the synodic phase; waxing illumination is on the
-        // left in the Southern Hemisphere, waning illumination on the right.
+        // Render the visible lunar hemisphere as a shaded sphere. The
+        // illuminated side is mirrored between hemispheres: waxing is on
+        // the left in the Southern Hemisphere and on the right in the North.
         const size = 320;
         let canvas = target.querySelector('canvas');
         if (!canvas) {
@@ -69,7 +69,11 @@
         }
 
         const angle = Math.PI * 2 * lunarPhase;
-        const lightX = -Math.sin(angle);
+        // GaugeIQ's selected location determines the apparent left/right
+        // orientation of the lunar phases. Default to the Southern Hemisphere
+        // only when no valid location is available.
+        const hemisphere = validLocation && lat >= 0 ? -1 : 1;
+        const lightX = -Math.sin(angle) * hemisphere;
         const lightZ = -Math.cos(angle);
         for (let y = 0; y < size; y++) {
             const ny = (y - centre) / radius;
@@ -116,7 +120,134 @@
         target.setAttribute('role', 'img');
         target.setAttribute('aria-label', phaseName + ', ' + (litFraction * 100).toFixed(1) + '% illuminated');
     }
-    if (disc) renderLunarDisc(disc, phase, illumination);
+    if (disc) {
+        // NASA LRO Wide Angle Camera global color mosaic (equirectangular).
+        // Render it as a lit sphere in WebGL so the actual lunar geography,
+        // not generated crater doodles, supplies the visible surface detail.
+        // The existing procedural renderer remains a graceful offline/CORS fallback.
+        renderLunarDisc(disc, phase, illumination);
+        const lunarTexture = new Image();
+        lunarTexture.crossOrigin = 'anonymous';
+        lunarTexture.onload = () => {
+            try {
+                renderTexturedLunarDisc(disc, phase, illumination, lunarTexture);
+            } catch (error) {
+                // Keep the procedural rendering if WebGL or image CORS is unavailable.
+                renderLunarDisc(disc, phase, illumination);
+            }
+        };
+        lunarTexture.onerror = () => renderLunarDisc(disc, phase, illumination);
+        lunarTexture.src = 'https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg';
+    }
+
+    function renderTexturedLunarDisc(target, lunarPhase, litFraction, textureImage) {
+        const size = 320;
+        // A canvas cannot switch from a 2D context to WebGL, so replace
+        // the procedural fallback canvas with a fresh WebGL canvas.
+        const canvas = document.createElement('canvas');
+        target.replaceChildren(canvas);
+        canvas.width = size;
+        canvas.height = size;
+        Object.assign(canvas.style, {
+            position: 'absolute', inset: '0', width: '100%', height: '100%',
+            display: 'block', borderRadius: '50%'
+        });
+        const gl = canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
+        if (!gl) throw new Error('WebGL unavailable');
+
+        const vertexSource = `
+            attribute vec2 a_position;
+            varying vec2 v_uv;
+            void main() {
+                v_uv = a_position * 0.5 + 0.5;
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+        const fragmentSource = `
+            precision highp float;
+            varying vec2 v_uv;
+            uniform sampler2D u_texture;
+            uniform float u_light_x;
+            uniform float u_light_z;
+            void main() {
+                vec2 p = (v_uv - 0.5) * 2.0;
+                float r2 = dot(p, p);
+                if (r2 > 1.0) {
+                    gl_FragColor = vec4(0.0);
+                    return;
+                }
+                float nz = sqrt(max(0.0, 1.0 - r2));
+                vec3 normal = normalize(vec3(p.x, -p.y, nz));
+                float diffuse = max(0.0, normal.x * u_light_x + normal.z * u_light_z);
+                float limb = 0.82 + 0.18 * nz;
+                float lighting = (0.018 + 0.982 * diffuse) * limb;
+
+                // Equirectangular longitude/latitude lookup on the visible sphere.
+                float longitude = atan(normal.x, normal.z);
+                float latitude = asin(clamp(normal.y, -1.0, 1.0));
+                vec2 uv = vec2(longitude / 6.28318530718 + 0.5,
+                               0.5 - latitude / 3.14159265359);
+                vec3 albedo = texture2D(u_texture, uv).rgb;
+                // Slightly neutralise the map's color enhancement while
+                // preserving real maria, highlands and crater structure.
+                float grey = dot(albedo, vec3(0.299, 0.587, 0.114));
+                albedo = mix(vec3(grey), albedo, 0.42);
+                gl_FragColor = vec4(albedo * lighting, 1.0);
+            }
+        `;
+        const compile = (type, source) => {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                const message = gl.getShaderInfoLog(shader);
+                gl.deleteShader(shader);
+                throw new Error(message || 'Moon shader compilation failed');
+            }
+            return shader;
+        };
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            throw new Error(gl.getProgramInfoLog(program) || 'Moon shader link failed');
+        }
+        gl.useProgram(program);
+        const vertices = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+        const position = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(position);
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureImage);
+
+        const angle = Math.PI * 2 * lunarPhase;
+        const hemisphere = validLocation && lat >= 0 ? -1 : 1;
+        gl.uniform1f(gl.getUniformLocation(program, 'u_light_x'), -Math.sin(angle) * hemisphere);
+        gl.uniform1f(gl.getUniformLocation(program, 'u_light_z'), -Math.cos(angle));
+        gl.viewport(0, 0, size, size);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        target.style.setProperty('--mth-phase', String(lunarPhase));
+        target.style.setProperty('--mth-illumination', String(litFraction));
+        target.style.setProperty('--mth-shadow-width', '0%');
+        target.dataset.phase = lunarPhase.toFixed(4);
+        target.setAttribute('role', 'img');
+        target.setAttribute('aria-label', phaseName + ', ' + (litFraction * 100).toFixed(1) + '% illuminated. NASA Lunar Reconnaissance Orbiter surface texture.');
+        target.dataset.lunarTexture = 'NASA LRO WAC';
+    }
     function solarEvent(day, latitude, longitude, sunrise) {
         const n = Math.floor((Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate()) - Date.UTC(day.getUTCFullYear(),0,0)) / 86400000);
         const lngHour = longitude / 15;
