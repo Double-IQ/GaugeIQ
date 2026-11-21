@@ -504,7 +504,7 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 1100);
+            }, 2500);
         }
 
         async function prepareAnimation(autoStart = true) {
@@ -595,7 +595,7 @@ protocolOptions.fileReaderConfig = {
                             source: sourceId,
                             paint: {
                                 'raster-opacity': 0.001,
-                                'raster-opacity-transition': { duration: 1000, delay: 0 }
+                                'raster-opacity-transition': { duration: 1500, delay: 0 }
                             }
                         });
 
