@@ -142,11 +142,10 @@
 
     function renderTexturedLunarDisc(target, lunarPhase, litFraction, textureImage) {
         const size = 320;
-        let canvas = target.querySelector('canvas');
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            target.replaceChildren(canvas);
-        }
+        // A canvas cannot switch from a 2D context to WebGL, so replace
+        // the procedural fallback canvas with a fresh WebGL canvas.
+        const canvas = document.createElement('canvas');
+        target.replaceChildren(canvas);
         canvas.width = size;
         canvas.height = size;
         Object.assign(canvas.style, {
