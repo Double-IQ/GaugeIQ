@@ -7152,3 +7152,9 @@ body.gaugeiq-menu-open{overflow:hidden}
     max-width:360px;
   }
 }
+
+
+/* Keep the Rain Radar Enable Compass action flush to the right of its controls row. */
+.rainfall-radar-card .rainfall-radar-status-controls .rainfall-radar-compass-button{
+  margin-left:auto;
+}
