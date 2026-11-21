@@ -504,7 +504,7 @@ protocolOptions.fileReaderConfig = {
                 showFrame(animationCurrentFrame);
                 setStatus('');
 
-            }, 1100);
+            }, 1600);
         }
 
         async function prepareAnimation(autoStart = true) {
