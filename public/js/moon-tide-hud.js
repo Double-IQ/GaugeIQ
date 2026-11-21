@@ -72,7 +72,7 @@
         // GaugeIQ's selected location determines the apparent left/right
         // orientation of the lunar phases. Default to the Southern Hemisphere
         // only when no valid location is available.
-        const hemisphere = validLocation && lat >= 0 ? 1 : -1;
+        const hemisphere = validLocation && lat >= 0 ? -1 : 1;
         const lightX = -Math.sin(angle) * hemisphere;
         const lightZ = -Math.cos(angle);
         for (let y = 0; y < size; y++) {
