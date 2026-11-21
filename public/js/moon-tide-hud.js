@@ -29,9 +29,9 @@
     $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {timeZone:zone,day:'2-digit',month:'short'});
     const disc = $('mthMoonDisc');
     function renderLunarDisc(target, lunarPhase, litFraction) {
-        // Render the visible lunar hemisphere as a shaded sphere. The light
-        // vector follows the synodic phase; waxing illumination is on the
-        // left in the Southern Hemisphere, waning illumination on the right.
+        // Render the visible lunar hemisphere as a shaded sphere. The
+        // illuminated side is mirrored between hemispheres: waxing is on
+        // the left in the Southern Hemisphere and on the right in the North.
         const size = 320;
         let canvas = target.querySelector('canvas');
         if (!canvas) {
@@ -69,7 +69,11 @@
         }
 
         const angle = Math.PI * 2 * lunarPhase;
-        const lightX = -Math.sin(angle);
+        // GaugeIQ's selected location determines the apparent left/right
+        // orientation of the lunar phases. Default to the Southern Hemisphere
+        // only when no valid location is available.
+        const hemisphere = validLocation && lat >= 0 ? 1 : -1;
+        const lightX = -Math.sin(angle) * hemisphere;
         const lightZ = -Math.cos(angle);
         for (let y = 0; y < size; y++) {
             const ny = (y - centre) / radius;
