@@ -70,8 +70,11 @@ try {
             $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
             $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
             $prepared[$variable] = is_file($dataPath) && is_array($meta) &&
+                ($meta['version'] ?? null) === 1 &&
                 ($meta['frame_time'] ?? '') === (string)$row['frame_time'] &&
+                ($meta['source_url_sha256'] ?? '') === hash('sha256', $url) &&
                 ($meta['variable'] ?? '') === $variable &&
+                ($meta['encoding'] ?? '') === 'float32-le' &&
                 (int)($meta['cell_count'] ?? 0) > 0 &&
                 (int)(filesize($dataPath) ?: 0) === (int)$meta['cell_count'] * 4;
         }
