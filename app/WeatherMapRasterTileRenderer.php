@@ -1,23 +1,138 @@
 <?php
 declare(strict_types=1);
 
-/** Samples the decoded regular ECMWF grid using the selected map interpolation. */
+/** Samples the decoded regular ECMWF grid with Open-Meteo-compatible interpolation. */
 final class WeatherMapRasterTileRenderer
 {
-    private static function valueAt(array $grid, int $columns, int $rows, int $x, int $y): float
+    private static function at(array $grid, int $columns, int $x, int $y): float
     {
-        $x = max(0, min($columns - 1, $x));
-        $y = max(0, min($rows - 1, $y));
         return (float)($grid[$y * $columns + $x] ?? NAN);
     }
 
-    private static function cubic(float $p0, float $p1, float $p2, float $p3, float $t): float
+    private static function bilinearNaNAware(
+        float $p0,
+        float $p1,
+        float $p2,
+        float $p3,
+        float $xFraction,
+        float $yFraction
+    ): float {
+        $w0 = (1 - $xFraction) * (1 - $yFraction);
+        $w1 = $xFraction * (1 - $yFraction);
+        $w2 = (1 - $xFraction) * $yFraction;
+        $w3 = $xFraction * $yFraction;
+        $n0 = !is_finite($p0);
+        $n1 = !is_finite($p1);
+        $n2 = !is_finite($p2);
+        $n3 = !is_finite($p3);
+
+        if (!$n0 && !$n1 && !$n2 && !$n3) {
+            return $p0 * $w0 + $p1 * $w1 + $p2 * $w2 + $p3 * $w3;
+        }
+        if ($n0 && !$n1 && !$n2 && !$n3) {
+            if ($xFraction + $yFraction < 1) return NAN;
+            $weights = $w1 + $w2 + $w3;
+            return $weights > 0 ? ($p1 * $w1 + $p2 * $w2 + $p3 * $w3) / $weights : NAN;
+        }
+        if (!$n0 && $n1 && !$n2 && !$n3) {
+            if ($xFraction > $yFraction) return NAN;
+            $weights = $w0 + $w2 + $w3;
+            return $weights > 0 ? ($p0 * $w0 + $p2 * $w2 + $p3 * $w3) / $weights : NAN;
+        }
+        if (!$n0 && !$n1 && $n2 && !$n3) {
+            if ($xFraction < $yFraction) return NAN;
+            $weights = $w0 + $w1 + $w3;
+            return $weights > 0 ? ($p0 * $w0 + $p1 * $w1 + $p3 * $w3) / $weights : NAN;
+        }
+        if (!$n0 && !$n1 && !$n2 && $n3) {
+            if ($xFraction + $yFraction > 1) return NAN;
+            $weights = $w0 + $w1 + $w2;
+            return $weights > 0 ? ($p0 * $w0 + $p1 * $w1 + $p2 * $w2) / $weights : NAN;
+        }
+        return NAN;
+    }
+
+    private static function linear(array $grid, int $columns, int $rows, int $x, int $y, float $xf, float $yf): float
     {
-        return 0.5 * (
-            2 * $p1 + (-$p0 + $p2) * $t +
-            (2 * $p0 - 5 * $p1 + 4 * $p2 - $p3) * $t * $t +
-            (-$p0 + 3 * $p1 - 3 * $p2 + $p3) * $t * $t * $t
+        if ($x < 0 || $y < 0 || $x >= $columns - 1 || $y >= $rows - 1) return NAN;
+        $index = $y * $columns + $x;
+        return self::bilinearNaNAware(
+            (float)($grid[$index] ?? NAN),
+            (float)($grid[$index + 1] ?? NAN),
+            (float)($grid[$index + $columns] ?? NAN),
+            (float)($grid[$index + $columns + 1] ?? NAN),
+            $xf,
+            $yf
         );
+    }
+
+    private static function cubic1D(float $p0, float $p1, float $p2, float $p3, float $t): float
+    {
+        $t2 = $t * $t;
+        $t3 = $t2 * $t;
+        return 0.5 * (
+            (-$t3 + 2 * $t2 - $t) * $p0 +
+            (3 * $t3 - 5 * $t2 + 2) * $p1 +
+            (-3 * $t3 + 4 * $t2 + $t) * $p2 +
+            ($t3 - $t2) * $p3
+        );
+    }
+
+    private static function monotone1D(float $t, float $p0, float $p1, float $p2, float $p3): float
+    {
+        $d0 = $p1 - $p0;
+        $d1 = $p2 - $p1;
+        $d2 = $p3 - $p2;
+        $m1 = $d0 * $d1 <= 0 ? 0.0 : (2 * $d0 * $d1) / ($d0 + $d1);
+        $m2 = $d1 * $d2 <= 0 ? 0.0 : (2 * $d1 * $d2) / ($d1 + $d2);
+        $t2 = $t * $t;
+        $t3 = $t2 * $t;
+        return (2 * $t3 - 3 * $t2 + 1) * $p1 +
+            ($t3 - 2 * $t2 + $t) * $m1 +
+            (-2 * $t3 + 3 * $t2) * $p2 +
+            ($t3 - $t2) * $m2;
+    }
+
+    private static function interpolateHighOrder(
+        array $grid,
+        int $columns,
+        int $rows,
+        int $x,
+        int $y,
+        float $xf,
+        float $yf,
+        bool $monotone
+    ): float {
+        if ($x < 1 || $x >= $columns - 2 || $y < 1 || $y >= $rows - 2) {
+            return self::linear($grid, $columns, $rows, $x, $y, $xf, $yf);
+        }
+
+        $rowValues = [];
+        $innerMin = INF;
+        $innerMax = -INF;
+        for ($row = -1; $row <= 2; $row++) {
+            $base = ($y + $row) * $columns;
+            $p0 = (float)($grid[$base + $x - 1] ?? NAN);
+            $p1 = (float)($grid[$base + $x] ?? NAN);
+            $p2 = (float)($grid[$base + $x + 1] ?? NAN);
+            $p3 = (float)($grid[$base + $x + 2] ?? NAN);
+            if (!is_finite($p0) || !is_finite($p1) || !is_finite($p2) || !is_finite($p3)) {
+                return self::linear($grid, $columns, $rows, $x, $y, $xf, $yf);
+            }
+            $rowValues[] = $monotone
+                ? self::monotone1D($xf, $p0, $p1, $p2, $p3)
+                : self::cubic1D($p0, $p1, $p2, $p3, $xf);
+            if ($row === 0 || $row === 1) {
+                $innerMin = min($innerMin, $p1, $p2);
+                $innerMax = max($innerMax, $p1, $p2);
+            }
+        }
+
+        if ($monotone) {
+            return self::monotone1D($yf, $rowValues[0], $rowValues[1], $rowValues[2], $rowValues[3]);
+        }
+        $value = self::cubic1D($rowValues[0], $rowValues[1], $rowValues[2], $rowValues[3], $yf);
+        return min(max($value, $innerMin), $innerMax);
     }
 
     public static function validate(array $grid, int $columns, int $rows, string $mode): void
@@ -34,49 +149,26 @@ final class WeatherMapRasterTileRenderer
     {
         $x0 = (int)floor($x);
         $y0 = (int)floor($y);
-        $fx = $x - $x0;
-        $fy = $y - $y0;
+        $xf = $x - $x0;
+        $yf = $y - $y0;
+
         if ($mode === 'nearest') {
-            return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
+            $xi = $xf >= 0.5 ? $x0 + 1 : $x0;
+            $yi = $yf >= 0.5 ? $y0 + 1 : $y0;
+            $xi = max(0, min($columns - 1, $xi));
+            $yi = max(0, min($rows - 1, $yi));
+            return self::at($grid, $columns, $xi, $yi);
         }
-
-        if ($mode === 'linear') {
-            $a = self::valueAt($grid, $columns, $rows, $x0, $y0);
-            $b = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0);
-            $c = self::valueAt($grid, $columns, $rows, $x0, $y0 + 1);
-            $d = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + 1);
-            if (!is_finite($a) || !is_finite($b) || !is_finite($c) || !is_finite($d)) {
-                return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
-            }
-            return ($a * (1 - $fx) + $b * $fx) * (1 - $fy) +
-                ($c * (1 - $fx) + $d * $fx) * $fy;
-        }
-
-        $rowsOfValues = [];
-        for ($row = -1; $row <= 2; $row++) {
-            $p0 = self::valueAt($grid, $columns, $rows, $x0 - 1, $y0 + $row);
-            $p1 = self::valueAt($grid, $columns, $rows, $x0, $y0 + $row);
-            $p2 = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + $row);
-            $p3 = self::valueAt($grid, $columns, $rows, $x0 + 2, $y0 + $row);
-            if (!is_finite($p0) || !is_finite($p1) || !is_finite($p2) || !is_finite($p3)) {
-                return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
-            }
-            $rowsOfValues[] = self::cubic($p0, $p1, $p2, $p3, $fx);
-        }
-        $value = self::cubic(
-            $rowsOfValues[0],
-            $rowsOfValues[1],
-            $rowsOfValues[2],
-            $rowsOfValues[3],
-            $fy
+        if ($mode === 'linear') return self::linear($grid, $columns, $rows, $x0, $y0, $xf, $yf);
+        return self::interpolateHighOrder(
+            $grid,
+            $columns,
+            $rows,
+            $x0,
+            $y0,
+            $xf,
+            $yf,
+            $mode === 'monotone'
         );
-        if ($mode === 'monotone') {
-            $a = self::valueAt($grid, $columns, $rows, $x0, $y0);
-            $b = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0);
-            $c = self::valueAt($grid, $columns, $rows, $x0, $y0 + 1);
-            $d = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + 1);
-            $value = max(min($a, $b, $c, $d), min(max($a, $b, $c, $d), $value));
-        }
-        return $value;
     }
 }
