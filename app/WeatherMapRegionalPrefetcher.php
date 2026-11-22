@@ -136,12 +136,6 @@ final class WeatherMapRegionalPrefetcher
     }
 
 
-    /**
-     * Decode the South Africa regional grid for a past frame and persist a
-     * compact Float32 cache. The browser can consume these prepared values in
-     * the server-tile stage without parsing OM metadata or PFor chunks.
-     */
-
     /** Keep the decoded cache bounded by age; active frames are refreshed in place. */
     private function cleanupDecodedCache(): void
     {
@@ -157,6 +151,11 @@ final class WeatherMapRegionalPrefetcher
         }
     }
 
+    /**
+     * Decode the South Africa regional grid for a past frame and persist a
+     * compact Float32 cache. The browser can consume these prepared values in
+     * the server-tile stage without parsing OM metadata or PFor chunks.
+     */
     private function decodeAndCachePastFrame(array $frame): void
     {
         $url = (string)($frame['url'] ?? '');
