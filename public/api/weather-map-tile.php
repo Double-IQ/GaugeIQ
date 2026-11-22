@@ -220,6 +220,7 @@ try {
             $grid = unpack('g*', $binary);
             if (!is_array($grid)) weatherTileFail(503, 'Prepared weather-map frame could not be decoded.');
             $grid = array_values($grid);
+            WeatherMapRasterTileRenderer::validate($grid, $columns, $rows, $interpolation);
 
             $west = (float)$region['west'];
             $south = (float)$region['south'];
