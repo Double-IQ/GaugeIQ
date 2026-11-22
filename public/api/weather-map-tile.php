@@ -181,11 +181,14 @@ try {
     $x = filter_input(INPUT_GET, 'x', FILTER_VALIDATE_INT);
     $y = filter_input(INPUT_GET, 'y', FILTER_VALIDATE_INT);
     $variable = (string)($_GET['variable'] ?? '');
+    $deltaTimeHours = filter_input(INPUT_GET, 'delta_time_hours', FILTER_VALIDATE_FLOAT);
     if ($slot === false || $slot === null || $slot < 0 || $slot > 3 ||
         $z === false || $z === null || $z < 0 || $z > 12 ||
         $x === false || $x === null || $y === false || $y === null ||
-        !in_array($variable, ['precipitation', 'cloud_cover'], true)) {
-        weatherTileFail(400, 'Invalid weather-map tile coordinates.');
+        !in_array($variable, ['precipitation', 'cloud_cover'], true) ||
+        $deltaTimeHours === false || $deltaTimeHours === null ||
+        !is_finite((float)$deltaTimeHours) || $deltaTimeHours <= 0 || $deltaTimeHours > 24) {
+        weatherTileFail(400, 'Invalid weather-map tile coordinates or precipitation interval.');
     }
     $tileCount = 1 << $z;
     if ($x < 0 || $x >= $tileCount || $y < 0 || $y >= $tileCount) {
@@ -243,7 +246,7 @@ try {
     }
     $paletteSignature = json_encode($palette, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     $tileKey = hash('sha256', implode('|', [
-        $key, (string)$z, (string)$x, (string)$y, $interpolation, $paletteSignature
+        $key, (string)$z, (string)$x, (string)$y, $interpolation, (string)$deltaTimeHours, $paletteSignature
     ]));
     $tilePath = $tileCacheDirectory . '/' . $tileKey . '.png';
     $etag = '"' . $tileKey . '"';
@@ -295,6 +298,9 @@ try {
                         continue;
                     }
                     $value = weatherTileSample($grid, $columns, $rows, $gx, $gy, $interpolation);
+                    if ($variable === 'precipitation' && is_finite($value)) {
+                        $value = max(0.0, $value) / (float)$deltaTimeHours;
+                    }
                     $rgba .= pack('C4', ...weatherTileColour($value, $variable, $palette));
                 }
             }
