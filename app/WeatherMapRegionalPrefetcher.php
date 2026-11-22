@@ -107,6 +107,7 @@ final class WeatherMapRegionalPrefetcher
                 }
             }
         }
+        $this->cleanupDecodedCache();
         $encodingText = [];
         foreach ($encodingSummaries as $fieldName => $signatures) {
             foreach (array_keys($signatures) as $signature) {
@@ -140,6 +141,22 @@ final class WeatherMapRegionalPrefetcher
      * compact Float32 cache. The browser can consume these prepared values in
      * the server-tile stage without parsing OM metadata or PFor chunks.
      */
+
+    /** Keep the decoded cache bounded by age; active frames are refreshed in place. */
+    private function cleanupDecodedCache(): void
+    {
+        $directory = $this->decodedCacheDirectory !== ''
+            ? $this->decodedCacheDirectory
+            : dirname(__DIR__) . '/storage/weather-map-cache/decoded';
+        if (!is_dir($directory)) return;
+        $expiredBefore = time() - (10 * 86400);
+        foreach (glob(rtrim($directory, '/') . '/*.{f32,json}', GLOB_BRACE) ?: [] as $path) {
+            if (!is_file($path)) continue;
+            $modified = (int)(filemtime($path) ?: 0);
+            if ($modified > 0 && $modified < $expiredBefore) @unlink($path);
+        }
+    }
+
     private function decodeAndCachePastFrame(array $frame): void
     {
         $url = (string)($frame['url'] ?? '');
