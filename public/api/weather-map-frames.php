@@ -61,11 +61,26 @@ try {
             continue;
         }
 
+        $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
+        $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
+        $prepared = [];
+        foreach (['precipitation', 'cloud_cover'] as $variable) {
+            $cacheKey = hash('sha256', $url . '|' . $variable . '|sa-grid-v1');
+            $dataPath = $decodedDirectory . '/' . $cacheKey . '.f32';
+            $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
+            $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
+            $prepared[$variable] = is_file($dataPath) && is_array($meta) &&
+                ($meta['frame_time'] ?? '') === (string)$row['frame_time'] &&
+                ($meta['variable'] ?? '') === $variable &&
+                (int)($meta['cell_count'] ?? 0) > 0 &&
+                (int)(filesize($dataPath) ?: 0) === (int)$meta['cell_count'] * 4;
+        }
         $frames[] = [
             'slot' => (int)$row['slot_id'],
             'type' => (string)$row['frame_type'],
             'time' => (string)$row['frame_time'],
             'url' => $url,
+            'prepared' => $prepared,
             'modelRunTime' => (string)$row['model_run_time'],
             'refreshedAt' => (string)$row['refreshed_at'],
         ];
