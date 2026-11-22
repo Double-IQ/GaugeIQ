@@ -126,6 +126,7 @@ try {
     $x = filter_input(INPUT_GET, 'x', FILTER_VALIDATE_INT);
     $y = filter_input(INPUT_GET, 'y', FILTER_VALIDATE_INT);
     $variable = (string)($_GET['variable'] ?? '');
+    $requestedFrameTime = (string)($_GET['frame_time'] ?? '');
     $deltaTimeHours = filter_input(INPUT_GET, 'delta_time_hours', FILTER_VALIDATE_FLOAT);
     if ($slot === false || $slot === null || $slot < 0 || $slot > 3 ||
         $z === false || $z === null || $z < 0 || $z > 12 ||
@@ -147,7 +148,9 @@ try {
     $stmt = $pdo->prepare("SELECT file_url, frame_time FROM gaugeiq_weather_map_frames WHERE frame_type = 'past' AND slot_id = ? LIMIT 1");
     $stmt->execute([$slot]);
     $frame = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!is_array($frame)) weatherTileFail(404, 'Weather-map frame is not scheduled.');
+    if (!is_array($frame) || $requestedFrameTime === '' || $requestedFrameTime !== (string)$frame['frame_time']) {
+        weatherTileFail(404, 'Weather-map frame is no longer scheduled.');
+    }
     $url = (string)$frame['file_url'];
     $parts = parse_url($url);
     if (!is_array($parts) || ($parts['scheme'] ?? '') !== 'https' ||
