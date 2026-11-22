@@ -7158,3 +7158,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .rainfall-radar-card .rainfall-radar-status-controls .rainfall-radar-compass-button{
   margin-left:auto;
 }
+
+/* Per-card data usage footer; follows the existing Moon & Tide footer treatment. */
+.data-usage-footer{align-items:center;border-top:1px solid rgba(104,163,218,.16);margin-top:10px;padding-top:10px}
+.data-usage-footer span:nth-child(2){color:#9cb6d5;font-size:8px;letter-spacing:.035em;text-align:right;overflow-wrap:anywhere}
+.data-usage-footer span:first-child{color:#819fc2}
+@media(max-width:480px){.data-usage-footer{gap:5px}.data-usage-footer span:nth-child(2){font-size:7px}}
