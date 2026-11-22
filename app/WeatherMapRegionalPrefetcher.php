@@ -44,6 +44,7 @@ final class WeatherMapRegionalPrefetcher
 
         $encodingSummaries = [];
         $blockCount = 0;
+        $decodedPastFrameCount = 0;
         $forecastFrames = array_values(array_filter(
             $frames,
             static fn(array $frame): bool => ($frame['type'] ?? '') === 'future'
@@ -102,6 +103,7 @@ final class WeatherMapRegionalPrefetcher
             if (($frameGroup[0]['type'] ?? '') === 'past') {
                 foreach ($frameGroup as $frame) {
                     $this->decodeAndCachePastFrame($frame);
+                    $decodedPastFrameCount++;
                 }
             }
         }
@@ -123,9 +125,10 @@ final class WeatherMapRegionalPrefetcher
             'frames' => count($frames),
             'blocks' => $blockCount,
             'output' => sprintf(
-                'Regional ECMWF prefetch completed: %d frames, %d unique 64 KiB cache blocks. Encoding: %s.',
+                'Regional ECMWF prefetch completed: %d frames, %d unique 64 KiB cache blocks; server-decoded %d past frames × 2 variables. Encoding: %s.',
                 count($frames),
                 $blockCount,
+                $decodedPastFrameCount,
                 $encodingText === [] ? 'unavailable' : implode('; ', $encodingText)
             ),
         ];
