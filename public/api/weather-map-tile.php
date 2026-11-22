@@ -89,6 +89,87 @@ function weatherTileColour(float $value, string $variable, array $palette): arra
     return [0, 0, 0, 0];
 }
 
+
+function weatherTileSample(array $grid, int $columns, int $rows, float $x, float $y, string $mode): float
+{
+    $at = static function (int $ix, int $iy) use ($grid, $columns, $rows): float {
+        $ix = max(0, min($columns - 1, $ix));
+        $iy = max(0, min($rows - 1, $iy));
+        return (float)($grid[$iy * $columns + $ix + 1] ?? NAN);
+    };
+
+    $x0 = (int)floor($x);
+    $y0 = (int)floor($y);
+    $fx = $x - $x0;
+    $fy = $y - $y0;
+    if ($mode === 'nearest') return $at((int)round($x), (int)round($y));
+
+    if ($mode === 'linear') {
+        $a = $at($x0, $y0);
+        $b = $at($x0 + 1, $y0);
+        $c = $at($x0, $y0 + 1);
+        $d = $at($x0 + 1, $y0 + 1);
+        if (!is_finite($a) || !is_finite($b) || !is_finite($c) || !is_finite($d)) {
+            return $at((int)round($x), (int)round($y));
+        }
+        return ($a * (1 - $fx) + $b * $fx) * (1 - $fy) +
+            ($c * (1 - $fx) + $d * $fx) * $fy;
+    }
+
+    $interpolate = static function (float $p0, float $p1, float $p2, float $p3, float $t): float {
+        return 0.5 * (
+            2 * $p1 + (-$p0 + $p2) * $t +
+            (2 * $p0 - 5 * $p1 + 4 * $p2 - $p3) * $t * $t +
+            (-$p0 + 3 * $p1 - 3 * $p2 + $p3) * $t * $t * $t
+        );
+    };
+
+    $intermediate = [];
+    for ($row = -1; $row <= 2; $row++) {
+        $samples = [
+            $at($x0 - 1, $y0 + $row),
+            $at($x0, $y0 + $row),
+            $at($x0 + 1, $y0 + $row),
+            $at($x0 + 2, $y0 + $row),
+        ];
+        foreach ($samples as $sample) {
+            if (!is_finite($sample)) return $at((int)round($x), (int)round($y));
+        }
+        $intermediate[] = $interpolate($samples[0], $samples[1], $samples[2], $samples[3], $fx);
+    }
+    $value = $interpolate($intermediate[0], $intermediate[1], $intermediate[2], $intermediate[3], $fy);
+    if ($mode === 'monotone') {
+        $corners = [$at($x0, $y0), $at($x0 + 1, $y0), $at($x0, $y0 + 1), $at($x0 + 1, $y0 + 1)];
+        $value = max(min($corners), min(max($corners), $value));
+    }
+    return $value;
+}
+
+function weatherTileCleanupCache(string $directory, int $maxBytes = 134217728): void
+{
+    $files = glob(rtrim($directory, '/') . '/*.png') ?: [];
+    $entries = [];
+    $total = 0;
+    $expiredBefore = time() - 172800;
+    foreach ($files as $path) {
+        if (!is_file($path)) continue;
+        $size = (int)(filesize($path) ?: 0);
+        $modified = (int)(filemtime($path) ?: 0);
+        if ($modified > 0 && $modified < $expiredBefore) {
+            @unlink($path);
+            continue;
+        }
+        $total += $size;
+        $entries[] = ['path' => $path, 'size' => $size, 'modified' => $modified];
+    }
+    if ($total <= $maxBytes) return;
+    usort($entries, static fn(array $a, array $b): int => $a['modified'] <=> $b['modified']);
+    foreach ($entries as $entry) {
+        if ($total <= $maxBytes) break;
+        if (@unlink($entry['path'])) $total -= $entry['size'];
+    }
+}
+
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
         header('Allow: GET');
@@ -152,53 +233,89 @@ try {
     }
 
     $palette = weatherTilePalette($variable, $_GET);
-    $binary = file_get_contents($dataPath);
-    if (!is_string($binary) || strlen($binary) !== $cellCount * 4) {
-        weatherTileFail(503, 'Prepared weather-map frame could not be read.');
+    $interpolation = (string)($_GET['interpolation'] ?? 'cubic');
+    if (!in_array($interpolation, ['nearest', 'linear', 'cubic', 'monotone'], true)) {
+        weatherTileFail(400, 'Invalid weather-map interpolation mode.');
     }
-    $grid = unpack('g*', $binary);
-    if (!is_array($grid)) weatherTileFail(503, 'Prepared weather-map frame could not be decoded.');
-
-    $west = (float)$region['west'];
-    $south = (float)$region['south'];
-    $xStart = (int)$region['x_start'];
-    $yStart = (int)$region['y_start'];
-    $step = (float)($metadata['grid']['step_degrees'] ?? 0.25);
-    $rgba = '';
-    $size = 256;
-    $world = 256 * $tileCount;
-    for ($py = 0; $py < $size; $py++) {
-        for ($px = 0; $px < $size; $px++) {
-            $globalX = $x * $size + $px + 0.5;
-            $globalY = $y * $size + $py + 0.5;
-            $longitude = ($globalX / $world) * 360.0 - 180.0;
-            $mercator = M_PI * (1.0 - 2.0 * $globalY / $world);
-            $latitude = rad2deg(atan(sinh($mercator)));
-            if ($longitude < $west || $longitude > (float)$region['east'] ||
-                $latitude < $south || $latitude > (float)$region['north']) {
-                $rgba .= "\0\0\0\0";
-                continue;
-            }
-            $gx = ($longitude + 180.0) / $step - $xStart;
-            $gy = ($latitude + 90.0) / $step - $yStart;
-            $ix = (int)round($gx);
-            $iy = (int)round($gy);
-            if ($ix < 0 || $iy < 0 || $ix >= $columns || $iy >= $rows) {
-                $rgba .= "\0\0\0\0";
-                continue;
-            }
-            $index = $iy * $columns + $ix + 1;
-            $value = (float)($grid[$index] ?? NAN);
-            $rgba .= pack('C4', ...weatherTileColour($value, $variable, $palette));
-        }
+    $tileCacheDirectory = $decodedDirectory . '/tiles';
+    if (!is_dir($tileCacheDirectory) && !mkdir($tileCacheDirectory, 0750, true) && !is_dir($tileCacheDirectory)) {
+        weatherTileFail(503, 'Weather-map tile cache is unavailable.');
     }
-
-    $png = weatherTileEncodePng($rgba, $size, $size);
-    header('Content-Type: image/png');
+    $paletteSignature = json_encode($palette, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    $tileKey = hash('sha256', implode('|', [
+        $key, (string)$z, (string)$x, (string)$y, $interpolation, $paletteSignature
+    ]));
+    $tilePath = $tileCacheDirectory . '/' . $tileKey . '.png';
+    $etag = '"' . $tileKey . '"';
+    header('ETag: ' . $etag);
     header('Cache-Control: public, max-age=3600, stale-while-revalidate=300');
-    header('ETag: "' . hash('sha256', $key . '|' . $z . '|' . $x . '|' . $y . '|' . http_build_query($_GET)) . '"');
-    header('Content-Length: ' . strlen($png));
-    echo $png;
+    if (trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag && is_file($tilePath)) {
+        http_response_code(304);
+        exit;
+    }
+
+    $lock = fopen($tilePath . '.lock', 'c');
+    if ($lock === false || !flock($lock, LOCK_EX)) {
+        if (is_resource($lock)) fclose($lock);
+        weatherTileFail(503, 'Weather-map tile cache is busy.');
+    }
+    try {
+        if (!is_file($tilePath)) {
+            $binary = file_get_contents($dataPath);
+            if (!is_string($binary) || strlen($binary) !== $cellCount * 4) {
+                weatherTileFail(503, 'Prepared weather-map frame could not be read.');
+            }
+            $grid = unpack('g*', $binary);
+            if (!is_array($grid)) weatherTileFail(503, 'Prepared weather-map frame could not be decoded.');
+
+            $west = (float)$region['west'];
+            $south = (float)$region['south'];
+            $xStart = (int)$region['x_start'];
+            $yStart = (int)$region['y_start'];
+            $step = (float)($metadata['grid']['step_degrees'] ?? 0.25);
+            $rgba = '';
+            $size = 256;
+            $world = 256 * $tileCount;
+            for ($py = 0; $py < $size; $py++) {
+                for ($px = 0; $px < $size; $px++) {
+                    $globalX = $x * $size + $px + 0.5;
+                    $globalY = $y * $size + $py + 0.5;
+                    $longitude = ($globalX / $world) * 360.0 - 180.0;
+                    $mercator = M_PI * (1.0 - 2.0 * $globalY / $world);
+                    $latitude = rad2deg(atan(sinh($mercator)));
+                    if ($longitude < $west || $longitude > (float)$region['east'] ||
+                        $latitude < $south || $latitude > (float)$region['north']) {
+                        $rgba .= "\0\0\0\0";
+                        continue;
+                    }
+                    $gx = ($longitude + 180.0) / $step - $xStart;
+                    $gy = ($latitude + 90.0) / $step - $yStart;
+                    if ($gx < -1 || $gy < -1 || $gx > $columns || $gy > $rows) {
+                        $rgba .= "\0\0\0\0";
+                        continue;
+                    }
+                    $value = weatherTileSample($grid, $columns, $rows, $gx, $gy, $interpolation);
+                    $rgba .= pack('C4', ...weatherTileColour($value, $variable, $palette));
+                }
+            }
+
+            $png = weatherTileEncodePng($rgba, 256, 256);
+            $temporaryPath = $tilePath . '.' . bin2hex(random_bytes(6)) . '.tmp';
+            if (file_put_contents($temporaryPath, $png, LOCK_EX) !== strlen($png) ||
+                !@rename($temporaryPath, $tilePath)) {
+                @unlink($temporaryPath);
+                weatherTileFail(503, 'Unable to publish the prepared weather-map tile.');
+            }
+        }
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+
+    weatherTileCleanupCache($tileCacheDirectory);
+    header('Content-Type: image/png');
+    header('Content-Length: ' . (string)filesize($tilePath));
+    readfile($tilePath);
 } catch (InvalidArgumentException $error) {
     weatherTileFail(400, $error->getMessage());
 } catch (Throwable $error) {
