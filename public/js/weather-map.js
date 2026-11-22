@@ -579,7 +579,7 @@ protocolOptions.fileReaderConfig = {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         let sourceOptions;
-                        if (frame.prepared?.[item.variable] && appearance.interpolation === 'nearest') {
+                        if (frame.prepared?.[item.variable]) {
                             const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
                             tileUrl.searchParams.set('slot', String(frame.slot));
                             tileUrl.searchParams.set('variable', item.variable);
