@@ -76,24 +76,8 @@
 .gaugeiq-update-loading-screen p{margin:0;color:#e8f7fb;font-size:15px;font-weight:750;letter-spacing:.04em}
 .gaugeiq-update-loading-screen small{max-width:300px;color:#9fb2bd;font-size:12px;line-height:1.5}
 .gaugeiq-update-progress{position:relative;width:min(280px,76vw);height:6px;overflow:hidden;border:1px solid rgba(54,223,255,.28);border-radius:999px;background:rgba(255,255,255,.09);box-shadow:0 0 12px rgba(54,223,255,.08)}
-.gaugeiq-update-progress span{position:absolute;top:0;bottom:0;left:-38%;width:38%;border-radius:inherit;background:linear-gradient(90deg,rgba(34,211,238,.55),#36dfff);box-shadow:0 0 12px rgba(54,223,255,.65);animation:gaugeiq-update-progress 1.35s ease-in-out infinite}
-@keyframes gaugeiq-update-progress{0%{left:-38%}100%{left:100%}}
+.gaugeiq-update-progress span{position:absolute;top:0;bottom:0;left:0;width:38%;border-radius:inherit;background:linear-gradient(90deg,rgba(34,211,238,.55),#36dfff);box-shadow:0 0 12px rgba(54,223,255,.65);will-change:transform;animation:gaugeiq-update-progress 1.35s linear infinite}
+@keyframes gaugeiq-update-progress{0%{transform:translate3d(-105%,0,0)}100%{transform:translate3d(265%,0,0)}}
 body.gaugeiq-update-running{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.gaugeiq-update-progress span{animation:none;left:0;width:100%;opacity:.75}}
 
-
-/* Keep the install indicator moving on iOS when Reduce Motion is enabled.
-   Animate a compositor-friendly transform rather than the positional left property. */
-@media(prefers-reduced-motion:reduce){
-    .gaugeiq-update-progress span{
-        left:0;
-        width:38%;
-        opacity:.85;
-        will-change:transform;
-        animation:gaugeiq-update-progress-ios 3.2s linear infinite;
-    }
-}
-@keyframes gaugeiq-update-progress-ios{
-    0%{transform:translate3d(-105%,0,0)}
-    100%{transform:translate3d(265%,0,0)}
-}

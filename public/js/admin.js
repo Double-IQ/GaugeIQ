@@ -63,7 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 overlay.hidden = false;
                 document.body.classList.add('gaugeiq-update-running');
             }
-            window.setTimeout(() => HTMLFormElement.prototype.submit.call(form), 80);
+            // Give Safari two rendering opportunities so the overlay is painted
+            // before the POST navigation starts (Chromium paints this more eagerly).
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                    window.setTimeout(() => HTMLFormElement.prototype.submit.call(form), 120);
+                });
+            });
         });
     }
 
