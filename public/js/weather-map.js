@@ -529,6 +529,7 @@ protocolOptions.fileReaderConfig = {
                     slot: Number(item.slot),
                     type: item.type,
                     time: Date.parse(item.time),
+                    frameTime: String(item.time),
                     url: item.url,
                     prepared: item.prepared || {}
                 }));
@@ -582,7 +583,7 @@ protocolOptions.fileReaderConfig = {
                         if (frame.prepared?.[item.variable]) {
                             const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
                             tileUrl.searchParams.set('slot', String(frame.slot));
-                            tileUrl.searchParams.set('frame_time', new Date(frame.time).toISOString());
+                            tileUrl.searchParams.set('frame_time', frame.frameTime);
                             tileUrl.searchParams.set('variable', item.variable);
                             tileUrl.searchParams.set('interpolation', appearance.interpolation);
                             tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
