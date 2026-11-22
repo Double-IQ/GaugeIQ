@@ -589,10 +589,12 @@ protocolOptions.fileReaderConfig = {
                             tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                             const colors = item.variable === 'precipitation'
                                 ? precipitationColors
-                                : appearance.cloudColors;
+                                : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
+                                    ...appearanceDefaults.cloudColors].slice(0, 4);
                             const alphas = item.variable === 'precipitation'
                                 ? precipitationColorOpacities
-                                : appearance.cloudColorOpacities || [100, 100, 100, 100];
+                                : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
+                                    100, 100, 100, 100].slice(0, 4);
                             tileUrl.searchParams.set('colors', colors.join(','));
                             tileUrl.searchParams.set('alphas', alphas.join(','));
                             sourceOptions = {
