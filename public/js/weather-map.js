@@ -584,6 +584,7 @@ protocolOptions.fileReaderConfig = {
                             tileUrl.searchParams.set('slot', String(frame.slot));
                             tileUrl.searchParams.set('variable', item.variable);
                             tileUrl.searchParams.set('interpolation', appearance.interpolation);
+                            tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                             const colors = item.variable === 'precipitation'
                                 ? precipitationColors
                                 : appearance.cloudColors;
