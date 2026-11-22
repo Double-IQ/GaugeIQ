@@ -231,7 +231,7 @@ if ($current && !empty($current['observed_at'])) {
 <link rel="modulepreload" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs" crossorigin>
 <link rel="modulepreload" href="https://unpkg.com/@openmeteo/weather-map-layer@0.3.1/dist/index.mjs" crossorigin>
 <link rel="modulepreload" href="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261120-radar-trail-fade">
+<link rel="stylesheet" href="css/app.css?v=20261122-card-data-usage">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css">
 <script type="module" src="js/weather-map.js?v=<?= htmlspecialchars($weatherMapJsVersion, ENT_QUOTES, 'UTF-8') ?>"></script>
@@ -509,6 +509,7 @@ if ($current && !empty($current['observed_at'])) {
                     <div class="temperature-conditions-inline" id="weatherConditions" aria-live="polite">Trend: <b class="conditions-status steady">→ Steady</b></div>
                 </div>
             <?php else: ?><div class="metric-unavailable">Unavailable</div><?php endif; ?>
+            <div class="mth-footer data-usage-footer" data-usage-section="weather"><span>DATA USAGE</span><span id="weatherDataUsage">Calculating page payload…</span><span>THIS VISIT</span></div>
         </article>
 
     <?php
@@ -1296,6 +1297,7 @@ if ($current && !empty($current['observed_at'])) {
                 <?= $nowcastUpdatedAt !== false ? 'Analysis updated ' . htmlspecialchars((new DateTimeImmutable('@' . $nowcastUpdatedAt))->setTimezone(new DateTimeZone($dashboardTimezone))->format('H:i'), ENT_QUOTES) . ' · ' : '' ?>
                 ECMWF IFS forecast via Open-Meteo · not live radar · 25 km grid
             </p>
+            <div class="mth-footer data-usage-footer" data-usage-section="radar"><span>DATA USAGE</span><span id="radarDataUsage">Calculating page payload…</span><span>THIS VISIT</span></div>
         </article>
     <?php endif; ?>
 
@@ -1329,6 +1331,7 @@ if ($current && !empty($current['observed_at'])) {
              data-location-id="<?= $locationId ?>">
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
+        <div class="mth-footer data-usage-footer" data-usage-section="weather-map"><span>DATA USAGE</span><span id="weatherMapDataUsage">Measuring weather tiles…</span><span>THIS VISIT</span></div>
     </section>
     <details class="weather-map-credits-card">
         <summary class="weather-map-credits-toggle">
@@ -1449,6 +1452,7 @@ if ($current && !empty($current['observed_at'])) {
         </div>
   </details>
         <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
+        <div class="mth-footer data-usage-footer" data-usage-section="moon-tide"><span>DATA USAGE</span><span id="moonTideDataUsage">Measuring tide data…</span><span>THIS VISIT</span></div>
     </section>
 
     <section class="card weather-change-card wind-hud-card mth-hud-card" aria-labelledby="weatherChangeTitle">
@@ -1613,5 +1617,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/app.js?v=20261120-radar-sweep-fade-5s"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261120-lunar-disc-realistic-v1"></script>
+<script src="js/data-usage.js?v=20261122-card-usage-v1"></script>
 </body>
 </html>
