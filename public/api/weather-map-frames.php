@@ -42,7 +42,16 @@ try {
     // An authenticated diagnostic request explicitly bypasses the normal
     // hourly schedule cache so operators can verify newly deployed scheduler
     // logic immediately. Public map requests retain the hourly refresh limit.
-    $weatherMapCache->refreshScheduleIfDue($diagnosticAuthorized ? 0 : 3600);
+    // If an upstream refresh fails, keep serving the last known-good schedule:
+    // the refresh service writes new rows transactionally, so existing rows
+    // remain intact until a complete replacement is ready.
+    $scheduleRefreshError = null;
+    try {
+        $weatherMapCache->refreshScheduleIfDue($diagnosticAuthorized ? 0 : 3600);
+    } catch (Throwable $refreshError) {
+        $scheduleRefreshError = $refreshError;
+        error_log('GaugeIQ weather-map schedule refresh failed; trying last known-good frames: ' . $refreshError->getMessage());
+    }
 
     $stmt = $pdo->query(
         "SELECT slot_id, frame_type, frame_time, file_url, model_run_time, refreshed_at
