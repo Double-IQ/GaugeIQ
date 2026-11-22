@@ -325,9 +325,7 @@ final class WeatherMapCacheService
         $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
         $pendingValue = $pendingQuery->fetchColumn();
         $pendingUrls = is_string($pendingValue) ? json_decode($pendingValue, true) : [];
-        if (!is_array($pendingUrls) || $pendingUrls === []) {
-            return ['skipped' => true, 'frames' => 0, 'blocks' => 0, 'output' => 'No new ECMWF frames require prefetch.'];
-        }
+        if (!is_array($pendingUrls)) $pendingUrls = [];
 
         try {
             $framesQuery = $this->pdo->query(
@@ -336,12 +334,29 @@ final class WeatherMapCacheService
             );
             $frames = [];
             $pendingSet = array_fill_keys(array_filter($pendingUrls, 'is_string'), true);
+            $decodedCacheRoot = (string)($this->config['weather_map_cache']['directory'] ?? (dirname(__DIR__) . '/storage/weather-map-cache'));
+            if ($decodedCacheRoot === '' || $decodedCacheRoot[0] !== '/') {
+                throw new RuntimeException('The weather-map cache directory must be an absolute server path.');
+            }
+            $decodedDirectory = rtrim($decodedCacheRoot, '/') . '/decoded';
             foreach ($framesQuery->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $url = (string)$row['file_url'];
-                if (!isset($pendingSet[$url])) continue;
+                $type = (string)$row['frame_type'];
+                $needsDecode = false;
+                if ($type === 'past') {
+                    foreach (['cloud_cover', 'precipitation'] as $variable) {
+                        $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v1');
+                        if (!is_file($decodedDirectory . '/' . $key . '.f32') ||
+                            !is_file($decodedDirectory . '/' . $key . '.json')) {
+                            $needsDecode = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isset($pendingSet[$url]) && !$needsDecode) continue;
                 $frames[] = [
                     'slot' => (int)$row['slot_id'],
-                    'type' => (string)$row['frame_type'],
+                    'type' => $type,
                     'time' => (string)$row['frame_time'],
                     'url' => $url,
                 ];
@@ -358,7 +373,11 @@ final class WeatherMapCacheService
 
             require_once __DIR__ . '/WeatherMapRegionalPrefetcher.php';
             $concurrency = max(1, min(16, (int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
-            $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency);
+            $cacheRoot = (string)($this->config['weather_map_cache']['directory'] ?? (dirname(__DIR__) . '/storage/weather-map-cache'));
+            if ($cacheRoot === '' || $cacheRoot[0] !== '/') {
+                throw new RuntimeException('The weather-map cache directory must be an absolute server path.');
+            }
+            $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency, rtrim($cacheRoot, '/') . '/decoded');
             $result = $prefetcher->prefetch($frames);
 
             $completedUrls = array_fill_keys(array_column($frames, 'url'), true);

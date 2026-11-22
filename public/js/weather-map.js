@@ -526,9 +526,14 @@ protocolOptions.fileReaderConfig = {
 
                 const scheduledFrames = schedule.frames.map(item => ({
                     id: item.type + '-' + item.slot,
+                    slot: Number(item.slot),
                     type: item.type,
                     time: Date.parse(item.time),
-                    url: item.url
+                    frameTime: String(item.time),
+                    url: item.url,
+                    prepared: item.prepared || {},
+                    forceBrowser: false,
+                    usingPreparedTiles: false
                 }));
                 if (scheduledFrames.some(frame =>
                     !Number.isFinite(frame.time) ||
@@ -576,19 +581,46 @@ protocolOptions.fileReaderConfig = {
                         frame.loadError = null;
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
-                        const dataUrl = new URL(frame.url);
-                        dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                        dataUrl.searchParams.set('variable', item.variable);
-                        dataUrl.searchParams.set('interpolation', appearance.interpolation);
-                        dataUrl.searchParams.set('color_blend', 'true');
-                        dataUrl.searchParams.set('tile_size', '256');
-
-                        map.addSource(sourceId, {
-                            type: 'raster',
-                            url: 'om://' + dataUrl.href,
-                            tileSize: 256,
-                            maxzoom: 12
-                        });
+                        let sourceOptions;
+                        if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
+                            const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
+                            tileUrl.searchParams.set('slot', String(frame.slot));
+                            tileUrl.searchParams.set('frame_time', frame.frameTime);
+                            tileUrl.searchParams.set('variable', item.variable);
+                            tileUrl.searchParams.set('interpolation', appearance.interpolation);
+                            tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
+                            const colors = item.variable === 'precipitation'
+                                ? precipitationColors
+                                : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
+                                    ...appearanceDefaults.cloudColors].slice(0, 4);
+                            const alphas = item.variable === 'precipitation'
+                                ? precipitationColorOpacities
+                                : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
+                                    100, 100, 100, 100].slice(0, 4);
+                            tileUrl.searchParams.set('colors', colors.join(','));
+                            tileUrl.searchParams.set('alphas', alphas.join(','));
+                            sourceOptions = {
+                                type: 'raster',
+                                tiles: [tileUrl.href + '&z={z}&x={x}&y={y}'],
+                                tileSize: 256,
+                                maxzoom: 12
+                            };
+                            frame.usingPreparedTiles = true;
+                        } else {
+                            const dataUrl = new URL(frame.url);
+                            dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
+                            dataUrl.searchParams.set('variable', item.variable);
+                            dataUrl.searchParams.set('interpolation', appearance.interpolation);
+                            dataUrl.searchParams.set('color_blend', 'true');
+                            dataUrl.searchParams.set('tile_size', '256');
+                            sourceOptions = {
+                                type: 'raster',
+                                url: 'om://' + dataUrl.href,
+                                tileSize: 256,
+                                maxzoom: 12
+                            };
+                        }
+                        map.addSource(sourceId, sourceOptions);
                         map.addLayer({
                             id: layerId,
                             type: 'raster',
@@ -978,6 +1010,19 @@ protocolOptions.fileReaderConfig = {
             const sourceId = event?.sourceId || event?.source?.id || '';
             if (String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
+                if (frame?.usingPreparedTiles && !frame.forceBrowser && animationFrameSourceAdder) {
+                    // A server tile failure must not strand playback. Replace this
+                    // frame with the proven browser renderer and keep the other
+                    // prepared frames untouched.
+                    removeAnimationFrameSources(frame);
+                    frame.forceBrowser = true;
+                    frame.usingPreparedTiles = false;
+                    frame.loadAttempts = 0;
+                    frame.loadError = null;
+                    animationFrameSourceAdder(frame);
+                    setStatus('Prepared weather tile unavailable · using the browser renderer for this frame…');
+                    return;
+                }
                 if (frame) frame.loadError = message;
                 if (animationLoadTimeout !== null) {
                     animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
@@ -996,10 +1041,7 @@ protocolOptions.fileReaderConfig = {
         mapInstance = map;
         window.GaugeIQWeatherMapResize = () => { if (mapInstance) mapInstance.resize(); };
         layerSelect.addEventListener('change', () => {
-            if (mapInstance && mapInstance.isStyleLoaded()) {
-                clearAnimation();
-                showWeatherLayer(layerSelect.value);
-            }
+            if (mapInstance && mapInstance.isStyleLoaded()) prepareAnimation(true);
         });
         }
     
