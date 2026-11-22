@@ -9,7 +9,11 @@ final class WeatherMapRegionalPrefetcher
     private const BLOCK_SIZE = 65536;
     private const USER_AGENT = 'GaugeIQ-WeatherMap/1.0';
 
-    public function __construct(private readonly string $proxyBaseUrl, private readonly int $concurrency = 6)
+    public function __construct(
+        private readonly string $proxyBaseUrl,
+        private readonly int $concurrency = 6,
+        private readonly string $decodedCacheDirectory = ''
+    )
     {
         if (!str_starts_with($this->proxyBaseUrl, 'https://')) {
             throw new InvalidArgumentException('The GaugeIQ weather-map proxy must use HTTPS.');
@@ -91,6 +95,15 @@ final class WeatherMapRegionalPrefetcher
             $groupBlockCount = count($requests);
             $this->fetchBlocksConcurrently(array_values($requests));
             $blockCount += $groupBlockCount;
+
+            // Decode the four visible past frames on the server after their
+            // regional compressed blocks have been warmed. Future frames are
+            // retained for Rain Radar but are not part of the map animation.
+            if (($frameGroup[0]['type'] ?? '') === 'past') {
+                foreach ($frameGroup as $frame) {
+                    $this->decodeAndCachePastFrame($frame);
+                }
+            }
         }
         $encodingText = [];
         foreach ($encodingSummaries as $fieldName => $signatures) {
@@ -116,6 +129,114 @@ final class WeatherMapRegionalPrefetcher
                 $encodingText === [] ? 'unavailable' : implode('; ', $encodingText)
             ),
         ];
+    }
+
+
+    /**
+     * Decode the South Africa regional grid for a past frame and persist a
+     * compact Float32 cache. The browser can consume these prepared values in
+     * the server-tile stage without parsing OM metadata or PFor chunks.
+     */
+    private function decodeAndCachePastFrame(array $frame): void
+    {
+        $url = (string)($frame['url'] ?? '');
+        $this->validateFrameUrl($url);
+        $fileSize = $this->fetchFileSize($url);
+        $reader = new WeatherMapOmReader(
+            fn(int $offset, int $length): string => $this->fetchProxyRange($url, $offset, $length),
+            $fileSize
+        );
+
+        $west = -25.0;
+        $south = -45.0;
+        $east = 60.0;
+        $north = 5.0;
+        $step = 0.25;
+        $width = 1440;
+        $height = 721;
+        $xStart = max(0, (int)floor(($west + 180.0) / $step) - 2);
+        $xEnd = min($width, (int)ceil(($east + 180.0) / $step) + 3);
+        $yStart = max(0, (int)floor(($south + 90.0) / $step) - 2);
+        $yEnd = min($height, (int)ceil(($north + 90.0) / $step) + 3);
+
+        $indices = [];
+        for ($y = $yStart; $y < $yEnd; $y++) {
+            $rowStart = $y * $width;
+            for ($x = $xStart; $x < $xEnd; $x++) {
+                $indices[] = $rowStart + $x;
+            }
+        }
+        if ($indices === []) {
+            throw new RuntimeException('The server-side weather-map decode region is empty.');
+        }
+
+        $directory = $this->decodedCacheDirectory !== ''
+            ? $this->decodedCacheDirectory
+            : dirname(__DIR__) . '/storage/weather-map-cache/decoded';
+        if (!str_starts_with($directory, '/')) {
+            throw new RuntimeException('The decoded weather-map cache directory must be an absolute path.');
+        }
+        if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
+            throw new RuntimeException('Unable to create the decoded weather-map cache directory.');
+        }
+
+        foreach (['cloud_cover', 'precipitation'] as $variable) {
+            $field = $reader->getArrayInfo($variable);
+            if (($field['dimensions'] ?? null) !== [$height, $width]) {
+                throw new RuntimeException('The ' . $variable . ' field does not match the ECMWF 0.25-degree regular grid.');
+            }
+            $values = $reader->decodeFloatArrayGridIndices($field, $indices);
+            if (count($values) !== count($indices)) {
+                throw new RuntimeException('The server did not decode every requested ' . $variable . ' grid cell.');
+            }
+
+            $binary = '';
+            foreach ($indices as $index) {
+                $value = (float)$values[$index];
+                $binary .= pack('g', $value);
+            }
+            $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v1');
+            $dataPath = rtrim($directory, '/') . '/' . $key . '.f32';
+            $metaPath = rtrim($directory, '/') . '/' . $key . '.json';
+            $metadata = [
+                'version' => 1,
+                'source_url_sha256' => hash('sha256', $url),
+                'frame_time' => (string)($frame['time'] ?? ''),
+                'variable' => $variable,
+                'grid' => ['width' => $width, 'height' => $height, 'step_degrees' => $step],
+                'region' => [
+                    'west' => $west, 'south' => $south, 'east' => $east, 'north' => $north,
+                    'x_start' => $xStart, 'x_end' => $xEnd,
+                    'y_start' => $yStart, 'y_end' => $yEnd,
+                    'columns' => $xEnd - $xStart, 'rows' => $yEnd - $yStart,
+                ],
+                'encoding' => 'float32-le',
+                'cell_count' => count($indices),
+                'prepared_at' => gmdate('c'),
+            ];
+
+            $suffix = '.' . bin2hex(random_bytes(6)) . '.tmp';
+            $temporaryData = $dataPath . $suffix;
+            $temporaryMeta = $metaPath . $suffix;
+            if (file_put_contents($temporaryData, $binary, LOCK_EX) !== strlen($binary)) {
+                @unlink($temporaryData);
+                throw new RuntimeException('Unable to write the decoded ' . $variable . ' weather-map cache.');
+            }
+            if (file_put_contents(
+                $temporaryMeta,
+                json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+                LOCK_EX
+            ) === false) {
+                @unlink($temporaryData);
+                @unlink($temporaryMeta);
+                throw new RuntimeException('Unable to write decoded weather-map metadata.');
+            }
+            if (!@rename($temporaryData, $dataPath) || !@rename($temporaryMeta, $metaPath)) {
+                @unlink($temporaryData);
+                @unlink($temporaryMeta);
+                throw new RuntimeException('Unable to publish the decoded weather-map cache atomically.');
+            }
+        }
     }
 
     private function validateFrameUrl(string $url): void
