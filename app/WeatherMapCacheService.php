@@ -358,7 +358,11 @@ final class WeatherMapCacheService
 
             require_once __DIR__ . '/WeatherMapRegionalPrefetcher.php';
             $concurrency = max(1, min(16, (int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
-            $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency);
+            $cacheRoot = (string)($this->config['weather_map_cache']['directory'] ?? (dirname(__DIR__) . '/storage/weather-map-cache'));
+            if ($cacheRoot === '' || $cacheRoot[0] !== '/') {
+                throw new RuntimeException('The weather-map cache directory must be an absolute server path.');
+            }
+            $prefetcher = new WeatherMapRegionalPrefetcher($baseUrl, $concurrency, rtrim($cacheRoot, '/') . '/decoded');
             $result = $prefetcher->prefetch($frames);
 
             $completedUrls = array_fill_keys(array_column($frames, 'url'), true);
