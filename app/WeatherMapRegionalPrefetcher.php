@@ -210,8 +210,19 @@ final class WeatherMapRegionalPrefetcher
             }
 
             $binary = '';
+            $finiteCount = 0;
+            $missingCount = 0;
+            $minimum = INF;
+            $maximum = -INF;
             foreach ($indices as $index) {
                 $value = (float)$values[$index];
+                if (is_finite($value)) {
+                    $finiteCount++;
+                    $minimum = min($minimum, $value);
+                    $maximum = max($maximum, $value);
+                } else {
+                    $missingCount++;
+                }
                 $binary .= pack('g', $value);
             }
             $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v1');
@@ -231,6 +242,13 @@ final class WeatherMapRegionalPrefetcher
                 ],
                 'encoding' => 'float32-le',
                 'cell_count' => count($indices),
+                'data_quality' => [
+                    'finite_count' => $finiteCount,
+                    'missing_count' => $missingCount,
+                    'finite_percent' => round(($finiteCount / count($indices)) * 100, 3),
+                    'minimum' => $finiteCount > 0 ? $minimum : null,
+                    'maximum' => $finiteCount > 0 ? $maximum : null,
+                ],
                 'prepared_at' => gmdate('c'),
             ];
 
