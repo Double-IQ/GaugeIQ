@@ -531,7 +531,9 @@ protocolOptions.fileReaderConfig = {
                     time: Date.parse(item.time),
                     frameTime: String(item.time),
                     url: item.url,
-                    prepared: item.prepared || {}
+                    prepared: item.prepared || {},
+                    forceBrowser: false,
+                    usingPreparedTiles: false
                 }));
                 if (scheduledFrames.some(frame =>
                     !Number.isFinite(frame.time) ||
@@ -580,7 +582,7 @@ protocolOptions.fileReaderConfig = {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         let sourceOptions;
-                        if (frame.prepared?.[item.variable]) {
+                        if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
                             const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
                             tileUrl.searchParams.set('slot', String(frame.slot));
                             tileUrl.searchParams.set('frame_time', frame.frameTime);
@@ -1008,6 +1010,19 @@ protocolOptions.fileReaderConfig = {
             const sourceId = event?.sourceId || event?.source?.id || '';
             if (String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
+                if (frame?.usingPreparedTiles && !frame.forceBrowser && animationFrameSourceAdder) {
+                    // A server tile failure must not strand playback. Replace this
+                    // frame with the proven browser renderer and keep the other
+                    // prepared frames untouched.
+                    removeAnimationFrameSources(frame);
+                    frame.forceBrowser = true;
+                    frame.usingPreparedTiles = false;
+                    frame.loadAttempts = 0;
+                    frame.loadError = null;
+                    animationFrameSourceAdder(frame);
+                    setStatus('Prepared weather tile unavailable · using the browser renderer for this frame…');
+                    return;
+                }
                 if (frame) frame.loadError = message;
                 if (animationLoadTimeout !== null) {
                     animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
