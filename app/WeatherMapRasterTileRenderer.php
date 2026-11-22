@@ -4,6 +4,22 @@ declare(strict_types=1);
 /** Samples the decoded regular ECMWF grid using the selected map interpolation. */
 final class WeatherMapRasterTileRenderer
 {
+    private static function valueAt(array $grid, int $columns, int $rows, int $x, int $y): float
+    {
+        $x = max(0, min($columns - 1, $x));
+        $y = max(0, min($rows - 1, $y));
+        return (float)($grid[$y * $columns + $x] ?? NAN);
+    }
+
+    private static function cubic(float $p0, float $p1, float $p2, float $p3, float $t): float
+    {
+        return 0.5 * (
+            2 * $p1 + (-$p0 + $p2) * $t +
+            (2 * $p0 - 5 * $p1 + 4 * $p2 - $p3) * $t * $t +
+            (-$p0 + 3 * $p1 - 3 * $p2 + $p3) * $t * $t * $t
+        );
+    }
+
     public static function sample(array $grid, int $columns, int $rows, float $x, float $y, string $mode): float
     {
         if (!in_array($mode, ['nearest', 'linear', 'cubic', 'monotone'], true)) {
@@ -13,54 +29,50 @@ final class WeatherMapRasterTileRenderer
             throw new InvalidArgumentException('Invalid decoded weather-map grid.');
         }
 
-        $at = static function (int $ix, int $iy) use ($grid, $columns, $rows): float {
-            $ix = max(0, min($columns - 1, $ix));
-            $iy = max(0, min($rows - 1, $iy));
-            return (float)($grid[$iy * $columns + $ix] ?? NAN);
-        };
         $x0 = (int)floor($x);
         $y0 = (int)floor($y);
         $fx = $x - $x0;
         $fy = $y - $y0;
-        if ($mode === 'nearest') return $at((int)round($x), (int)round($y));
+        if ($mode === 'nearest') {
+            return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
+        }
 
         if ($mode === 'linear') {
-            $a = $at($x0, $y0);
-            $b = $at($x0 + 1, $y0);
-            $c = $at($x0, $y0 + 1);
-            $d = $at($x0 + 1, $y0 + 1);
+            $a = self::valueAt($grid, $columns, $rows, $x0, $y0);
+            $b = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0);
+            $c = self::valueAt($grid, $columns, $rows, $x0, $y0 + 1);
+            $d = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + 1);
             if (!is_finite($a) || !is_finite($b) || !is_finite($c) || !is_finite($d)) {
-                return $at((int)round($x), (int)round($y));
+                return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
             }
             return ($a * (1 - $fx) + $b * $fx) * (1 - $fy) +
                 ($c * (1 - $fx) + $d * $fx) * $fy;
         }
 
-        $interpolate = static function (float $p0, float $p1, float $p2, float $p3, float $t): float {
-            return 0.5 * (
-                2 * $p1 + (-$p0 + $p2) * $t +
-                (2 * $p0 - 5 * $p1 + 4 * $p2 - $p3) * $t * $t +
-                (-$p0 + 3 * $p1 - 3 * $p2 + $p3) * $t * $t * $t
-            );
-        };
-
-        $intermediate = [];
+        $rowsOfValues = [];
         for ($row = -1; $row <= 2; $row++) {
-            $samples = [
-                $at($x0 - 1, $y0 + $row),
-                $at($x0, $y0 + $row),
-                $at($x0 + 1, $y0 + $row),
-                $at($x0 + 2, $y0 + $row),
-            ];
-            foreach ($samples as $sample) {
-                if (!is_finite($sample)) return $at((int)round($x), (int)round($y));
+            $p0 = self::valueAt($grid, $columns, $rows, $x0 - 1, $y0 + $row);
+            $p1 = self::valueAt($grid, $columns, $rows, $x0, $y0 + $row);
+            $p2 = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + $row);
+            $p3 = self::valueAt($grid, $columns, $rows, $x0 + 2, $y0 + $row);
+            if (!is_finite($p0) || !is_finite($p1) || !is_finite($p2) || !is_finite($p3)) {
+                return self::valueAt($grid, $columns, $rows, (int)round($x), (int)round($y));
             }
-            $intermediate[] = $interpolate($samples[0], $samples[1], $samples[2], $samples[3], $fx);
+            $rowsOfValues[] = self::cubic($p0, $p1, $p2, $p3, $fx);
         }
-        $value = $interpolate($intermediate[0], $intermediate[1], $intermediate[2], $intermediate[3], $fy);
+        $value = self::cubic(
+            $rowsOfValues[0],
+            $rowsOfValues[1],
+            $rowsOfValues[2],
+            $rowsOfValues[3],
+            $fy
+        );
         if ($mode === 'monotone') {
-            $corners = [$at($x0, $y0), $at($x0 + 1, $y0), $at($x0, $y0 + 1), $at($x0 + 1, $y0 + 1)];
-            $value = max(min($corners), min(max($corners), $value));
+            $a = self::valueAt($grid, $columns, $rows, $x0, $y0);
+            $b = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0);
+            $c = self::valueAt($grid, $columns, $rows, $x0, $y0 + 1);
+            $d = self::valueAt($grid, $columns, $rows, $x0 + 1, $y0 + 1);
+            $value = max(min($a, $b, $c, $d), min(max($a, $b, $c, $d), $value));
         }
         return $value;
     }
