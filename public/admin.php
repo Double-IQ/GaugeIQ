@@ -98,7 +98,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <meta name="theme-color" content="#07131d">
 <link rel="stylesheet" href="css/app.css?v=20261101-admin-action-buttons-v2">
 <link rel="stylesheet" href="css/alerts.css?v=20261029-notification-devices">
-<link rel="stylesheet" href="css/admin-console.css?v=20261120-admin-action-shine">
+<link rel="stylesheet" href="css/admin-console.css?v=20261122-ios-progress-transform">
 <link rel="stylesheet" href="css/admin-interactions.css?v=20261116-hud-feedback">
 <title>GaugeIQ Administration</title>
 </head>
@@ -203,7 +203,7 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <footer class="admin-console-footer"><span>GAUGЕIQ · ADMINISTRATION</span><a href="./">Return to dashboard</a></footer>
 
 <script src="js/admin-interactions.js?v=20261120-admin-action-shine" defer></script>
-<script src="js/admin.js?v=20261117-update-loading-screen" defer></script>
+<script src="js/admin.js?v=20261122-ios-progress-paint" defer></script>
 <script src="js/alerts.js?v=20261016-wvi-alerts" defer></script>
 </main>
 </body>
