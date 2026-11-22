@@ -325,9 +325,7 @@ final class WeatherMapCacheService
         $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
         $pendingValue = $pendingQuery->fetchColumn();
         $pendingUrls = is_string($pendingValue) ? json_decode($pendingValue, true) : [];
-        if (!is_array($pendingUrls) || $pendingUrls === []) {
-            return ['skipped' => true, 'frames' => 0, 'blocks' => 0, 'output' => 'No new ECMWF frames require prefetch.'];
-        }
+        if (!is_array($pendingUrls)) $pendingUrls = [];
 
         try {
             $framesQuery = $this->pdo->query(
