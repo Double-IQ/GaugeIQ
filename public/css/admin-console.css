@@ -80,3 +80,20 @@
 @keyframes gaugeiq-update-progress{0%{left:-38%}100%{left:100%}}
 body.gaugeiq-update-running{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.gaugeiq-update-progress span{animation:none;left:0;width:100%;opacity:.75}}
+
+
+/* Keep the install indicator moving on iOS when Reduce Motion is enabled.
+   Animate a compositor-friendly transform rather than the positional left property. */
+@media(prefers-reduced-motion:reduce){
+    .gaugeiq-update-progress span{
+        left:0;
+        width:38%;
+        opacity:.85;
+        will-change:transform;
+        animation:gaugeiq-update-progress-ios 3.2s linear infinite;
+    }
+}
+@keyframes gaugeiq-update-progress-ios{
+    0%{transform:translate3d(-105%,0,0)}
+    100%{transform:translate3d(265%,0,0)}
+}
