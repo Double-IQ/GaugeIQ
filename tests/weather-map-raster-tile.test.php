@@ -32,7 +32,7 @@ assertWeatherRaster(is_finite($edge), 'Cubic interpolation failed at a grid boun
 
 $invalidModeRejected = false;
 try {
-    WeatherMapRasterTileRenderer::sample($grid, $columns, $rows, 1.0, 1.0, 'unknown');
+    WeatherMapRasterTileRenderer::validate($grid, $columns, $rows, 'unknown');
 } catch (InvalidArgumentException) {
     $invalidModeRejected = true;
 }
