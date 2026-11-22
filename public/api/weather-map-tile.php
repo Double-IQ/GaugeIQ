@@ -90,61 +90,6 @@ function weatherTileColour(float $value, string $variable, array $palette): arra
 }
 
 
-function weatherTileSample(array $grid, int $columns, int $rows, float $x, float $y, string $mode): float
-{
-    $at = static function (int $ix, int $iy) use ($grid, $columns, $rows): float {
-        $ix = max(0, min($columns - 1, $ix));
-        $iy = max(0, min($rows - 1, $iy));
-        return (float)($grid[$iy * $columns + $ix + 1] ?? NAN);
-    };
-
-    $x0 = (int)floor($x);
-    $y0 = (int)floor($y);
-    $fx = $x - $x0;
-    $fy = $y - $y0;
-    if ($mode === 'nearest') return $at((int)round($x), (int)round($y));
-
-    if ($mode === 'linear') {
-        $a = $at($x0, $y0);
-        $b = $at($x0 + 1, $y0);
-        $c = $at($x0, $y0 + 1);
-        $d = $at($x0 + 1, $y0 + 1);
-        if (!is_finite($a) || !is_finite($b) || !is_finite($c) || !is_finite($d)) {
-            return $at((int)round($x), (int)round($y));
-        }
-        return ($a * (1 - $fx) + $b * $fx) * (1 - $fy) +
-            ($c * (1 - $fx) + $d * $fx) * $fy;
-    }
-
-    $interpolate = static function (float $p0, float $p1, float $p2, float $p3, float $t): float {
-        return 0.5 * (
-            2 * $p1 + (-$p0 + $p2) * $t +
-            (2 * $p0 - 5 * $p1 + 4 * $p2 - $p3) * $t * $t +
-            (-$p0 + 3 * $p1 - 3 * $p2 + $p3) * $t * $t * $t
-        );
-    };
-
-    $intermediate = [];
-    for ($row = -1; $row <= 2; $row++) {
-        $samples = [
-            $at($x0 - 1, $y0 + $row),
-            $at($x0, $y0 + $row),
-            $at($x0 + 1, $y0 + $row),
-            $at($x0 + 2, $y0 + $row),
-        ];
-        foreach ($samples as $sample) {
-            if (!is_finite($sample)) return $at((int)round($x), (int)round($y));
-        }
-        $intermediate[] = $interpolate($samples[0], $samples[1], $samples[2], $samples[3], $fx);
-    }
-    $value = $interpolate($intermediate[0], $intermediate[1], $intermediate[2], $intermediate[3], $fy);
-    if ($mode === 'monotone') {
-        $corners = [$at($x0, $y0), $at($x0 + 1, $y0), $at($x0, $y0 + 1), $at($x0 + 1, $y0 + 1)];
-        $value = max(min($corners), min(max($corners), $value));
-    }
-    return $value;
-}
-
 function weatherTileCleanupCache(string $directory, int $maxBytes = 134217728): void
 {
     $files = glob(rtrim($directory, '/') . '/*.png') ?: [];
@@ -197,6 +142,7 @@ try {
 
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
+    require_once __DIR__ . '/../../app/WeatherMapRasterTileRenderer.php';
     $pdo = (new Database($config))->pdo();
     $stmt = $pdo->prepare("SELECT file_url, frame_time FROM gaugeiq_weather_map_frames WHERE frame_type = 'past' AND slot_id = ? LIMIT 1");
     $stmt->execute([$slot]);
@@ -297,7 +243,7 @@ try {
                         $rgba .= "\0\0\0\0";
                         continue;
                     }
-                    $value = weatherTileSample($grid, $columns, $rows, $gx, $gy, $interpolation);
+                    $value = WeatherMapRasterTileRenderer::sample(array_values($grid), $columns, $rows, $gx, $gy, $interpolation);
                     if ($variable === 'precipitation' && is_finite($value)) {
                         $value = max(0.0, $value) / (float)$deltaTimeHours;
                     }
