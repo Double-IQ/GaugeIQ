@@ -216,6 +216,7 @@ try {
             }
             $grid = unpack('g*', $binary);
             if (!is_array($grid)) weatherTileFail(503, 'Prepared weather-map frame could not be decoded.');
+            $grid = array_values($grid);
 
             $west = (float)$region['west'];
             $south = (float)$region['south'];
@@ -243,7 +244,7 @@ try {
                         $rgba .= "\0\0\0\0";
                         continue;
                     }
-                    $value = WeatherMapRasterTileRenderer::sample(array_values($grid), $columns, $rows, $gx, $gy, $interpolation);
+                    $value = WeatherMapRasterTileRenderer::sample($grid, $columns, $rows, $gx, $gy, $interpolation);
                     if ($variable === 'precipitation' && is_finite($value)) {
                         $value = max(0.0, $value) / (float)$deltaTimeHours;
                     }
