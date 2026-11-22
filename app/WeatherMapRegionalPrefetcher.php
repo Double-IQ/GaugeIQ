@@ -45,6 +45,7 @@ final class WeatherMapRegionalPrefetcher
         $encodingSummaries = [];
         $blockCount = 0;
         $decodedPastFrameCount = 0;
+        $coverageSummaries = [];
         $forecastFrames = array_values(array_filter(
             $frames,
             static fn(array $frame): bool => ($frame['type'] ?? '') === 'future'
@@ -102,7 +103,18 @@ final class WeatherMapRegionalPrefetcher
             // retained for Rain Radar but are not part of the map animation.
             if (($frameGroup[0]['type'] ?? '') === 'past') {
                 foreach ($frameGroup as $frame) {
-                    $this->decodeAndCachePastFrame($frame);
+                    $coverage = $this->decodeAndCachePastFrame($frame);
+                    foreach ($coverage as $item) {
+                        $coverageSummaries[] = sprintf(
+                            '%s %s: %.3f%% finite (%d missing; range %s to %s)',
+                            (string)($frame['time'] ?? 'unknown frame'),
+                            $item['variable'],
+                            $item['finite_percent'],
+                            $item['missing_count'],
+                            $item['minimum'] === null ? 'n/a' : sprintf('%.4f', $item['minimum']),
+                            $item['maximum'] === null ? 'n/a' : sprintf('%.4f', $item['maximum'])
+                        );
+                    }
                     $decodedPastFrameCount++;
                 }
             }
@@ -130,7 +142,8 @@ final class WeatherMapRegionalPrefetcher
                 count($frames),
                 $blockCount,
                 $decodedPastFrameCount,
-                $encodingText === [] ? 'unavailable' : implode('; ', $encodingText)
+                ($encodingText === [] ? 'unavailable' : implode('; ', $encodingText)) .
+                ($coverageSummaries === [] ? '' : ' Decoded coverage: ' . implode('; ', $coverageSummaries))
             ),
         ];
     }
@@ -156,7 +169,7 @@ final class WeatherMapRegionalPrefetcher
      * compact Float32 cache. The browser can consume these prepared values in
      * the server-tile stage without parsing OM metadata or PFor chunks.
      */
-    private function decodeAndCachePastFrame(array $frame): void
+    private function decodeAndCachePastFrame(array $frame): array
     {
         $url = (string)($frame['url'] ?? '');
         $this->validateFrameUrl($url);
@@ -273,7 +286,15 @@ final class WeatherMapRegionalPrefetcher
                 @unlink($temporaryMeta);
                 throw new RuntimeException('Unable to publish the decoded weather-map cache atomically.');
             }
+            $coverage[] = [
+                'variable' => $variable,
+                'finite_percent' => round(($finiteCount / count($indices)) * 100, 3),
+                'missing_count' => $missingCount,
+                'minimum' => $finiteCount > 0 ? $minimum : null,
+                'maximum' => $finiteCount > 0 ? $maximum : null,
+            ];
         }
+        return $coverage;
     }
 
     private function validateFrameUrl(string $url): void
