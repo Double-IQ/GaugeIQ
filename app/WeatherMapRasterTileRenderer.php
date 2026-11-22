@@ -20,7 +20,7 @@ final class WeatherMapRasterTileRenderer
         );
     }
 
-    public static function sample(array $grid, int $columns, int $rows, float $x, float $y, string $mode): float
+    public static function validate(array $grid, int $columns, int $rows, string $mode): void
     {
         if (!in_array($mode, ['nearest', 'linear', 'cubic', 'monotone'], true)) {
             throw new InvalidArgumentException('Unsupported weather-map interpolation mode.');
@@ -28,7 +28,10 @@ final class WeatherMapRasterTileRenderer
         if ($columns < 1 || $rows < 1 || count($grid) !== $columns * $rows) {
             throw new InvalidArgumentException('Invalid decoded weather-map grid.');
         }
+    }
 
+    public static function sample(array $grid, int $columns, int $rows, float $x, float $y, string $mode): float
+    {
         $x0 = (int)floor($x);
         $y0 = (int)floor($y);
         $fx = $x - $x0;
