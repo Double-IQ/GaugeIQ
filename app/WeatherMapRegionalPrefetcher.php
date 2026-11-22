@@ -212,6 +212,7 @@ final class WeatherMapRegionalPrefetcher
             throw new RuntimeException('Unable to create the decoded weather-map cache directory.');
         }
 
+        $coverage = [];
         foreach (['cloud_cover', 'precipitation'] as $variable) {
             $field = $reader->getArrayInfo($variable);
             if (($field['dimensions'] ?? null) !== [$height, $width]) {
