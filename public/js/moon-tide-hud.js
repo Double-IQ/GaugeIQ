@@ -536,7 +536,7 @@
             Math.cos(moonPosition.dec*rad)*Math.cos(sunPosition.dec*rad)*Math.cos((moonPosition.ra-sunPosition.ra)*rad)
         )));
         const lit = (1 + Math.cos(Math.PI - phaseAngle))/2;
-        orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
+        if (orbitMoon) orbitMoon.style.setProperty('--mth-moon-lit',String(lit));
         // The Sun is a fixed external light source in this diagram. Only
         // Earth's surface rotates and the Moon moves along its orbit.
         const axis = root.querySelector('.mth-tidal-axis');
