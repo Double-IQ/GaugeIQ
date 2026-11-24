@@ -457,12 +457,27 @@
         const aspect=pixelWidth/pixelHeight;
         gl.disable(gl.BLEND);
         drawTrackerSphere([0,0,0],1,0,sunDir,right,up,forward,aspect);
-        // Small gold location marker sits just above the surface at the camera's
-        // sub-observer point; it remains tied to the configured dashboard location.
+        // The gold marker is the observer's location on the near-side surface.
         gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
         drawTrackerSphere(forward.map(v=>v*1.012),0.025,3,sunDir,right,up,forward,aspect);
-        drawTrackerSphere(moonDir.map(v=>v*1.78),0.145,1,sunDir,right,up,forward,aspect);
-        drawTrackerSphere(sunDir.map(v=>v*2.75),0.205,2,sunDir,right,up,forward,aspect);
+        // Plot Sun and Moon on the observer's local sky dome. Their positions
+        // use true altitude/azimuth for this latitude, longitude and timestamp.
+        // This avoids placing the midday Sun behind the Earth when viewed from
+        // the selected location, while Earth shading still uses the real Sun vector.
+        const skyPosition=(direction)=>{
+            const east=direction[0]*right[0]+direction[1]*right[1]+direction[2]*right[2];
+            const north=direction[0]*up[0]+direction[1]*up[1]+direction[2]*up[2];
+            const altitude=Math.asin(Math.max(-1,Math.min(1,direction[0]*forward[0]+direction[1]*forward[1]+direction[2]*forward[2])));
+            const horizontal=Math.cos(altitude);
+            const azimuth=Math.atan2(east,north);
+            return {center:[right[0]*(Math.sin(azimuth)*horizontal*1.45)+up[0]*(Math.sin(altitude)*1.45)+forward[0]*2.15,
+                            right[1]*(Math.sin(azimuth)*horizontal*1.45)+up[1]*(Math.sin(altitude)*1.45)+forward[1]*2.15,
+                            right[2]*(Math.sin(azimuth)*horizontal*1.45)+up[2]*(Math.sin(altitude)*1.45)+forward[2]*2.15],
+                    altitude:altitude*180/Math.PI};
+        };
+        const moonSky=skyPosition(moonDir),sunSky=skyPosition(sunDir);
+        if(moonSky.altitude>-1) drawTrackerSphere(moonSky.center,0.135,1,sunDir,right,up,forward,aspect);
+        if(sunSky.altitude>-1) drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
         gl.disable(gl.BLEND);
     }
 
