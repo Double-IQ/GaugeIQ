@@ -352,11 +352,126 @@
     const timeScrubber = $('mthTimeScrubber');
     const trackerDisplay = root.querySelector('.mth-tracker-display');
     const trackerSize = () => trackerDisplay ? Math.min(trackerDisplay.clientWidth,520) : 340;
+
+    // WebGL 3D tracker: Earth is the origin; the camera sits above the selected
+    // location. Sun and Moon are positioned from their calculated equatorial
+    // coordinates, then projected into this local viewpoint.
+    const trackerCanvas = $('mthTracker3D');
+    let trackerGL = null;
+    let trackerProgram = null;
+    let trackerSphere = null;
+    let trackerUniforms = null;
+    function initTracker3D() {
+        if (!trackerCanvas || trackerGL) return !!trackerGL;
+        const gl = trackerCanvas.getContext('webgl', {alpha:true,antialias:true,premultipliedAlpha:false});
+        if (!gl) return false;
+        const vertex = `
+            attribute vec3 a_position;
+            uniform vec3 u_center;
+            uniform float u_radius;
+            uniform vec3 u_right;
+            uniform vec3 u_up;
+            uniform vec3 u_forward;
+            uniform float u_aspect;
+            varying vec3 v_normal;
+            void main() {
+                vec3 world = u_center + a_position * u_radius;
+                vec3 view = vec3(dot(world,u_right),dot(world,u_up),dot(world,u_forward));
+                float depth = max(0.25, 4.8 - view.z);
+                float focal = 1.72;
+                gl_Position = vec4(view.x*focal/(depth*u_aspect), view.y*focal/depth, 0.0, 1.0);
+                v_normal = a_position;
+            }`;
+        const fragment = `
+            precision mediump float;
+            varying vec3 v_normal;
+            uniform vec3 u_light;
+            uniform float u_kind;
+            float terrain(vec3 p) {
+                float n = sin(p.x*8.0 + sin(p.z*5.0))*0.42
+                        + sin(p.y*11.0 + p.x*3.0)*0.28
+                        + cos(p.z*13.0 - p.y*4.0)*0.20
+                        + sin(p.x*19.0 + p.y*7.0 + p.z*11.0)*0.10;
+                return n;
+            }
+            void main() {
+                vec3 n = normalize(v_normal);
+                float diffuse = max(0.0,dot(n,normalize(u_light)));
+                float limb = 0.72 + 0.28*max(0.0,n.z);
+                vec3 color;
+                float light;
+                if (u_kind < 0.5) {
+                    float land = smoothstep(0.02,0.13,terrain(n*2.0));
+                    vec3 ocean = vec3(0.025,0.20,0.34);
+                    vec3 ground = vec3(0.30,0.43,0.27);
+                    color = mix(ocean,ground,land);
+                    light = 0.045 + 0.955*diffuse;
+                    color *= light*limb;
+                } else if (u_kind < 1.5) {
+                    color = vec3(0.66,0.68,0.64);
+                    light = 0.025 + 0.975*diffuse;
+                    color *= light*limb;
+                } else if (u_kind < 2.5) {
+                    color = vec3(1.0,0.69,0.27);
+                    color *= 1.1 + 0.25*diffuse;
+                } else {
+                    color = vec3(1.0,0.72,0.28);
+                    color *= 1.35;
+                }
+                gl_FragColor = vec4(color,1.0);
+            }`;
+        const compile=(type,source)=>{const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(sh));return sh;};
+        const program=gl.createProgram();
+        gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));
+        gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));
+        gl.linkProgram(program);
+        if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
+        const positions=[],indices=[],latitudes=28,longitudes=40;
+        for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.cos(theta),Math.sin(theta)*Math.sin(phi));}}
+        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,b+1,a+1);}
+        const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
+        const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);
+        trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,indexBuffer,count:indices.length};
+        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
+        return true;
+    }
+    function drawTrackerSphere(center,radius,kind,light,right,up,forward,aspect) {
+        const gl=trackerGL,u=trackerUniforms;
+        gl.uniform3fv(u.center,center);gl.uniform1f(u.radius,radius);gl.uniform1f(u.kind,kind);
+        gl.uniform3fv(u.light,light);gl.uniform3fv(u.right,right);gl.uniform3fv(u.up,up);gl.uniform3fv(u.forward,forward);gl.uniform1f(u.aspect,aspect);
+        gl.drawElements(gl.TRIANGLES,trackerSphere.count,gl.UNSIGNED_SHORT,0);
+    }
+    function renderTracker3D(date,moonPosition,sunPosition,gmst) {
+        if(!trackerCanvas || !initTracker3D()) return;
+        const width=Math.max(1,trackerCanvas.clientWidth),height=Math.max(1,trackerCanvas.clientHeight),dpr=Math.min(2,window.devicePixelRatio||1);
+        const pixelWidth=Math.round(width*dpr),pixelHeight=Math.round(height*dpr);
+        if(trackerCanvas.width!==pixelWidth||trackerCanvas.height!==pixelHeight){trackerCanvas.width=pixelWidth;trackerCanvas.height=pixelHeight;}
+        const gl=trackerGL;gl.viewport(0,0,pixelWidth,pixelHeight);gl.clearColor(0.012,0.035,0.065,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.useProgram(trackerProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER,trackerSphere.vertexBuffer);gl.enableVertexAttribArray(trackerUniforms.position);gl.vertexAttribPointer(trackerUniforms.position,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,trackerSphere.indexBuffer);
+        const latRad=lat*rad,observerLon=(lon+gmst)*rad;
+        const forward=[Math.cos(latRad)*Math.cos(observerLon),Math.cos(latRad)*Math.sin(observerLon),Math.sin(latRad)];
+        let right=[-Math.sin(observerLon),Math.cos(observerLon),0];
+        const up=[-Math.sin(latRad)*Math.cos(observerLon),-Math.sin(latRad)*Math.sin(observerLon),Math.cos(latRad)];
+        const celestial=(ra,dec)=>[Math.cos(dec*rad)*Math.cos(ra*rad),Math.cos(dec*rad)*Math.sin(ra*rad),Math.sin(dec*rad)];
+        const moonDir=celestial(moonPosition.ra,moonPosition.dec),sunDir=celestial(sunPosition.ra,sunPosition.dec);
+        const aspect=pixelWidth/pixelHeight;
+        gl.disable(gl.BLEND);
+        drawTrackerSphere([0,0,0],1,0,sunDir,right,up,forward,aspect);
+        // Small gold location marker sits just above the surface at the camera's
+        // sub-observer point; it remains tied to the configured dashboard location.
+        gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+        drawTrackerSphere(forward.map(v=>v*1.012),0.025,3,sunDir,right,up,forward,aspect);
+        drawTrackerSphere(moonDir.map(v=>v*1.78),0.145,1,sunDir,right,up,forward,aspect);
+        drawTrackerSphere(sunDir.map(v=>v*2.75),0.205,2,sunDir,right,up,forward,aspect);
+        gl.disable(gl.BLEND);
+    }
+
     function updateEarthMoonTracker(date) {
         if (!globe || !orbitMoon || !date) return;
         const moonPosition = orbitalElements(date);
         const sunPosition = solarCoordinates(date);
         const gmst = gmstDegrees(date);
+        renderTracker3D(date,moonPosition,sunPosition,gmst);
         const moonHourAngle = (moonPosition.ra - gmst) * rad;
         const moonX = Math.sin(moonHourAngle) * Math.cos(moonPosition.dec*rad);
         const moonY = -Math.sin(moonPosition.dec*rad);
