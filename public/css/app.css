@@ -7170,3 +7170,6 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-tracker-display{min-height:340px;overflow:hidden;position:relative}
 .mth-tracker-3d{display:block;width:100%;height:340px;max-width:100%;touch-action:pan-y}
 @media(max-width:560px){.mth-tracker-display{min-height:300px}.mth-tracker-3d{height:300px}}
+
+/* Lunar disc grows with illumination; at full moon it covers the reticle's blue wire field. */
+.mth-moon-disc{width:var(--mth-moon-size,58%);transition:width .35s ease;}
