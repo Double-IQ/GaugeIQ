@@ -7164,3 +7164,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .data-usage-footer span:nth-child(2){color:#9cb6d5;font-size:8px;letter-spacing:.035em;text-align:right;overflow-wrap:anywhere}
 .data-usage-footer span:first-child{color:#819fc2}
 @media(max-width:480px){.data-usage-footer{gap:5px}.data-usage-footer span:nth-child(2){font-size:7px}}
+
+
+/* Section 04: true 3D Earth-centred astronomical view. */
+.mth-tracker-display{min-height:340px;overflow:hidden;position:relative}
+.mth-tracker-3d{display:block;width:100%;height:340px;max-width:100%;touch-action:pan-y}
+@media(max-width:560px){.mth-tracker-display{min-height:300px}.mth-tracker-3d{height:300px}}
