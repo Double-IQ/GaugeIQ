@@ -113,6 +113,7 @@
         context.putImageData(image, 0, 0);
         target.style.setProperty('--mth-phase', String(lunarPhase));
         target.style.setProperty('--mth-illumination', String(litFraction));
+        target.style.setProperty('--mth-moon-size', (58 + 42 * Math.max(0, Math.min(1, litFraction))) + '%');
         // Disable the old flat CSS shadow mask; the canvas now draws the
         // actual curved terminator and the illuminated surface together.
         target.style.setProperty('--mth-shadow-width', '0%');
@@ -242,6 +243,7 @@
 
         target.style.setProperty('--mth-phase', String(lunarPhase));
         target.style.setProperty('--mth-illumination', String(litFraction));
+        target.style.setProperty('--mth-moon-size', (58 + 42 * Math.max(0, Math.min(1, litFraction))) + '%');
         target.style.setProperty('--mth-shadow-width', '0%');
         target.dataset.phase = lunarPhase.toFixed(4);
         target.setAttribute('role', 'img');
