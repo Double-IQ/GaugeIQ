@@ -33,15 +33,12 @@
     function renderLunarDisc(target, lunarPhase, litFraction) {
         // Quiet, non-cartoon fallback if the photographic texture is unavailable.
         const size = 320;
-        let canvas = target.querySelector('canvas');
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            canvas.setAttribute('aria-hidden', 'true');
-            Object.assign(canvas.style, {position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',borderRadius:'50%'});
-            target.replaceChildren(canvas);
-        }
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.setAttribute('aria-hidden', 'true');
+        Object.assign(canvas.style, {position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',borderRadius:'50%'});
+        target.replaceChildren(canvas);
         const context = canvas.getContext('2d');
         if (context) {
             context.clearRect(0, 0, size, size);
@@ -128,7 +125,7 @@
                 float lighting = (0.018 + 0.982 * diffuse) * limb;
 
                 // Equirectangular longitude/latitude lookup on the visible sphere.
-                // Rotate the lunar geography for the selected hemisphere
+                // Rotate lunar geography into the configured observer's local sky view
                 // without rotating the apparent phase illumination.
                 float cr = cos(u_surface_rotation);
                 float sr = sin(u_surface_rotation);
