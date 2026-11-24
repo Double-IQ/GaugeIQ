@@ -393,7 +393,10 @@
                 vec3 view = vec3(dot(world,u_right),dot(world,u_up),dot(world,u_forward));
                 float depth = max(0.25, 4.8 - view.z);
                 float focal = 1.72;
-                gl_Position = vec4(view.x*focal/(depth*u_aspect), view.y*focal/depth, 0.0, 1.0);
+                // Perspective-correct depth is essential: z=0 placed every
+                // sphere on the same depth plane, hiding bodies drawn later.
+                float clipZ = depth * 1.004008 - 0.200401;
+                gl_Position = vec4(view.x*focal/u_aspect, view.y*focal, clipZ, depth);
                 v_normal = a_position;
             }`;
         const fragment = `
@@ -442,7 +445,9 @@
         if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
         const positions=[],indices=[],latitudes=28,longitudes=40;
         for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.cos(theta),Math.sin(theta)*Math.sin(phi));}}
-        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,b+1,a+1);}
+        // Counter-clockwise outward-facing triangles. The old winding
+        // pointed inward, so BACK-face culling discarded the visible globe.
+        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,a+1,b,b,a+1,b+1);}
         const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
         const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);
         trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,indexBuffer,count:indices.length};
@@ -456,7 +461,14 @@
         gl.drawElements(gl.TRIANGLES,trackerSphere.count,gl.UNSIGNED_SHORT,0);
     }
     function renderTracker3D(date,moonPosition,sunPosition,gmst) {
-        if(!trackerCanvas || !initTracker3D()) return;
+        if(!trackerCanvas) return;
+        if(!initTracker3D()) {
+            trackerCanvas.dataset.renderState='webgl-unavailable';
+            const state=$('mthOrbitState');
+            if(state) state.textContent='3D RENDERER UNAVAILABLE';
+            return;
+        }
+        trackerCanvas.dataset.renderState='webgl-active';
         const width=Math.max(1,trackerCanvas.clientWidth),height=Math.max(1,trackerCanvas.clientHeight),dpr=Math.min(2,window.devicePixelRatio||1);
         const pixelWidth=Math.round(width*dpr),pixelHeight=Math.round(height*dpr);
         if(trackerCanvas.width!==pixelWidth||trackerCanvas.height!==pixelHeight){trackerCanvas.width=pixelWidth;trackerCanvas.height=pixelHeight;}
