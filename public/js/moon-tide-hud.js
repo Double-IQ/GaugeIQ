@@ -508,7 +508,9 @@
     }
 
     function updateEarthMoonTracker(date) {
-        if (!globe || !orbitMoon || !date) return;
+        // Section 04 renders on its own canvas; obsolete DOM globe elements
+        // must not prevent the current WebGL tracker from updating.
+        if (!date) return;
         const moonPosition = orbitalElements(date);
         const sunPosition = solarCoordinates(date);
         const gmst = gmstDegrees(date);
@@ -523,10 +525,12 @@
         // Use the calculated sky direction but normalise its 2-D projection
         // so the Moon remains on the circumference of the displayed orbit.
         const moonScreenAngle = Math.atan2(moonY,moonX);
-        orbitMoon.style.left = (130 + Math.cos(moonScreenAngle) * orbitRadius - 15) + 'px';
-        orbitMoon.style.top = (130 + Math.sin(moonScreenAngle) * orbitRadius - 15) + 'px';
-        orbitMoon.style.transform = 'none';
-        orbitMoon.style.opacity = moonZ < -0.1 ? '.62' : '1';
+        if (orbitMoon) {
+            orbitMoon.style.left = (130 + Math.cos(moonScreenAngle) * orbitRadius - 15) + 'px';
+            orbitMoon.style.top = (130 + Math.sin(moonScreenAngle) * orbitRadius - 15) + 'px';
+            orbitMoon.style.transform = 'none';
+            orbitMoon.style.opacity = moonZ < -0.1 ? '.62' : '1';
+        }
         const phaseAngle = Math.acos(Math.max(-1,Math.min(1,
             Math.sin(moonPosition.dec*rad)*Math.sin(sunPosition.dec*rad) +
             Math.cos(moonPosition.dec*rad)*Math.cos(sunPosition.dec*rad)*Math.cos((moonPosition.ra-sunPosition.ra)*rad)
@@ -556,14 +560,16 @@
         const hourOffset = (date.getTime()-now.getTime())/3600000;
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
         $('mthOrbitState').textContent = 'CALCULATED POSITION';
-        globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
-        // Keep the equirectangular texture's Greenwich meridian aligned with the
-        // camera-facing meridian. The texture must move west as Earth rotates east.
-        const textureWidth = 300;
-        const globeViewportWidth = globe.clientWidth;
-        const textureOffset = (globeViewportWidth / 2) - (norm360(gmst) / 360) * textureWidth;
-        globe.style.backgroundPosition = textureOffset.toFixed(2) + 'px center';
-        globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
+        if (globe) {
+            globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
+            // Keep the equirectangular texture's Greenwich meridian aligned with the
+            // camera-facing meridian. The texture must move west as Earth rotates east.
+            const textureWidth = 300;
+            const globeViewportWidth = globe.clientWidth;
+            const textureOffset = (globeViewportWidth / 2) - (norm360(gmst) / 360) * textureWidth;
+            globe.style.backgroundPosition = textureOffset.toFixed(2) + 'px center';
+            globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
+        }
     }
     if (timeScrubber) {
         timeScrubber.addEventListener('input',() => {
