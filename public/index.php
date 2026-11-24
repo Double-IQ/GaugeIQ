@@ -1401,25 +1401,14 @@ if ($current && !empty($current['observed_at'])) {
             <div class="mth-solar-readouts"><div><small>SUNRISE</small><strong id="mthSunrise">—</strong></div><div><small>SOLAR NOON</small><strong id="mthSolarNoon">—</strong></div><div><small>SUNSET</small><strong id="mthSunset">—</strong></div><div><small>DAYLIGHT</small><strong id="mthDaylight">—</strong></div></div>
         </div>
         <div class="mth-section mth-orbit">
-            <div class="mth-section-head"><span class="mth-index">04</span><div><strong>EARTH–MOON TRACKER</strong><small>ROTATING GLOBE / CALCULATED LUNAR ORBIT</small></div><span class="mth-section-state" id="mthOrbitState">LIVE MODEL</span></div>
+            <div class="mth-section-head"><span class="mth-index">04</span><div><strong>EARTH–MOON TRACKER</strong><small>3D EARTH-CENTRED / CALCULATED SUN & MOON POSITIONS</small></div><span class="mth-section-state" id="mthOrbitState">LIVE MODEL</span></div>
             <div class="mth-tracker-readouts">
                 <div><small>MOON RANGE</small><strong id="mthOrbitDistance">—</strong></div>
                 <div><small>ORBIT POSITION</small><strong id="mthOrbitPosition">—</strong></div>
                 <div><small>YOUR LOCATION</small><strong id="mthOrbitLocation">—</strong></div>
             </div>
             <div class="mth-orbit-display mth-tracker-display">
-                <div class="mth-earth-system mth-tracker-system">
-                    <div class="mth-sun-vector" aria-label="Sun direction"><span class="mth-sun-core"></span><small>SUN</small><i></i></div>
-                    <div class="mth-orbit-ring"></div>
-                    <div class="mth-earth-globe mth-real-earth" role="img" aria-label="Rotating Earth with simplified continent shapes">
-                        <span class="mth-earth-atmosphere"></span><span class="mth-earth-night"></span>
-                        <span class="mth-tidal-axis"></span>
-                        <span class="mth-tidal-bulge mth-bulge-near"></span><span class="mth-tidal-bulge mth-bulge-far"></span>
-                        <span class="mth-location-marker" id="mthLocationMarker" title="Selected GaugeIQ location"></span>
-                    </div>
-                    <div class="mth-moon-orbit mth-calculated-orbit"><div class="mth-orbit-moon" id="mthOrbitMoon"><span></span></div></div>
-                    <span class="mth-earth-label">EARTH</span><span class="mth-moon-label">MOON</span>
-                </div>
+                <canvas id="mthTracker3D" class="mth-tracker-3d" role="img" aria-label="Three-dimensional Earth-centred view showing the Sun, Moon and selected location at the chosen time"></canvas>
                 <div class="mth-orbit-legend"><span><i class="mth-legend-sun"></i> SUN DIRECTION</span><span><i class="mth-legend-earth"></i> EARTH ROTATION</span><span><i class="mth-legend-tide"></i> TIDAL AXIS</span><span><i class="mth-legend-location"></i> YOUR LOCATION</span></div>
             </div>
             <div class="mth-time-control">
@@ -1427,7 +1416,7 @@ if ($current && !empty($current['observed_at'])) {
                 <input id="mthTimeScrubber" type="range" min="-12" max="12" step="0.25" value="0" aria-label="Preview Earth and Moon positions from 12 hours ago to 12 hours ahead">
                 <div class="mth-time-labels"><span>−12 HOURS</span><span>NOW</span><span>+12 HOURS</span></div>
             </div>
-            <p class="mth-note">Moon position, Earth rotation and your location are synchronised to the selected time. The orbital path and tidal bulges are enlarged for visibility; distances are not to scale.</p>
+            <p class="mth-note">Earth stays centred while the camera follows your location. Sun and Moon directions use calculated celestial coordinates; orbital distances are visually compressed and are not to scale.</p>
         </div>
         <div class="mth-section mth-tides">
             <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
