@@ -28,117 +28,57 @@
     $('mthMoonDistance').textContent = Math.round(distance).toLocaleString() + ' KM';
     $('mthNextFull').textContent = nextFull.toLocaleDateString(undefined, {timeZone:zone,day:'2-digit',month:'short'});
     const disc = $('mthMoonDisc');
+    // Apparent orientation of lunar north in the selected observer's local sky.
+    let lunarSurfaceRotation = validLocation && lat < 0 ? Math.PI : 0;
     function renderLunarDisc(target, lunarPhase, litFraction) {
-        // Render the visible lunar hemisphere as a shaded sphere. The
-        // illuminated side is mirrored between hemispheres: waxing is on
-        // the left in the Southern Hemisphere and on the right in the North.
+        // Quiet, non-cartoon fallback if the photographic texture is unavailable.
         const size = 320;
-        let canvas = target.querySelector('canvas');
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            canvas.setAttribute('aria-hidden', 'true');
-            Object.assign(canvas.style, {
-                position: 'absolute', inset: '0', width: '100%', height: '100%',
-                display: 'block', borderRadius: '50%'
-            });
-            target.replaceChildren(canvas);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.setAttribute('aria-hidden', 'true');
+        Object.assign(canvas.style, {position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',borderRadius:'50%'});
+        target.replaceChildren(canvas);
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.clearRect(0, 0, size, size);
+            const hemisphere = validLocation && lat >= 0 ? -1 : 1;
+            const angle = Math.PI * 2 * lunarPhase;
+            const lightX = -Math.sin(angle) * hemisphere;
+            const gradient = context.createRadialGradient(size*(0.5-lightX*0.16),size*0.34,size*0.025,size*0.5,size*0.5,size*0.49);
+            gradient.addColorStop(0,'#b9bdba');
+            gradient.addColorStop(0.72,'#777d7c');
+            gradient.addColorStop(1,'#242b30');
+            context.fillStyle = gradient;
+            context.beginPath();
+            context.arc(size/2,size/2,size*0.485,0,Math.PI*2);
+            context.fill();
         }
-        const context = canvas.getContext('2d', { alpha: true });
-        if (!context) return;
-        const image = context.createImageData(size, size);
-        const pixels = image.data;
-        const centre = (size - 1) / 2;
-        const radius = size * 0.485;
-
-        // Stable, deterministic crater positions keep the lunar surface
-        // recognisable and prevent texture flicker when the phase changes.
-        let seed = 73129;
-        const random = () => {
-            seed = (seed * 16807) % 2147483647;
-            return (seed - 1) / 2147483646;
-        };
-        const craters = [];
-        for (let i = 0; i < 42; i++) {
-            const x = (random() * 1.5) - 0.75;
-            const y = (random() * 1.5) - 0.75;
-            if (x * x + y * y < 0.78) {
-                craters.push({ x, y, r: 0.018 + random() * 0.065 });
-            }
-        }
-
-        const angle = Math.PI * 2 * lunarPhase;
-        // GaugeIQ's selected location determines the apparent left/right
-        // orientation of the lunar phases. Default to the Southern Hemisphere
-        // only when no valid location is available.
-        const hemisphere = validLocation && lat >= 0 ? -1 : 1;
-        const lightX = -Math.sin(angle) * hemisphere;
-        const lightZ = -Math.cos(angle);
-        for (let y = 0; y < size; y++) {
-            const ny = (y - centre) / radius;
-            for (let x = 0; x < size; x++) {
-                const nx = (x - centre) / radius;
-                const radial = nx * nx + ny * ny;
-                if (radial > 1) continue;
-                const nz = Math.sqrt(Math.max(0, 1 - radial));
-                const diffuse = Math.max(0, nx * lightX + nz * lightZ);
-                const limb = 0.78 + 0.22 * nz;
-                const ambient = 0.035;
-                const light = (ambient + (1 - ambient) * diffuse) * limb;
-
-                const mare = 0.035 * Math.sin(nx * 17 + ny * 9)
-                    + 0.025 * Math.sin(nx * 31 - ny * 23)
-                    + 0.018 * Math.cos(ny * 39 + nx * 7);
-                let craterTone = 0;
-                for (const crater of craters) {
-                    const dx = (nx - crater.x) / crater.r;
-                    const dy = (ny - crater.y) / crater.r;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 1.25) {
-                        const bowl = Math.exp(-Math.pow(distance / 0.58, 2));
-                        const rim = Math.exp(-Math.pow((distance - 0.78) / 0.12, 2));
-                        craterTone += -0.16 * bowl + 0.13 * rim;
-                    }
-                }
-                craterTone = Math.max(-0.28, Math.min(0.2, craterTone));
-                const albedo = Math.max(0.58, Math.min(1.08, 0.91 + mare + craterTone));
-                const index = (y * size + x) * 4;
-                pixels[index] = Math.round(202 * albedo * light);
-                pixels[index + 1] = Math.round(205 * albedo * light);
-                pixels[index + 2] = Math.round(194 * albedo * light);
-                pixels[index + 3] = 255;
-            }
-        }
-        context.putImageData(image, 0, 0);
-        target.style.setProperty('--mth-phase', String(lunarPhase));
-        target.style.setProperty('--mth-illumination', String(litFraction));
-        target.style.setProperty('--mth-moon-size', (58 + 42 * Math.max(0, Math.min(1, litFraction))) + '%');
-        // Disable the old flat CSS shadow mask; the canvas now draws the
-        // actual curved terminator and the illuminated surface together.
-        target.style.setProperty('--mth-shadow-width', '0%');
-        target.dataset.phase = lunarPhase.toFixed(4);
-        target.setAttribute('role', 'img');
-        target.setAttribute('aria-label', phaseName + ', ' + (litFraction * 100).toFixed(1) + '% illuminated');
+        target.style.setProperty('--mth-phase',String(lunarPhase));
+        target.style.setProperty('--mth-illumination',String(litFraction));
+        target.style.setProperty('--mth-moon-size',(58+42*Math.max(0,Math.min(1,litFraction)))+'%');
+        target.style.setProperty('--mth-shadow-width','0%');
+        target.dataset.phase=lunarPhase.toFixed(4);
+        target.dataset.lunarTexture='fallback';
+        target.setAttribute('role','img');
+        target.setAttribute('aria-label',phaseName+', '+(litFraction*100).toFixed(1)+'% illuminated. Lunar surface texture unavailable.');
     }
     if (disc) {
-        // NASA LRO Wide Angle Camera global color mosaic (equirectangular).
-        // Render it as a lit sphere in WebGL so the actual lunar geography,
-        // not generated crater doodles, supplies the visible surface detail.
-        // The existing procedural renderer remains a graceful offline/CORS fallback.
-        renderLunarDisc(disc, phase, illumination);
-        const lunarTexture = new Image();
-        lunarTexture.crossOrigin = 'anonymous';
-        lunarTexture.onload = () => {
-            try {
-                renderTexturedLunarDisc(disc, phase, illumination, lunarTexture);
-            } catch (error) {
-                // Keep the procedural rendering if WebGL or image CORS is unavailable.
-                renderLunarDisc(disc, phase, illumination);
+        // NASA LRO WAC global color mosaic served locally (same-origin) for reliable iOS/WebGL texture access.
+        // Credit: NASA's Scientific Visualization Studio; Ernie Wright (USRA); Noah Petro (NASA/GSFC).
+        // The equirectangular source is centred at 0° lunar longitude.
+        renderLunarDisc(disc,phase,illumination);
+        const lunarTexture=new Image();
+        lunarTexture.crossOrigin='anonymous';
+        lunarTexture.onload=()=>{
+            try { renderTexturedLunarDisc(disc,phase,illumination,lunarTexture); }
+            catch(error) {
+                try { renderTexturedLunarDisc2D(disc,phase,illumination,lunarTexture); }
+                catch(fallbackError) { renderLunarDisc(disc,phase,illumination); }
             }
         };
-        lunarTexture.onerror = () => renderLunarDisc(disc, phase, illumination);
-        lunarTexture.src = 'https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg';
+        lunarTexture.onerror=()=>renderLunarDisc(disc,phase,illumination);
+        lunarTexture.src='/assets/moon-lroc-2k.jpg';
     }
 
     function renderTexturedLunarDisc(target, lunarPhase, litFraction, textureImage) {
@@ -170,6 +110,7 @@
             uniform sampler2D u_texture;
             uniform float u_light_x;
             uniform float u_light_z;
+            uniform float u_surface_rotation;
             void main() {
                 vec2 p = (v_uv - 0.5) * 2.0;
                 float r2 = dot(p, p);
@@ -184,8 +125,13 @@
                 float lighting = (0.018 + 0.982 * diffuse) * limb;
 
                 // Equirectangular longitude/latitude lookup on the visible sphere.
-                float longitude = atan(normal.x, normal.z);
-                float latitude = asin(clamp(normal.y, -1.0, 1.0));
+                // Rotate lunar geography into the configured observer's local sky view
+                // without rotating the apparent phase illumination.
+                float cr = cos(u_surface_rotation);
+                float sr = sin(u_surface_rotation);
+                vec3 mapNormal = vec3(normal.x*cr-normal.y*sr,normal.x*sr+normal.y*cr,normal.z);
+                float longitude = atan(mapNormal.x, mapNormal.z);
+                float latitude = asin(clamp(mapNormal.y, -1.0, 1.0));
                 vec2 uv = vec2(longitude / 6.28318530718 + 0.5,
                                0.5 - latitude / 3.14159265359);
                 vec3 albedo = texture2D(u_texture, uv).rgb;
@@ -236,6 +182,7 @@
         const hemisphere = validLocation && lat >= 0 ? -1 : 1;
         gl.uniform1f(gl.getUniformLocation(program, 'u_light_x'), -Math.sin(angle) * hemisphere);
         gl.uniform1f(gl.getUniformLocation(program, 'u_light_z'), -Math.cos(angle));
+        gl.uniform1f(gl.getUniformLocation(program, 'u_surface_rotation'), lunarSurfaceRotation);
         gl.viewport(0, 0, size, size);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -250,6 +197,49 @@
         target.setAttribute('aria-label', phaseName + ', ' + (litFraction * 100).toFixed(1) + '% illuminated. NASA Lunar Reconnaissance Orbiter surface texture.');
         target.dataset.lunarTexture = 'NASA LRO WAC';
     }
+    function renderTexturedLunarDisc2D(target,lunarPhase,litFraction,textureImage) {
+        // Canvas fallback for devices without WebGL: project the same real
+        // equirectangular lunar map onto a shaded sphere.
+        const size=320, source=document.createElement('canvas');
+        source.width=textureImage.naturalWidth; source.height=textureImage.naturalHeight;
+        const sc=source.getContext('2d',{willReadFrequently:true});
+        sc.drawImage(textureImage,0,0);
+        const src=sc.getImageData(0,0,source.width,source.height).data;
+        const canvas=document.createElement('canvas'); canvas.width=size; canvas.height=size;
+        Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',borderRadius:'50%'});
+        const ctx=canvas.getContext('2d'), out=ctx.createImageData(size,size);
+        const hemisphere=validLocation&&lat>=0?-1:1, angle=Math.PI*2*lunarPhase;
+        const lightX=-Math.sin(angle)*hemisphere, lightZ=-Math.cos(angle);
+        const rotation=lunarSurfaceRotation, cr=Math.cos(rotation), sr=Math.sin(rotation);
+        const centre=(size-1)/2, radius=size*0.485;
+        for(let y=0;y<size;y++){
+            const py=-(y-centre)/radius;
+            for(let x=0;x<size;x++){
+                const px=(x-centre)/radius, r2=px*px+py*py;
+                if(r2>1) continue;
+                const nz=Math.sqrt(1-r2), diffuse=Math.max(0,px*lightX+nz*lightZ);
+                const shade=(0.018+0.982*diffuse)*(0.82+0.18*nz);
+                const mx=px*cr-py*sr, my=px*sr+py*cr;
+                const longitude=Math.atan2(mx,nz), latitude=Math.asin(Math.max(-1,Math.min(1,my)));
+                const sx=Math.max(0,Math.min(source.width-1,Math.floor(((longitude/(2*Math.PI)+0.5)*source.width)%source.width)));
+                const sy=Math.max(0,Math.min(source.height-1,Math.floor((0.5-latitude/Math.PI)*source.height)));
+                const si=(sy*source.width+sx)*4, di=(y*size+x)*4;
+                const grey=src[si]*0.299+src[si+1]*0.587+src[si+2]*0.114;
+                for(let k=0;k<3;k++) out.data[di+k]=Math.round((src[si+k]*0.58+grey*0.42)*shade);
+                out.data[di+3]=255;
+            }
+        }
+        ctx.putImageData(out,0,0); target.replaceChildren(canvas);
+        target.style.setProperty('--mth-phase',String(lunarPhase));
+        target.style.setProperty('--mth-illumination',String(litFraction));
+        target.style.setProperty('--mth-moon-size',(58+42*Math.max(0,Math.min(1,litFraction)))+'%');
+        target.style.setProperty('--mth-shadow-width','0%');
+        target.dataset.phase=lunarPhase.toFixed(4);
+        target.dataset.lunarTexture='NASA LRO WAC (2D)';
+        target.setAttribute('role','img');
+        target.setAttribute('aria-label',phaseName+', '+(litFraction*100).toFixed(1)+'% illuminated. NASA LRO lunar surface texture.');
+    }
+
     function solarEvent(day, latitude, longitude, sunrise) {
         const n = Math.floor((Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate()) - Date.UTC(day.getUTCFullYear(),0,0)) / 86400000);
         const lngHour = longitude / 15;
@@ -348,6 +338,28 @@
         const T = (jd - 2451545.0)/36525;
         return norm360(280.46061837 + 360.98564736629*(jd-2451545) + 0.000387933*T*T - T*T*T/38710000);
     };
+    if (validLocation) {
+        // Position angle of the lunar north pole, corrected by the local
+        // parallactic angle. This gives the disk's actual apparent rotation
+        // for the configured latitude, longitude and current observation time.
+        const moon = orbitalElements(now);
+        const phi = lat * rad;
+        const dec = moon.dec * rad;
+        const hourAngle = ((gmstDegrees(now) + lon - moon.ra + 540) % 360 - 180) * rad;
+        const parallactic = Math.atan2(
+            Math.sin(hourAngle),
+            Math.tan(phi) * Math.cos(dec) - Math.sin(dec) * Math.cos(hourAngle)
+        );
+        const poleRa = 269.9949 * rad;
+        const poleDec = 66.5392 * rad;
+        const deltaRa = poleRa - moon.ra * rad;
+        const polePositionAngle = Math.atan2(
+            Math.cos(poleDec) * Math.sin(deltaRa),
+            Math.sin(poleDec) * Math.cos(dec)
+                - Math.cos(poleDec) * Math.sin(dec) * Math.cos(deltaRa)
+        );
+        lunarSurfaceRotation = polePositionAngle - parallactic;
+    }
     const orbitMoon = $('mthOrbitMoon');
     const globe = root.querySelector('.mth-real-earth');
     const locationMarker = $('mthLocationMarker');
