@@ -301,6 +301,16 @@ echo "PASS OM v3 zero-byte all-NaN chunk decoding\\n";
 
 
 
+$delta2dFixture = WeatherMapOmReader::decodeDelta2D16([10, 20, 1, 2, 3, 4], 3, 2);
+if ($delta2dFixture !== [10, 20, 11, 22, 14, 26]) {
+    throw new RuntimeException('ECMWF PFor 2D vertical delta reconstruction failed.');
+}
+$wrappedDelta2dFixture = WeatherMapOmReader::decodeDelta2D16([32760, -32760, 10, -10], 2, 2);
+if ($wrappedDelta2dFixture !== [32760, -32760, -32766, 32766]) {
+    throw new RuntimeException('ECMWF PFor 2D signed 16-bit delta wrapping failed.');
+}
+echo "PASS ECMWF PFor 2D vertical delta reconstruction and signed wrapping\\n";
+
 $scaledPrecipitation = WeatherMapOmReader::decodeScaledPfor16Value(28, 10.0, 0.0);
 if (abs($scaledPrecipitation - 2.8) > 0.000001) {
     throw new RuntimeException('ECMWF PFor scale factor must divide the stored integer value.');
