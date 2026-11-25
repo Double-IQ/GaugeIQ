@@ -652,17 +652,18 @@ final class WeatherMapOmReader
                         throw new RuntimeException('Invalid bitmap padding in ECMWF PFor data.');
                     }
                     $exceptions = self::unpackBits($input, $position, count($exceptionPositions), $exceptionWidth);
-                    $base = self::unpackPfor16Values($input, $position, $remaining, $width, $remaining === 128);
+                    $base = self::unpackPfor16Values($input, $position, $remaining, $width, ($header & 0x80) !== 0);
                     foreach ($exceptionPositions as $index => $target) {
                         $base[$target] += $exceptions[$index] << $width;
                     }
                     $deltas = $base;
                 } else {
-                    $deltas = self::unpackPfor16Values($input, $position, $remaining, $width, $remaining === 128);
+                    $deltas = self::unpackPfor16Values($input, $position, $remaining, $width, ($header & 0x80) !== 0);
                 }
             } else {
                 // Variable-byte exception blocks use Open-Meteo's 64-bit SIMD
-                // VByte thresholds (VB_MAX=254, VB_B2=6, VB_B3=3).
+                // VByte thresholds (VB_MAX=254, VB_B2=6, VB_B3=3). The
+                // vector-interleaved PFor layout is selected only by bit 7.
                 self::need($input, $position, 1);
                 $exceptionCount = ord($input[$position++]);
                 if ($width >= 16 || $exceptionCount < 1 || $exceptionCount > $remaining) {

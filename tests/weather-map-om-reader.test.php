@@ -93,48 +93,9 @@ checkPfor16Fixture(
 );
 
 
-function packVerticalPfor16ForTest(array $values, int $width): string
-{
-    $packed = str_repeat("\0", $width * 16);
-    foreach ($values as $index => $value) {
-        $lane = $index % 8;
-        $slot = intdiv($index, 8);
-        $bitOffset = $slot * $width;
-        $wordIndex = intdiv($bitOffset, 16);
-        $shift = $bitOffset % 16;
-        $offset = $wordIndex * 16 + $lane * 2;
-        $word = ord($packed[$offset]) | (ord($packed[$offset + 1]) << 8);
-        $word |= ($value << $shift) & 0xffff;
-        $packed[$offset] = chr($word & 0xff);
-        $packed[$offset + 1] = chr(($word >> 8) & 0xff);
-        if ($shift + $width > 16) {
-            $nextOffset = ($wordIndex + 1) * 16 + $lane * 2;
-            $nextWord = ord($packed[$nextOffset]) | (ord($packed[$nextOffset + 1]) << 8);
-            $nextWord |= $value >> (16 - $shift);
-            $packed[$nextOffset] = chr($nextWord & 0xff);
-            $packed[$nextOffset + 1] = chr(($nextWord >> 8) & 0xff);
-        }
-    }
-    return $packed;
-}
-
-foreach ([1, 3, 5, 8, 16] as $width) {
-    $encoded = [];
-    for ($i = 0; $i < 128; $i++) {
-        $mask = (1 << $width) - 1;
-        $encoded[] = ($i * 37 + 11) & $mask;
-    }
-    $expected = [0];
-    $previous = 0;
-    foreach ($encoded as $raw) {
-        $delta = ($raw >> 1) ^ (-($raw & 1));
-        $unsigned = ($previous + $delta) & 0xffff;
-        $previous = ($unsigned & 0x8000) !== 0 ? $unsigned - 65536 : $unsigned;
-        $expected[] = $previous;
-    }
-    $stream = chr(0) . chr($width) . packVerticalPfor16ForTest($encoded, $width);
-    checkPfor16Fixture("ECMWF 16-bit vertical width $width", bin2hex($stream), $expected);
-}
+// The official PFor format uses the vector-interleaved layout only when
+// the block header sets bit 7. The real flagged case is covered by the
+// fixture above; ordinary 128-value blocks are covered below.
 
 function encodeSmallSeed(int $value): string
 {
@@ -300,6 +261,17 @@ echo "PASS OM v3 zero-byte all-NaN chunk decoding\\n";
 
 
 
+
+// An ordinary 128-value PFor block is bit-packed linearly. The vector
+// layout is used only when the PFor header explicitly sets bit 7.
+$ordinary128Packed = "\0\x01" . str_repeat("\xaa", 16);
+$ordinary128Decoded = WeatherMapOmReader::decodePforDelta16($ordinary128Packed, 129);
+$ordinary128Expected = [0];
+for ($i = 0; $i < 128; $i++) $ordinary128Expected[] = -intdiv($i + 1, 2);
+if ($ordinary128Decoded !== $ordinary128Expected) {
+    throw new RuntimeException('ECMWF ordinary 128-value PFor blocks must use linear bit unpacking.');
+}
+echo "PASS ECMWF ordinary 128-value PFor block layout selection\\n";
 
 $delta2dFixture = WeatherMapOmReader::decodeDelta2D16([10, 20, 1, 2, 3, 4], 3, 2);
 if ($delta2dFixture !== [10, 20, 11, 22, 14, 26]) {
