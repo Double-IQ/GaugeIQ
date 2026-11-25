@@ -532,11 +532,10 @@ protocolOptions.fileReaderConfig = {
                     frameTime: String(item.time),
                     url: item.url,
                     prepared: item.prepared || {},
-                    // Keep the proven browser renderer active until prepared
-                    // raster tiles pass regional data-integrity checks. The
-                    // server tile path currently produces visible rectangular
-                    // gaps in some areas on real devices.
-                    forceBrowser: true,
+                    // Use the server-prepared regional frames for raster tiles.
+                    // If a tile fails, the map error handler switches this
+                    // frame back to the browser renderer automatically.
+                    forceBrowser: false,
                     usingPreparedTiles: false
                 }));
                 if (scheduledFrames.some(frame =>

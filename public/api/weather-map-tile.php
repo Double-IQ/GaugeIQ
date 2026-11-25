@@ -195,7 +195,7 @@ try {
     }
     $paletteSignature = json_encode($palette, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     $tileKey = hash('sha256', implode('|', [
-        $key, (string)$z, (string)$x, (string)$y, $interpolation, (string)$deltaTimeHours, $paletteSignature
+        'prepared-raster-v2', $key, (string)$z, (string)$x, (string)$y, $interpolation, (string)$deltaTimeHours, $paletteSignature
     ]));
     $tilePath = $tileCacheDirectory . '/' . $tileKey . '.png';
     $etag = '"' . $tileKey . '"';
