@@ -1253,7 +1253,7 @@ if ($current && !empty($current['observed_at'])) {
                         </g>
                     </svg>
                     </div>
-                    <script type="application/json" id="rainfallRadarScanData"><?= json_encode(['current' => $radarCurrentFrame, 'forecast' => $radarFrame], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?></script>
+                    <script type="application/json" id="rainfallRadarScanData"><?= json_encode(['current' => $radarCurrentFrame, 'forecast' => $radarFrame, 'movement_trend' => (string)($rainfallNowcast['rain_footprint_trend'] ?? 'not_assessed')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?></script>
                     <div class="rainfall-radar-legend">
                         <span><i class="rainfall-legend-low"></i>Lower</span><span><i class="rainfall-legend-mid"></i>Moderate</span><span><i class="rainfall-legend-high"></i>Higher</span>
                     </div>
