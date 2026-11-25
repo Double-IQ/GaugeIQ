@@ -2382,8 +2382,8 @@ updateNetworkDiagnostics();
 })();
 
 
-// Rainfall radar compass: rotate only the forecast echo layer. The radar
-// housing, range rings, labels and independently animated sweep stay fixed.
+// Rainfall radar compass: rotate the echoes and animated sweep together.
+// The radar housing, range rings and labels remain fixed.
 (() => {
     const radarEchoes = document.getElementById('rainfallRadarEchoes');
     const radarCompassLayer = document.getElementById('rainfallRadarCompassLayer');
