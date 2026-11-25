@@ -2298,10 +2298,9 @@ updateNetworkDiagnostics();
             const radians = bearing * Math.PI / 180;
             const spot = document.createElementNS(svgNs, 'circle');
             const radius = Math.max(4, Math.min(7, 4 + Math.log10(1 + Math.max(0, amount)) * 2));
-            // Synchronize new echoes to both the live sweep clock and the
-            // current compass rotation so rescans never reset dot illumination.
-            const compassHeading = Number(window.gaugeIQRadarCompassHeading) || 0;
-            const phase = echoDelayForBearing(bearing - compassHeading);
+            // Keep each echo on the shared sweep clock. Compass rotates the
+            // weather layer only; it must never re-phase an echo's animation.
+            const phase = echoDelayForBearing(bearing);
             spot.setAttribute('class', 'rainfall-radar-cell rainfall-radar-grid-cell');
             spot.setAttribute('data-bearing', bearing.toFixed(2));
             spot.setAttribute('data-distance', distance.toFixed(1));
@@ -2435,27 +2434,17 @@ updateNetworkDiagnostics();
         // Bearings are north-up in the forecast data, so counter-rotate the
         // echoes by the device heading to keep them geographically aligned.
         radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
-        // Do not rewrite CSS animation-delay on every animation frame:
-        // changing it repeatedly restarts/rephases the echo animations.
-        // Apply the final bearing phase once the compass heading settles.
+        // Compass rotation is independent of the echo animation clock.
+        // Never rewrite animation delays as the device heading changes.
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
             currentHeading = targetHeading;
-            syncEchoSweepPhases(currentHeading);
+            window.gaugeIQRadarCompassHeading = currentHeading;
             animationFrame = null;
             return;
         }
         animationFrame = requestAnimationFrame(renderHeading);
-    }
-
-    function syncEchoSweepPhases(heading) {
-        window.gaugeIQRadarCompassHeading = enabled ? (normalize(heading) ?? 0) : 0;
-        radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
-            const bearing = normalize(Number(cell.dataset.bearing) - heading);
-            const delay = bearing === null ? null : window.gaugeIQRadarEchoDelay?.(bearing);
-            if (Number.isFinite(delay)) cell.style.animationDelay = delay.toFixed(3) + 's';
-        });
     }
 
     function applyHeading(value) {
@@ -2552,9 +2541,8 @@ updateNetworkDiagnostics();
         currentHeading = null;
         targetHeading = null;
         radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
-        // Restore the default north-up sweep timing as well as the map rotation.
-        // Otherwise each dot keeps the animation delay from the last compass heading.
-        syncEchoSweepPhases(0);
+        // Reset map orientation without touching the shared echo animation clock.
+        window.gaugeIQRadarCompassHeading = 0;
         setStatus('North-up');
         updateButton();
     }
