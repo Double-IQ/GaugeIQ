@@ -336,7 +336,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 id: 'gaugeiq-region-outline', type: 'line', source: regionSourceId,
                 paint: { 'line-color': '#38bdf8', 'line-width': 2.5, 'line-dasharray': [2, 1] }
             });
-            regionMap.fitBounds([[regionBounds[0], regionBounds[1]], [regionBounds[2], regionBounds[3]]], { padding: 35, maxZoom: 7, duration: 0 });
+            regionMap.fitBounds([[regionBounds[0], regionBounds[1]], [regionBounds[2], regionBounds[3]]], { padding: 35, maxZoom: 3.5, duration: 0 });
         });
         // Handle drawing on the canvas with Pointer Events so mouse, pen and
         // touch all work consistently. Pointer capture keeps the drag alive
