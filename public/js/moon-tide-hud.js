@@ -383,7 +383,8 @@
     let trackerMoonTextureReady = false;
     function loadTrackerEarthTexture(gl,texture) {
         const image=new Image();
-        image.crossOrigin='anonymous';
+        // Load through GaugeIQ's same-origin cached proxy so iOS/PWA does not
+        // depend on NASA's cross-origin image headers at runtime.
         image.onload=()=>{
             if(trackerGL!==gl||!texture) return;
             try {
@@ -406,7 +407,7 @@
             } catch(error) { console.warn('GaugeIQ Earth texture could not be applied',error); }
         };
         image.onerror=()=>console.warn('GaugeIQ NASA Blue Marble texture could not be loaded');
-        image.src='https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x5400x2700.jpg';
+        image.src='/earth-texture.php?v=1';
     }
     function loadTrackerSunTexture(gl,texture) {
         const image=new Image(); image.crossOrigin='anonymous';
@@ -519,7 +520,10 @@
                 float limb=0.72+0.28*max(0.0,dot(n,normalize(u_viewForward)));
                 vec3 color;
                 if(u_kind<0.5) {
-                    vec3 fallback=mix(vec3(0.012,0.075,0.16),vec3(0.27,0.34,0.20),step(0.0,sin(n.x*4.0)*sin(n.y*3.0)));
+                    // Never substitute an artificial geometric pattern for
+                    // the NASA map. If the image is unavailable, show a clean
+                    // ocean-blue globe while the loader reports the failure.
+                    vec3 fallback=vec3(0.012,0.075,0.16);
                     vec3 surface=texture2D(u_earthTexture,v_uv).rgb;
                     color=mix(fallback,surface,u_earthTextureReady);
                     float dayLight=0.035+0.965*diffuse;
