@@ -1128,13 +1128,14 @@ if ($current && !empty($current['observed_at'])) {
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
         $radarLocalAmount = !$nowcastIsStale && is_numeric($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($radarFrame['local_precipitation_mm_per_hour'] ?? $radarFrame['local_precipitation_mm'])) : null;
+        if ($radarLocalAmount !== null && $radarLocalAmount < 0.2) $radarLocalAmount = null;
         $radarLocalHasRain = $radarLocalAmount !== null && $radarLocalAmount > 0.0;
         $radarHasRainForecast = $radarCells !== [] || ($radarNearestAmount !== null && $radarNearestAmount > 0.0);
         $forecastScanAmounts = [];
         foreach (array_slice($nowcastFrames, 0, 2) as $forecastScanFrame) {
             $forecastScanValue = $forecastScanFrame['local_precipitation_mm_per_hour'] ?? $forecastScanFrame['local_precipitation_mm'] ?? null;
             if (is_numeric($forecastScanValue)) {
-                $forecastScanAmounts[] = max(0.0, (float)$forecastScanValue);
+                $forecastScanAmounts[] = max(0.0, (float)$forecastScanValue) >= 0.2 ? (float)$forecastScanValue : 0.0;
             }
         }
         $forecastScanHasData = $forecastScanAmounts !== [];
@@ -1278,6 +1279,7 @@ if ($current && !empty($current['observed_at'])) {
                     $frameTimestamp = strtotime((string)($nowcastFrame['time'] ?? ''));
                     if ($frameTimestamp === false) continue;
                     $localAmount = is_numeric($nowcastFrame['local_precipitation_mm_per_hour'] ?? $nowcastFrame['local_precipitation_mm'] ?? null) ? max(0.0, (float)($nowcastFrame['local_precipitation_mm_per_hour'] ?? $nowcastFrame['local_precipitation_mm'])) : 0.0;
+                    if ($localAmount < 0.2) $localAmount = 0.0;
                     $barWidth = min(100.0, ($localAmount / 10.0) * 100.0);
                     $leadLabel = $frameLeadLabels[$frameIndex] ?? ('+' . (3 * ($frameIndex + 1)) . 'h');
                 ?>
