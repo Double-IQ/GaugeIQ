@@ -11,7 +11,7 @@ final class WeatherMapRainfallNowcastService
 {
     private const USER_AGENT = 'GaugeIQ-WeatherMap/1.0';
     private const SEARCH_RADIUS_KM = 100.0;
-    private const WET_THRESHOLD_MM_PER_HOUR = 0.1;
+    private const WET_THRESHOLD_MM_PER_HOUR = 0.2;
 
     public function __construct(
         private readonly PDO $pdo,
@@ -164,6 +164,11 @@ final class WeatherMapRainfallNowcastService
             $localAmount = is_finite($localValue)
                 ? self::precipitationRate($localValue, $stepDurationHours)
                 : 0.0;
+            // Apply the same 0.2 mm/h display/detection threshold to the
+            // location readout and surrounding 25 km grid cells.
+            if ($localAmount < self::WET_THRESHOLD_MM_PER_HOUR) {
+                $localAmount = 0.0;
+            }
             $wet15 = 0;
             $wet50 = 0;
             $wet100 = 0;
