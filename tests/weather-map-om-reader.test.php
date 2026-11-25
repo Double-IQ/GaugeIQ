@@ -93,9 +93,21 @@ checkPfor16Fixture(
 );
 
 
-// The official PFor format uses the vector-interleaved layout only when
-// the block header sets bit 7. The real flagged case is covered by the
-// fixture above; ordinary 128-value blocks are covered below.
+// Open-Meteo's official C decoder dispatches every full 128-value
+// 16-bit block to p4*z*dec128v16, regardless of the header's bit 7.
+// This fixture uses different lane values so linear unpacking cannot pass.
+$ordinary128Packed = "\0\x01"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff";
+$ordinary128Expected = [0];
+$value = 0;
+for ($i = 0; $i < 128; $i++) {
+    if (($i % 8) % 2 === 1) $value--;
+    $ordinary128Expected[] = $value;
+}
+checkPfor16Fixture('ECMWF ordinary 128-value vector-interleaved block', bin2hex($ordinary128Packed), $ordinary128Expected);
 
 function encodeSmallSeed(int $value): string
 {
@@ -261,17 +273,6 @@ echo "PASS OM v3 zero-byte all-NaN chunk decoding\\n";
 
 
 
-
-// An ordinary 128-value PFor block is bit-packed linearly. The vector
-// layout is used only when the PFor header explicitly sets bit 7.
-$ordinary128Packed = "\0\x01" . str_repeat("\xaa", 16);
-$ordinary128Decoded = WeatherMapOmReader::decodePforDelta16($ordinary128Packed, 129);
-$ordinary128Expected = [0];
-for ($i = 0; $i < 128; $i++) $ordinary128Expected[] = -intdiv($i + 1, 2);
-if ($ordinary128Decoded !== $ordinary128Expected) {
-    throw new RuntimeException('ECMWF ordinary 128-value PFor blocks must use linear bit unpacking.');
-}
-echo "PASS ECMWF ordinary 128-value PFor block layout selection\\n";
 
 $delta2dFixture = WeatherMapOmReader::decodeDelta2D16([10, 20, 1, 2, 3, 4], 3, 2);
 if ($delta2dFixture !== [10, 20, 11, 22, 14, 26]) {
