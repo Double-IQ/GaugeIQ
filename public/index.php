@@ -1360,7 +1360,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="data-usage-footer" data-usage-section="surf"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="surfDataUsage">—</strong></span></div>
     </section>
 <section class="card surf-report-card wind-hud-card activity-iq-card" id="windIqCard">
- <div class="wind-hud-heading"><div><p class="label">Wind IQ</p><div class="wind-hud-subtitle">AIR &amp; WATER SPORTS / 7 DAYS</div></div><span class="wind-hud-live"><span></span> MODEL DATA</span></div>
+ <div class="wind-hud-heading"><div><p class="label">Wind IQ</p><div class="wind-hud-subtitle">AIR &amp; WATER SPORTS / 7 DAYS</div></div><span class="wind-hud-live surf-connection-status" id="windIqConnectionStatus" role="status" aria-live="polite"><span></span> CONNECTING</span></div>
  <div class="surf-spot-controls"><label for="windIqActivity">ACTIVITY</label><select id="windIqActivity"><option value="paragliding">Paragliding</option><option value="hanggliding">Hang gliding</option><option value="kitesurfing">Kitesurfing</option><option value="windsurfing">Windsurfing</option></select></div>
  <div class="surf-spot-controls"><label for="windIqSpot">LOCATION</label><select id="windIqSpot"><option value="pollock">Pollock Beach · Gqeberha</option><option value="nahoon">Nahoon · East London</option><option value="sardinia">Sardinia Bay · Gqeberha</option><option value="jeffreys">Jeffreys Bay</option><option value="cape">Cape St Francis</option></select></div>
  <div class="surf-report-status" id="windIqStatus">Loading wind forecast…</div>
@@ -1370,7 +1370,7 @@ if ($current && !empty($current['observed_at'])) {
  <div class="data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="windIqUsage">—</strong></span></div>
 </section>
 <section class="card surf-report-card wind-hud-card activity-iq-card" id="fishIqCard">
- <div class="wind-hud-heading"><div><p class="label">Fish IQ</p><div class="wind-hud-subtitle">COASTAL FISHING OUTLOOK / 7 DAYS</div></div><span class="wind-hud-live"><span></span> MODEL DATA</span></div>
+ <div class="wind-hud-heading"><div><p class="label">Fish IQ</p><div class="wind-hud-subtitle">COASTAL FISHING OUTLOOK / 7 DAYS</div></div><span class="wind-hud-live surf-connection-status" id="fishIqConnectionStatus" role="status" aria-live="polite"><span></span> CONNECTING</span></div>
  <div class="surf-spot-controls"><label for="fishIqMode">FISHING</label><select id="fishIqMode"><option value="shore">Shore fishing</option><option value="boat">Boat fishing</option></select></div>
  <div class="surf-spot-controls"><label for="fishIqSpot">LOCATION</label><select id="fishIqSpot"><option value="pollock">Gqeberha · Pollock / Hobie</option><option value="sardinia">Sardinia Bay · Gqeberha</option><option value="nahoon">Nahoon · East London</option><option value="jeffreys">Jeffreys Bay</option><option value="cape">Cape St Francis</option></select></div>
  <div class="surf-report-status" id="fishIqStatus">Loading coastal forecast…</div>
