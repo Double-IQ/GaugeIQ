@@ -7260,6 +7260,13 @@ body.gaugeiq-menu-open{overflow:hidden}
 .surf-report-metrics>div{padding:10px;border:1px solid rgba(117,164,211,.15);border-radius:10px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:3px}
 .surf-report-metrics small,.surf-hour small,.surf-day small{color:#88a4c5;font-size:9px;font-weight:800;letter-spacing:.12em}
 .surf-report-metrics strong{font-size:18px;color:#f0f7ff}.surf-report-metrics span{font-size:10px;color:#9bb5d3}
+.surf-forecast-details{margin-top:10px;border:1px solid rgba(117,164,211,.15);border-radius:10px;background:rgba(255,255,255,.02);overflow:hidden}
+.surf-forecast-details summary{list-style:none;cursor:pointer;padding:11px 12px;color:#8ca8c9;font-size:9px;font-weight:850;letter-spacing:.15em;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none}
+.surf-forecast-details summary::-webkit-details-marker{display:none}
+.surf-forecast-details summary::after{content:'+';font-size:15px;line-height:1;color:#9bb5d3}
+.surf-forecast-details[open] summary::after{content:'−'}
+.surf-forecast-details[open] summary{border-bottom:1px solid rgba(117,164,211,.12)}
+.surf-forecast-details .surf-hour-grid,.surf-forecast-details .surf-day-grid{padding:0 8px 8px}
 .surf-block-title{margin:14px 0 8px;color:#8ca8c9;font-size:9px;font-weight:850;letter-spacing:.15em}
 .surf-hour-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.surf-hour,.surf-day{padding:8px 6px;border:1px solid rgba(117,164,211,.13);border-radius:9px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:4px;min-width:0}
 .surf-hour strong,.surf-day strong{font-size:14px;color:#eef6ff}.surf-hour span,.surf-day span,.surf-day em{font-size:9px;color:#9bb5d3;font-style:normal}
