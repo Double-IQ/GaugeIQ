@@ -7273,3 +7273,8 @@ body.gaugeiq-menu-open{overflow:hidden}
 .activity-iq-card .surf-report-summary{margin-top:10px}
 .activity-iq-card .surf-report-note{line-height:1.5}
 @media(max-width:520px){.activity-iq-card .surf-day-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.activity-iq-card .surf-day:nth-child(n+5){display:none}}
+
+/* Surf Report connection state: only show linked after both feeds return usable data. */
+.surf-connection-status.is-offline{border-color:rgba(255,105,105,.3);background:rgba(190,45,45,.1);color:#ff9999}
+.surf-connection-status.is-offline span{background:#ff6868;box-shadow:0 0 9px rgba(255,104,104,.5)}
+.surf-connection-status.is-linked{border-color:rgba(67,210,177,.25);background:rgba(23,169,133,.08);color:#86e8cc}
