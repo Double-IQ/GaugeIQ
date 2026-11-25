@@ -96,11 +96,11 @@ checkPfor16Fixture(
 // Open-Meteo's official C decoder dispatches every full 128-value
 // 16-bit block to p4*z*dec128v16, regardless of the header's bit 7.
 // This fixture uses different lane values so linear unpacking cannot pass.
-$ordinary128Packed = "\\0\\x01"
-    . "\\0\\0\\xff\\xff"
-    . "\\0\\0\\xff\\xff"
-    . "\\0\\0\\xff\\xff"
-    . "\\0\\0\\xff\\xff";
+$ordinary128Packed = "\0\x01"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff"
+    . "\0\0\xff\xff";
 $ordinary128Expected = [0];
 $value = 0;
 for ($i = 0; $i < 128; $i++) {
