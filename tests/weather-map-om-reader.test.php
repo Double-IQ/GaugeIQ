@@ -93,9 +93,21 @@ checkPfor16Fixture(
 );
 
 
-// The official PFor format uses the vector-interleaved layout only when
-// the block header sets bit 7. The real flagged case is covered by the
-// fixture above; ordinary 128-value blocks are covered below.
+// Open-Meteo's official C decoder dispatches every full 128-value
+// 16-bit block to p4*z*dec128v16, regardless of the header's bit 7.
+// This fixture uses different lane values so linear unpacking cannot pass.
+$ordinary128Packed = "\\0\\x01"
+    . "\\0\\0\\xff\\xff"
+    . "\\0\\0\\xff\\xff"
+    . "\\0\\0\\xff\\xff"
+    . "\\0\\0\\xff\\xff";
+$ordinary128Expected = [0];
+$value = 0;
+for ($i = 0; $i < 128; $i++) {
+    if (($i % 8) % 2 === 1) $value--;
+    $ordinary128Expected[] = $value;
+}
+checkPfor16Fixture('ECMWF ordinary 128-value vector-interleaved block', bin2hex($ordinary128Packed), $ordinary128Expected);
 
 function encodeSmallSeed(int $value): string
 {
