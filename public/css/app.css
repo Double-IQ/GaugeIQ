@@ -7173,3 +7173,57 @@ body.gaugeiq-menu-open{overflow:hidden}
 
 /* Lunar disc grows with illumination; at full moon it covers the reticle's blue wire field. */
 .mth-moon-disc{width:var(--mth-moon-size,58%);transition:width .35s ease;}
+
+
+/* WVI and Conditions Trend: use the same navy glass card system as Wind and Rain Radar. */
+.mth-hud-card{
+  color:#edf6ff!important;
+  background:radial-gradient(ellipse at 50% -20%,rgba(38,132,201,.18),transparent 54%),linear-gradient(145deg,#10294a 0%,#07172e 52%,#041126 100%)!important;
+  border:1px solid rgba(104,163,218,.34)!important;
+  border-radius:18px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 30px rgba(2,8,23,.17)!important;
+}
+.mth-hud-card .mth-header{border-bottom-color:rgba(117,164,211,.2)}
+.mth-hud-card .mth-kicker{font-family:inherit;color:#9cb6d5;font-size:10px;letter-spacing:.12em}
+.mth-hud-card .mth-header h2{font-family:inherit;color:#edf6ff;font-size:22px;font-weight:750;letter-spacing:normal}
+.mth-hud-card .mth-subtitle{font-family:inherit;color:#9cb6d5;font-size:11px;letter-spacing:.04em}
+.mth-hud-card .mth-subtitle span{color:#7db9ff}
+.mth-hud-card .mth-live{font-family:inherit;color:#7db9ff;border-color:rgba(125,185,255,.28);background:rgba(53,196,235,.07);border-radius:999px;letter-spacing:.04em}
+.mth-hud-card .mth-live i{background:#35c4eb;box-shadow:0 0 8px rgba(53,196,235,.55)}
+.mth-hud-card .mth-section{border-bottom-color:rgba(117,164,211,.2)}
+.mth-hud-card .mth-index{font-family:inherit;color:#7db9ff;border-right-color:rgba(125,185,255,.3)}
+.mth-hud-card .mth-section-head strong{font-family:inherit;font-size:13px;line-height:1.2;font-weight:800;color:#edf6ff;letter-spacing:.025em}
+.mth-hud-card .mth-section-head small{font-family:inherit;font-size:10px;line-height:1.3;font-weight:600;color:#9cb6d5;letter-spacing:.045em}
+.mth-hud-card .mth-section-state{font-family:inherit;font-size:10px;line-height:1.2;font-weight:700;color:#7db9ff;letter-spacing:.02em}
+.mth-hud-card .weather-change-score{
+  min-height:76px;padding:8px;
+  background:linear-gradient(135deg,rgba(1,10,24,.34),rgba(1,10,24,.58));
+  border:1px solid rgba(125,185,255,.28);border-radius:14px;color:#7db9ff;
+}
+.mth-hud-card .weather-change-level span{border-color:rgba(125,185,255,.22);background:rgba(1,10,24,.34);border-radius:3px}
+.mth-hud-card .weather-change-level span.is-active{background:#35c4eb;border-color:#35c4eb;box-shadow:0 0 7px rgba(53,196,235,.25)}
+.mth-hud-card .mth-more-toggle{border-color:rgba(125,185,255,.28);border-radius:10px;background:rgba(1,10,24,.24);color:#7db9ff;font-family:inherit;font-size:11px;letter-spacing:.06em}
+.mth-hud-card .weather-change-summary,.mth-hud-card .conditions-trend-summary{
+  background:rgba(1,10,24,.24);border:1px solid rgba(117,164,211,.2);border-radius:12px;color:#c5d7ec;
+}
+.mth-hud-card .weather-change-reason{background:rgba(1,10,24,.24);border:1px solid rgba(117,164,211,.2);border-radius:12px;color:#c5d7ec}
+.mth-hud-card .weather-change-reason strong{color:#7db9ff}
+.mth-hud-card .mth-trend-result{background:rgba(1,10,24,.24);border:1px solid rgba(117,164,211,.2);border-radius:14px}
+.mth-hud-card .conditions-trend-score{
+  width:56px;height:56px;flex:0 0 56px;border:1px solid rgba(125,185,255,.38);
+  border-radius:50%;background:rgba(1,10,24,.3);color:#7db9ff;font:700 25px inherit;
+}
+.mth-hud-card .conditions-trend-score[data-trend="worsening"]{color:#ffc184;border-color:rgba(255,193,132,.55)}
+.mth-hud-card .conditions-trend-score[data-trend="improving"]{color:#43d6a4;border-color:rgba(67,214,164,.5)}
+.mth-hud-card .conditions-trend-label{color:#edf6ff;font:800 14px inherit;letter-spacing:.025em}
+.mth-hud-card .mth-algorithm-details{border-top-color:rgba(117,164,211,.2);color:#9cb6d5;font-family:inherit;font-size:12px}
+.mth-hud-card .mth-algorithm-details summary{color:#7db9ff;font:700 12px inherit;letter-spacing:.025em}
+.mth-hud-card .mth-algorithm-details p{color:#9cb6d5}
+.mth-hud-card .mth-footer{color:#829fc1;font:700 8px inherit;letter-spacing:.08em}
+@media(max-width:560px){
+  .mth-hud-card{padding:16px!important}
+  .mth-hud-card .mth-header{gap:8px}
+  .mth-hud-card .mth-live{font-size:8px;padding:5px 6px}
+  .mth-hud-card .mth-subtitle{font-size:8px}
+  .mth-hud-card .mth-footer{font-size:6px}
+}
