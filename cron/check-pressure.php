@@ -12,7 +12,7 @@ if ($databaseDriver === 'sqlite' && $databasePath !== '') {
     $cronLockHandle = @fopen($databasePath . '.cron.lock', 'c');
     if (!is_resource($cronLockHandle) || !flock($cronLockHandle, LOCK_EX | LOCK_NB)) {
         if (is_resource($cronLockHandle)) fclose($cronLockHandle);
-        echo "GaugeIQ cron skipped: another check-pressure.php run is already active.\\n";
+        echo "GaugeIQ cron skipped: another check-pressure.php run is already active.\n";
         exit(0);
     }
 }
