@@ -335,10 +335,17 @@ protocolOptions.fileReaderConfig = {
         let animationLoadPoll = null;
         let animationLoadError = null;
         let animationFrameSourceAdder = null;
+        // Keep a visible session warning if any frame has to fall back from server-prepared tiles.
+        const preparedTileFallbacks = new Set();
 
         function setStatus(message) {
-            status.textContent = message;
-            status.hidden = !message;
+            const fallbackNotice = preparedTileFallbacks.size
+                ? '⚠ Server-prepared tiles failed for ' + Array.from(preparedTileFallbacks).join(', ') +
+                    '. Browser rendering is being used for those frame(s).'
+                : '';
+            const visibleMessage = [fallbackNotice, message].filter(Boolean).join(' ');
+            status.textContent = visibleMessage;
+            status.hidden = !visibleMessage;
         }
 
         function weatherVariables(selection) {
@@ -509,6 +516,7 @@ protocolOptions.fileReaderConfig = {
 
         async function prepareAnimation(autoStart = true) {
             clearAnimation();
+            preparedTileFallbacks.clear();
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
@@ -1022,8 +1030,11 @@ protocolOptions.fileReaderConfig = {
                     frame.usingPreparedTiles = false;
                     frame.loadAttempts = 0;
                     frame.loadError = null;
+                    preparedTileFallbacks.add(frame.id);
                     animationFrameSourceAdder(frame);
-                    setStatus('Prepared weather tile unavailable · using the browser renderer for this frame…');
+                    // setStatus keeps this warning visible even when normal
+                    // loading/playback messages update the status line later.
+                    setStatus('');
                     return;
                 }
                 if (frame) frame.loadError = message;
