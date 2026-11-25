@@ -74,12 +74,12 @@ try {
         $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
         $prepared = [];
         foreach (['precipitation', 'cloud_cover'] as $variable) {
-            $cacheKey = hash('sha256', $url . '|' . $variable . '|sa-grid-v1');
+            $cacheKey = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
             $dataPath = $decodedDirectory . '/' . $cacheKey . '.f32';
             $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
             $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
             $prepared[$variable] = is_file($dataPath) && is_array($meta) &&
-                ($meta['version'] ?? null) === 1 &&
+                ($meta['version'] ?? null) === 3 &&
                 ($meta['frame_time'] ?? '') === (string)$row['frame_time'] &&
                 ($meta['source_url_sha256'] ?? '') === hash('sha256', $url) &&
                 ($meta['variable'] ?? '') === $variable &&
