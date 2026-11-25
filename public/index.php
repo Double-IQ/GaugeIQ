@@ -1329,7 +1329,7 @@ if ($current && !empty($current['observed_at'])) {
     <section class="card surf-report-card wind-hud-card" id="surfReportCard" aria-labelledby="surfReportTitle">
         <div class="wind-hud-heading">
             <div><p class="label" id="surfReportTitle">Surf Report</p><div class="wind-hud-subtitle">MARINE FORECAST / 7 DAYS</div></div>
-            <span class="wind-hud-live"><span></span> MODEL DATA</span>
+            <span class="wind-hud-live surf-connection-status" id="surfConnectionStatus" role="status" aria-live="polite"><span></span> CONNECTING</span>
         </div>
         <div class="surf-spot-controls">
             <label for="surfSpotSelect">SURF SPOT</label>
