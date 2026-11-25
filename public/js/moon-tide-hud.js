@@ -377,6 +377,8 @@
     let trackerUniforms = null;
     let trackerEarthTexture = null;
     let trackerEarthTextureReady = false;
+    let trackerSunTexture = null;
+    let trackerSunTextureReady = false;
     function loadTrackerEarthTexture(gl,texture) {
         const image=new Image();
         image.crossOrigin='anonymous';
@@ -387,6 +389,8 @@
                 canvas.width=2048;canvas.height=1024;
                 const ctx=canvas.getContext('2d',{alpha:false});
                 ctx.drawImage(image,0,0,canvas.width,canvas.height);
+                // The Sun uses texture unit 1; explicitly upload Earth to unit 0.
+                gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D,texture);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
                 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
@@ -402,12 +406,35 @@
         image.onerror=()=>console.warn('GaugeIQ NASA Blue Marble texture could not be loaded');
         image.src='https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x5400x2700.jpg';
     }
+    function loadTrackerSunTexture(gl,texture) {
+        const image=new Image(); image.crossOrigin='anonymous';
+        image.onload=()=>{
+            if(trackerGL!==gl||!texture) return;
+            try {
+                const canvas=document.createElement('canvas'); canvas.width=1024; canvas.height=1024;
+                const ctx=canvas.getContext('2d',{alpha:false}); ctx.drawImage(image,0,0,1024,1024);
+                gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+                gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+                gl.generateMipmap(gl.TEXTURE_2D); trackerSunTextureReady=true;
+                gl.activeTexture(gl.TEXTURE0);
+            } catch(error) { console.warn('GaugeIQ NASA SDO Sun texture could not be applied',error); }
+        };
+        image.onerror=()=>console.warn('GaugeIQ NASA SDO Sun image could not be loaded');
+        image.src='https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg';
+    }
     function initTracker3D() {
         if (!trackerCanvas || trackerGL) return !!trackerGL;
         const gl = trackerCanvas.getContext('webgl', {alpha:true,antialias:true,premultipliedAlpha:false});
         if (!gl) return false;
         const vertex = `
             attribute vec3 a_position;
+            attribute vec2 a_uv;
             uniform vec3 u_center;
             uniform float u_radius;
             uniform vec3 u_right;
@@ -426,9 +453,7 @@
                 float clipZ = depth * 1.004008 - 0.200401;
                 gl_Position = vec4(view.x*focal/u_aspect, view.y*focal, clipZ, depth);
                 v_normal = a_position;
-                float longitude=atan(a_position.y,a_position.x);
-                float latitude=asin(clamp(a_position.z,-1.0,1.0));
-                v_uv=vec2(longitude/6.28318530718+0.5,0.5+latitude/3.14159265359);
+                v_uv=a_uv;
             }`;
         const fragment = `
             precision mediump float;
@@ -439,6 +464,8 @@
             uniform vec3 u_viewForward;
             uniform sampler2D u_earthTexture;
             uniform float u_earthTextureReady;
+            uniform sampler2D u_sunTexture;
+            uniform float u_sunTextureReady;
             float hash21(vec2 p) {
                 p=fract(p*vec2(123.34,456.21));
                 p+=dot(p,p+45.32);
@@ -479,11 +506,10 @@
                     vec3 lunarBase=mix(vec3(0.43,0.44,0.42),vec3(0.57,0.56,0.52),maria*0.34);
                     color=(lunarBase+vec3(relief))*(0.018+0.982*diffuse)*limb;
                 } else if(u_kind<2.5) {
-                    float granulation=0.035*sin(n.x*31.0+n.y*19.0)*sin(n.z*27.0-n.x*11.0);
-                    float edge=pow(1.0-max(0.0,n.z),2.0);
-                    color=vec3(1.0,0.76,0.38)+granulation;
-                    color=mix(color,vec3(1.0,0.43,0.12),edge*0.28);
-                    color*=1.25+0.32*diffuse;
+                    vec3 solarFallback=vec3(1.0,0.48,0.12)*(1.0+0.08*sin(n.x*31.0+n.y*19.0)*sin(n.z*27.0-n.x*11.0));
+                    vec3 solarImage=texture2D(u_sunTexture,v_uv).rgb;
+                    color=mix(solarFallback,solarImage,u_sunTextureReady);
+                    color*=1.45;
                 } else {
                     color=vec3(1.0,0.72,0.28)*1.35;
                 }
@@ -495,14 +521,16 @@
         gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));
         gl.linkProgram(program);
         if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
-        const positions=[],indices=[],latitudes=28,longitudes=40;
-        for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta));}}
+        const positions=[],uvs=[],indices=[],latitudes=56,longitudes=80;
+        for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta));uvs.push(0.5+x/longitudes,1-y/latitudes);}}
         // Counter-clockwise outward-facing triangles. The old winding
         // pointed inward, so BACK-face culling discarded the visible globe.
         for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,a+1,b+1);}
         const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
+        const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(uvs),gl.STATIC_DRAW);
+        const uvLocation=gl.getAttribLocation(program,'a_uv');gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
         const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);
-        trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,indexBuffer,count:indices.length};
+        trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,uvBuffer,indexBuffer,count:indices.length};
         trackerEarthTexture=gl.createTexture();
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D,trackerEarthTexture);
@@ -512,7 +540,12 @@
         gl.uniform1i(gl.getUniformLocation(program,'u_earthTexture'),0);
         gl.uniform1f(gl.getUniformLocation(program,'u_earthTextureReady'),0);
         loadTrackerEarthTexture(gl,trackerEarthTexture);
-        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),viewForward:gl.getUniformLocation(program,'u_viewForward'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
+        trackerSunTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,trackerSunTexture);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,112,28,255]));
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+        gl.uniform1i(gl.getUniformLocation(program,'u_sunTexture'),1);gl.uniform1f(gl.getUniformLocation(program,'u_sunTextureReady'),0);
+        loadTrackerSunTexture(gl,trackerSunTexture);
+        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),sunTexture:gl.getUniformLocation(program,'u_sunTexture'),sunTextureReady:gl.getUniformLocation(program,'u_sunTextureReady'),viewForward:gl.getUniformLocation(program,'u_viewForward'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
         return true;
     }
     function drawTrackerSphere(center,radius,kind,light,right,up,forward,aspect) {
@@ -534,7 +567,9 @@
         const pixelWidth=Math.round(width*dpr),pixelHeight=Math.round(height*dpr);
         if(trackerCanvas.width!==pixelWidth||trackerCanvas.height!==pixelHeight){trackerCanvas.width=pixelWidth;trackerCanvas.height=pixelHeight;}
         const gl=trackerGL;gl.viewport(0,0,pixelWidth,pixelHeight);gl.clearColor(0.012,0.035,0.065,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.useProgram(trackerProgram);
-        gl.bindBuffer(gl.ARRAY_BUFFER,trackerSphere.vertexBuffer);gl.enableVertexAttribArray(trackerUniforms.position);gl.vertexAttribPointer(trackerUniforms.position,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,trackerSphere.indexBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER,trackerSphere.vertexBuffer);gl.enableVertexAttribArray(trackerUniforms.position);gl.vertexAttribPointer(trackerUniforms.position,3,gl.FLOAT,false,0,0);
+        const uvLocation=gl.getAttribLocation(trackerProgram,'a_uv');gl.bindBuffer(gl.ARRAY_BUFFER,trackerSphere.uvBuffer);gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,trackerSphere.indexBuffer);
         const latRad=lat*rad,observerLon=lon*rad;
         const forward=[Math.cos(latRad)*Math.cos(observerLon),Math.cos(latRad)*Math.sin(observerLon),Math.sin(latRad)];
         let right=[-Math.sin(observerLon),Math.cos(observerLon),0];
@@ -578,7 +613,10 @@
         drawTrackerSphere(moonSky.center,0.135,1,moonLight,right,up,forward,aspect);
         // The solar disk is deliberately larger and warmer than the Moon so
         // it reads as a luminous star rather than a second grey planet.
-        drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
+        gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,trackerSunTexture);
+        gl.uniform1i(trackerUniforms.sunTexture,1);gl.uniform1f(trackerUniforms.sunTextureReady,trackerSunTextureReady?1:0);
+        drawTrackerSphere(sunSky.center,1.25,2,sunDir,right,up,forward,aspect);
+        gl.activeTexture(gl.TEXTURE0);
         gl.disable(gl.BLEND);
     }
 
