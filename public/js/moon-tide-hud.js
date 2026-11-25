@@ -426,8 +426,8 @@
                 float clipZ = depth * 1.004008 - 0.200401;
                 gl_Position = vec4(view.x*focal/u_aspect, view.y*focal, clipZ, depth);
                 v_normal = a_position;
-                float longitude=atan(a_position.z,a_position.x);
-                float latitude=asin(clamp(a_position.y,-1.0,1.0));
+                float longitude=atan(a_position.y,a_position.x);
+                float latitude=asin(clamp(a_position.z,-1.0,1.0));
                 v_uv=vec2(longitude/6.28318530718+0.5,0.5+latitude/3.14159265359);
             }`;
         const fragment = `
@@ -436,6 +436,7 @@
             varying vec2 v_uv;
             uniform vec3 u_light;
             uniform float u_kind;
+            uniform vec3 u_viewForward;
             uniform sampler2D u_earthTexture;
             uniform float u_earthTextureReady;
             float hash21(vec2 p) {
@@ -444,7 +445,7 @@
                 return fract(p.x*p.y);
             }
             float lunarRelief(vec3 p) {
-                vec2 uv=vec2(atan(p.z,p.x),asin(clamp(p.y,-1.0,1.0)));
+                vec2 uv=vec2(atan(p.y,p.x),asin(clamp(p.z,-1.0,1.0)));
                 float relief=0.0;
                 for(int i=0;i<3;i++) {
                     float scale=5.0+float(i)*7.0;
@@ -464,7 +465,7 @@
             void main() {
                 vec3 n=normalize(v_normal);
                 float diffuse=max(0.0,dot(n,normalize(u_light)));
-                float limb=0.72+0.28*max(0.0,n.z);
+                float limb=0.72+0.28*max(0.0,dot(n,normalize(u_viewForward)));
                 vec3 color;
                 if(u_kind<0.5) {
                     vec3 fallback=mix(vec3(0.012,0.075,0.16),vec3(0.27,0.34,0.20),step(0.0,sin(n.x*4.0)*sin(n.y*3.0)));
@@ -495,10 +496,10 @@
         gl.linkProgram(program);
         if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
         const positions=[],indices=[],latitudes=28,longitudes=40;
-        for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.cos(theta),Math.sin(theta)*Math.sin(phi));}}
+        for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta));}}
         // Counter-clockwise outward-facing triangles. The old winding
         // pointed inward, so BACK-face culling discarded the visible globe.
-        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,a+1,b,b,a+1,b+1);}
+        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,a+1,b+1);}
         const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
         const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);
         trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,indexBuffer,count:indices.length};
@@ -511,13 +512,13 @@
         gl.uniform1i(gl.getUniformLocation(program,'u_earthTexture'),0);
         gl.uniform1f(gl.getUniformLocation(program,'u_earthTextureReady'),0);
         loadTrackerEarthTexture(gl,trackerEarthTexture);
-        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
+        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),viewForward:gl.getUniformLocation(program,'u_viewForward'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
         return true;
     }
     function drawTrackerSphere(center,radius,kind,light,right,up,forward,aspect) {
         const gl=trackerGL,u=trackerUniforms;
         gl.uniform3fv(u.center,center);gl.uniform1f(u.radius,radius);gl.uniform1f(u.kind,kind);
-        gl.uniform3fv(u.light,light);gl.uniform3fv(u.right,right);gl.uniform3fv(u.up,up);gl.uniform3fv(u.forward,forward);gl.uniform1f(u.aspect,aspect);
+        gl.uniform3fv(u.light,light);gl.uniform3fv(u.viewForward,forward);gl.uniform3fv(u.right,right);gl.uniform3fv(u.up,up);gl.uniform3fv(u.forward,forward);gl.uniform1f(u.aspect,aspect);
         gl.drawElements(gl.TRIANGLES,trackerSphere.count,gl.UNSIGNED_SHORT,0);
     }
     function renderTracker3D(date,moonPosition,sunPosition,gmst) {
