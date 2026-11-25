@@ -51,6 +51,9 @@ final class Database
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);
+        // Wait briefly for concurrent web requests or cron activity instead of
+        // failing immediately on SQLite's single-writer lock.
+        $this->pdo->exec('PRAGMA busy_timeout = 10000');
     }
 
     public function pdo(): PDO
