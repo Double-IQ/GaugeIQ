@@ -1657,7 +1657,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/app.js?v=20261120-radar-sweep-fade-5s"></script>
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261120-lunar-disc-realistic-v1"></script>
-<script src="js/data-usage.js?v=20261122-card-usage-v1"><script src="js/surf-report.js?v=20261125-surf-report-v1"></script>
-</script>
+<script src="js/data-usage.js?v=20261122-card-usage-v1"></script>
+<script src="js/surf-report.js?v=20261125-surf-report-v1"></script>
 </body>
 </html>
