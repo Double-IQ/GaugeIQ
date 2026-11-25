@@ -2435,9 +2435,9 @@ updateNetworkDiagnostics();
         // Bearings are north-up in the forecast data, so counter-rotate the
         // echoes by the device heading to keep them geographically aligned.
         radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
-        // Keep each echo's illumination phase aligned with the fixed sweep
-        // throughout compass easing, not only after the heading settles.
-        syncEchoSweepPhases(currentHeading);
+        // Do not rewrite CSS animation-delay on every animation frame:
+        // changing it repeatedly restarts/rephases the echo animations.
+        // Apply the final bearing phase once the compass heading settles.
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
