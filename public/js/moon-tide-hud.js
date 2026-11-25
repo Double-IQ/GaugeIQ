@@ -404,12 +404,24 @@
             varying vec3 v_normal;
             uniform vec3 u_light;
             uniform float u_kind;
-            float terrain(vec3 p) {
-                float n = sin(p.x*8.0 + sin(p.z*5.0))*0.42
-                        + sin(p.y*11.0 + p.x*3.0)*0.28
-                        + cos(p.z*13.0 - p.y*4.0)*0.20
-                        + sin(p.x*19.0 + p.y*7.0 + p.z*11.0)*0.10;
-                return n;
+            float blob(vec2 p, vec2 c, vec2 r) {
+                vec2 q = (p-c)/r;
+                return dot(q,q);
+            }
+            float continents(vec3 p) {
+                float lon = atan(p.z,p.x);
+                float lat = asin(clamp(p.y,-1.0,1.0));
+                vec2 ll = vec2(lon,lat);
+                float land = 10.0;
+                land = min(land,blob(ll,vec2(-1.75,0.62),vec2(0.34,0.66)));
+                land = min(land,blob(ll,vec2(-1.95,-0.38),vec2(0.20,0.48)));
+                land = min(land,blob(ll,vec2(0.55,0.82),vec2(0.78,0.34)));
+                land = min(land,blob(ll,vec2(1.28,0.28),vec2(0.70,0.48)));
+                land = min(land,blob(ll,vec2(0.38,-0.12),vec2(0.27,0.57)));
+                land = min(land,blob(ll,vec2(2.35,-0.42),vec2(0.34,0.22)));
+                land = min(land,blob(ll,vec2(-0.15,-1.43),vec2(2.7,0.12)));
+                land = min(land,blob(ll,vec2(2.05,0.16),vec2(0.13,0.28)));
+                return land;
             }
             void main() {
                 vec3 n = normalize(v_normal);
@@ -418,9 +430,9 @@
                 vec3 color;
                 float light;
                 if (u_kind < 0.5) {
-                    float land = smoothstep(0.02,0.13,terrain(n*2.0));
-                    vec3 ocean = vec3(0.025,0.20,0.34);
-                    vec3 ground = vec3(0.30,0.43,0.27);
+                    float land = 1.0-smoothstep(0.88,1.08,continents(n));
+                    vec3 ocean = vec3(0.018,0.105,0.22);
+                    vec3 ground = vec3(0.30,0.39,0.24);
                     color = mix(ocean,ground,land);
                     light = 0.045 + 0.955*diffuse;
                     color *= light*limb;
@@ -474,12 +486,14 @@
         if(trackerCanvas.width!==pixelWidth||trackerCanvas.height!==pixelHeight){trackerCanvas.width=pixelWidth;trackerCanvas.height=pixelHeight;}
         const gl=trackerGL;gl.viewport(0,0,pixelWidth,pixelHeight);gl.clearColor(0.012,0.035,0.065,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.useProgram(trackerProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER,trackerSphere.vertexBuffer);gl.enableVertexAttribArray(trackerUniforms.position);gl.vertexAttribPointer(trackerUniforms.position,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,trackerSphere.indexBuffer);
-        const latRad=lat*rad,observerLon=(lon+gmst)*rad;
+        const latRad=lat*rad,observerLon=lon*rad;
         const forward=[Math.cos(latRad)*Math.cos(observerLon),Math.cos(latRad)*Math.sin(observerLon),Math.sin(latRad)];
         let right=[-Math.sin(observerLon),Math.cos(observerLon),0];
         const up=[-Math.sin(latRad)*Math.cos(observerLon),-Math.sin(latRad)*Math.sin(observerLon),Math.cos(latRad)];
         const celestial=(ra,dec)=>[Math.cos(dec*rad)*Math.cos(ra*rad),Math.cos(dec*rad)*Math.sin(ra*rad),Math.sin(dec*rad)];
-        const moonDir=celestial(moonPosition.ra,moonPosition.dec),sunDir=celestial(sunPosition.ra,sunPosition.dec);
+        // Convert inertial equatorial coordinates into the Earth-fixed frame.
+        // The globe and observer stay fixed; only Sun/Moon directions change.
+        const moonDir=celestial(moonPosition.ra-gmst,moonPosition.dec),sunDir=celestial(sunPosition.ra-gmst,sunPosition.dec);
         const aspect=pixelWidth/pixelHeight;
         gl.disable(gl.BLEND);
         drawTrackerSphere([0,0,0],1,0,sunDir,right,up,forward,aspect);
@@ -564,14 +578,10 @@
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
         $('mthOrbitState').textContent = 'CALCULATED POSITION';
         if (globe) {
-            globe.style.setProperty('--mth-earth-turn',norm360(gmst)+'deg');
-            // Keep the equirectangular texture's Greenwich meridian aligned with the
-            // camera-facing meridian. The texture must move west as Earth rotates east.
-            const textureWidth = 300;
-            const globeViewportWidth = globe.clientWidth;
-            const textureOffset = (globeViewportWidth / 2) - (norm360(gmst) / 360) * textureWidth;
-            globe.style.backgroundPosition = textureOffset.toFixed(2) + 'px center';
-            globe.setAttribute('aria-label','Rotating Earth. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres. ' + (root.dataset.locationName || 'Selected location') + ' marker updates with Earth rotation.');
+            // Earth is fixed in the selected observer's local frame.
+            globe.style.setProperty('--mth-earth-turn','0deg');
+            globe.style.backgroundPosition = 'center center';
+            globe.setAttribute('aria-label','Earth fixed to the selected location. Moon range ' + Math.round(moonPosition.distanceKm).toLocaleString() + ' kilometres.');
         }
     }
     if (timeScrubber) {
