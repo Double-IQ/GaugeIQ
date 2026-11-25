@@ -502,8 +502,11 @@
                     altitude:altitude*180/Math.PI};
         };
         const moonSky=skyPosition(moonDir),sunSky=skyPosition(sunDir);
-        if(moonSky.altitude>-1) drawTrackerSphere(moonSky.center,0.135,1,sunDir,right,up,forward,aspect);
-        if(sunSky.altitude>-1) drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
+        // Keep both bodies rendered at their calculated azimuth/elevation angles,
+        // including when they are below the local horizon. The sky-dome projection
+        // is independent of whether the observer can currently see them outdoors.
+        drawTrackerSphere(moonSky.center,0.135,1,sunDir,right,up,forward,aspect);
+        drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
         gl.disable(gl.BLEND);
     }
 
