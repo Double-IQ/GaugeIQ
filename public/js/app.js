@@ -2356,7 +2356,14 @@ updateNetworkDiagnostics();
         byId('rainfallRadarNearestAmount').textContent =
             Number.isFinite(nearestAmount) ? nearestAmount.toFixed(2) + ' mm/h at cell' : 'No wet cells';
         byId('rainfallRadarTrendLabel').textContent = current ? 'SCAN TIME' : 'RAIN MOVEMENT';
-        byId('rainfallRadarTrendValue').textContent = current ? (time || 'Latest available') : 'Forecast trend';
+        const movementLabels = {
+            closing: 'Moving closer',
+            receding: 'Moving away',
+            steady: 'Staying steady',
+            not_assessed: 'Not enough data',
+        };
+        const movement = movementLabels[scans.movement_trend] || 'Not enough data';
+        byId('rainfallRadarTrendValue').textContent = current ? (time || 'Latest available') : movement;
         document.querySelectorAll('.rainfall-radar-timeline,.rainfall-radar-consistency').forEach(el => {
             el.hidden = current;
         });
