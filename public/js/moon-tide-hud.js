@@ -629,16 +629,21 @@
             return {azimuth,altitude:altitude*180/Math.PI};
         };
         const moonSky=skyPosition(moonDir);
-        // Give the Moon a deliberately flatter, horizontal orbital track around
-        // Earth. The forward component creates a shallow perspective ellipse:
-        // the near side is closer/larger and the far side is slightly smaller.
+        // Put the Moon on a much flatter, true 3D orbit around Earth.
+        // The orbit runs left-to-right in the observer view and swings in
+        // depth: the near side grows, while the far side passes behind Earth.
+        // At the limbs it naturally peeks around the globe instead of popping
+        // out of view. The small vertical term keeps the orbit from looking
+        // mechanically flat while remaining substantially more horizontal.
         const moonAzimuth=moonSky.azimuth;
-        const moonDepth=2.15+Math.cos(moonAzimuth)*0.30;
-        const moonElevation=Math.sin(moonSky.altitude*Math.PI/180)*0.42;
+        const orbitRadius=1.72;
+        const moonSide=Math.sin(moonAzimuth)*orbitRadius;
+        const moonDepth=Math.cos(moonAzimuth)*orbitRadius;
+        const moonElevation=Math.sin(moonSky.altitude*Math.PI/180)*0.16;
         moonSky.center=[
-            right[0]*(Math.sin(moonAzimuth)*1.45)+up[0]*moonElevation+forward[0]*moonDepth,
-            right[1]*(Math.sin(moonAzimuth)*1.45)+up[1]*moonElevation+forward[1]*moonDepth,
-            right[2]*(Math.sin(moonAzimuth)*1.45)+up[2]*moonElevation+forward[2]*moonDepth
+            right[0]*moonSide+up[0]*moonElevation+forward[0]*moonDepth,
+            right[1]*moonSide+up[1]*moonElevation+forward[1]*moonDepth,
+            right[2]*moonSide+up[2]*moonElevation+forward[2]*moonDepth
         ];
         // Keep both bodies rendered at their calculated azimuth/elevation angles,
         // including when they are below the local horizon. The sky-dome projection
@@ -648,7 +653,9 @@
         const moonLight=moonToSun.map(v=>v/moonToSunLength);
         gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,trackerMoonTexture);
         gl.uniform1i(trackerUniforms.moonTexture,2);gl.uniform1f(trackerUniforms.moonTextureReady,trackerMoonTextureReady?1:0);
-        const perspectiveRadius=0.135*(2.65/Math.max(2.30,4.8-moonDepth));
+        // Scale by actual view depth: near-side Moon is larger, far-side
+        // Moon is smaller and is correctly depth-occluded by Earth's globe.
+        const perspectiveRadius=0.135*(2.8/Math.max(1.9,3.4-moonDepth));
         drawTrackerSphere(moonSky.center,perspectiveRadius,1,moonLight,right,up,forward,aspect);
         // The Sun remains the directional light source for Earth and Moon,
         // but its separate visible sphere is intentionally omitted.
