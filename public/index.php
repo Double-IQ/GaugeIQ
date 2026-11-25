@@ -1237,11 +1237,13 @@ if ($current && !empty($current['observed_at'])) {
                             <circle class="rainfall-radar-range-ring" data-ring-km="50" cx="160" cy="160" r="70" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
                             <circle class="rainfall-radar-range-ring" data-ring-km="100" cx="160" cy="160" r="140" fill="none" stroke="#376071" stroke-dasharray="3 4"/>
                             <path d="M20 160H300 M160 20V300 M61 61L259 259 M259 61L61 259" stroke="#376071" stroke-opacity=".42" stroke-width="1"/>
-                            <g id="rainfallRadarEchoes" class="rainfall-radar-cells" transform="rotate(0 160 160)"><?= $radarCellMarkup ?></g>
-                            <g class="rainfall-radar-sweep">
+                            <g id="rainfallRadarCompassLayer" transform="rotate(0 160 160)">
+                                <g id="rainfallRadarEchoes" class="rainfall-radar-cells"><?= $radarCellMarkup ?></g>
+                                <g class="rainfall-radar-sweep">
                                 <path d="M160 160 L160 20 A140 140 0 0 1 280 88 Z" fill="url(#rainfallRadarSweepGradient)"/>
                                 <path d="M160 160L280 88" stroke="#42DDF8" stroke-width="5" stroke-opacity="0.24" filter="url(#rainfallRadarSweepGlow)"/>
                                 <path d="M160 160L280 88" stroke="url(#rainfallRadarSweepLine)" stroke-width="1.35" stroke-linecap="round"/>
+                                </g>
                             </g>
                         </g>
                         <g class="rainfall-radar-labels" fill="#8CB3C4" font-size="9" font-family="sans-serif">
