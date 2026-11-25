@@ -2272,6 +2272,9 @@ updateNetworkDiagnostics();
         const elapsedSincePass = (getSweepElapsedSeconds() - untilSweep + 7) % 7;
         return -elapsedSincePass;
     };
+    // The echo layer is north-up unless compass mode is active. Keep this
+    // shared heading available to scans rendered after compass activation.
+    window.gaugeIQRadarCompassHeading = 0;
     window.gaugeIQRadarEchoDelay = echoDelayForBearing;
     const amountOf = frame => Number(frame?.local_precipitation_mm_per_hour ?? frame?.local_precipitation_mm);
     const displayTime = value => {
@@ -2293,8 +2296,10 @@ updateNetworkDiagnostics();
             const radians = bearing * Math.PI / 180;
             const spot = document.createElementNS(svgNs, 'circle');
             const radius = Math.max(4, Math.min(7, 4 + Math.log10(1 + Math.max(0, amount)) * 2));
-            // Synchronize newly rendered echoes to the sweep's actual animation clock.
-            const phase = echoDelayForBearing(bearing);
+            // Synchronize new echoes to both the live sweep clock and the
+            // current compass rotation so rescans never reset dot illumination.
+            const compassHeading = Number(window.gaugeIQRadarCompassHeading) || 0;
+            const phase = echoDelayForBearing(bearing - compassHeading);
             spot.setAttribute('class', 'rainfall-radar-cell rainfall-radar-grid-cell');
             spot.setAttribute('data-bearing', bearing.toFixed(2));
             spot.setAttribute('data-distance', distance.toFixed(1));
@@ -2428,6 +2433,9 @@ updateNetworkDiagnostics();
         // Bearings are north-up in the forecast data, so counter-rotate the
         // echoes by the device heading to keep them geographically aligned.
         radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
+        // Keep each echo's illumination phase aligned with the fixed sweep
+        // throughout compass easing, not only after the heading settles.
+        syncEchoSweepPhases(currentHeading);
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
 
         if (Math.abs(deltaBetween(currentHeading, targetHeading)) < 0.08) {
@@ -2440,6 +2448,7 @@ updateNetworkDiagnostics();
     }
 
     function syncEchoSweepPhases(heading) {
+        window.gaugeIQRadarCompassHeading = enabled ? (normalize(heading) ?? 0) : 0;
         radarEchoes.querySelectorAll('.rainfall-radar-cell[data-bearing]').forEach(cell => {
             const bearing = normalize(Number(cell.dataset.bearing) - heading);
             const delay = bearing === null ? null : window.gaugeIQRadarEchoDelay?.(bearing);
