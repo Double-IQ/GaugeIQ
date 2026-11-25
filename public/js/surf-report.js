@@ -2,6 +2,8 @@
   const card=document.getElementById('surfReportCard'); if(!card) return;
   const spots={
     pollock:{name:'Pollock Beach',lat:-33.982,lon:25.662,face:115},
+    nahoonReef:{name:'Nahoon Reef',lat:-32.9938,lon:27.9464,face:130},
+    nahoonBeach:{name:'Nahoon Beach',lat:-32.9895,lon:27.9505,face:120},
     hobie:{name:'Hobie Beach',lat:-33.984,lon:25.657,face:115},
     sardinia:{name:'Sardinia Bay',lat:-34.038,lon:25.535,face:145},
     capeStFrancis:{name:'Cape St Francis',lat:-34.205,lon:24.833,face:105},

@@ -1335,6 +1335,8 @@ if ($current && !empty($current['observed_at'])) {
             <label for="surfSpotSelect">SURF SPOT</label>
             <select id="surfSpotSelect" aria-label="Choose surf spot">
                 <option value="pollock">Pollock Beach · Gqeberha</option>
+                <option value="nahoonReef">Nahoon Reef · East London</option>
+                <option value="nahoonBeach">Nahoon Beach · East London</option>
                 <option value="hobie">Hobie Beach · Gqeberha</option>
                 <option value="sardinia">Sardinia Bay · Gqeberha</option>
                 <option value="capeStFrancis">Cape St Francis</option>
