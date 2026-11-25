@@ -1122,8 +1122,29 @@ if ($current && !empty($current['observed_at'])) {
         $nowcastStatus = (string)($rainfallNowcast['status'] ?? 'clear');
         $nowcastFrames = is_array($rainfallNowcast['frames'] ?? null) ? array_values(array_filter($rainfallNowcast['frames'], 'is_array')) : [];
         $nowcastUpdatedAt = strtotime((string)($rainfallNowcast['updated_at'] ?? ''));
-        $radarFrame = $nowcastFrames[0] ?? [];
-        $radarCurrentFrame = is_array($rainfallNowcast['current_frame'] ?? null) && $rainfallNowcast['current_frame'] !== [] ? $rainfallNowcast['current_frame'] : null;
+        $filterRadarFrameByDisplayThreshold = static function (array $frame): array {
+            $cells = is_array($frame['rain_cells'] ?? null) ? $frame['rain_cells'] : [];
+            $frame['rain_cells'] = array_values(array_filter($cells, static function ($cell): bool {
+                if (!is_array($cell)) return false;
+                $amount = $cell['precipitation_mm_per_hour'] ?? $cell['precipitation_mm'] ?? null;
+                return is_numeric($amount) && (float)$amount >= 0.2;
+            }));
+            foreach (['nearest_rain_precipitation_mm_per_hour', 'nearest_rain_precipitation_mm', 'local_precipitation_mm_per_hour', 'local_precipitation_mm'] as $amountKey) {
+                if (is_numeric($frame[$amountKey] ?? null) && (float)$frame[$amountKey] < 0.2) {
+                    $frame[$amountKey] = 0.0;
+                    if (str_starts_with($amountKey, 'nearest_rain_')) {
+                        $frame['nearest_rain_km'] = null;
+                        $frame['nearest_rain_precipitation_mm_per_hour'] = null;
+                        $frame['nearest_rain_precipitation_mm'] = null;
+                    }
+                }
+            }
+            return $frame;
+        };
+        $radarFrame = isset($nowcastFrames[0]) ? $filterRadarFrameByDisplayThreshold($nowcastFrames[0]) : [];
+        $radarCurrentFrame = is_array($rainfallNowcast['current_frame'] ?? null) && $rainfallNowcast['current_frame'] !== []
+            ? $filterRadarFrameByDisplayThreshold($rainfallNowcast['current_frame'])
+            : null;
         $radarCells = is_array($radarFrame['rain_cells'] ?? null) ? $radarFrame['rain_cells'] : [];
         $radarNearestKm = is_numeric($radarFrame['nearest_rain_km'] ?? null) ? (float)$radarFrame['nearest_rain_km'] : null;
         $radarNearestAmount = is_numeric($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm'] ?? null) ? (float)($radarFrame['nearest_rain_precipitation_mm_per_hour'] ?? $radarFrame['nearest_rain_precipitation_mm']) : null;
