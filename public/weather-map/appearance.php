@@ -315,7 +315,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             },
             center: [selectedLocation.longitude || 0, selectedLocation.latitude || 0],
             zoom: 4,
-            minZoom: 1,
+            minZoom: 0,
             maxZoom: 12,
             attributionControl: true
         });
@@ -383,7 +383,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 // rectangle remains visible with useful surrounding context.
                 regionMap.fitBounds(
                     [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
-                    { padding: 48, maxZoom: 1.5, duration: 350 }
+                    { padding: 48, maxZoom: 0.5, duration: 500 }
                 );
             }
         };
