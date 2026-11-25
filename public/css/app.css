@@ -7267,3 +7267,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .surf-report-note{margin:12px 0 8px;color:#819bb8;font-size:10px;line-height:1.45}
 .surf-report-card .data-usage-footer{margin-top:10px}
 @media(max-width:520px){.surf-report-summary{grid-template-columns:88px 1fr}.surf-day-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.surf-day:nth-child(n+5){display:none}.surf-hour-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Wind IQ and Fish IQ inherit the established Surf Report card styling. */
+.activity-iq-card .surf-spot-controls{margin-top:10px}
+.activity-iq-card .surf-report-summary{margin-top:10px}
+.activity-iq-card .surf-report-note{line-height:1.5}
+@media(max-width:520px){.activity-iq-card .surf-day-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.activity-iq-card .surf-day:nth-child(n+5){display:none}}
