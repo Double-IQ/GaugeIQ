@@ -2750,6 +2750,19 @@ body.gaugeiq-menu-open{overflow:hidden}
   background:#0b1b3b;
 }
 .gaugeiq-weather-map-canvas .maplibregl-map{position:absolute;inset:0;width:100%;height:100%}
+.gaugeiq-weather-map-server-status{
+  position:absolute;z-index:5;top:12px;right:12px;left:auto;
+  display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 24px);
+  padding:7px 10px;border:1px solid rgba(148,163,184,.3);border-radius:999px;
+  background:rgba(6,22,38,.9);color:#e2e8f0;font-size:11px;font-weight:750;
+  line-height:1.2;letter-spacing:.02em;pointer-events:none;backdrop-filter:blur(8px);
+}
+.gaugeiq-weather-map-server-status::before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px currentColor}
+.gaugeiq-weather-map-server-status.is-online{border-color:rgba(34,197,94,.5);color:#bbf7d0}
+.gaugeiq-weather-map-server-status.is-online::before{background:#22c55e}
+.gaugeiq-weather-map-server-status.is-offline{border-color:rgba(248,113,113,.55);color:#fecaca}
+.gaugeiq-weather-map-server-status.is-offline::before{background:#ef4444}
+.gaugeiq-weather-map-server-status.is-checking{color:#fde68a}
 .gaugeiq-weather-map-status{
   position:absolute;z-index:1;left:12px;bottom:14px;max-width:calc(100% - 24px);
   padding:8px 11px;border:1px solid rgba(148,163,184,.25);border-radius:9px;

@@ -215,6 +215,7 @@ protocolOptions.fileReaderConfig = {
 
         const mapElement = document.getElementById('map');
         const status = document.getElementById('map-status');
+        const serverStatus = document.getElementById('map-server-status');
         const layerSelect = document.getElementById('layer-select');
         const animationToggle = document.getElementById('map-animation-toggle');
         const frameTimeLabel = document.getElementById('map-frame-time');
@@ -337,6 +338,14 @@ protocolOptions.fileReaderConfig = {
         let animationFrameSourceAdder = null;
         // Keep a visible session warning if any frame has to fall back from server-prepared tiles.
         const preparedTileFallbacks = new Set();
+        function updateServerStatus(state) {
+            if (!serverStatus) return;
+            serverStatus.classList.remove('is-online', 'is-offline', 'is-checking');
+            serverStatus.classList.add('is-' + state);
+            serverStatus.textContent = state === 'online' ? 'Server online'
+                : state === 'offline' ? 'Server offline · browser fallback'
+                : 'Checking server…';
+        }
 
         function setStatus(message) {
             const fallbackNotice = preparedTileFallbacks.size
@@ -517,6 +526,7 @@ protocolOptions.fileReaderConfig = {
         async function prepareAnimation(autoStart = true) {
             clearAnimation();
             preparedTileFallbacks.clear();
+            updateServerStatus('checking');
             const token = animationToken;
             animationPreparing = true;
             animationToggle.disabled = true;
@@ -618,6 +628,10 @@ protocolOptions.fileReaderConfig = {
                             };
                             frame.usingPreparedTiles = true;
                         } else {
+                            if (!frame.forceBrowser) {
+                                preparedTileFallbacks.add(frame.id);
+                                updateServerStatus('offline');
+                            }
                             const dataUrl = new URL(frame.url);
                             dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
                             dataUrl.searchParams.set('variable', item.variable);
@@ -708,6 +722,7 @@ protocolOptions.fileReaderConfig = {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
                     animationToggle.disabled = false;
+                    updateServerStatus(preparedTileFallbacks.size ? 'offline' : 'online');
                     setStatus('');
                     showFrame(animationCurrentFrame);
                     if (autoStart) runAnimation();
@@ -1031,6 +1046,7 @@ protocolOptions.fileReaderConfig = {
                     frame.loadAttempts = 0;
                     frame.loadError = null;
                     preparedTileFallbacks.add(frame.id);
+                    updateServerStatus('offline');
                     animationFrameSourceAdder(frame);
                     // setStatus keeps this warning visible even when normal
                     // loading/playback messages update the status line later.

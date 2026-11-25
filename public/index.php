@@ -1354,6 +1354,7 @@ if ($current && !empty($current['observed_at'])) {
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
              data-location-id="<?= $locationId ?>">
+            <div class="gaugeiq-weather-map-server-status is-checking" id="map-server-status" role="status" aria-live="polite">Checking server…</div>
             <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
         <div class="mth-footer data-usage-footer" data-usage-section="weather-map"><span>DATA USAGE</span><span id="weatherMapDataUsage">Measuring weather tiles…</span><span>THIS VISIT</span></div>
