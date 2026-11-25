@@ -1359,6 +1359,28 @@ if ($current && !empty($current['observed_at'])) {
         <p class="surf-report-note">Forecast model, not a live buoy or beach observation. Local break shape, tide and shelter can change conditions significantly.</p>
         <div class="data-usage-footer" data-usage-section="surf"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="surfDataUsage">—</strong></span></div>
     </section>
+<section class="card surf-report-card wind-hud-card activity-iq-card" id="windIqCard">
+ <div class="wind-hud-heading"><div><p class="label">Wind IQ</p><div class="wind-hud-subtitle">AIR &amp; WATER SPORTS / 7 DAYS</div></div><span class="wind-hud-live"><span></span> MODEL DATA</span></div>
+ <div class="surf-spot-controls"><label for="windIqActivity">ACTIVITY</label><select id="windIqActivity"><option value="paragliding">Paragliding</option><option value="hanggliding">Hang gliding</option><option value="kitesurfing">Kitesurfing</option><option value="windsurfing">Windsurfing</option></select></div>
+ <div class="surf-spot-controls"><label for="windIqSpot">LOCATION</label><select id="windIqSpot"><option value="pollock">Pollock Beach · Gqeberha</option><option value="nahoon">Nahoon · East London</option><option value="sardinia">Sardinia Bay · Gqeberha</option><option value="jeffreys">Jeffreys Bay</option><option value="cape">Cape St Francis</option></select></div>
+ <div class="surf-report-status" id="windIqStatus">Loading wind forecast…</div>
+ <div class="surf-report-summary" id="windIqSummary" hidden><div class="surf-report-rating"><span id="windIqScore">—</span><strong id="windIqGrade">—</strong><small id="windIqBest">Best window —</small></div><div class="surf-report-metrics"><div><small>WIND</small><strong id="windIqWind">—</strong><span id="windIqDir">—</span></div><div><small>GUSTS</small><strong id="windIqGust">—</strong><span>10 m forecast</span></div><div><small>RAIN RISK</small><strong id="windIqRain">—</strong><span>Precipitation probability</span></div><div><small id="windIqExtraLabel">CLOUD BASE</small><strong id="windIqExtra">—</strong><span id="windIqExtraText">Thermal proxy</span></div></div></div>
+ <div id="windIqHourly"></div><div id="windIqDays"></div>
+ <p class="surf-report-note">Model-based guidance, not a flight or water-sports clearance. Surface wind is not launch-site or altitude wind. Check local observations, site rules and qualified safety guidance before going out.</p>
+ <div class="data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="windIqUsage">—</strong></span></div>
+</section>
+<section class="card surf-report-card wind-hud-card activity-iq-card" id="fishIqCard">
+ <div class="wind-hud-heading"><div><p class="label">Fish IQ</p><div class="wind-hud-subtitle">COASTAL FISHING OUTLOOK / 7 DAYS</div></div><span class="wind-hud-live"><span></span> MODEL DATA</span></div>
+ <div class="surf-spot-controls"><label for="fishIqMode">FISHING</label><select id="fishIqMode"><option value="shore">Shore fishing</option><option value="boat">Boat fishing</option></select></div>
+ <div class="surf-spot-controls"><label for="fishIqSpot">LOCATION</label><select id="fishIqSpot"><option value="pollock">Gqeberha · Pollock / Hobie</option><option value="sardinia">Sardinia Bay · Gqeberha</option><option value="nahoon">Nahoon · East London</option><option value="jeffreys">Jeffreys Bay</option><option value="cape">Cape St Francis</option></select></div>
+ <div class="surf-report-status" id="fishIqStatus">Loading coastal forecast…</div>
+ <div class="surf-report-summary" id="fishIqSummary" hidden><div class="surf-report-rating"><span id="fishIqScore">—</span><strong id="fishIqGrade">—</strong><small id="fishIqBest">Best window —</small></div><div class="surf-report-metrics"><div><small>SEA TEMP</small><strong id="fishIqSea">—</strong><span>Model estimate</span></div><div><small>SWELL</small><strong id="fishIqWave">—</strong><span id="fishIqPeriod">—</span></div><div><small>WIND</small><strong id="fishIqWind">—</strong><span id="fishIqDir">—</span></div><div><small>SEA LEVEL</small><strong id="fishIqLevel">—</strong><span>Modelled, not tide-gauge data</span></div></div></div>
+ <div id="fishIqHourly"></div><div id="fishIqDays"></div>
+ <div class="surf-block-title">COMMON REGIONAL TARGETS</div><p class="surf-report-note">Kob, shad (elf), garrick (leervis), blacktail and geelbek are among species encountered along parts of this coastline. The model cannot predict species presence or catch likelihood.</p>
+ <p class="surf-report-note">Fishing suitability is an environmental estimate, not a fish-location tracker or catch guarantee. Modelled sea level is not a verified local tide table. Boat users must consult official marine forecasts and navigation information.</p>
+ <div class="data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO MARINE</a></span><span>THIS VISIT <strong id="fishIqUsage">—</strong></span></div>
+</section>
+
 
     <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
         <header class="gaugeiq-weather-map-toolbar">
@@ -1661,5 +1683,7 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/moon-tide-hud.js?v=20261120-lunar-disc-realistic-v1"></script>
 <script src="js/data-usage.js?v=20261122-card-usage-v1"></script>
 <script src="js/surf-report.js?v=20261125-surf-report-v1"></script>
+<script src="js/wind-iq.js?v=20261125-wind-iq-v1"></script>
+<script src="js/fish-iq.js?v=20261125-fish-iq-v1"></script>
 </body>
 </html>
