@@ -2,6 +2,20 @@
 declare(strict_types=1);
 
 $config = require __DIR__ . '/../config/local.php';
+
+// Prevent overlapping scheduled monitor runs from competing for the SQLite
+// writer lock. The OS releases this lock automatically when the process exits.
+$cronLockHandle = null;
+$databaseDriver = strtolower((string)($config['database']['driver'] ?? 'sqlite'));
+$databasePath = (string)($config['database']['path'] ?? '');
+if ($databaseDriver === 'sqlite' && $databasePath !== '') {
+    $cronLockHandle = @fopen($databasePath . '.cron.lock', 'c');
+    if (!is_resource($cronLockHandle) || !flock($cronLockHandle, LOCK_EX | LOCK_NB)) {
+        if (is_resource($cronLockHandle)) fclose($cronLockHandle);
+        echo "GaugeIQ cron skipped: another check-pressure.php run is already active.\n";
+        exit(0);
+    }
+}
 require __DIR__ . '/../app/Database.php';
 require __DIR__ . '/../app/PressureService.php';
 require __DIR__ . '/../app/PushService.php';
