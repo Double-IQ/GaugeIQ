@@ -25,8 +25,8 @@
       const [raw,weatherRaw]=await Promise.all([marineResponse.text(),weatherResponse.text()]);const data=JSON.parse(raw),weather=JSON.parse(weatherRaw);const h=data.hourly,wh=weather.hourly;if(!h?.time?.length)throw new Error('No marine forecast returned for this location');
       set('surfDataUsage',((new TextEncoder().encode(raw).length+new TextEncoder().encode(weatherRaw).length)/1024).toFixed(1)+' KB');
       const now=new Date(),start=h.time.findIndex(t=>new Date(t)>=now);const ix=Math.max(0,start);
-      const wave=h.wave_height[ix],period=h.wave_period[ix],swell=h.swell_wave_height[ix],swellDir=h.swell_wave_direction[ix],wind=h.wind_wave_height[ix],windDir=h.wind_wave_direction[ix],windSpeed=h.wind_speed_10m?.[ix],sea=h.sea_surface_temperature?.[ix];
-      const hourlyWind=h.wind_speed_10m;
+      const wave=h.wave_height[ix],period=h.wave_period[ix],swell=h.swell_wave_height[ix],swellDir=h.swell_wave_direction[ix],sea=h.sea_surface_temperature?.[ix];
+      const hourlyWind=wh.wind_speed_10m;
       const rel=relation(wh.wind_direction_10m?.[ix],spot.face);const grade=rating(Number(wave),Number(period),Number(hourlyWind?.[ix]),rel);
       set('surfRating',symbol[grade]);set('surfRatingLabel',grade+' conditions');set('surfWaveHeight',Number.isFinite(wave)?wave.toFixed(1)+' m':'—');set('surfWavePeriod',Number.isFinite(period)?period.toFixed(0)+' s period':'—');
       set('surfSwellHeight',Number.isFinite(swell)?swell.toFixed(1)+' m':'—');set('surfSwellDirection',Number.isFinite(swellDir)?compass(swellDir)+' · '+Math.round(swellDir)+'°':'—');
