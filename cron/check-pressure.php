@@ -24,7 +24,27 @@ try {
     }
     $prefetchResult = $weatherMapCache->prefetchRegionalFramesIfDue(3600);
     if (!$prefetchResult['skipped']) {
+        echo "Weather-map regional prefetch completed:\n";
         echo $prefetchResult['output'] . "\n";
+    } else {
+        // A skipped run is normal when all scheduled frames are already decoded.
+        // Still print the last saved diagnostics so the cron log remains useful
+        // without requiring shell or database access on the hosting account.
+        $lastOutput = trim(getGaugeIqSetting($pdo, 'weather_map_prefetch_last_output', ''));
+        $lastSuccess = trim(getGaugeIqSetting($pdo, 'weather_map_prefetch_last_success_at', ''));
+        $lastError = trim(getGaugeIqSetting($pdo, 'weather_map_prefetch_last_error', ''));
+        $pendingUrls = json_decode(getGaugeIqSetting($pdo, 'weather_map_prefetch_pending_urls', '[]'), true);
+        $pendingCount = is_array($pendingUrls) ? count(array_filter($pendingUrls, 'is_string')) : 0;
+
+        echo "Weather-map regional prefetch skipped: " . (string)($prefetchResult['output'] ?? 'No frames required decoding.') . "\n";
+        echo "Weather-map last successful prefetch: " . ($lastSuccess !== '' ? $lastSuccess : 'not recorded') . "\n";
+        echo "Weather-map pending frame URLs: " . $pendingCount . "\n";
+        echo "Weather-map last recorded error: " . ($lastError !== '' ? $lastError : 'none') . "\n";
+        if ($lastOutput !== '') {
+            echo "Weather-map last successful coverage diagnostics:\n" . $lastOutput . "\n";
+        } else {
+            echo "Weather-map last successful coverage diagnostics: not yet recorded.\n";
+        }
     }
 } catch (Throwable $weatherMapError) {
     error_log('GaugeIQ regional weather-map refresh failed: ' . $weatherMapError->getMessage());
