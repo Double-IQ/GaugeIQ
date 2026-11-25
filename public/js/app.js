@@ -2265,11 +2265,13 @@ updateNetworkDiagnostics();
         const sweep = document.querySelector('.rainfall-radar-sweep');
         const animation = sweep?.getAnimations().find(item => item.playState !== 'idle');
         const currentTime = Number(animation?.currentTime);
-        return Number.isFinite(currentTime) ? ((currentTime / 1000) % 7 + 7) % 7 : 0;
+        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 12;
+        return Number.isFinite(currentTime) ? ((currentTime / 1000) % period + period) % period : 0;
     };
     const echoDelayForBearing = bearing => {
-        const untilSweep = ((((Number(bearing) - 59) % 360) + 360) % 360) / 360 * 7;
-        const elapsedSincePass = (getSweepElapsedSeconds() - untilSweep + 7) % 7;
+        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 12;
+        const untilSweep = ((((Number(bearing) - 59) % 360) + 360) % 360) / 360 * period;
+        const elapsedSincePass = (getSweepElapsedSeconds() - untilSweep + period) % period;
         return -elapsedSincePass;
     };
     // The echo layer is north-up unless compass mode is active. Keep this
