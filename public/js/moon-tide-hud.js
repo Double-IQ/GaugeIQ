@@ -379,6 +379,8 @@
     let trackerEarthTextureReady = false;
     let trackerSunTexture = null;
     let trackerSunTextureReady = false;
+    let trackerMoonTexture = null;
+    let trackerMoonTextureReady = false;
     function loadTrackerEarthTexture(gl,texture) {
         const image=new Image();
         image.crossOrigin='anonymous';
@@ -428,6 +430,26 @@
         image.onerror=()=>console.warn('GaugeIQ NASA SDO Sun image could not be loaded');
         image.src='https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg';
     }
+    function loadTrackerMoonTexture(gl,texture) {
+        const image=new Image();
+        image.onload=()=>{
+            if(trackerGL!==gl||!texture) return;
+            try {
+                gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D,texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+                gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                trackerMoonTextureReady=true; gl.activeTexture(gl.TEXTURE0);
+            } catch(error) { console.warn('GaugeIQ NASA LRO Moon texture could not be applied',error); }
+        };
+        image.onerror=()=>console.warn('GaugeIQ NASA LRO Moon texture could not be loaded');
+        image.src='/assets/moon-lroc-2k.jpg';
+    }
     function initTracker3D() {
         if (!trackerCanvas || trackerGL) return !!trackerGL;
         const gl = trackerCanvas.getContext('webgl', {alpha:true,antialias:true,premultipliedAlpha:false});
@@ -466,6 +488,8 @@
             uniform float u_earthTextureReady;
             uniform sampler2D u_sunTexture;
             uniform float u_sunTextureReady;
+            uniform sampler2D u_moonTexture;
+            uniform float u_moonTextureReady;
             float hash21(vec2 p) {
                 p=fract(p*vec2(123.34,456.21));
                 p+=dot(p,p+45.32);
@@ -501,10 +525,9 @@
                     float dayLight=0.035+0.965*diffuse;
                     color*=dayLight*limb;
                 } else if(u_kind<1.5) {
-                    float relief=lunarRelief(n);
-                    float maria=0.5+0.5*sin(n.x*8.0+n.z*5.0)*sin(n.y*7.0-n.x*3.0);
-                    vec3 lunarBase=mix(vec3(0.43,0.44,0.42),vec3(0.57,0.56,0.52),maria*0.34);
-                    color=(lunarBase+vec3(relief))*(0.018+0.982*diffuse)*limb;
+                    vec3 lunarFallback=vec3(0.48,0.48,0.46);
+                    vec3 lunarSurface=texture2D(u_moonTexture,v_uv).rgb;
+                    color=mix(lunarFallback,lunarSurface,u_moonTextureReady)*(0.025+0.975*diffuse)*limb;
                 } else if(u_kind<2.5) {
                     vec3 solarFallback=vec3(1.0,0.48,0.12)*(1.0+0.08*sin(n.x*31.0+n.y*19.0)*sin(n.z*27.0-n.x*11.0));
                     vec3 solarImage=texture2D(u_sunTexture,v_uv).rgb;
@@ -545,7 +568,12 @@
         gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
         gl.uniform1i(gl.getUniformLocation(program,'u_sunTexture'),1);gl.uniform1f(gl.getUniformLocation(program,'u_sunTextureReady'),0);
         loadTrackerSunTexture(gl,trackerSunTexture);
-        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),sunTexture:gl.getUniformLocation(program,'u_sunTexture'),sunTextureReady:gl.getUniformLocation(program,'u_sunTextureReady'),viewForward:gl.getUniformLocation(program,'u_viewForward'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
+        trackerMoonTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,trackerMoonTexture);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([120,120,116,255]));
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+        gl.uniform1i(gl.getUniformLocation(program,'u_moonTexture'),2);gl.uniform1f(gl.getUniformLocation(program,'u_moonTextureReady'),0);
+        loadTrackerMoonTexture(gl,trackerMoonTexture);
+        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),sunTexture:gl.getUniformLocation(program,'u_sunTexture'),sunTextureReady:gl.getUniformLocation(program,'u_sunTextureReady'),moonTexture:gl.getUniformLocation(program,'u_moonTexture'),moonTextureReady:gl.getUniformLocation(program,'u_moonTextureReady'),viewForward:gl.getUniformLocation(program,'u_viewForward'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
         return true;
     }
     function drawTrackerSphere(center,radius,kind,light,right,up,forward,aspect) {
@@ -610,6 +638,8 @@
         const moonToSun=[sunDir[0]-moonDir[0],sunDir[1]-moonDir[1],sunDir[2]-moonDir[2]];
         const moonToSunLength=Math.hypot(moonToSun[0],moonToSun[1],moonToSun[2])||1;
         const moonLight=moonToSun.map(v=>v/moonToSunLength);
+        gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,trackerMoonTexture);
+        gl.uniform1i(trackerUniforms.moonTexture,2);gl.uniform1f(trackerUniforms.moonTextureReady,trackerMoonTextureReady?1:0);
         drawTrackerSphere(moonSky.center,0.135,1,moonLight,right,up,forward,aspect);
         // The solar disk is deliberately larger and warmer than the Moon so
         // it reads as a luminous star rather than a second grey planet.
