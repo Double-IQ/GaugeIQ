@@ -7227,3 +7227,10 @@ body.gaugeiq-menu-open{overflow:hidden}
   .mth-hud-card .mth-subtitle{font-size:8px}
   .mth-hud-card .mth-footer{font-size:6px}
 }
+
+
+/* Earth–Moon tracker legend: identify only objects shown in the 3D view. */
+.mth-orbit-legend .mth-legend-sun{background:#f6bd63;box-shadow:0 0 6px rgba(246,189,99,.65)}
+.mth-orbit-legend .mth-legend-earth{background:#287fc2;box-shadow:0 0 6px rgba(40,127,194,.55)}
+.mth-orbit-legend .mth-legend-moon{background:#c6ccd4;box-shadow:0 0 5px rgba(198,204,212,.45)}
+.mth-orbit-legend .mth-legend-location{background:#f2b84b;box-shadow:0 0 6px rgba(242,184,75,.65)}
