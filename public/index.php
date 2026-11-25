@@ -1434,7 +1434,7 @@ if ($current && !empty($current['observed_at'])) {
             </div>
             <div class="mth-orbit-display mth-tracker-display">
                 <canvas id="mthTracker3D" class="mth-tracker-3d" role="img" aria-label="Three-dimensional Earth-centred view showing the Sun, Moon and selected location at the chosen time"></canvas>
-                <div class="mth-orbit-legend"><span><i class="mth-legend-sun"></i> SUN DIRECTION</span><span><i class="mth-legend-earth"></i> EARTH ROTATION</span><span><i class="mth-legend-tide"></i> TIDAL AXIS</span><span><i class="mth-legend-location"></i> YOUR LOCATION</span></div>
+                <div class="mth-orbit-legend" aria-label="Tracker legend"><span><i class="mth-legend-sun"></i> SUN</span><span><i class="mth-legend-earth"></i> EARTH</span><span><i class="mth-legend-moon"></i> MOON</span><span><i class="mth-legend-location"></i> YOUR LOCATION</span></div>
             </div>
             <div class="mth-time-control">
                 <div class="mth-time-heading"><strong>TIME POSITION SIMULATOR</strong><span id="mthOrbitTime">NOW</span></div>
