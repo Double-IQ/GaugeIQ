@@ -423,6 +423,29 @@
                 land = min(land,blob(ll,vec2(2.05,0.16),vec2(0.13,0.28)));
                 return land;
             }
+            float hash21(vec2 p) {
+                p=fract(p*vec2(123.34,456.21));
+                p+=dot(p,p+45.32);
+                return fract(p.x*p.y);
+            }
+            float lunarRelief(vec3 p) {
+                vec2 uv=vec2(atan(p.z,p.x),asin(clamp(p.y,-1.0,1.0)));
+                float relief=0.0;
+                for(int i=0;i<3;i++) {
+                    float scale=5.0+float(i)*7.0;
+                    vec2 cell=floor(uv*scale);
+                    vec2 local=fract(uv*scale)-0.5;
+                    float rnd=hash21(cell+float(i)*19.7);
+                    vec2 offset=(vec2(hash21(cell+3.1),hash21(cell+8.7))-0.5)*0.55;
+                    float radius=mix(0.10,0.34,rnd);
+                    float d=length(local-offset);
+                    float rim=1.0-smoothstep(radius-0.035,radius+0.018,d);
+                    float bowl=1.0-smoothstep(radius*0.48,radius*0.88,d);
+                    relief+=rim*0.20-bowl*0.17;
+                }
+                float maria=sin(uv.x*3.2+sin(uv.y*4.1))*sin(uv.y*5.3)*0.055;
+                return relief+maria;
+            }
             void main() {
                 vec3 n = normalize(v_normal);
                 float diffuse = max(0.0,dot(n,normalize(u_light)));
@@ -437,12 +460,18 @@
                     light = 0.045 + 0.955*diffuse;
                     color *= light*limb;
                 } else if (u_kind < 1.5) {
-                    color = vec3(0.66,0.68,0.64);
-                    light = 0.025 + 0.975*diffuse;
-                    color *= light*limb;
+                    float relief=lunarRelief(n);
+                    float maria=0.5+0.5*sin(n.x*8.0+n.z*5.0)*sin(n.y*7.0-n.x*3.0);
+                    vec3 lunarBase=mix(vec3(0.43,0.44,0.42),vec3(0.57,0.56,0.52),maria*0.34);
+                    color=lunarBase+vec3(relief);
+                    light=0.018+0.982*diffuse;
+                    color*=light*limb;
                 } else if (u_kind < 2.5) {
-                    color = vec3(1.0,0.69,0.27);
-                    color *= 1.1 + 0.25*diffuse;
+                    float granulation=0.035*sin(n.x*31.0+n.y*19.0)*sin(n.z*27.0-n.x*11.0);
+                    float edge=pow(1.0-max(0.0,n.z),2.0);
+                    color=vec3(1.0,0.76,0.38)+granulation;
+                    color=mix(color,vec3(1.0,0.43,0.12),edge*0.28);
+                    color*=1.25+0.32*diffuse;
                 } else {
                     color = vec3(1.0,0.72,0.28);
                     color *= 1.35;
@@ -519,7 +548,12 @@
         // Keep both bodies rendered at their calculated azimuth/elevation angles,
         // including when they are below the local horizon. The sky-dome projection
         // is independent of whether the observer can currently see them outdoors.
-        drawTrackerSphere(moonSky.center,0.135,1,sunDir,right,up,forward,aspect);
+        const moonToSun=[sunDir[0]-moonDir[0],sunDir[1]-moonDir[1],sunDir[2]-moonDir[2]];
+        const moonToSunLength=Math.hypot(moonToSun[0],moonToSun[1],moonToSun[2])||1;
+        const moonLight=moonToSun.map(v=>v/moonToSunLength);
+        drawTrackerSphere(moonSky.center,0.135,1,moonLight,right,up,forward,aspect);
+        // The solar disk is deliberately larger and warmer than the Moon so
+        // it reads as a luminous star rather than a second grey planet.
         drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
         gl.disable(gl.BLEND);
     }
