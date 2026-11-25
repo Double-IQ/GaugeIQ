@@ -626,12 +626,20 @@
             const altitude=Math.asin(Math.max(-1,Math.min(1,direction[0]*forward[0]+direction[1]*forward[1]+direction[2]*forward[2])));
             const horizontal=Math.cos(altitude);
             const azimuth=Math.atan2(east,north);
-            return {center:[right[0]*(Math.sin(azimuth)*horizontal*1.45)+up[0]*(Math.sin(altitude)*1.45)+forward[0]*2.15,
-                            right[1]*(Math.sin(azimuth)*horizontal*1.45)+up[1]*(Math.sin(altitude)*1.45)+forward[1]*2.15,
-                            right[2]*(Math.sin(azimuth)*horizontal*1.45)+up[2]*(Math.sin(altitude)*1.45)+forward[2]*2.15],
-                    altitude:altitude*180/Math.PI};
+            return {azimuth,altitude:altitude*180/Math.PI};
         };
-        const moonSky=skyPosition(moonDir),sunSky=skyPosition(sunDir);
+        const moonSky=skyPosition(moonDir);
+        // Give the Moon a deliberately flatter, horizontal orbital track around
+        // Earth. The forward component creates a shallow perspective ellipse:
+        // the near side is closer/larger and the far side is slightly smaller.
+        const moonAzimuth=moonSky.azimuth;
+        const moonDepth=2.15+Math.cos(moonAzimuth)*0.30;
+        const moonElevation=Math.sin(moonSky.altitude*Math.PI/180)*0.42;
+        moonSky.center=[
+            right[0]*(Math.sin(moonAzimuth)*1.45)+up[0]*moonElevation+forward[0]*moonDepth,
+            right[1]*(Math.sin(moonAzimuth)*1.45)+up[1]*moonElevation+forward[1]*moonDepth,
+            right[2]*(Math.sin(moonAzimuth)*1.45)+up[2]*moonElevation+forward[2]*moonDepth
+        ];
         // Keep both bodies rendered at their calculated azimuth/elevation angles,
         // including when they are below the local horizon. The sky-dome projection
         // is independent of whether the observer can currently see them outdoors.
@@ -640,12 +648,10 @@
         const moonLight=moonToSun.map(v=>v/moonToSunLength);
         gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,trackerMoonTexture);
         gl.uniform1i(trackerUniforms.moonTexture,2);gl.uniform1f(trackerUniforms.moonTextureReady,trackerMoonTextureReady?1:0);
-        drawTrackerSphere(moonSky.center,0.135,1,moonLight,right,up,forward,aspect);
-        // The solar disk is deliberately larger and warmer than the Moon so
-        // it reads as a luminous star rather than a second grey planet.
-        gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,trackerSunTexture);
-        gl.uniform1i(trackerUniforms.sunTexture,1);gl.uniform1f(trackerUniforms.sunTextureReady,trackerSunTextureReady?1:0);
-        drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
+        const perspectiveRadius=0.135*(2.65/Math.max(2.30,4.8-moonDepth));
+        drawTrackerSphere(moonSky.center,perspectiveRadius,1,moonLight,right,up,forward,aspect);
+        // The Sun remains the directional light source for Earth and Moon,
+        // but its separate visible sphere is intentionally omitted.
         gl.activeTexture(gl.TEXTURE0);
         gl.disable(gl.BLEND);
     }
