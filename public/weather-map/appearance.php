@@ -383,7 +383,7 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 // rectangle remains visible with useful surrounding context.
                 regionMap.fitBounds(
                     [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
-                    { padding: 48, maxZoom: 3, duration: 350 }
+                    { padding: 48, maxZoom: 1.5, duration: 350 }
                 );
             }
         };
