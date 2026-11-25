@@ -16,7 +16,8 @@
   const relation=(wind,face)=>{if(!Number.isFinite(wind))return 'Wind direction unavailable';const off=degDiff(wind,(face+180)%360);return off<55?'Offshore':off>125?'Onshore':'Cross-shore';};
   const rating=(h,p,w,rel)=>{if(!Number.isFinite(h)||!Number.isFinite(p)||!Number.isFinite(w))return 'Unavailable';let score=0;if(h>=.5&&h<=2.2)score+=2;else if(h>2.2&&h<3.2)score+=1;else if(h<.5)score-=2;else score-=1;if(p>=9)score+=2;else if(p>=7)score+=1;if(w<12)score+=2;else if(w<20)score+=1;else score-=2;if(rel==='Offshore')score+=2;else if(rel==='Onshore')score-=2;return score>=6?'Excellent':score>=4?'Good':score>=2?'Fair':score>=0?'Poor':'Flat';};
   const symbol={Unavailable:'?',Flat:'—',Poor:'×',Fair:'△',Good:'✓',Excellent:'★'};
-  const set=(id,v)=>{const n=el(id);if(n)n.textContent=v;};\n  const connection=(online)=>{const badge=el('surfConnectionStatus');if(!badge)return;badge.classList.toggle('is-offline',online===false);badge.classList.toggle('is-linked',online===true);badge.lastChild.textContent=online===true?' STATION LINKED':online===false?' OFFLINE':' CONNECTING';};
+  const set=(id,v)=>{const n=el(id);if(n)n.textContent=v;};
+  const connection=(online)=>{const badge=el('surfConnectionStatus');if(!badge)return;badge.classList.toggle('is-offline',online===false);badge.classList.toggle('is-linked',online===true);badge.lastChild.textContent=online===true?' STATION LINKED':online===false?' OFFLINE':' CONNECTING';};
   async function load(){
     const spot=spots[select.value]||spots.pollock;connection(null);set('surfReportStatus','Fetching marine forecast for '+spot.name+'…');el('surfReportSummary').hidden=true;el('surfHourly').innerHTML='';el('surfSevenDay').innerHTML='';
     const vars='wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature,sea_level_height_msl';
@@ -25,7 +26,8 @@
     try{
       const [marineResponse,weatherResponse]=await Promise.all([fetch(marineUrl),fetch(weatherUrl)]);if(!marineResponse.ok)throw new Error('Marine forecast request failed ('+marineResponse.status+')');if(!weatherResponse.ok)throw new Error('Wind forecast unavailable');
       const [raw,weatherRaw]=await Promise.all([marineResponse.text(),weatherResponse.text()]);const data=JSON.parse(raw),weather=JSON.parse(weatherRaw);const h=data.hourly,wh=weather.hourly;if(!h?.time?.length||!wh?.time?.length||!Array.isArray(h.wave_height)||!Array.isArray(h.wave_period)||!Array.isArray(wh.wind_speed_10m)||!Array.isArray(wh.wind_direction_10m))throw new Error('Incomplete marine or wind forecast');if(!h.wave_height.some(v=>Number.isFinite(v))||!h.wave_period.some(v=>Number.isFinite(v))||!wh.wind_speed_10m.some(v=>Number.isFinite(v)))throw new Error('Forecast returned without usable surf conditions');
-      connection(true);\n      set('surfDataUsage',((new TextEncoder().encode(raw).length+new TextEncoder().encode(weatherRaw).length)/1024).toFixed(1)+' KB');
+      connection(true);
+      set('surfDataUsage',((new TextEncoder().encode(raw).length+new TextEncoder().encode(weatherRaw).length)/1024).toFixed(1)+' KB');
       const now=new Date(),start=h.time.findIndex(t=>new Date(t)>=now);const ix=Math.max(0,start);
       const wave=h.wave_height[ix],period=h.wave_period[ix],swell=h.swell_wave_height[ix],swellDir=h.swell_wave_direction[ix],sea=h.sea_surface_temperature?.[ix];
       const hourlyWind=wh.wind_speed_10m;
