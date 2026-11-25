@@ -7247,3 +7247,23 @@ body.gaugeiq-menu-open{overflow:hidden}
 .mth-orbit-legend .mth-legend-earth{background:#287fc2;box-shadow:0 0 6px rgba(40,127,194,.55)}
 .mth-orbit-legend .mth-legend-moon{background:#c6ccd4;box-shadow:0 0 5px rgba(198,204,212,.45)}
 .mth-orbit-legend .mth-legend-location{background:#f2b84b;box-shadow:0 0 6px rgba(242,184,75,.65)}
+
+/* Surf report card */
+.surf-report-card{margin-top:16px}
+.surf-spot-controls{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:#90aac8;font-size:10px;font-weight:800;letter-spacing:.12em}
+.surf-spot-controls select{flex:1;min-width:0;padding:10px 12px;border:1px solid rgba(117,164,211,.22);border-radius:9px;background:#091a2d;color:#eaf4ff;font:inherit;letter-spacing:normal;font-size:13px}
+.surf-report-status{color:#9bb5d3;font-size:12px;padding:8px 0}
+.surf-report-summary{display:grid;grid-template-columns:110px 1fr;gap:12px;margin:8px 0 14px}
+.surf-report-rating{border:1px solid rgba(117,164,211,.18);border-radius:12px;background:rgba(255,255,255,.035);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;text-align:center}
+.surf-report-rating span{font-size:27px;color:#5dd5bc}.surf-report-rating strong{font-size:13px;color:#eaf4ff}.surf-report-rating small{font-size:10px;color:#8eabc9;margin-top:5px}
+.surf-report-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.surf-report-metrics>div{padding:10px;border:1px solid rgba(117,164,211,.15);border-radius:10px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:3px}
+.surf-report-metrics small,.surf-hour small,.surf-day small{color:#88a4c5;font-size:9px;font-weight:800;letter-spacing:.12em}
+.surf-report-metrics strong{font-size:18px;color:#f0f7ff}.surf-report-metrics span{font-size:10px;color:#9bb5d3}
+.surf-block-title{margin:14px 0 8px;color:#8ca8c9;font-size:9px;font-weight:850;letter-spacing:.15em}
+.surf-hour-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.surf-hour,.surf-day{padding:8px 6px;border:1px solid rgba(117,164,211,.13);border-radius:9px;background:rgba(255,255,255,.025);display:flex;flex-direction:column;gap:4px;min-width:0}
+.surf-hour strong,.surf-day strong{font-size:14px;color:#eef6ff}.surf-hour span,.surf-day span,.surf-day em{font-size:9px;color:#9bb5d3;font-style:normal}
+.surf-day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.surf-day{padding:7px 4px}.surf-day strong{font-size:12px}.surf-day span,.surf-day em{font-size:8px;line-height:1.25}
+.surf-report-note{margin:12px 0 8px;color:#819bb8;font-size:10px;line-height:1.45}
+.surf-report-card .data-usage-footer{margin-top:10px}
+@media(max-width:520px){.surf-report-summary{grid-template-columns:88px 1fr}.surf-day-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.surf-day:nth-child(n+5){display:none}.surf-hour-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}

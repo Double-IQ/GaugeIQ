@@ -1326,6 +1326,38 @@ if ($current && !empty($current['observed_at'])) {
         </article>
     <?php endif; ?>
 
+    <section class="card surf-report-card wind-hud-card" id="surfReportCard" aria-labelledby="surfReportTitle">
+        <div class="wind-hud-heading">
+            <div><p class="label" id="surfReportTitle">Surf Report</p><div class="wind-hud-subtitle">MARINE FORECAST / 7 DAYS</div></div>
+            <span class="wind-hud-live"><span></span> MODEL DATA</span>
+        </div>
+        <div class="surf-spot-controls">
+            <label for="surfSpotSelect">SURF SPOT</label>
+            <select id="surfSpotSelect" aria-label="Choose surf spot">
+                <option value="pollock">Pollock Beach · Gqeberha</option>
+                <option value="hobie">Hobie Beach · Gqeberha</option>
+                <option value="sardinia">Sardinia Bay · Gqeberha</option>
+                <option value="capeStFrancis">Cape St Francis</option>
+                <option value="jeffreys">Jeffreys Bay</option>
+                <option value="muizenberg">Muizenberg · Cape Town</option>
+            </select>
+        </div>
+        <div class="surf-report-status" id="surfReportStatus">Loading marine forecast…</div>
+        <div class="surf-report-summary" id="surfReportSummary" hidden>
+            <div class="surf-report-rating"><span id="surfRating">—</span><strong id="surfRatingLabel">—</strong><small id="surfBestTime">Best window —</small></div>
+            <div class="surf-report-metrics">
+                <div><small>WAVE</small><strong id="surfWaveHeight">—</strong><span id="surfWavePeriod">—</span></div>
+                <div><small>SWELL</small><strong id="surfSwellHeight">—</strong><span id="surfSwellDirection">—</span></div>
+                <div><small>WIND</small><strong id="surfWindSpeed">—</strong><span id="surfWindRelation">—</span></div>
+                <div><small>SEA TEMP</small><strong id="surfSeaTemp">—</strong><span id="surfTide">Sea level / tide</span></div>
+            </div>
+        </div>
+        <div class="surf-hourly" id="surfHourly"></div>
+        <div class="surf-seven-day" id="surfSevenDay"></div>
+        <p class="surf-report-note">Forecast model, not a live buoy or beach observation. Local break shape, tide and shelter can change conditions significantly.</p>
+        <div class="data-usage-footer" data-usage-section="surf"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="surfDataUsage">—</strong></span></div>
+    </section>
+
     <section id="weatherMapView" class="weather-map-dashboard-card card" aria-labelledby="interactiveWeatherMapsTitle">
         <header class="gaugeiq-weather-map-toolbar">
             <div class="gaugeiq-weather-map-heading">
@@ -1626,5 +1658,6 @@ $historyWeatherLatest = (string)($historyWeatherLatestStmt->fetchColumn() ?: '')
 <script src="js/admin-interactions.js?v=20261116-hud-feedback"></script>
 <script src="js/moon-tide-hud.js?v=20261120-lunar-disc-realistic-v1"></script>
 <script src="js/data-usage.js?v=20261122-card-usage-v1"></script>
+<script src="js/surf-report.js?v=20261125-surf-report-v1"></script>
 </body>
 </html>
