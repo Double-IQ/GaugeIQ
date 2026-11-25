@@ -267,7 +267,7 @@ echo "PASS OM v3 zero-byte all-NaN chunk decoding\\n";
 $ordinary128Packed = "\0\x01" . str_repeat("\xaa", 16);
 $ordinary128Decoded = WeatherMapOmReader::decodePforDelta16($ordinary128Packed, 129);
 $ordinary128Expected = [0];
-for ($i = 0; $i < 128; $i++) $ordinary128Expected[] = ($i % 2 === 0) ? 0 : -1;
+for ($i = 0; $i < 128; $i++) $ordinary128Expected[] = -intdiv($i + 1, 2);
 if ($ordinary128Decoded !== $ordinary128Expected) {
     throw new RuntimeException('ECMWF ordinary 128-value PFor blocks must use linear bit unpacking.');
 }
