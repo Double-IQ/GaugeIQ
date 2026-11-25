@@ -314,6 +314,29 @@ final class WeatherMapOmReader
         return ($raw / $scaleFactor) - $addOffset;
     }
 
+    /**
+     * Reverse OM's second-stage 2D delta filter for signed 16-bit chunks.
+     * PFor decoding reconstructs the row-major delta stream first; OM then
+     * cumulatively restores each column down the first (row) dimension.
+     */
+    public static function decodeDelta2D16(array $values, int $height, int $width): array
+    {
+        if ($height < 1 || $width < 1 || $height > intdiv(PHP_INT_MAX, $width) ||
+            count($values) !== $height * $width) {
+            throw new InvalidArgumentException('The OM 2D delta chunk dimensions do not match its decoded values.');
+        }
+        for ($y = 1; $y < $height; $y++) {
+            $rowOffset = $y * $width;
+            $previousRowOffset = $rowOffset - $width;
+            for ($x = 0; $x < $width; $x++) {
+                $index = $rowOffset + $x;
+                $unsigned = ($values[$index] + $values[$previousRowOffset + $x]) & 0xffff;
+                $values[$index] = $unsigned >= 0x8000 ? $unsigned - 0x10000 : $unsigned;
+            }
+        }
+        return $values;
+    }
+
     /** Decode a selected range from a flattened 16-bit ECMWF float array. */
     public function decodeFloatArrayRange(array $arrayInfo, int $startIndex, int $endIndex): array
     {
@@ -465,6 +488,9 @@ final class WeatherMapOmReader
             if (count($integers) !== $chunkCount) {
                 throw new RuntimeException('An ECMWF regular-grid chunk decoded to an unexpected number of values.');
             }
+            // Compression type 0 is PFor-delta2D-int16: the PFor stream's
+            // 1D deltas must be followed by OM's vertical 2D delta filter.
+            $integers = self::decodeDelta2D16($integers, $actualChunkHeight, $actualChunkWidth);
             foreach ($chunkCells as [$index, $y, $x]) {
                 $localIndex = ($y - $chunkStartY) * $actualChunkWidth + ($x - $chunkStartX);
                 $decoded[$index] = self::decodeScaledPfor16Value(
