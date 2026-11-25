@@ -162,14 +162,14 @@ try {
     $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
     if ($cacheRoot === '' || $cacheRoot[0] !== '/') weatherTileFail(500, 'Invalid weather-map cache directory.');
     $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
-    $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v2');
+    $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
     $dataPath = $decodedDirectory . '/' . $key . '.f32';
     $metaPath = $decodedDirectory . '/' . $key . '.json';
     if (!is_file($dataPath) || !is_file($metaPath)) {
         weatherTileFail(404, 'Prepared weather-map frame is not ready.');
     }
     $metadata = json_decode((string)file_get_contents($metaPath), true);
-    if (!is_array($metadata) || ($metadata['version'] ?? null) !== 2 ||
+    if (!is_array($metadata) || ($metadata['version'] ?? null) !== 3 ||
         ($metadata['variable'] ?? '') !== $variable ||
         ($metadata['frame_time'] ?? '') !== (string)$frame['frame_time'] ||
         ($metadata['encoding'] ?? '') !== 'float32-le') {

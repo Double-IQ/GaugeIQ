@@ -239,11 +239,11 @@ final class WeatherMapRegionalPrefetcher
                 }
                 $binary .= pack('g', $value);
             }
-            $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v2');
+            $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
             $dataPath = rtrim($directory, '/') . '/' . $key . '.f32';
             $metaPath = rtrim($directory, '/') . '/' . $key . '.json';
             $metadata = [
-                'version' => 2,
+                'version' => 3,
                 'source_url_sha256' => hash('sha256', $url),
                 'frame_time' => (string)($frame['time'] ?? ''),
                 'variable' => $variable,

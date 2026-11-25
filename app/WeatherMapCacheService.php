@@ -345,7 +345,7 @@ final class WeatherMapCacheService
                 $needsDecode = false;
                 if ($type === 'past') {
                     foreach (['cloud_cover', 'precipitation'] as $variable) {
-                        $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v2');
+                        $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
                         if (!is_file($decodedDirectory . '/' . $key . '.f32') ||
                             !is_file($decodedDirectory . '/' . $key . '.json')) {
                             $needsDecode = true;
