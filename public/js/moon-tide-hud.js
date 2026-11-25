@@ -615,7 +615,7 @@
         // it reads as a luminous star rather than a second grey planet.
         gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,trackerSunTexture);
         gl.uniform1i(trackerUniforms.sunTexture,1);gl.uniform1f(trackerUniforms.sunTextureReady,trackerSunTextureReady?1:0);
-        drawTrackerSphere(sunSky.center,1.25,2,sunDir,right,up,forward,aspect);
+        drawTrackerSphere(sunSky.center,0.19,2,sunDir,right,up,forward,aspect);
         gl.activeTexture(gl.TEXTURE0);
         gl.disable(gl.BLEND);
     }
