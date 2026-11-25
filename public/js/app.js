@@ -2382,13 +2382,14 @@ updateNetworkDiagnostics();
 })();
 
 
-// Rainfall radar compass: rotate only the forecast echo layer. The radar
-// housing, range rings, labels and independently animated sweep stay fixed.
+// Rainfall radar compass: rotate the echoes and animated sweep together.
+// The radar housing, range rings and labels remain fixed.
 (() => {
     const radarEchoes = document.getElementById('rainfallRadarEchoes');
+    const radarCompassLayer = document.getElementById('rainfallRadarCompassLayer');
     const radarCompassButton = document.getElementById('rainfallRadarCompassButton');
     const radarCompassStatus = document.getElementById('rainfallRadarCompassStatus');
-    if (!radarEchoes || !radarCompassButton) return;
+    if (!radarEchoes || !radarCompassLayer || !radarCompassButton) return;
 
     const storageKey = 'gaugeiq-rain-radar-compass-enabled-v1';
     const permissionStorageKey = 'gaugeiq-compass-permission-granted-v1';
@@ -2431,9 +2432,9 @@ updateNetworkDiagnostics();
         currentHeading = normalize(currentHeading + delta * 0.2);
         if (Math.abs(delta) < 0.08) currentHeading = targetHeading;
 
-        // Bearings are north-up in the forecast data, so counter-rotate the
-        // echoes by the device heading to keep them geographically aligned.
-        radarEchoes.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
+        // Rotate the echoes and sweep together so the sweep still passes
+        // over each echo at the same point in its shared 9-second cycle.
+        radarCompassLayer.setAttribute('transform', 'rotate(' + (-currentHeading).toFixed(2) + ' 160 160)');
         // Compass rotation is independent of the echo animation clock.
         // Never rewrite animation delays as the device heading changes.
         setStatus('Heading ' + Math.round(currentHeading) + '° · ' + direction(currentHeading));
@@ -2540,7 +2541,7 @@ updateNetworkDiagnostics();
         nativeHeadingSeen = false;
         currentHeading = null;
         targetHeading = null;
-        radarEchoes.setAttribute('transform', 'rotate(0 160 160)');
+        radarCompassLayer.setAttribute('transform', 'rotate(0 160 160)');
         // Reset map orientation without touching the shared echo animation clock.
         window.gaugeIQRadarCompassHeading = 0;
         setStatus('North-up');
