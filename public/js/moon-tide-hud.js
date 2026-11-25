@@ -389,6 +389,8 @@
                 canvas.width=2048;canvas.height=1024;
                 const ctx=canvas.getContext('2d',{alpha:false});
                 ctx.drawImage(image,0,0,canvas.width,canvas.height);
+                // The Sun uses texture unit 1; explicitly upload Earth to unit 0.
+                gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D,texture);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
                 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
