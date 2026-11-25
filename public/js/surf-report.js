@@ -21,8 +21,8 @@
   async function load(){
     const spot=spots[select.value]||spots.pollock;connection(null);set('surfReportStatus','Fetching marine forecast for '+spot.name+'…');el('surfReportSummary').hidden=true;el('surfHourly').innerHTML='';el('surfSevenDay').innerHTML='';
     const vars='wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature,sea_level_height_msl';
-    const marineUrl='${proxy}?'+new URLSearchParams({endpoint:'marine',latitude:spot.lat,longitude:spot.lon,hourly:vars,forecast_days:7,timezone:'auto'});
-    const weatherUrl='${proxy}?'+new URLSearchParams({endpoint:'forecast',latitude:spot.lat,longitude:spot.lon,hourly:'wind_speed_10m,wind_direction_10m',forecast_days:7,timezone:'auto'});
+    const marineUrl='/api/open-meteo-proxy.php?'+new URLSearchParams({endpoint:'marine',latitude:spot.lat,longitude:spot.lon,hourly:vars,forecast_days:7,timezone:'auto'});
+    const weatherUrl='/api/open-meteo-proxy.php?'+new URLSearchParams({endpoint:'forecast',latitude:spot.lat,longitude:spot.lon,hourly:'wind_speed_10m,wind_direction_10m',forecast_days:7,timezone:'auto'});
     try{
       const [marineResponse,weatherResponse]=await Promise.all([fetch(marineUrl),fetch(weatherUrl)]);if(!marineResponse.ok)throw new Error('Marine forecast request failed ('+marineResponse.status+')');if(!weatherResponse.ok)throw new Error('Wind forecast unavailable');
       const [raw,weatherRaw]=await Promise.all([marineResponse.text(),weatherResponse.text()]);const data=JSON.parse(raw),weather=JSON.parse(weatherRaw);const h=data.hourly,wh=weather.hourly;if(!h?.time?.length||!wh?.time?.length||!Array.isArray(h.wave_height)||!Array.isArray(h.wave_period)||!Array.isArray(wh.wind_speed_10m)||!Array.isArray(wh.wind_direction_10m))throw new Error('Incomplete marine or wind forecast');if(!h.wave_height.some(v=>Number.isFinite(v))||!h.wave_period.some(v=>Number.isFinite(v))||!wh.wind_speed_10m.some(v=>Number.isFinite(v)))throw new Error('Forecast returned without usable surf conditions');
