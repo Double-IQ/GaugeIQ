@@ -6025,7 +6025,7 @@ body.gaugeiq-menu-open{overflow:hidden}
 /* Only forecast echoes rotate for compass mode; the radar housing and sweep stay fixed. */
 .rainfall-radar-cells{transition:none}
 .rainfall-radar-cell{stroke:rgba(222,248,255,.28);stroke-width:.7;filter:url(#rainfallRadarGlow);opacity:.035;transform-box:fill-box;transform-origin:center;animation:rainfall-echo-sweep 9s linear infinite;animation-delay:var(--rainfall-radar-phase,0s)}
-/* Match echo illumination to the 59-degree sweep sector on the shared 12-second rotation. */
+/* Match echo illumination to the 59-degree sweep sector on the shared 9-second rotation. */
 @keyframes rainfall-echo-sweep{0%{opacity:1;filter:url(#rainfallRadarGlow) brightness(1.8)}66.667%{opacity:.96;filter:url(#rainfallRadarGlow) brightness(1.65)}100%{opacity:.035;filter:url(#rainfallRadarGlow) brightness(.45)}}
 @media(prefers-reduced-motion:reduce){.rainfall-radar-cell{animation:none;opacity:.72;filter:url(#rainfallRadarGlow)}.rainfall-radar-cells{transition:none}}
 /* The ECMWF raster rotates beneath the fixed scope overlay in compass mode. */
