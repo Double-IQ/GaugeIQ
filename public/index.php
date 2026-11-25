@@ -1326,6 +1326,75 @@ if ($current && !empty($current['observed_at'])) {
         </article>
     <?php endif; ?>
 
+    <section class="moon-tide-hud-card card" id="moonTideHud" aria-labelledby="moonTideTitle"
+        data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
+        data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
+        data-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES, 'UTF-8') ?>"
+        data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>">
+        <div class="mth-header">
+            <div><p class="mth-kicker">LUNAR &amp; OCEANIC TELEMETRY</p><h2 id="moonTideTitle">MOON &amp; TIDE</h2><p class="mth-subtitle">LUNAR TRACKING SYSTEM <span>·</span> <span data-mth-location><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></span></p></div>
+            <span class="mth-live"><i></i> SYSTEM ONLINE</span>
+        </div>
+        <div class="mth-section mth-lunar">
+            <div class="mth-section-head"><span class="mth-index">01</span><div><strong>LUNAR TRACKING</strong><small>PHASE / ILLUMINATION / CYCLE</small></div><span class="mth-section-state">LIVE CALC</span></div>
+            <div class="mth-lunar-grid">
+                <div class="mth-moon-instrument"><div class="mth-moon-reticle"><span class="mth-reticle-tick"></span><div class="mth-moon-disc" id="mthMoonDisc"></div><span class="mth-reticle-cross"></span></div><div class="mth-moon-caption" id="mthPhaseName">CALCULATING PHASE</div></div>
+                <div class="mth-lunar-readouts">
+                    <div><small>ILLUMINATION</small><strong id="mthIllumination">—</strong></div>
+                    <div><small>LUNAR AGE</small><strong id="mthLunarAge">—</strong></div>
+                    <div><small>MOON DISTANCE · EST.</small><strong id="mthMoonDistance">—</strong></div>
+                    <div><small>NEXT FULL MOON</small><strong id="mthNextFull">—</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="mth-section mth-solar">
+            <div class="mth-section-head"><span class="mth-index">03</span><div><strong>SOLAR WINDOW</strong><small>LOCAL HORIZON / DAYLIGHT CYCLE</small></div><span class="mth-section-state">LOCATION BASED</span></div>
+            <div class="mth-solar-readouts"><div><small>SUNRISE</small><strong id="mthSunrise">—</strong></div><div><small>SOLAR NOON</small><strong id="mthSolarNoon">—</strong></div><div><small>SUNSET</small><strong id="mthSunset">—</strong></div><div><small>DAYLIGHT</small><strong id="mthDaylight">—</strong></div></div>
+        </div>
+        <div class="mth-section mth-orbit">
+            <div class="mth-section-head"><span class="mth-index">04</span><div><strong>EARTH–MOON TRACKER</strong><small>3D EARTH-CENTRED / CALCULATED SUN & MOON POSITIONS</small></div><span class="mth-section-state" id="mthOrbitState">LIVE MODEL</span></div>
+            <div class="mth-tracker-readouts">
+                <div><small>MOON RANGE</small><strong id="mthOrbitDistance">—</strong></div>
+                <div><small>ORBIT POSITION</small><strong id="mthOrbitPosition">—</strong></div>
+                <div><small>YOUR LOCATION</small><strong id="mthOrbitLocation">—</strong></div>
+            </div>
+            <div class="mth-orbit-display mth-tracker-display">
+                <canvas id="mthTracker3D" class="mth-tracker-3d" role="img" aria-label="Three-dimensional Earth-centred view showing the Sun, Moon and selected location at the chosen time"></canvas>
+                <div class="mth-orbit-legend" aria-label="Tracker legend"><span><i class="mth-legend-sun"></i> SUN</span><span><i class="mth-legend-earth"></i> EARTH</span><span><i class="mth-legend-moon"></i> MOON</span><span><i class="mth-legend-location"></i> YOUR LOCATION</span></div>
+            </div>
+            <div class="mth-time-control">
+                <div class="mth-time-heading"><strong>TIME POSITION SIMULATOR</strong><span id="mthOrbitTime">NOW</span></div>
+                <input id="mthTimeScrubber" type="range" min="-12" max="12" step="0.25" value="0" aria-label="Preview Earth and Moon positions from 12 hours ago to 12 hours ahead">
+                <div class="mth-time-labels"><span>−12 HOURS</span><span>NOW</span><span>+12 HOURS</span></div>
+            </div>
+            <p class="mth-note">Earth stays centred while the camera follows your location. Sun and Moon directions use calculated celestial coordinates; orbital distances are visually compressed and are not to scale.</p>
+        </div>
+        <div class="mth-section mth-tides">
+            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
+            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong id="mthTideStatus">SEARCHING FOR COASTAL STATION</strong><p id="mthTideMessage">Checking for a nearby station with harmonic tide predictions. No tide height will be inferred from the Moon phase.</p></div></div>
+            <div class="mth-tide-events"><div><small>NEXT HIGH WATER</small><strong id="mthNextHigh">—</strong><span id="mthNextHighTime">—</span></div><div><small>NEXT LOW WATER</small><strong id="mthNextLow">—</strong><span id="mthNextLowTime">—</span></div></div>
+            <div class="mth-tide-baseline"><span id="mthTideStation">LOCAL COASTAL PREDICTION</span><strong id="mthTideDistance">CHECKING STATION COVERAGE</strong></div>
+            <p class="mth-note" id="mthTideAttribution">Tide predictions are harmonic estimates and do not account for weather-driven surge. Not for navigation.</p>
+        </div>
+        <div class="mth-section mth-tide-graph-section">
+            <div class="mth-section-head"><span class="mth-index">05</span><div><strong>LOCAL TIDE PROFILE</strong><small>24-HOUR HARMONIC WATER-LEVEL PREDICTION</small></div><span class="mth-section-state mth-state-pending" id="mthGraphState">DATA LINK PENDING</span></div>
+            <div class="mth-graph-readout">
+                <div class="mth-graph-current"><small>CURRENT PREDICTED HEIGHT</small><strong id="mthGraphCurrent">—</strong><span id="mthGraphTrend">WAITING FOR STATION DATA</span></div>
+                <div class="mth-graph-window"><small>FORECAST WINDOW</small><strong id="mthGraphWindow">NEXT 24 HOURS</strong><span id="mthGraphDatum">STATION DATUM</span></div>
+            </div>
+            <div class="mth-tide-graph-wrap" id="mthTideGraphWrap">
+                <div class="mth-graph-loading" id="mthGraphMessage" role="status">Waiting for verified local tide-station predictions…</div>
+                <svg class="mth-tide-graph" id="mthTideGraph" viewBox="0 0 720 246" role="img" aria-label="24-hour local tide-height prediction graph" hidden></svg>
+            </div>
+            <div class="mth-graph-legend"><span><i class="mth-legend-curve"></i> PREDICTED WATER LEVEL</span><span><i class="mth-legend-now"></i> CURRENT TIME</span><span><i class="mth-legend-extreme"></i> HIGH / LOW WATER</span></div>
+            <div class="mth-graph-source"><span id="mthGraphStation">NO VERIFIED STATION DATA</span><strong id="mthGraphDistance">PREDICTION OFFLINE</strong></div>
+            <p class="mth-note">Harmonic station prediction in metres relative to the station’s chart datum. Actual water levels can differ due to wind, atmospheric pressure, waves and storm surge. Not for navigation.</p>
+        </div>
+  </details>
+        <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
+        <div class="mth-footer data-usage-footer" data-usage-section="moon-tide"><span>DATA USAGE</span><span id="moonTideDataUsage">Measuring tide data…</span><span>THIS VISIT</span></div>
+    </section>
+
     <section class="card surf-report-card wind-hud-card" id="surfReportCard" aria-labelledby="surfReportTitle">
         <div class="wind-hud-heading">
             <div><p class="label" id="surfReportTitle">Surf Report</p><div class="wind-hud-subtitle">MARINE FORECAST / 7 DAYS</div></div>
@@ -1457,74 +1526,7 @@ if ($current && !empty($current['observed_at'])) {
 
 
 
-    <section class="moon-tide-hud-card card" id="moonTideHud" aria-labelledby="moonTideTitle"
-        data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
-        data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
-        data-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES, 'UTF-8') ?>"
-        data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>">
-        <div class="mth-header">
-            <div><p class="mth-kicker">LUNAR &amp; OCEANIC TELEMETRY</p><h2 id="moonTideTitle">MOON &amp; TIDE</h2><p class="mth-subtitle">LUNAR TRACKING SYSTEM <span>·</span> <span data-mth-location><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></span></p></div>
-            <span class="mth-live"><i></i> SYSTEM ONLINE</span>
-        </div>
-        <div class="mth-section mth-lunar">
-            <div class="mth-section-head"><span class="mth-index">01</span><div><strong>LUNAR TRACKING</strong><small>PHASE / ILLUMINATION / CYCLE</small></div><span class="mth-section-state">LIVE CALC</span></div>
-            <div class="mth-lunar-grid">
-                <div class="mth-moon-instrument"><div class="mth-moon-reticle"><span class="mth-reticle-tick"></span><div class="mth-moon-disc" id="mthMoonDisc"></div><span class="mth-reticle-cross"></span></div><div class="mth-moon-caption" id="mthPhaseName">CALCULATING PHASE</div></div>
-                <div class="mth-lunar-readouts">
-                    <div><small>ILLUMINATION</small><strong id="mthIllumination">—</strong></div>
-                    <div><small>LUNAR AGE</small><strong id="mthLunarAge">—</strong></div>
-                    <div><small>MOON DISTANCE · EST.</small><strong id="mthMoonDistance">—</strong></div>
-                    <div><small>NEXT FULL MOON</small><strong id="mthNextFull">—</strong></div>
-                </div>
-            </div>
-        </div>
-        <div class="mth-section mth-solar">
-            <div class="mth-section-head"><span class="mth-index">03</span><div><strong>SOLAR WINDOW</strong><small>LOCAL HORIZON / DAYLIGHT CYCLE</small></div><span class="mth-section-state">LOCATION BASED</span></div>
-            <div class="mth-solar-readouts"><div><small>SUNRISE</small><strong id="mthSunrise">—</strong></div><div><small>SOLAR NOON</small><strong id="mthSolarNoon">—</strong></div><div><small>SUNSET</small><strong id="mthSunset">—</strong></div><div><small>DAYLIGHT</small><strong id="mthDaylight">—</strong></div></div>
-        </div>
-        <div class="mth-section mth-orbit">
-            <div class="mth-section-head"><span class="mth-index">04</span><div><strong>EARTH–MOON TRACKER</strong><small>3D EARTH-CENTRED / CALCULATED SUN & MOON POSITIONS</small></div><span class="mth-section-state" id="mthOrbitState">LIVE MODEL</span></div>
-            <div class="mth-tracker-readouts">
-                <div><small>MOON RANGE</small><strong id="mthOrbitDistance">—</strong></div>
-                <div><small>ORBIT POSITION</small><strong id="mthOrbitPosition">—</strong></div>
-                <div><small>YOUR LOCATION</small><strong id="mthOrbitLocation">—</strong></div>
-            </div>
-            <div class="mth-orbit-display mth-tracker-display">
-                <canvas id="mthTracker3D" class="mth-tracker-3d" role="img" aria-label="Three-dimensional Earth-centred view showing the Sun, Moon and selected location at the chosen time"></canvas>
-                <div class="mth-orbit-legend" aria-label="Tracker legend"><span><i class="mth-legend-sun"></i> SUN</span><span><i class="mth-legend-earth"></i> EARTH</span><span><i class="mth-legend-moon"></i> MOON</span><span><i class="mth-legend-location"></i> YOUR LOCATION</span></div>
-            </div>
-            <div class="mth-time-control">
-                <div class="mth-time-heading"><strong>TIME POSITION SIMULATOR</strong><span id="mthOrbitTime">NOW</span></div>
-                <input id="mthTimeScrubber" type="range" min="-12" max="12" step="0.25" value="0" aria-label="Preview Earth and Moon positions from 12 hours ago to 12 hours ahead">
-                <div class="mth-time-labels"><span>−12 HOURS</span><span>NOW</span><span>+12 HOURS</span></div>
-            </div>
-            <p class="mth-note">Earth stays centred while the camera follows your location. Sun and Moon directions use calculated celestial coordinates; orbital distances are visually compressed and are not to scale.</p>
-        </div>
-        <div class="mth-section mth-tides">
-            <div class="mth-section-head"><span class="mth-index">02</span><div><strong>LOCAL TIDE MONITOR</strong><small>COASTAL STATION / PREDICTED HEIGHT</small></div><span class="mth-section-state mth-state-pending">DATA LINK PENDING</span></div>
-            <div class="mth-tide-panel"><div class="mth-tide-status-mark">⌁</div><div><strong id="mthTideStatus">SEARCHING FOR COASTAL STATION</strong><p id="mthTideMessage">Checking for a nearby station with harmonic tide predictions. No tide height will be inferred from the Moon phase.</p></div></div>
-            <div class="mth-tide-events"><div><small>NEXT HIGH WATER</small><strong id="mthNextHigh">—</strong><span id="mthNextHighTime">—</span></div><div><small>NEXT LOW WATER</small><strong id="mthNextLow">—</strong><span id="mthNextLowTime">—</span></div></div>
-            <div class="mth-tide-baseline"><span id="mthTideStation">LOCAL COASTAL PREDICTION</span><strong id="mthTideDistance">CHECKING STATION COVERAGE</strong></div>
-            <p class="mth-note" id="mthTideAttribution">Tide predictions are harmonic estimates and do not account for weather-driven surge. Not for navigation.</p>
-        </div>
-        <div class="mth-section mth-tide-graph-section">
-            <div class="mth-section-head"><span class="mth-index">05</span><div><strong>LOCAL TIDE PROFILE</strong><small>24-HOUR HARMONIC WATER-LEVEL PREDICTION</small></div><span class="mth-section-state mth-state-pending" id="mthGraphState">DATA LINK PENDING</span></div>
-            <div class="mth-graph-readout">
-                <div class="mth-graph-current"><small>CURRENT PREDICTED HEIGHT</small><strong id="mthGraphCurrent">—</strong><span id="mthGraphTrend">WAITING FOR STATION DATA</span></div>
-                <div class="mth-graph-window"><small>FORECAST WINDOW</small><strong id="mthGraphWindow">NEXT 24 HOURS</strong><span id="mthGraphDatum">STATION DATUM</span></div>
-            </div>
-            <div class="mth-tide-graph-wrap" id="mthTideGraphWrap">
-                <div class="mth-graph-loading" id="mthGraphMessage" role="status">Waiting for verified local tide-station predictions…</div>
-                <svg class="mth-tide-graph" id="mthTideGraph" viewBox="0 0 720 246" role="img" aria-label="24-hour local tide-height prediction graph" hidden></svg>
-            </div>
-            <div class="mth-graph-legend"><span><i class="mth-legend-curve"></i> PREDICTED WATER LEVEL</span><span><i class="mth-legend-now"></i> CURRENT TIME</span><span><i class="mth-legend-extreme"></i> HIGH / LOW WATER</span></div>
-            <div class="mth-graph-source"><span id="mthGraphStation">NO VERIFIED STATION DATA</span><strong id="mthGraphDistance">PREDICTION OFFLINE</strong></div>
-            <p class="mth-note">Harmonic station prediction in metres relative to the station’s chart datum. Actual water levels can differ due to wind, atmospheric pressure, waves and storm surge. Not for navigation.</p>
-        </div>
-  </details>
-        <div class="mth-footer"><span>GQ // MTH-01</span><span>ASTRONOMICAL VALUES ARE CALCULATED LOCALLY</span><span>NO TIDE DATA FABRICATED</span></div>
-        <div class="mth-footer data-usage-footer" data-usage-section="moon-tide"><span>DATA USAGE</span><span id="moonTideDataUsage">Measuring tide data…</span><span>THIS VISIT</span></div>
-    </section>
+    
 
     <section class="card weather-change-card wind-hud-card mth-hud-card" aria-labelledby="weatherChangeTitle">
         <div class="mth-header">
