@@ -375,6 +375,33 @@
     let trackerProgram = null;
     let trackerSphere = null;
     let trackerUniforms = null;
+    let trackerEarthTexture = null;
+    let trackerEarthTextureReady = false;
+    function loadTrackerEarthTexture(gl,texture) {
+        const image=new Image();
+        image.crossOrigin='anonymous';
+        image.onload=()=>{
+            if(trackerGL!==gl||!texture) return;
+            try {
+                const canvas=document.createElement('canvas');
+                canvas.width=2048;canvas.height=1024;
+                const ctx=canvas.getContext('2d',{alpha:false});
+                ctx.drawImage(image,0,0,canvas.width,canvas.height);
+                gl.bindTexture(gl.TEXTURE_2D,texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+                gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                trackerEarthTextureReady=true;
+            } catch(error) { console.warn('GaugeIQ Earth texture could not be applied',error); }
+        };
+        image.onerror=()=>console.warn('GaugeIQ NASA Blue Marble texture could not be loaded');
+        image.src='https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/july/world.200407.3x5400x2700.jpg';
+    }
     function initTracker3D() {
         if (!trackerCanvas || trackerGL) return !!trackerGL;
         const gl = trackerCanvas.getContext('webgl', {alpha:true,antialias:true,premultipliedAlpha:false});
@@ -388,6 +415,7 @@
             uniform vec3 u_forward;
             uniform float u_aspect;
             varying vec3 v_normal;
+            varying vec2 v_uv;
             void main() {
                 vec3 world = u_center + a_position * u_radius;
                 vec3 view = vec3(dot(world,u_right),dot(world,u_up),dot(world,u_forward));
@@ -398,31 +426,18 @@
                 float clipZ = depth * 1.004008 - 0.200401;
                 gl_Position = vec4(view.x*focal/u_aspect, view.y*focal, clipZ, depth);
                 v_normal = a_position;
+                float longitude=atan(a_position.z,a_position.x);
+                float latitude=asin(clamp(a_position.y,-1.0,1.0));
+                v_uv=vec2(longitude/6.28318530718+0.5,0.5+latitude/3.14159265359);
             }`;
         const fragment = `
             precision mediump float;
             varying vec3 v_normal;
+            varying vec2 v_uv;
             uniform vec3 u_light;
             uniform float u_kind;
-            float blob(vec2 p, vec2 c, vec2 r) {
-                vec2 q = (p-c)/r;
-                return dot(q,q);
-            }
-            float continents(vec3 p) {
-                float lon = atan(p.z,p.x);
-                float lat = asin(clamp(p.y,-1.0,1.0));
-                vec2 ll = vec2(lon,lat);
-                float land = 10.0;
-                land = min(land,blob(ll,vec2(-1.75,0.62),vec2(0.34,0.66)));
-                land = min(land,blob(ll,vec2(-1.95,-0.38),vec2(0.20,0.48)));
-                land = min(land,blob(ll,vec2(0.55,0.82),vec2(0.78,0.34)));
-                land = min(land,blob(ll,vec2(1.28,0.28),vec2(0.70,0.48)));
-                land = min(land,blob(ll,vec2(0.38,-0.12),vec2(0.27,0.57)));
-                land = min(land,blob(ll,vec2(2.35,-0.42),vec2(0.34,0.22)));
-                land = min(land,blob(ll,vec2(-0.15,-1.43),vec2(2.7,0.12)));
-                land = min(land,blob(ll,vec2(2.05,0.16),vec2(0.13,0.28)));
-                return land;
-            }
+            uniform sampler2D u_earthTexture;
+            uniform float u_earthTextureReady;
             float hash21(vec2 p) {
                 p=fract(p*vec2(123.34,456.21));
                 p+=dot(p,p+45.32);
@@ -447,36 +462,31 @@
                 return relief+maria;
             }
             void main() {
-                vec3 n = normalize(v_normal);
-                float diffuse = max(0.0,dot(n,normalize(u_light)));
-                float limb = 0.72 + 0.28*max(0.0,n.z);
+                vec3 n=normalize(v_normal);
+                float diffuse=max(0.0,dot(n,normalize(u_light)));
+                float limb=0.72+0.28*max(0.0,n.z);
                 vec3 color;
-                float light;
-                if (u_kind < 0.5) {
-                    float land = 1.0-smoothstep(0.88,1.08,continents(n));
-                    vec3 ocean = vec3(0.018,0.105,0.22);
-                    vec3 ground = vec3(0.30,0.39,0.24);
-                    color = mix(ocean,ground,land);
-                    light = 0.045 + 0.955*diffuse;
-                    color *= light*limb;
-                } else if (u_kind < 1.5) {
+                if(u_kind<0.5) {
+                    vec3 fallback=mix(vec3(0.012,0.075,0.16),vec3(0.27,0.34,0.20),step(0.0,sin(n.x*4.0)*sin(n.y*3.0)));
+                    vec3 surface=texture2D(u_earthTexture,v_uv).rgb;
+                    color=mix(fallback,surface,u_earthTextureReady);
+                    float dayLight=0.035+0.965*diffuse;
+                    color*=dayLight*limb;
+                } else if(u_kind<1.5) {
                     float relief=lunarRelief(n);
                     float maria=0.5+0.5*sin(n.x*8.0+n.z*5.0)*sin(n.y*7.0-n.x*3.0);
                     vec3 lunarBase=mix(vec3(0.43,0.44,0.42),vec3(0.57,0.56,0.52),maria*0.34);
-                    color=lunarBase+vec3(relief);
-                    light=0.018+0.982*diffuse;
-                    color*=light*limb;
-                } else if (u_kind < 2.5) {
+                    color=(lunarBase+vec3(relief))*(0.018+0.982*diffuse)*limb;
+                } else if(u_kind<2.5) {
                     float granulation=0.035*sin(n.x*31.0+n.y*19.0)*sin(n.z*27.0-n.x*11.0);
                     float edge=pow(1.0-max(0.0,n.z),2.0);
                     color=vec3(1.0,0.76,0.38)+granulation;
                     color=mix(color,vec3(1.0,0.43,0.12),edge*0.28);
                     color*=1.25+0.32*diffuse;
                 } else {
-                    color = vec3(1.0,0.72,0.28);
-                    color *= 1.35;
+                    color=vec3(1.0,0.72,0.28)*1.35;
                 }
-                gl_FragColor = vec4(color,1.0);
+                gl_FragColor=vec4(color,1.0);
             }`;
         const compile=(type,source)=>{const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(sh));return sh;};
         const program=gl.createProgram();
@@ -492,7 +502,16 @@
         const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
         const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(indices),gl.STATIC_DRAW);
         trackerGL=gl;trackerProgram=program;trackerSphere={vertexBuffer,indexBuffer,count:indices.length};
-        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
+        trackerEarthTexture=gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D,trackerEarthTexture);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([8,35,65,255]));
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+        gl.uniform1i(gl.getUniformLocation(program,'u_earthTexture'),0);
+        gl.uniform1f(gl.getUniformLocation(program,'u_earthTextureReady'),0);
+        loadTrackerEarthTexture(gl,trackerEarthTexture);
+        trackerUniforms={position:gl.getAttribLocation(program,'a_position'),earthTexture:gl.getUniformLocation(program,'u_earthTexture'),earthTextureReady:gl.getUniformLocation(program,'u_earthTextureReady'),center:gl.getUniformLocation(program,'u_center'),radius:gl.getUniformLocation(program,'u_radius'),right:gl.getUniformLocation(program,'u_right'),up:gl.getUniformLocation(program,'u_up'),forward:gl.getUniformLocation(program,'u_forward'),aspect:gl.getUniformLocation(program,'u_aspect'),light:gl.getUniformLocation(program,'u_light'),kind:gl.getUniformLocation(program,'u_kind')};
         return true;
     }
     function drawTrackerSphere(center,radius,kind,light,right,up,forward,aspect) {
@@ -524,6 +543,10 @@
         // The globe and observer stay fixed; only Sun/Moon directions change.
         const moonDir=celestial(moonPosition.ra-gmst,moonPosition.dec),sunDir=celestial(sunPosition.ra-gmst,sunPosition.dec);
         const aspect=pixelWidth/pixelHeight;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D,trackerEarthTexture);
+        gl.uniform1i(trackerUniforms.earthTexture,0);
+        gl.uniform1f(trackerUniforms.earthTextureReady,trackerEarthTextureReady?1:0);
         gl.disable(gl.BLEND);
         drawTrackerSphere([0,0,0],1,0,sunDir,right,up,forward,aspect);
         // The gold marker is the observer's location on the near-side surface.
@@ -593,10 +616,11 @@
         const axis = root.querySelector('.mth-tidal-axis');
         if (axis) axis.style.transform = 'translate(-50%,-50%) rotate(' + (Math.atan2(moonY,moonX)*180/Math.PI) + 'deg)';
         if (locationMarker && validLocation) {
-            const delta = (lon-gmst)*rad;
-            const markerX = Math.cos(lat*rad)*Math.sin(delta);
-            const markerY = -Math.sin(lat*rad);
-            const markerZ = Math.cos(lat*rad)*Math.cos(delta);
+            // Keep the legacy overlay aligned with the same fixed, location-centred
+            // view as the 3D globe. The WebGL surface marker is the authoritative pin.
+            const markerX = 0;
+            const markerY = 0;
+            const markerZ = 1;
             const globeRadiusPercent = 46;
             locationMarker.style.left = (50 + markerX*globeRadiusPercent) + '%';
             locationMarker.style.top = (50 + markerY*globeRadiusPercent) + '%';
