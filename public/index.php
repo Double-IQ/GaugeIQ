@@ -1357,7 +1357,7 @@ if ($current && !empty($current['observed_at'])) {
         <div class="surf-hourly" id="surfHourly"></div>
         <div class="surf-seven-day" id="surfSevenDay"></div>
         <p class="surf-report-note">Forecast model, not a live buoy or beach observation. Local break shape, tide and shelter can change conditions significantly.</p>
-        <div class="data-usage-footer" data-usage-section="surf"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="surfDataUsage">—</strong></span></div>
+        <div class="mth-footer data-usage-footer" data-usage-section="surf"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="surfDataUsage">—</strong></span></div>
     </section>
 <section class="card surf-report-card wind-hud-card activity-iq-card" id="windIqCard">
  <div class="wind-hud-heading"><div><p class="label">Wind IQ</p><div class="wind-hud-subtitle">AIR &amp; WATER SPORTS / 7 DAYS</div></div><span class="wind-hud-live surf-connection-status" id="windIqConnectionStatus" role="status" aria-live="polite"><span></span> CONNECTING</span></div>
@@ -1367,7 +1367,7 @@ if ($current && !empty($current['observed_at'])) {
  <div class="surf-report-summary" id="windIqSummary" hidden><div class="surf-report-rating"><span id="windIqScore">—</span><strong id="windIqGrade">—</strong><small id="windIqBest">Best window —</small></div><div class="surf-report-metrics"><div><small>WIND</small><strong id="windIqWind">—</strong><span id="windIqDir">—</span></div><div><small>GUSTS</small><strong id="windIqGust">—</strong><span>10 m forecast</span></div><div><small>RAIN RISK</small><strong id="windIqRain">—</strong><span>Precipitation probability</span></div><div><small id="windIqExtraLabel">CLOUD BASE</small><strong id="windIqExtra">—</strong><span id="windIqExtraText">Thermal proxy</span></div></div></div>
  <div id="windIqHourly"></div><div id="windIqDays"></div>
  <p class="surf-report-note">Model-based guidance, not a flight or water-sports clearance. Surface wind is not launch-site or altitude wind. Check local observations, site rules and qualified safety guidance before going out.</p>
- <div class="data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="windIqUsage">—</strong></span></div>
+ <div class="mth-footer data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">OPEN-METEO</a></span><span>THIS VISIT <strong id="windIqUsage">—</strong></span></div>
 </section>
 <section class="card surf-report-card wind-hud-card activity-iq-card" id="fishIqCard">
  <div class="wind-hud-heading"><div><p class="label">Fish IQ</p><div class="wind-hud-subtitle">COASTAL FISHING OUTLOOK / 7 DAYS</div></div><span class="wind-hud-live surf-connection-status" id="fishIqConnectionStatus" role="status" aria-live="polite"><span></span> CONNECTING</span></div>
@@ -1378,7 +1378,7 @@ if ($current && !empty($current['observed_at'])) {
  <div id="fishIqHourly"></div><div id="fishIqDays"></div>
  <div class="surf-block-title">COMMON REGIONAL TARGETS</div><p class="surf-report-note">Kob, shad (elf), garrick (leervis), blacktail and geelbek are among species encountered along parts of this coastline. The model cannot predict species presence or catch likelihood.</p>
  <p class="surf-report-note">Fishing suitability is an environmental estimate, not a fish-location tracker or catch guarantee. Modelled sea level is not a verified local tide table. Boat users must consult official marine forecasts and navigation information.</p>
- <div class="data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO MARINE</a></span><span>THIS VISIT <strong id="fishIqUsage">—</strong></span></div>
+ <div class="mth-footer data-usage-footer"><span>DATA USAGE</span><span>MODEL SOURCE <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">OPEN-METEO MARINE</a></span><span>THIS VISIT <strong id="fishIqUsage">—</strong></span></div>
 </section>
 
 
