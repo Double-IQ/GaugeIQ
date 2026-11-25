@@ -377,7 +377,15 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
                 Math.min(85, Math.max(regionStart.lat, end.lat))
             ];
             regionStart = null;
-            if (bounds[0] < bounds[2] && bounds[1] < bounds[3]) showRegionBounds(bounds);
+            if (bounds[0] < bounds[2] && bounds[1] < bounds[3]) {
+                showRegionBounds(bounds);
+                // Reframe the map after a selection so the complete coverage
+                // rectangle remains visible with useful surrounding context.
+                regionMap.fitBounds(
+                    [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
+                    { padding: 48, maxZoom: 3, duration: 350 }
+                );
+            }
         };
         mapCanvas.addEventListener('pointerup', finishRegionPointer);
         mapCanvas.addEventListener('pointercancel', () => { regionStart = null; });
