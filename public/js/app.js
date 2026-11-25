@@ -2265,11 +2265,11 @@ updateNetworkDiagnostics();
         const sweep = document.querySelector('.rainfall-radar-sweep');
         const animation = sweep?.getAnimations().find(item => item.playState !== 'idle');
         const currentTime = Number(animation?.currentTime);
-        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 12;
+        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 9;
         return Number.isFinite(currentTime) ? ((currentTime / 1000) % period + period) % period : 0;
     };
     const echoDelayForBearing = bearing => {
-        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 12;
+        const period = Number(window.gaugeIQRadarSweepPeriodSeconds) || 9;
         const untilSweep = ((((Number(bearing) - 59) % 360) + 360) % 360) / 360 * period;
         const elapsedSincePass = (getSweepElapsedSeconds() - untilSweep + period) % period;
         return -elapsedSincePass;
