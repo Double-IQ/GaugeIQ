@@ -663,24 +663,6 @@ protocolOptions.fileReaderConfig = {
                 const probeY = Math.max(0, Math.min(probeCount - 1,
                     Math.floor((1 - Math.asinh(Math.tan(probeLatitude * Math.PI / 180)) / Math.PI) / 2 * probeCount)));
                 for (const frame of pastFrames) {
-                    if (variables.some(item => !frame.prepared?.[item.variable])) {
-                        try {
-                            const repairResponse = await fetch(
-                                '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
-                                { cache: 'no-store' }
-                            );
-                            if (repairResponse.ok) {
-                                const repairedSchedule = await repairResponse.json();
-                                const repairedFrame = repairedSchedule.frames?.find(item =>
-                                    Number(item.slot) === frame.slot && String(item.time) === frame.frameTime
-                                );
-                                if (repairedFrame?.prepared) frame.prepared = repairedFrame.prepared;
-                            }
-                        } catch (repairError) {
-                            preparedTileFallbackReasons.set(frame.id,
-                                'Server preparation retry failed: ' + (repairError?.message || 'request error'));
-                        }
-                    }
                     const allVariablesPrepared = variables.every(item => frame.prepared?.[item.variable]);
                     if (!allVariablesPrepared) {
                         frame.forceBrowser = true;
@@ -709,50 +691,6 @@ protocolOptions.fileReaderConfig = {
                         } catch (probeError) {
                             failure = probeError?.message || 'The tile verification request failed.';
                             break;
-                        }
-                    }
-
-                    if (failure) {
-                        // The frames API unconditionally reconciles the server cache.
-                        // Retry the same real tile request before choosing browser fallback.
-                        try {
-                            const repairResponse = await fetch(
-                                '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
-                                { cache: 'no-store' }
-                            );
-                            if (repairResponse.ok) {
-                                const repairedSchedule = await repairResponse.json();
-                                const repairedFrame = repairedSchedule.frames?.find(item =>
-                                    Number(item.slot) === frame.slot && String(item.time) === frame.frameTime
-                                );
-                                if (repairedFrame?.prepared) {
-                                    frame.prepared = repairedFrame.prepared;
-                                    let retryFailure = null;
-                                    for (const item of variables) {
-                                        if (!frame.prepared[item.variable]) {
-                                            retryFailure = 'Server decoded data is still unavailable for ' + item.variable + '.';
-                                            break;
-                                        }
-                                        const retryUrl = buildPreparedTileUrl(frame, item, probeZoom, probeX, probeY);
-                                        const retryResponse = await fetch(retryUrl.href, { cache: 'no-store' });
-                                        const retryType = retryResponse.headers.get('content-type') || '';
-                                        if (!retryResponse.ok || !retryType.toLowerCase().includes('image/png')) {
-                                            const responseText = (await retryResponse.text()).slice(0, 220).replace(/\s+/g, ' ').trim();
-                                            retryFailure = 'HTTP ' + retryResponse.status + ' ' +
-                                                (responseText || retryResponse.statusText || 'Invalid tile response');
-                                            break;
-                                        }
-                                    }
-                                    failure = retryFailure;
-                                } else {
-                                    failure = 'Server preparation retry did not return a prepared frame.';
-                                }
-                            } else {
-                                failure = 'Server preparation retry failed with HTTP ' + repairResponse.status + '.';
-                            }
-                        } catch (repairError) {
-                            failure = 'Server preparation retry failed: ' +
-                                (repairError?.message || 'request error') + '. Original tile error: ' + failure;
                         }
                     }
 
