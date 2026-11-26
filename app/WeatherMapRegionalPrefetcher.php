@@ -190,15 +190,10 @@ final class WeatherMapRegionalPrefetcher
         $xEnd = min($width, (int)ceil(($east + 180.0) / $step) + 3);
         $yStart = max(0, (int)floor(($south + 90.0) / $step) - 2);
         $yEnd = min($height, (int)ceil(($north + 90.0) / $step) + 3);
-
-        $indices = [];
-        for ($y = $yStart; $y < $yEnd; $y++) {
-            $rowStart = $y * $width;
-            for ($x = $xStart; $x < $xEnd; $x++) {
-                $indices[] = $rowStart + $x;
-            }
-        }
-        if ($indices === []) {
+        $columns = $xEnd - $xStart;
+        $rows = $yEnd - $yStart;
+        $cellCount = $columns * $rows;
+        if ($columns < 1 || $rows < 1 || $cellCount < 1) {
             throw new RuntimeException('The server-side weather-map decode region is empty.');
         }
 
@@ -218,30 +213,85 @@ final class WeatherMapRegionalPrefetcher
             if (($field['dimensions'] ?? null) !== [$height, $width]) {
                 throw new RuntimeException('The ' . $variable . ' field does not match the ECMWF 0.25-degree regular grid.');
             }
-            $values = $reader->decodeFloatArrayGridIndices($field, $indices);
-            if (count($values) !== count($indices)) {
-                throw new RuntimeException('The server did not decode every requested ' . $variable . ' grid cell.');
+            $chunkHeight = (int)($field['chunks'][0] ?? 0);
+            if ($chunkHeight < 1) {
+                throw new RuntimeException('The ' . $variable . ' field has invalid ECMWF chunk dimensions.');
             }
 
-            $binary = '';
+            $key = WeatherMapRegionSettings::cacheKey($url, $variable, $this->regionBounds);
+            $dataPath = rtrim($directory, '/') . '/' . $key . '.f32';
+            $metaPath = rtrim($directory, '/') . '/' . $key . '.json';
+            $suffix = '.' . bin2hex(random_bytes(6)) . '.tmp';
+            $temporaryData = $dataPath . $suffix;
+            $temporaryMeta = $metaPath . $suffix;
+            $handle = @fopen($temporaryData, 'wb');
+            if ($handle === false) {
+                throw new RuntimeException('Unable to create the temporary decoded ' . $variable . ' weather-map cache.');
+            }
+
             $finiteCount = 0;
             $missingCount = 0;
             $minimum = INF;
             $maximum = -INF;
-            foreach ($indices as $index) {
-                $value = (float)$values[$index];
-                if (is_finite($value)) {
-                    $finiteCount++;
-                    $minimum = min($minimum, $value);
-                    $maximum = max($maximum, $value);
-                } else {
-                    $missingCount++;
+            $writtenCells = 0;
+            try {
+                // Decode one complete OM chunk-row band at a time. The OM
+                // 2-D delta filter requires each compressed chunk to be
+                // decoded whole, so bands are aligned to chunkHeight.
+                for ($bandStart = $yStart; $bandStart < $yEnd;) {
+                    $bandEnd = min($yEnd, (int)(ceil(($bandStart + 1) / $chunkHeight) * $chunkHeight));
+                    $indices = [];
+                    for ($y = $bandStart; $y < $bandEnd; $y++) {
+                        $rowStart = $y * $width;
+                        for ($x = $xStart; $x < $xEnd; $x++) {
+                            $indices[] = $rowStart + $x;
+                        }
+                    }
+
+                    $values = $reader->decodeFloatArrayGridIndices($field, $indices);
+                    if (count($values) !== count($indices)) {
+                        throw new RuntimeException('The server did not decode every requested ' . $variable . ' grid cell.');
+                    }
+
+                    $binary = '';
+                    foreach ($indices as $index) {
+                        if (!array_key_exists($index, $values)) {
+                            throw new RuntimeException('The decoded ' . $variable . ' row band contains a missing grid cell.');
+                        }
+                        $value = (float)$values[$index];
+                        if (is_finite($value)) {
+                            $finiteCount++;
+                            $minimum = min($minimum, $value);
+                            $maximum = max($maximum, $value);
+                        } else {
+                            $missingCount++;
+                        }
+                        $binary .= pack('g', $value);
+                    }
+                    $length = strlen($binary);
+                    $offset = 0;
+                    while ($offset < $length) {
+                        $written = fwrite($handle, substr($binary, $offset));
+                        if ($written === false || $written === 0) {
+                            throw new RuntimeException('Unable to write the decoded ' . $variable . ' weather-map row band.');
+                        }
+                        $offset += $written;
+                    }
+                    $writtenCells += count($indices);
+                    unset($indices, $values, $binary);
+                    $bandStart = $bandEnd;
                 }
-                $binary .= pack('g', $value);
+                if (!fflush($handle) || $writtenCells !== $cellCount) {
+                    throw new RuntimeException('The decoded ' . $variable . ' weather-map cache is incomplete.');
+                }
+            } catch (Throwable $error) {
+                fclose($handle);
+                @unlink($temporaryData);
+                @unlink($temporaryMeta);
+                throw $error;
             }
-            $key = WeatherMapRegionSettings::cacheKey($url, $variable, $this->regionBounds);
-            $dataPath = rtrim($directory, '/') . '/' . $key . '.f32';
-            $metaPath = rtrim($directory, '/') . '/' . $key . '.json';
+            fclose($handle);
+
             $metadata = [
                 'version' => 4,
                 'source_url_sha256' => hash('sha256', $url),
@@ -252,44 +302,37 @@ final class WeatherMapRegionalPrefetcher
                     'west' => $west, 'south' => $south, 'east' => $east, 'north' => $north,
                     'x_start' => $xStart, 'x_end' => $xEnd,
                     'y_start' => $yStart, 'y_end' => $yEnd,
-                    'columns' => $xEnd - $xStart, 'rows' => $yEnd - $yStart,
+                    'columns' => $columns, 'rows' => $rows,
                 ],
                 'encoding' => 'float32-le',
-                'cell_count' => count($indices),
+                'cell_count' => $cellCount,
                 'data_quality' => [
                     'finite_count' => $finiteCount,
                     'missing_count' => $missingCount,
-                    'finite_percent' => round(($finiteCount / count($indices)) * 100, 3),
+                    'finite_percent' => round(($finiteCount / $cellCount) * 100, 3),
                     'minimum' => $finiteCount > 0 ? $minimum : null,
                     'maximum' => $finiteCount > 0 ? $maximum : null,
                 ],
                 'prepared_at' => gmdate('c'),
             ];
 
-            $suffix = '.' . bin2hex(random_bytes(6)) . '.tmp';
-            $temporaryData = $dataPath . $suffix;
-            $temporaryMeta = $metaPath . $suffix;
-            if (file_put_contents($temporaryData, $binary, LOCK_EX) !== strlen($binary)) {
-                @unlink($temporaryData);
-                throw new RuntimeException('Unable to write the decoded ' . $variable . ' weather-map cache.');
-            }
-            if (file_put_contents(
-                $temporaryMeta,
-                json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
-                LOCK_EX
-            ) === false) {
+            $encodedMetadata = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            if (file_put_contents($temporaryMeta, $encodedMetadata, LOCK_EX) !== strlen($encodedMetadata)) {
                 @unlink($temporaryData);
                 @unlink($temporaryMeta);
                 throw new RuntimeException('Unable to write decoded weather-map metadata.');
             }
+            // Publish the data first and its completion metadata last. Readers
+            // treat the cache as ready only when both files and sizes validate.
             if (!@rename($temporaryData, $dataPath) || !@rename($temporaryMeta, $metaPath)) {
                 @unlink($temporaryData);
                 @unlink($temporaryMeta);
                 throw new RuntimeException('Unable to publish the decoded weather-map cache atomically.');
             }
+
             $coverage[] = [
                 'variable' => $variable,
-                'finite_percent' => round(($finiteCount / count($indices)) * 100, 3),
+                'finite_percent' => round(($finiteCount / $cellCount) * 100, 3),
                 'missing_count' => $missingCount,
                 'minimum' => $finiteCount > 0 ? $minimum : null,
                 'maximum' => $finiteCount > 0 ? $maximum : null,
