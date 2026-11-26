@@ -13,9 +13,16 @@ try {
     }
     if (!is_file($configPath)) regionApiFail(503,'GaugeIQ is not installed.');
     $origin=(string)($_SERVER['HTTP_ORIGIN'] ?? '');
-    $host=(string)($_SERVER['HTTP_HOST'] ?? '');
-    $scheme=(!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    if ($origin === '' || !hash_equals($scheme.'://'.$host, rtrim($origin,'/'))) {
+    $host=strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $originParts=$origin!==''?parse_url($origin):false;
+    $originHost=is_array($originParts)?strtolower((string)($originParts['host'] ?? '')):'';
+    $originPort=is_array($originParts)?(int)($originParts['port'] ?? 0):0;
+    $hostParts=explode(':',$host);
+    $hostName=strtolower((string)($hostParts[0] ?? ''));
+    $hostPort=isset($hostParts[1])?(int)$hostParts[1]:0;
+    if ($originHost==='' || $originHost!==$hostName ||
+        ($originPort!==0 && $hostPort!==0 && $originPort!==$hostPort) ||
+        !in_array((string)($originParts['scheme'] ?? ''),['https','http'],true)) {
         regionApiFail(403,'Cross-origin settings updates are not allowed.');
     }
     $payload=json_decode((string)file_get_contents('php://input'),true,16,JSON_THROW_ON_ERROR);

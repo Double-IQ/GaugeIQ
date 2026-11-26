@@ -218,7 +218,7 @@ try {
         <button class="reset" id="reset" type="button">Reset defaults</button>
         <span id="status" role="status" aria-live="polite"></span>
     </div>
-    <p class="note">Settings are saved in this browser on this device. Return to the map after saving; reload the map to apply your changes.</p>
+    <p class="note">Weather coverage is saved to GaugeIQ for the selected location. Other appearance preferences remain saved in this browser. Reload the map after saving to apply the new server-decoded coverage.</p>
 </main>
 <script type="module">
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs';

@@ -786,7 +786,7 @@ protocolOptions.fileReaderConfig = {
         }
 
         async function resolveCurrentOmUrls(variables) {
-            const response = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
+            const response = await fetch('/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId), { cache: 'no-store' });
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
