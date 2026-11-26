@@ -949,7 +949,7 @@
             return;
         }
         tideLog('TIDE LOAD START');
-        const start = new Date();
+        const start = new Date(now.getTime());
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
 
