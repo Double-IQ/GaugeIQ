@@ -869,7 +869,7 @@
             return '<line class="mth-graph-tick" x1="' + xx.toFixed(2) + '" y1="42" x2="' + xx.toFixed(2) + '" y2="190"/>' +
                 '<text class="mth-graph-axis-label" x="' + xx.toFixed(2) + '" y="211" text-anchor="middle">' + tideLocalTime(timestamp,false) + '</text>';
         }).join('');
-        const now = Date.now();
+        const now = nowSnapshotTimestamp;
         const nowX = x(Math.max(startTime,Math.min(endTime,now)));
         const nearest = samples.reduce((best,point) => Math.abs(point.timestamp-now) < Math.abs(best.timestamp-now) ? point : best,samples[0]);
         const before = samples.filter(point => point.timestamp <= now).slice(-1)[0] || samples[0];
@@ -980,7 +980,7 @@
                 return;
             }
             const events = extremesPayload.extremes.map(event => ({...event,timestamp:Date.parse(event.time)}))
-                .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= Date.now() - 60000)
+                .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= now.getTime() - 60000)
                 .sort((a,b) => a.timestamp - b.timestamp);
             const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
             const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
@@ -1044,6 +1044,7 @@
         setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.'));
     });
 
+    const nowSnapshotTimestamp = now.getTime();
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
     root.querySelector('.mth-live').setAttribute('aria-label','Server snapshot generated ' + nowText.format(now));
 })();
