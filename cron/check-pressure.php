@@ -38,9 +38,9 @@ $moonTideLocations = getGaugeIqSetting($pdo, 'second_location_enabled', '0') ===
 foreach ($moonTideLocations as $moonTideLocationId) {
     try {
         $moonTideService = new MoonTideSnapshotService($pdo, $config);
-        $moonTideSnapshot = $moonTideService->refresh($moonTideLocationId);
+        $moonTideSnapshot = $moonTideService->refreshIfDue($moonTideLocationId, 3600);
         printf(
-            "Moon & Tide snapshot refreshed: Location %d at %s (tide station %s).\n",
+            "Moon & Tide hourly snapshot ready: Location %d at %s (tide station %s).\n",
             $moonTideLocationId,
             (string)$moonTideSnapshot['generatedAt'],
             (string)($moonTideSnapshot['tides']['extremes']['station']['name'] ?? 'unavailable')
