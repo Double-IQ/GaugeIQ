@@ -635,8 +635,7 @@ protocolOptions.fileReaderConfig = {
                 const probeY = Math.max(0, Math.min(probeCount - 1,
                     Math.floor((1 - Math.asinh(Math.tan(probeLatitude * Math.PI / 180)) / Math.PI) / 2 * probeCount)));
                 for (const frame of pastFrames) {
-                    let preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
-                    if (!preparedVariables.length) {
+                    if (variables.some(item => !frame.prepared?.[item.variable])) {
                         try {
                             const repairResponse = await fetch(
                                 '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
@@ -647,26 +646,28 @@ protocolOptions.fileReaderConfig = {
                                 const repairedFrame = repairedSchedule.frames?.find(item =>
                                     Number(item.slot) === frame.slot && String(item.time) === frame.frameTime
                                 );
-                                if (repairedFrame?.prepared) {
-                                    frame.prepared = repairedFrame.prepared;
-                                    preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
-                                }
+                                if (repairedFrame?.prepared) frame.prepared = repairedFrame.prepared;
                             }
                         } catch (repairError) {
                             preparedTileFallbackReasons.set(frame.id,
                                 'Server preparation retry failed: ' + (repairError?.message || 'request error'));
                         }
                     }
-                    if (!preparedVariables.length) {
+                    const allVariablesPrepared = variables.every(item => frame.prepared?.[item.variable]);
+                    if (!allVariablesPrepared) {
                         frame.forceBrowser = true;
                         preparedTileFallbacks.add(frame.id);
                         if (!preparedTileFallbackReasons.has(frame.id)) {
-                            preparedTileFallbackReasons.set(frame.id, 'Server decoded frame data is still unavailable after retry.');
+                            const missing = variables.filter(item => !frame.prepared?.[item.variable])
+                                .map(item => item.variable).join(', ');
+                            preparedTileFallbackReasons.set(frame.id,
+                                'Server decoded data is still unavailable for ' + (missing || 'this frame') + ' after retry.');
                         }
                         continue;
                     }
+
                     let failure = null;
-                    for (const item of preparedVariables) {
+                    for (const item of variables) {
                         try {
                             const probeUrl = buildPreparedTileUrl(frame, item, probeZoom, probeX, probeY);
                             const probeResponse = await fetch(probeUrl.href, { cache: 'no-store' });
@@ -682,9 +683,10 @@ protocolOptions.fileReaderConfig = {
                             break;
                         }
                     }
+
                     if (failure) {
-                        // The frames API performs an unconditional server-cache
-                        // reconciliation. Retry the real tile request after it runs.
+                        // The frames API unconditionally reconciles the server cache.
+                        // Retry the same real tile request before choosing browser fallback.
                         try {
                             const repairResponse = await fetch(
                                 '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
@@ -698,9 +700,9 @@ protocolOptions.fileReaderConfig = {
                                 if (repairedFrame?.prepared) {
                                     frame.prepared = repairedFrame.prepared;
                                     let retryFailure = null;
-                                    for (const item of preparedVariables) {
+                                    for (const item of variables) {
                                         if (!frame.prepared[item.variable]) {
-                                            retryFailure = 'The server still has no decoded ' + item.variable + ' data.';
+                                            retryFailure = 'Server decoded data is still unavailable for ' + item.variable + '.';
                                             break;
                                         }
                                         const retryUrl = buildPreparedTileUrl(frame, item, probeZoom, probeX, probeY);
@@ -725,6 +727,7 @@ protocolOptions.fileReaderConfig = {
                                 (repairError?.message || 'request error') + '. Original tile error: ' + failure;
                         }
                     }
+
                     if (failure) {
                         frame.forceBrowser = true;
                         preparedTileFallbacks.add(frame.id);
