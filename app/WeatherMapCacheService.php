@@ -317,8 +317,12 @@ final class WeatherMapCacheService
      *
      * @return array{skipped:bool,frames:int,blocks?:int,output?:string}
      */
-    public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
+    public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600, ?int $onlyLocationId = null): array
     {
+        if ($onlyLocationId !== null && !in_array($onlyLocationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Invalid GaugeIQ location for regional weather-map prefetch.');
+        }
+        $locationIds = $onlyLocationId === null ? [1, 2] : [$onlyLocationId];
         require_once __DIR__ . '/WeatherMapRegionSettings.php';
         $pendingQuery=$this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
         $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
@@ -339,7 +343,7 @@ final class WeatherMapCacheService
             $concurrency=max(1,min(16,(int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
             $pendingSet=array_fill_keys(array_filter($pendingUrls,'is_string'),true);
             $totalFrames=0; $totalBlocks=0; $outputs=[]; $completedUrls=[];
-            foreach([1,2] as $locationId) {
+            foreach($locationIds as $locationId) {
                 $bounds=WeatherMapRegionSettings::get($this->pdo,$locationId);
                 $frames=[];
                 foreach($allFrames as $row) {
@@ -347,7 +351,18 @@ final class WeatherMapCacheService
                     $needsDecode=false;
                     if($type==='past') foreach(['cloud_cover','precipitation'] as $variable) {
                         $key=WeatherMapRegionSettings::cacheKey($url,$variable,$bounds);
-                        if(!is_file($decodedDirectory.'/'.$key.'.f32') || !is_file($decodedDirectory.'/'.$key.'.json')) { $needsDecode=true; break; }
+                        $dataPath=$decodedDirectory.'/'.$key.'.f32';
+                        $metaPath=$decodedDirectory.'/'.$key.'.json';
+                        $meta=is_file($metaPath)?json_decode((string)file_get_contents($metaPath),true):null;
+                        $isValid=is_file($dataPath) && is_array($meta) &&
+                            ($meta['version']??null)===4 &&
+                            ($meta['frame_time']??'')===(string)$row['frame_time'] &&
+                            ($meta['source_url_sha256']??'')===hash('sha256',$url) &&
+                            ($meta['variable']??'')===$variable &&
+                            ($meta['encoding']??'')==='float32-le' &&
+                            (int)($meta['cell_count']??0)>0 &&
+                            (int)(filesize($dataPath)?:0)===(int)$meta['cell_count']*4;
+                        if(!$isValid) { $needsDecode=true; break; }
                     }
                     if(!isset($pendingSet[$url]) && !$needsDecode) continue;
                     $frames[]=['slot'=>(int)$row['slot_id'],'type'=>$type,'time'=>(string)$row['frame_time'],'url'=>$url];

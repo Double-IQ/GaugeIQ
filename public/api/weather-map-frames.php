@@ -63,8 +63,56 @@ try {
          WHERE frame_type = 'past'
          ORDER BY slot_id ASC"
     );
+    $frameRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
+    $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
+    $isPreparedCache = static function (array $row, string $variable) use ($decodedDirectory, $regionBounds): bool {
+        $url = (string)($row['file_url'] ?? '');
+        $cacheKey = WeatherMapRegionSettings::cacheKey($url, $variable, $regionBounds);
+        $dataPath = $decodedDirectory . '/' . $cacheKey . '.f32';
+        $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
+        $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
+        return is_file($dataPath) && is_array($meta) &&
+            ($meta['version'] ?? null) === 4 &&
+            ($meta['frame_time'] ?? '') === (string)($row['frame_time'] ?? '') &&
+            ($meta['source_url_sha256'] ?? '') === hash('sha256', $url) &&
+            ($meta['variable'] ?? '') === $variable &&
+            ($meta['encoding'] ?? '') === 'float32-le' &&
+            (int)($meta['cell_count'] ?? 0) > 0 &&
+            (int)(filesize($dataPath) ?: 0) === (int)$meta['cell_count'] * 4;
+    };
+
+    // Do not expose a missing server cache to the browser yet. First make a
+    // synchronous, location-specific attempt to fetch and decode every missing
+    // scheduled past frame. Browser rendering is only the fallback if this
+    // server-side attempt cannot produce a complete cache.
+    $missingServerCache = false;
+    foreach ($frameRows as $row) {
+        foreach (['precipitation', 'cloud_cover'] as $variable) {
+            if (!$isPreparedCache($row, $variable)) {
+                $missingServerCache = true;
+                break 2;
+            }
+        }
+    }
+    $serverPrefetch = 'not-needed';
+    if ($missingServerCache) {
+        $serverPrefetch = 'attempted';
+        try {
+            if (function_exists('set_time_limit')) @set_time_limit(300);
+            $weatherMapCache->prefetchRegionalFramesIfDue(0, $locationId);
+            $serverPrefetch = 'completed';
+        } catch (Throwable $prefetchError) {
+            $serverPrefetch = 'failed';
+            error_log(
+                'GaugeIQ weather-map on-demand server prefetch failed for location ' .
+                $locationId . '; browser fallback may be used: ' . $prefetchError->getMessage()
+            );
+        }
+    }
+
     $frames = [];
-    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    foreach ($frameRows as $row) {
         $url = (string)($row['file_url'] ?? '');
         $parts = parse_url($url);
         if (!is_array($parts) ||
@@ -74,22 +122,9 @@ try {
             continue;
         }
 
-        $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
-        $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
         $prepared = [];
         foreach (['precipitation', 'cloud_cover'] as $variable) {
-            $cacheKey = WeatherMapRegionSettings::cacheKey($url, $variable, $regionBounds);
-            $dataPath = $decodedDirectory . '/' . $cacheKey . '.f32';
-            $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
-            $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
-            $prepared[$variable] = is_file($dataPath) && is_array($meta) &&
-                ($meta['version'] ?? null) === 4 &&
-                ($meta['frame_time'] ?? '') === (string)$row['frame_time'] &&
-                ($meta['source_url_sha256'] ?? '') === hash('sha256', $url) &&
-                ($meta['variable'] ?? '') === $variable &&
-                ($meta['encoding'] ?? '') === 'float32-le' &&
-                (int)($meta['cell_count'] ?? 0) > 0 &&
-                (int)(filesize($dataPath) ?: 0) === (int)$meta['cell_count'] * 4;
+            $prepared[$variable] = $isPreparedCache($row, $variable);
         }
         $frames[] = [
             'slot' => (int)$row['slot_id'],
@@ -110,6 +145,7 @@ try {
     echo json_encode([
         'frames' => $frames,
         'refreshedAt' => $frames[0]['refreshedAt'],
+        'serverPrefetch' => $serverPrefetch,
     ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 } catch (Throwable $error) {
     error_log('GaugeIQ weather-map frames API failed: ' . $error->getMessage());
