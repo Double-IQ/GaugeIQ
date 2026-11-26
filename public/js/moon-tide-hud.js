@@ -552,7 +552,7 @@
         for(let y=0;y<=latitudes;y++){const theta=y*Math.PI/latitudes;for(let x=0;x<=longitudes;x++){const phi=x*2*Math.PI/longitudes;positions.push(Math.sin(theta)*Math.cos(phi),Math.sin(theta)*Math.sin(phi),Math.cos(theta));uvs.push(0.5+x/longitudes,1-y/latitudes);}}
         // Counter-clockwise outward-facing triangles. The old winding
         // pointed inward, so BACK-face culling discarded the visible globe.
-        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,a+1,b+1);}
+        for(let y=0;y<latitudes;y++)for(let x=0;x<longitudes;x++){const a=y*(longitudes+1)+x,b=a+longitudes+1;indices.push(a,b,a+1,b,b+1,a+1);}
         const vertexBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(positions),gl.STATIC_DRAW);
         const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(uvs),gl.STATIC_DRAW);
         const uvLocation=gl.getAttribLocation(program,'a_uv');gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
