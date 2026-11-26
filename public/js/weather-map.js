@@ -246,29 +246,32 @@ protocolOptions.fileReaderConfig = {
             savedRegionBounds[2] <= 180 && savedRegionBounds[1] >= -85 &&
             savedRegionBounds[3] <= 85 && savedRegionBounds[0] < savedRegionBounds[2] &&
             savedRegionBounds[1] < savedRegionBounds[3];
-        const weatherRegionBounds = validRegionBounds ? savedRegionBounds : defaultRegionBounds;
-        const [regionWest, regionSouth, regionEast, regionNorth] = weatherRegionBounds;
-        const weatherRegionClip = {
-            geojson: {
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [[
-                        [regionWest, regionSouth],
-                        [regionEast, regionSouth],
-                        [regionEast, regionNorth],
-                        [regionWest, regionNorth],
-                        [regionWest, regionSouth]
-                    ]]
-                }
-            },
-            bounds: weatherRegionBounds
+        let weatherRegionBounds = validRegionBounds ? [...savedRegionBounds] : [...defaultRegionBounds];
+        const weatherRegionClip = { geojson: null, bounds: weatherRegionBounds };
+        const makeWeatherRegionFeature = bounds => ({
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'Polygon',
+                coordinates: [[
+                    [bounds[0], bounds[1]],
+                    [bounds[2], bounds[1]],
+                    [bounds[2], bounds[3]],
+                    [bounds[0], bounds[3]],
+                    [bounds[0], bounds[1]]
+                ]]
+            }
+        });
+        const applyWeatherRegionBounds = bounds => {
+            weatherRegionBounds = [...bounds];
+            weatherRegionClip.geojson = makeWeatherRegionFeature(weatherRegionBounds);
+            weatherRegionClip.bounds = weatherRegionBounds;
+            protocolOptions.clippingOptions = {
+                geojson: weatherRegionClip.geojson,
+                bounds: weatherRegionClip.bounds
+            };
         };
-        protocolOptions.clippingOptions = {
-            geojson: weatherRegionClip.geojson,
-            bounds: weatherRegionClip.bounds
-        };
+        applyWeatherRegionBounds(weatherRegionBounds);
         maplibregl.addProtocol('om', (params, abortController) =>
             OMWeatherMapLayer.omProtocol(params, abortController, protocolOptions)
         );
@@ -546,6 +549,31 @@ protocolOptions.fileReaderConfig = {
                 if (!Array.isArray(schedule.frames) || schedule.frames.length !== 4) {
                     throw new Error('The server has not supplied all 4 scheduled past weather frames.');
                 }
+
+                // The server's saved Appearance coverage is authoritative. Use
+                // the same rectangle that its decoded cache and tile API use,
+                // rather than a possibly stale browser-local rectangle.
+                const serverRegionBounds = schedule.frames[0]?.regionBounds;
+                const validServerRegionBounds = Array.isArray(serverRegionBounds) &&
+                    serverRegionBounds.length === 4 && serverRegionBounds.every(value =>
+                        Number.isFinite(Number(value))
+                    ) &&
+                    Number(serverRegionBounds[0]) >= -180 && Number(serverRegionBounds[2]) <= 180 &&
+                    Number(serverRegionBounds[1]) >= -85 && Number(serverRegionBounds[3]) <= 85 &&
+                    Number(serverRegionBounds[0]) < Number(serverRegionBounds[2]) &&
+                    Number(serverRegionBounds[1]) < Number(serverRegionBounds[3]);
+                if (!validServerRegionBounds) {
+                    throw new Error('The server has not supplied valid prepared weather-map coverage bounds.');
+                }
+                if (schedule.frames.some(item => !Array.isArray(item.regionBounds) ||
+                    item.regionBounds.length !== 4 ||
+                    item.regionBounds.some((value, index) =>
+                        Math.abs(Number(value) - Number(serverRegionBounds[index])) > 0.000001
+                    )
+                )) {
+                    throw new Error('The scheduled weather frames do not share the same prepared coverage region.');
+                }
+                applyWeatherRegionBounds(serverRegionBounds.map(Number));
 
                 const scheduledFrames = schedule.frames.map(item => ({
                     id: item.type + '-' + item.slot,
