@@ -673,7 +673,7 @@ protocolOptions.fileReaderConfig = {
                             const probeResponse = await fetch(probeUrl.href, { cache: 'no-store' });
                             const contentType = probeResponse.headers.get('content-type') || '';
                             if (!probeResponse.ok || !contentType.toLowerCase().includes('image/png')) {
-                                const responseText = (await probeResponse.text()).slice(0, 220).replace(/\\s+/g, ' ').trim();
+                                const responseText = (await probeResponse.text()).slice(0, 220).replace(/\s+/g, ' ').trim();
                                 failure = 'HTTP ' + probeResponse.status + ' ' +
                                     (responseText || probeResponse.statusText || 'Invalid tile response');
                                 break;
@@ -709,7 +709,7 @@ protocolOptions.fileReaderConfig = {
                                         const retryResponse = await fetch(retryUrl.href, { cache: 'no-store' });
                                         const retryType = retryResponse.headers.get('content-type') || '';
                                         if (!retryResponse.ok || !retryType.toLowerCase().includes('image/png')) {
-                                            const responseText = (await retryResponse.text()).slice(0, 220).replace(/\\s+/g, ' ').trim();
+                                            const responseText = (await retryResponse.text()).slice(0, 220).replace(/\s+/g, ' ').trim();
                                             retryFailure = 'HTTP ' + retryResponse.status + ' ' +
                                                 (responseText || retryResponse.statusText || 'Invalid tile response');
                                             break;
