@@ -623,20 +623,52 @@ protocolOptions.fileReaderConfig = {
                 };
 
                 // Verify the actual PNG tile endpoint, not just the decoded cache files.
-                // A second schedule request forces the server-side cache reconciliation
-                // again before we decide that browser-side decoding is necessary.
+                // A second schedule request forces server-cache reconciliation before
+                // we decide that browser-side decoding is necessary.
+                const probeZoom = Math.max(0, Math.min(12, Math.floor(map.getZoom())));
+                const probeCount = 2 ** probeZoom;
+                const probeCenter = map.getCenter();
+                const probeLongitude = Math.max(-180, Math.min(180, probeCenter.lng));
+                const probeLatitude = Math.max(-85.05112878, Math.min(85.05112878, probeCenter.lat));
+                const probeX = Math.max(0, Math.min(probeCount - 1,
+                    Math.floor((probeLongitude + 180) / 360 * probeCount)));
+                const probeY = Math.max(0, Math.min(probeCount - 1,
+                    Math.floor((1 - Math.asinh(Math.tan(probeLatitude * Math.PI / 180)) / Math.PI) / 2 * probeCount)));
                 for (const frame of pastFrames) {
-                    const preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
+                    let preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
+                    if (!preparedVariables.length) {
+                        try {
+                            const repairResponse = await fetch(
+                                '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
+                                { cache: 'no-store' }
+                            );
+                            if (repairResponse.ok) {
+                                const repairedSchedule = await repairResponse.json();
+                                const repairedFrame = repairedSchedule.frames?.find(item =>
+                                    Number(item.slot) === frame.slot && String(item.time) === frame.frameTime
+                                );
+                                if (repairedFrame?.prepared) {
+                                    frame.prepared = repairedFrame.prepared;
+                                    preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
+                                }
+                            }
+                        } catch (repairError) {
+                            preparedTileFallbackReasons.set(frame.id,
+                                'Server preparation retry failed: ' + (repairError?.message || 'request error'));
+                        }
+                    }
                     if (!preparedVariables.length) {
                         frame.forceBrowser = true;
                         preparedTileFallbacks.add(frame.id);
-                        preparedTileFallbackReasons.set(frame.id, 'The server reports that decoded frame data is not prepared.');
+                        if (!preparedTileFallbackReasons.has(frame.id)) {
+                            preparedTileFallbackReasons.set(frame.id, 'Server decoded frame data is still unavailable after retry.');
+                        }
                         continue;
                     }
                     let failure = null;
                     for (const item of preparedVariables) {
                         try {
-                            const probeUrl = buildPreparedTileUrl(frame, item);
+                            const probeUrl = buildPreparedTileUrl(frame, item, probeZoom, probeX, probeY);
                             const probeResponse = await fetch(probeUrl.href, { cache: 'no-store' });
                             const contentType = probeResponse.headers.get('content-type') || '';
                             if (!probeResponse.ok || !contentType.toLowerCase().includes('image/png')) {
@@ -671,7 +703,7 @@ protocolOptions.fileReaderConfig = {
                                             retryFailure = 'The server still has no decoded ' + item.variable + ' data.';
                                             break;
                                         }
-                                        const retryUrl = buildPreparedTileUrl(frame, item);
+                                        const retryUrl = buildPreparedTileUrl(frame, item, probeZoom, probeX, probeY);
                                         const retryResponse = await fetch(retryUrl.href, { cache: 'no-store' });
                                         const retryType = retryResponse.headers.get('content-type') || '';
                                         if (!retryResponse.ok || !retryType.toLowerCase().includes('image/png')) {
@@ -1145,6 +1177,7 @@ protocolOptions.fileReaderConfig = {
                     frame.loadAttempts = 0;
                     frame.loadError = null;
                     preparedTileFallbacks.add(frame.id);
+                    preparedTileFallbackReasons.set(frame.id, message);
                     updateServerStatus('offline');
                     animationFrameSourceAdder(frame);
                     // setStatus keeps this warning visible even when normal
