@@ -336,8 +336,9 @@ final class WeatherMapCacheService
             $cacheRoot=(string)($this->config['weather_map_cache']['directory'] ?? (dirname(__DIR__).'/storage/weather-map-cache'));
             if($cacheRoot==='' || $cacheRoot[0]!=='/') throw new RuntimeException('The weather-map cache directory must be an absolute server path.');
             $decodedDirectory=rtrim($cacheRoot,'/').'/decoded';
-            $baseUrl=rtrim((string)($this->config['app']['base_url'] ?? ''),'/');
-            if(!str_starts_with($baseUrl,'https://')) throw new RuntimeException('A public HTTPS app.base_url is required for regional weather-map prefetch.');
+            // Regional prefetch now downloads Open-Meteo byte ranges directly.
+            // It must not depend on the server reaching its own public HTTPS URL.
+            $upstreamBaseUrl='https://openmeteo.s3.amazonaws.com';
             require_once __DIR__.'/WeatherMapRegionalPrefetcher.php';
             require_once __DIR__.'/WeatherMapRegionSettings.php';
             $concurrency=max(1,min(16,(int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
@@ -368,7 +369,7 @@ final class WeatherMapCacheService
                     $frames[]=['slot'=>(int)$row['slot_id'],'type'=>$type,'time'=>(string)$row['frame_time'],'url'=>$url];
                 }
                 if($frames===[]) continue;
-                $prefetcher=new WeatherMapRegionalPrefetcher($baseUrl,$concurrency,$decodedDirectory,$bounds);
+                $prefetcher=new WeatherMapRegionalPrefetcher($upstreamBaseUrl,$concurrency,$decodedDirectory,$bounds);
                 $result=$prefetcher->prefetch($frames);
                 $totalFrames=max($totalFrames,$result['frames']);
                 $totalBlocks+=$result['blocks'];

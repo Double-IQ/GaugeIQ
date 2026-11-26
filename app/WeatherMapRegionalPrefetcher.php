@@ -309,41 +309,49 @@ final class WeatherMapRegionalPrefetcher
         }
     }
 
+    /**
+     * Fetch the upstream Open-Meteo object directly. The previous implementation
+     * called GaugeIQ's own public proxy URL from PHP, which depends on hosting
+     * loopback/DNS/SSL routing and can fail even while the server has internet.
+     */
     private function proxyUrl(string $upstreamUrl, bool $metadata = false): string
     {
-        $query = ['url' => $upstreamUrl];
-        if ($metadata) $query['metadata'] = '1';
-        return rtrim($this->proxyBaseUrl, '/') . '/api/weather-map-proxy.php?' .
-            http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        $this->validateFrameUrl($upstreamUrl);
+        return $upstreamUrl;
     }
 
     private function fetchFileSize(string $upstreamUrl): int
     {
-        $curl = curl_init($this->proxyUrl($upstreamUrl, true));
-        if ($curl === false) throw new RuntimeException('Unable to initialise weather-map metadata request.');
+        $this->validateFrameUrl($upstreamUrl);
+        $curl = curl_init($upstreamUrl);
+        if ($curl === false) throw new RuntimeException('Unable to initialise ECMWF frame metadata request.');
+        $contentRange = '';
         curl_setopt_array($curl, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_USERAGENT => self::USER_AGENT,
-            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            CURLOPT_HTTPHEADER => ['Accept: application/octet-stream'],
+            CURLOPT_RANGE => '0-0',
+            CURLOPT_HEADERFUNCTION => static function ($handle, string $header) use (&$contentRange): int {
+                if (stripos($header, 'Content-Range:') === 0) {
+                    $contentRange = trim(substr($header, strlen('Content-Range:')));
+                }
+                return strlen($header);
+            },
         ]);
         $body = curl_exec($curl);
         $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         $error = curl_error($curl);
         curl_close($curl);
-        if (!is_string($body) || $status !== 200) {
-            throw new RuntimeException('Weather-map proxy metadata request failed' .
-                ($error !== '' ? ': ' . $error : ' (HTTP ' . $status . ').'));
+        if (!is_string($body) || $status !== 206 || strlen($body) !== 1 ||
+            preg_match('/^bytes\\s+0-0\\/(\\d+)$/i', $contentRange, $match) !== 1) {
+            throw new RuntimeException('Direct ECMWF frame metadata request failed' .
+                ($error !== '' ? ': ' . $error : ' (HTTP ' . $status . ', Content-Range: ' . $contentRange . ').'));
         }
-        try {
-            $metadata = json_decode($body, true, 32, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException('Weather-map proxy returned invalid metadata JSON.', 0, $exception);
-        }
-        $size = is_array($metadata) ? (int)($metadata['size'] ?? 0) : 0;
-        if ($size < 27) throw new RuntimeException('Weather-map proxy returned an invalid ECMWF file size.');
+        $size = (int)$match[1];
+        if ($size < 27) throw new RuntimeException('ECMWF returned an invalid .om file size.');
         return $size;
     }
 
