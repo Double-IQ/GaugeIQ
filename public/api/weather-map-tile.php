@@ -192,11 +192,37 @@ try {
         'west' => $serverBounds[0], 'south' => $serverBounds[1],
         'east' => $serverBounds[2], 'north' => $serverBounds[3],
     ];
+    // The decoded server cache intentionally covers a broad regional area.
+    // The browser clips that prepared raster to the user's smaller map viewport.
+    // Accept any valid requested rectangle fully contained by the prepared
+    // region; requiring exact equality incorrectly forced every local viewport
+    // to fall back to browser-side .om decoding.
+    $requestedBounds = [];
+    $hasRequestedBounds = false;
     foreach (['west', 'south', 'east', 'north'] as $boundName) {
-        $requested = filter_input(INPUT_GET, 'region_' . $boundName, FILTER_VALIDATE_FLOAT);
-        if ($requested !== false && $requested !== null &&
-            (!is_finite((float)$requested) || abs((float)$requested - $regionBounds[$boundName]) > 0.000001)) {
-            weatherTileFail(409, 'Selected coverage has changed. Reload the weather map to use the saved server region.');
+        $queryKey = 'region_' . $boundName;
+        if (!array_key_exists($queryKey, $_GET)) continue;
+        $hasRequestedBounds = true;
+        $value = $_GET[$queryKey];
+        if (!is_scalar($value) || !is_numeric((string)$value) || !is_finite((float)$value)) {
+            weatherTileFail(400, 'Invalid selected weather-map coverage.');
+        }
+        $requestedBounds[$boundName] = (float)$value;
+    }
+    if ($hasRequestedBounds) {
+        if (count($requestedBounds) !== 4) {
+            weatherTileFail(400, 'Selected weather-map coverage is incomplete.');
+        }
+        try {
+            $requestedBounds = WeatherMapRegionSettings::validate($requestedBounds);
+        } catch (Throwable) {
+            weatherTileFail(400, 'Selected weather-map coverage is invalid.');
+        }
+        if ($requestedBounds[0] < $serverBounds[0] - 0.000001 ||
+            $requestedBounds[1] < $serverBounds[1] - 0.000001 ||
+            $requestedBounds[2] > $serverBounds[2] + 0.000001 ||
+            $requestedBounds[3] > $serverBounds[3] + 0.000001) {
+            weatherTileFail(409, 'Selected coverage extends beyond the server-prepared weather-map region.');
         }
     }
 
