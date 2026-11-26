@@ -135,13 +135,17 @@ final class MoonTideSnapshotService
         $prefix=$locationId===2?'second_location_':'location_';
         $fallbackLat=(string)($this->config['pressure']['latitude']??'');
         $fallbackLon=(string)($this->config['pressure']['longitude']??'');
-        $lat=(float)$this->setting($prefix.'latitude',$locationId===1?$fallbackLat:'');
-        $lon=(float)$this->setting($prefix.'longitude',$locationId===1?$fallbackLon:'');
+        $lat=(float)($locationId===1
+            ? $this->setting('active_location_latitude',$this->setting('location_latitude',$fallbackLat))
+            : $this->setting('second_location_latitude',''));
+        $lon=(float)($locationId===1
+            ? $this->setting('active_location_longitude',$this->setting('location_longitude',$fallbackLon))
+            : $this->setting('second_location_longitude',''));
         if (!is_finite($lat)||!is_finite($lon)||abs($lat)>90||abs($lon)>180||($lat===0.0&&$lon===0.0)) throw new RuntimeException('Location '.$locationId.' has no valid coordinates.');
-        $zoneName=$this->setting($locationId===2?'location_timezone_location_2':'location_timezone',(string)($this->config['app']['timezone']??'UTC'));
+        $zoneName=$this->setting($locationId===2?'location_timezone_location_2':'location_timezone',$this->setting('active_location_timezone',(string)($this->config['app']['timezone']??'UTC')));
         try{$zone=new DateTimeZone($zoneName);}catch(Throwable){$zone=new DateTimeZone('UTC');}
         $now=new DateTimeImmutable('now',new DateTimeZone('UTC'));
-        $payload=['locationId'=>$locationId,'locationName'=>$this->setting($prefix.'name',$locationId===1?(string)($this->config['pressure']['location_name']??'Location 1'):'Location 2'),'generatedAt'=>$now->format(DATE_ATOM),'timezone'=>$zone->getName(),'latitude'=>$lat,'longitude'=>$lon,'astronomy'=>$this->astronomy($now,$lat,$lon,$zone)];
+        $payload=['locationId'=>$locationId,'locationName'=>$this->setting($locationId===1?'active_location_name':'second_location_name',$this->setting($locationId===1?'location_name':'second_location_name',$locationId===1?(string)($this->config['pressure']['location_name']??'Location 1'):'Location 2')),'generatedAt'=>$now->format(DATE_ATOM),'timezone'=>$zone->getName(),'latitude'=>$lat,'longitude'=>$lon,'astronomy'=>$this->astronomy($now,$lat,$lon,$zone)];
         $payload['tides']=$this->tides($lat,$lon,$now);
         $this->save('moon_tide_snapshot_location_'.$locationId,json_encode($payload,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR));
         $this->save('moon_tide_snapshot_location_'.$locationId.'_updated_at',$now->format(DATE_ATOM));
