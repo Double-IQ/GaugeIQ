@@ -62,6 +62,7 @@ final class MoonTideSnapshotService
         $moonRa = self::norm(atan2($ye,$xe)/$rad);
         $moonDec = atan2($ze,hypot($xe,$ye))/$rad;
         $moonLon = self::norm(atan2($yh,$xh)/$rad);
+        $moonLat = asin(max(-1.0,min(1.0,$zh/$r))) / $rad;
         $gmst = self::norm(280.46061837 + 360.98564736629*($jd-2451545.0) + 0.000387933*(($jd-2451545.0)/36525)**2 - ((($jd-2451545.0)/36525)**3)/38710000);
 
         $synodic = 29.530588853;
@@ -127,6 +128,23 @@ final class MoonTideSnapshotService
         $timelineParams=['start'=>$start->format('Y-m-d\TH:i:s\Z'),'end'=>$end->format('Y-m-d\TH:i:s\Z'),'units'=>'meters'];
         $timeline=$this->tideRequest($base.'stations/'.rawurlencode($m[1]).'/'.rawurlencode($m[2]).'/timeline?'.http_build_query($timelineParams));
         return ['extremes'=>$ext,'timeline'=>$timeline,'error'=>null];
+    }
+
+    public function refreshIfDue(int $locationId, int $maxAgeSeconds = 3600): array
+    {
+        if (!in_array($locationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Invalid location ID.');
+        }
+        $key = 'moon_tide_snapshot_location_' . $locationId;
+        $existing = $this->setting($key);
+        if ($existing !== '') {
+            $snapshot = json_decode($existing, true);
+            $generatedAt = is_array($snapshot) ? strtotime((string)($snapshot['generatedAt'] ?? '')) : false;
+            if ($generatedAt !== false && (time() - $generatedAt) < $maxAgeSeconds) {
+                return $snapshot;
+            }
+        }
+        return $this->refresh($locationId);
     }
 
     public function refresh(int $locationId): array
