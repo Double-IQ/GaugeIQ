@@ -317,8 +317,12 @@ final class WeatherMapCacheService
      *
      * @return array{skipped:bool,frames:int,blocks?:int,output?:string}
      */
-    public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
+    public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600, ?int $onlyLocationId = null): array
     {
+        if ($onlyLocationId !== null && !in_array($onlyLocationId, [1, 2], true)) {
+            throw new InvalidArgumentException('Invalid GaugeIQ location for regional weather-map prefetch.');
+        }
+        $locationIds = $onlyLocationId === null ? [1, 2] : [$onlyLocationId];
         require_once __DIR__ . '/WeatherMapRegionSettings.php';
         $pendingQuery=$this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
         $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
@@ -339,7 +343,7 @@ final class WeatherMapCacheService
             $concurrency=max(1,min(16,(int)($this->config['weather_map_cache']['prefetch_concurrency'] ?? 6)));
             $pendingSet=array_fill_keys(array_filter($pendingUrls,'is_string'),true);
             $totalFrames=0; $totalBlocks=0; $outputs=[]; $completedUrls=[];
-            foreach([1,2] as $locationId) {
+            foreach($locationIds as $locationId) {
                 $bounds=WeatherMapRegionSettings::get($this->pdo,$locationId);
                 $frames=[];
                 foreach($allFrames as $row) {
