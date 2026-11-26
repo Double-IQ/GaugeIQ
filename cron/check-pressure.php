@@ -40,14 +40,14 @@ foreach ($moonTideLocations as $moonTideLocationId) {
         $moonTideService = new MoonTideSnapshotService($pdo, $config);
         $moonTideSnapshot = $moonTideService->refresh($moonTideLocationId);
         printf(
-            "Moon & Tide snapshot refreshed: Location %d at %s (tide station %s).\\n",
+            "Moon & Tide snapshot refreshed: Location %d at %s (tide station %s).\n",
             $moonTideLocationId,
             (string)$moonTideSnapshot['generatedAt'],
             (string)($moonTideSnapshot['tides']['extremes']['station']['name'] ?? 'unavailable')
         );
     } catch (Throwable $moonTideError) {
         error_log('GaugeIQ Moon & Tide snapshot refresh failed for Location ' . $moonTideLocationId . ': ' . $moonTideError->getMessage());
-        fwrite(STDERR, "Moon & Tide snapshot refresh failed for Location {$moonTideLocationId} (previous snapshot retained): " . $moonTideError->getMessage() . "\\n");
+        fwrite(STDERR, "Moon & Tide snapshot refresh failed for Location {$moonTideLocationId} (previous snapshot retained): " . $moonTideError->getMessage() . "\n");
     }
 }
 // Refresh the six rolling ECMWF map-frame references and prefetch their
@@ -549,7 +549,7 @@ foreach ($retentionLocations as $retentionLocation) {
         );
     } catch (Throwable $retentionError) {
         error_log('GaugeIQ historical retention failed for Location ' . (int)$retentionLocation['id'] . ': ' . $retentionError->getMessage());
-        fwrite(STDERR, "Historical retention failed for Location " . (int)$retentionLocation['id'] . ": " . $retentionError->getMessage() . "\\n");
+        fwrite(STDERR, "Historical retention failed for Location " . (int)$retentionLocation['id'] . ": " . $retentionError->getMessage() . "\n");
         $failedLocations++;
     }
 }
