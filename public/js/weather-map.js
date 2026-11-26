@@ -533,7 +533,7 @@ protocolOptions.fileReaderConfig = {
             setStatus('Preparing four past weather frames…');
 
             try {
-                const scheduleResponse = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
+                const scheduleResponse = await fetch('/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId), { cache: 'no-store' });
                 if (!scheduleResponse.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
                 const schedule = await scheduleResponse.json();
                 if (token !== animationToken) return;
@@ -606,6 +606,7 @@ protocolOptions.fileReaderConfig = {
                         if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
                             const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
                             tileUrl.searchParams.set('slot', String(frame.slot));
+                            tileUrl.searchParams.set('location_id', activeLocationId);
                             tileUrl.searchParams.set('frame_time', frame.frameTime);
                             tileUrl.searchParams.set('variable', item.variable);
                             tileUrl.searchParams.set('interpolation', appearance.interpolation);
@@ -785,7 +786,7 @@ protocolOptions.fileReaderConfig = {
         }
 
         async function resolveCurrentOmUrls(variables) {
-            const response = await fetch('/api/weather-map-frames.php', { cache: 'no-store' });
+            const response = await fetch('/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId), { cache: 'no-store' });
             if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];

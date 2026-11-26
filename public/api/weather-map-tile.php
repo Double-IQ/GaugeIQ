@@ -144,7 +144,11 @@ try {
     $config = require $configPath;
     require_once __DIR__ . '/../../app/Database.php';
     require_once __DIR__ . '/../../app/WeatherMapRasterTileRenderer.php';
+    require_once __DIR__ . '/../../app/WeatherMapRegionSettings.php';
     $pdo = (new Database($config))->pdo();
+    $locationId = filter_input(INPUT_GET, 'location_id', FILTER_VALIDATE_INT);
+    if ($locationId === false || $locationId === null || !in_array($locationId, [1, 2], true)) $locationId = 1;
+    $serverBounds = WeatherMapRegionSettings::get($pdo, $locationId);
     $stmt = $pdo->prepare("SELECT file_url, frame_time FROM gaugeiq_weather_map_frames WHERE frame_type = 'past' AND slot_id = ? LIMIT 1");
     $stmt->execute([$slot]);
     $frame = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -162,14 +166,14 @@ try {
     $cacheRoot = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
     if ($cacheRoot === '' || $cacheRoot[0] !== '/') weatherTileFail(500, 'Invalid weather-map cache directory.');
     $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
-    $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
+    $key = WeatherMapRegionSettings::cacheKey($url, $variable, $serverBounds);
     $dataPath = $decodedDirectory . '/' . $key . '.f32';
     $metaPath = $decodedDirectory . '/' . $key . '.json';
     if (!is_file($dataPath) || !is_file($metaPath)) {
         weatherTileFail(404, 'Prepared weather-map frame is not ready.');
     }
     $metadata = json_decode((string)file_get_contents($metaPath), true);
-    if (!is_array($metadata) || ($metadata['version'] ?? null) !== 3 ||
+    if (!is_array($metadata) || ($metadata['version'] ?? null) !== 4 ||
         ($metadata['variable'] ?? '') !== $variable ||
         ($metadata['frame_time'] ?? '') !== (string)$frame['frame_time'] ||
         ($metadata['encoding'] ?? '') !== 'float32-le') {
@@ -184,18 +188,16 @@ try {
         weatherTileFail(503, 'Prepared weather-map frame data is incomplete.');
     }
 
-    $regionBounds = [];
+    $regionBounds = [
+        'west' => $serverBounds[0], 'south' => $serverBounds[1],
+        'east' => $serverBounds[2], 'north' => $serverBounds[3],
+    ];
     foreach (['west', 'south', 'east', 'north'] as $boundName) {
-        $boundValue = filter_input(INPUT_GET, 'region_' . $boundName, FILTER_VALIDATE_FLOAT);
-        if ($boundValue === false || $boundValue === null || !is_finite((float)$boundValue)) {
-            weatherTileFail(400, 'Invalid selected weather coverage bounds.');
+        $requested = filter_input(INPUT_GET, 'region_' . $boundName, FILTER_VALIDATE_FLOAT);
+        if ($requested !== false && $requested !== null &&
+            (!is_finite((float)$requested) || abs((float)$requested - $regionBounds[$boundName]) > 0.000001)) {
+            weatherTileFail(409, 'Selected coverage has changed. Reload the weather map to use the saved server region.');
         }
-        $regionBounds[$boundName] = (float)$boundValue;
-    }
-    if ($regionBounds['west'] < -180 || $regionBounds['east'] > 180 ||
-        $regionBounds['south'] < -85 || $regionBounds['north'] > 85 ||
-        $regionBounds['west'] >= $regionBounds['east'] || $regionBounds['south'] >= $regionBounds['north']) {
-        weatherTileFail(400, 'Selected weather coverage bounds are outside the supported range.');
     }
 
     $palette = weatherTilePalette($variable, $_GET);

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/WeatherMapOmReader.php';
+require_once __DIR__ . '/WeatherMapRegionSettings.php';
 
 /** Prefetches only newly scheduled frames and their regional .om cache blocks. */
 final class WeatherMapRegionalPrefetcher
@@ -12,9 +13,11 @@ final class WeatherMapRegionalPrefetcher
     public function __construct(
         private readonly string $proxyBaseUrl,
         private readonly int $concurrency = 6,
-        private readonly string $decodedCacheDirectory = ''
+        private readonly string $decodedCacheDirectory = '',
+        private readonly array $regionBounds = [-25.0, -45.0, 60.0, 5.0]
     )
     {
+        WeatherMapRegionSettings::validate($this->regionBounds);
         if (!str_starts_with($this->proxyBaseUrl, 'https://')) {
             throw new InvalidArgumentException('The GaugeIQ weather-map proxy must use HTTPS.');
         }
@@ -179,10 +182,7 @@ final class WeatherMapRegionalPrefetcher
             $fileSize
         );
 
-        $west = -25.0;
-        $south = -45.0;
-        $east = 60.0;
-        $north = 5.0;
+        [$west, $south, $east, $north] = $this->regionBounds;
         $step = 0.25;
         $width = 1440;
         $height = 721;
@@ -239,11 +239,11 @@ final class WeatherMapRegionalPrefetcher
                 }
                 $binary .= pack('g', $value);
             }
-            $key = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
+            $key = WeatherMapRegionSettings::cacheKey($url, $variable, $this->regionBounds);
             $dataPath = rtrim($directory, '/') . '/' . $key . '.f32';
             $metaPath = rtrim($directory, '/') . '/' . $key . '.json';
             $metadata = [
-                'version' => 3,
+                'version' => 4,
                 'source_url_sha256' => hash('sha256', $url),
                 'frame_time' => (string)($frame['time'] ?? ''),
                 'variable' => $variable,

@@ -218,7 +218,7 @@ try {
         <button class="reset" id="reset" type="button">Reset defaults</button>
         <span id="status" role="status" aria-live="polite"></span>
     </div>
-    <p class="note">Settings are saved in this browser on this device. Return to the map after saving; reload the map to apply your changes.</p>
+    <p class="note">Weather coverage is saved to GaugeIQ for the selected location. Other appearance preferences remain saved in this browser. Reload the map after saving to apply the new server-decoded coverage.</p>
 </main>
 <script type="module">
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.mjs';
@@ -657,8 +657,21 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
         }
     });
 
-    document.getElementById('save').addEventListener('click', () => {
+    document.getElementById('save').addEventListener('click', async () => {
+        const saveButton = document.getElementById('save');
+        saveButton.disabled = true;
+        document.getElementById('status').textContent = 'Saving weather coverage to GaugeIQ…';
         try {
+            const response = await fetch('/api/weather-map-region.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ location_id: LOCATION_ID, bounds: [...regionBounds] })
+            });
+            const result = await response.json();
+            if (!response.ok || result.saved !== true) {
+                throw new Error(result.error || 'The server could not save the selected coverage.');
+            }
             settings.weatherRegionBoundsByLocation = {
                 ...(settings.weatherRegionBoundsByLocation && typeof settings.weatherRegionBoundsByLocation === 'object'
                     ? settings.weatherRegionBoundsByLocation : {}),
@@ -666,9 +679,11 @@ import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-
             };
             if (LOCATION_ID === 1) settings.weatherRegionBounds = [...regionBounds];
             localStorage.setItem(KEY, JSON.stringify(settings));
-            document.getElementById('status').textContent = 'Appearance saved.';
+            document.getElementById('status').textContent = 'Coverage and appearance saved. Reload the weather map to apply the new server region.';
         } catch (error) {
-            document.getElementById('status').textContent = 'Could not save settings in this browser.';
+            document.getElementById('status').textContent = error?.message || 'Could not save weather coverage.';
+        } finally {
+            saveButton.disabled = false;
         }
     });
 
