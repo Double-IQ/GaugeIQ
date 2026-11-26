@@ -122,8 +122,8 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         <p class="admin-user">Signed in as <?= h(AdminAuth::username()) ?></p>
     </div>
     <nav class="admin-console-nav" aria-label="Admin navigation">
-        <a class="admin-console-link" href="./">Back to GaugeIQ</a>
-        <a class="admin-console-link admin-signout" href="logout.php">Sign out</a>
+        <a class="admin-console-button" href="./">Back to GaugeIQ</a>
+        <a class="admin-console-button" href="logout.php">Sign out</a>
     </nav>
 </header>
 
