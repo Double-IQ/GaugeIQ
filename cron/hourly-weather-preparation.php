@@ -47,6 +47,7 @@ $log = static function (string $message): void {
     echo '[' . gmdate('c') . '] ' . $message . PHP_EOL;
 };
 $failures = [];
+$exitCode = 0;
 
 try {
     $pdo = (new Database($config))->pdo();
@@ -90,13 +91,16 @@ try {
 
     if ($failures !== []) {
         $log('Completed with ' . count($failures) . ' task failure(s).');
-        exit(1);
+        $exitCode = 1;
+    } else {
+        $log('Hourly preparation completed successfully.');
     }
-    $log('Hourly preparation completed successfully.');
 } catch (Throwable $error) {
     $log('FATAL hourly preparation: ' . $error->getMessage());
-    exit(1);
+    $exitCode = 1;
 } finally {
     flock($lockHandle, LOCK_UN);
     fclose($lockHandle);
 }
+
+exit($exitCode);
