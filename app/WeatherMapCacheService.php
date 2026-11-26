@@ -319,6 +319,7 @@ final class WeatherMapCacheService
      */
     public function prefetchRegionalFramesIfDue(int $intervalSeconds = 3600): array
     {
+        require_once __DIR__ . '/WeatherMapRegionSettings.php';
         $pendingQuery=$this->pdo->prepare("SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1");
         $pendingQuery->execute(['weather_map_prefetch_pending_urls']);
         $pendingValue=$pendingQuery->fetchColumn();
