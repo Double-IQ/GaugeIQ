@@ -1,4 +1,4 @@
-(() => {
+(async () => {
     'use strict';
     const root = document.getElementById('moonTideHud');
     if (!root) return;
@@ -10,9 +10,31 @@
     // Temporary Section 05 diagnostic logging has been removed.
     const tideLog = () => {};
 
+    let serverSnapshot = null;
+    try {
+        const snapshotResponse = await fetch('api/moon-tide-snapshot.php?location=' + encodeURIComponent(root.dataset.locationId || '1'), {
+            headers: { Accept: 'application/json' }, cache: 'no-store'
+        });
+        if (!snapshotResponse.ok) throw new Error('Hourly Moon & Tide snapshot unavailable (HTTP ' + snapshotResponse.status + ').');
+        serverSnapshot = await snapshotResponse.json();
+        if (!serverSnapshot.generatedAt || !serverSnapshot.astronomy || !serverSnapshot.tides) {
+            throw new Error('The server returned an incomplete Moon & Tide snapshot.');
+        }
+    } catch (snapshotError) {
+        const live = root.querySelector('.mth-live');
+        if (live) live.textContent = 'SNAPSHOT UNAVAILABLE';
+        const status = $('mthTideStatus');
+        const message = $('mthTideMessage');
+        if (status) status.textContent = 'HOURLY SNAPSHOT UNAVAILABLE';
+        if (message) message.textContent = 'GaugeIQ could not retrieve the latest server-generated Moon & Tide data. ' + snapshotError.message;
+        const graphMessage = $('mthGraphMessage');
+        if (graphMessage) { graphMessage.hidden = false; graphMessage.textContent = 'Waiting for the next successful hourly server refresh.'; }
+        return;
+    }
+
     const synodic = 29.530588853;
     const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
-    const now = new Date();
+    const now = new Date(serverSnapshot.generatedAt);
     const cycle = ((now.getTime() - knownNewMoon) / 86400000 % synodic + synodic) % synodic;
     const phase = cycle / synodic;
     const illumination = (1 - Math.cos(2 * Math.PI * phase)) / 2;
@@ -297,6 +319,9 @@
     const rad = Math.PI / 180;
     const norm360 = value => (value % 360 + 360) % 360;
     const orbitalElements = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) {
+            return {...serverSnapshot.astronomy.moon, eclipticLatitude: 0};
+        }
         const d = (date.getTime() - Date.UTC(2000,0,0,0,0,0)) / 86400000;
         const N = norm360(125.1228 - 0.0529538083 * d);
         const inclination = 5.1454;
@@ -323,6 +348,7 @@
         return {ra,dec,distanceKm:r*6378.14,eclipticLongitude:eclLon,eclipticLatitude:eclLat};
     };
     const solarCoordinates = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) return serverSnapshot.astronomy.sun;
         // Apparent geocentric Sun coordinates (Meeus/NOAA low-order series).
         // The previous mean-longitude-only approximation omitted the equation
         // of centre and could place the terminator noticeably out of sync.
@@ -355,6 +381,7 @@
         };
     };
     const gmstDegrees = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) return serverSnapshot.astronomy.gmst;
         const jd = date.getTime()/86400000 + 2440587.5;
         const T = (jd - 2451545.0)/36525;
         return norm360(280.46061837 + 360.98564736629*(jd-2451545) + 0.000387933*T*T - T*T*T/38710000);
@@ -741,7 +768,7 @@
         $('mthOrbitPosition').textContent = norm360(moonPosition.eclipticLongitude).toFixed(1) + '° ECL.';
         const hourOffset = (date.getTime()-now.getTime())/3600000;
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
-        $('mthOrbitState').textContent = 'CALCULATED POSITION';
+        $('mthOrbitState').textContent = 'HOURLY SERVER SNAPSHOT';
         if (globe) {
             // Earth is fixed in the selected observer's local frame.
             globe.style.setProperty('--mth-earth-turn','0deg');
@@ -755,24 +782,7 @@
             updateEarthMoonTracker(previewDate);
         });
     }
-    updateEarthMoonTracker(new Date());
-    const refreshLiveTracker = () => {
-        if (document.visibilityState === 'hidden') return;
-        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
-        // iOS may suspend the minute timer while the PWA is backgrounded.
-        // Always recalculate from the current epoch time when it becomes active.
-        updateEarthMoonTracker(new Date());
-    };
-    window.addEventListener('pageshow', refreshLiveTracker);
-    window.addEventListener('focus', refreshLiveTracker);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') refreshLiveTracker();
-    });
-    const liveTrackerTimer = window.setInterval(() => {
-        if (document.visibilityState === 'hidden') return;
-        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
-        updateEarthMoonTracker(new Date());
-    },60000);
+    updateEarthMoonTracker(now);
 
     function tideUrl(mode, start, end, stationId = null) {
         const params = new URLSearchParams({
@@ -783,61 +793,13 @@
         return 'api/tides.php?' + params.toString();
     }
     async function fetchTidePayload(mode, start, end, stationId = null, timeoutMs = 30000) {
-        // Scope cached data to the exact prediction window and station.
-        const cacheKey = 'gaugeiq-mth-tides-v4:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3) + ':' + start.toISOString() + ':' + end.toISOString() + ':' + (stationId || 'nearest');
-        try {
-            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-            if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) { tideLog(mode.toUpperCase() + ' CACHE HIT', 'age=' + Math.round((Date.now()-cached.savedAt)/1000) + 's'); return cached.payload; }
-        } catch { /* Ignore unavailable or invalid session cache. */ }
-        const controller = new AbortController();
-        let timedOut = false;
-        let timeoutId;
-        // Race the whole request (including response parsing) against a hard
-        // deadline. Some mobile browsers can leave an aborted fetch pending;
-        // the independent rejection guarantees the HUD always leaves loading.
-        tideLog(mode.toUpperCase() + ' REQUEST START', tideUrl(mode,start,end,stationId));
-        const requestStartedAt = Date.now();
-        const requestPromise = (async () => {
-            const response = await fetch(tideUrl(mode, start, end, stationId), {
-                headers: { Accept: 'application/json' },
-                cache: 'no-store',
-                signal: controller.signal
-            });
-            tideLog(mode.toUpperCase() + ' HTTP RESPONSE', 'status=' + response.status + '; elapsed=' + (Date.now()-requestStartedAt) + 'ms');
-            let payload;
-            try {
-                payload = await response.json();
-            } catch {
-                throw new Error('Tide ' + mode + ' request returned an invalid JSON response (HTTP ' + response.status + ').');
-            }
-            if (!response.ok) {
-                const details = Array.isArray(payload?.errors)
-                    ? payload.errors.map(item => [item?.path, item?.message].filter(Boolean).join(': ')).filter(Boolean).join('; ')
-                    : '';
-                const detail = [payload?.message, details].filter(Boolean).join(' — ');
-                throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
-            }
-            tideLog(mode.toUpperCase() + ' JSON PARSED', 'elapsed=' + (Date.now()-requestStartedAt) + 'ms; keys=' + Object.keys(payload || {}).join(','));
-            return payload;
-        })();
-        const deadlinePromise = new Promise((resolve, reject) => {
-            timeoutId = window.setTimeout(() => {
-                timedOut = true;
-                controller.abort();
-                reject(new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.'));
-            }, timeoutMs);
-        });
-        try {
-            const payload = await Promise.race([requestPromise, deadlinePromise]);
-            try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
-            return payload;
-        } catch (error) {
-            tideLog(mode.toUpperCase() + ' REQUEST FAILED', (Date.now()-requestStartedAt) + 'ms; ' + (error?.stack || error?.message || String(error)));
-            if (timedOut) throw new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.');
-            throw error;
-        } finally {
-            window.clearTimeout(timeoutId);
+        const payload = mode === 'extremes'
+            ? serverSnapshot.tides.extremes
+            : serverSnapshot.tides.timeline;
+        if (!payload || typeof payload !== 'object') {
+            throw new Error(serverSnapshot.tides.error || 'The hourly cron did not produce a usable tide ' + mode + ' prediction.');
         }
+        return payload;
     }
     function tideLocalTime(timestamp, includeDay = true) {
         return new Intl.DateTimeFormat(undefined,{
@@ -1083,5 +1045,5 @@
     });
 
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
-    root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
+    root.querySelector('.mth-live').setAttribute('aria-label','Server snapshot generated ' + nowText.format(now));
 })();
