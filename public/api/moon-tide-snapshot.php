@@ -23,7 +23,16 @@ if ($locationId === false || !in_array((int)$locationId, [1, 2], true)) {
 try {
     $config = require __DIR__ . '/../../config/local.php';
     require_once __DIR__ . '/../../app/Database.php';
+    require_once __DIR__ . '/../../app/MoonTideSnapshotService.php';
     $db = new Database($config);
+    $service = new MoonTideSnapshotService($db->pdo(), $config);
+    // Reuse a fresh hourly snapshot. If it is older than one hour, refresh
+    // on the server; the browser never calls astronomy or tide providers.
+    try {
+        $service->refreshIfDue((int)$locationId, 3600);
+    } catch (Throwable $refreshError) {
+        error_log('GaugeIQ stale Moon & Tide snapshot refresh failed: ' . $refreshError->getMessage());
+    }
     $stmt = $db->pdo()->prepare('SELECT value FROM gaugeiq_settings WHERE `key` = ? LIMIT 1');
     $stmt->execute(['moon_tide_snapshot_location_' . (int)$locationId]);
     $raw = $stmt->fetchColumn();
