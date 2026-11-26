@@ -119,24 +119,28 @@ The required PHP extensions are:
 
 Fix any `MISSING` result before continuing.
 
-## 8. Configure the cron job
+## 8. Configure the existing cron job
 
-GaugeIQ checks pressure on the server, so the cron job must run even when the iPhone is asleep.
-
-Use cPanel **Cron Jobs** and run the checker every 15 minutes:
+GaugeIQ uses one monitoring cron job. Keep the existing job running every 15 minutes:
 
 ```
 php /home/ACCOUNT/GaugeIQ/cron/check-pressure.php
 ```
 
-Use the PHP CLI binary provided by your host if cPanel requires an absolute executable path. You can check it from Terminal with:
+Use the PHP CLI binary supplied by your host if cPanel requires an absolute executable path. You can check it from Terminal with:
 
 ```
 which php
 ```
 
-Do not run the cron URL through the browser. Run the PHP file from the server. The same cron also refreshes GaugeIQ's rolling six-past/six-future ECMWF map-frame schedule once an hour; no additional cron job is required.
+The existing `check-pressure.php` job also handles the server-side preparation tasks, with hourly freshness checks so they are not repeated unnecessarily:
 
+- Refreshes the ECMWF map-frame schedule when it is stale.
+- Prefetches regional weather-map data when the hourly cache refresh is due.
+- Refreshes Moon & Tide snapshots for enabled locations when older than one hour.
+- Refreshes the ECMWF rainfall outlook when due.
+
+**Do not create a separate hourly weather-preparation cron.** These tasks are already integrated into the existing monitoring cron.
 ## 9. Connect the iPhone
 
 1. Open GaugeIQ in Safari over HTTPS.
