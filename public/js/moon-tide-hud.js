@@ -323,15 +323,36 @@
         return {ra,dec,distanceKm:r*6378.14,eclipticLongitude:eclLon,eclipticLatitude:eclLat};
     };
     const solarCoordinates = date => {
-        const d = (date.getTime() - Date.UTC(2000,0,0,0,0,0)) / 86400000;
-        const w = 282.9404 + 4.70935e-5*d;
-        const M = norm360(356.0470 + 0.9856002585*d);
-        const L = norm360(w + M);
-        const obliq = 23.4393 - 3.563e-7*d;
-        const x = Math.cos(L*rad);
-        const y = Math.cos(obliq*rad)*Math.sin(L*rad);
-        const z = Math.sin(obliq*rad)*Math.sin(L*rad);
-        return {ra:norm360(Math.atan2(y,x)/rad),dec:Math.atan2(z,Math.sqrt(x*x+y*y))/rad,longitude:L};
+        // Apparent geocentric Sun coordinates (Meeus/NOAA low-order series).
+        // The previous mean-longitude-only approximation omitted the equation
+        // of centre and could place the terminator noticeably out of sync.
+        const jd = date.getTime() / 86400000 + 2440587.5;
+        const T = (jd - 2451545.0) / 36525;
+        const T2 = T * T;
+        const T3 = T2 * T;
+        const meanLongitude = norm360(280.46646 + T * (36000.76983 + 0.0003032 * T));
+        const meanAnomaly = norm360(357.52911 + T * (35999.05029 - 0.0001537 * T));
+        const anomaly = meanAnomaly * rad;
+        const equationOfCentre =
+            (1.914602 - T * (0.004817 + 0.000014 * T)) * Math.sin(anomaly) +
+            (0.019993 - 0.000101 * T) * Math.sin(2 * anomaly) +
+            0.000289 * Math.sin(3 * anomaly);
+        const omega = (125.04 - 1934.136 * T) * rad;
+        const apparentLongitude = meanLongitude + equationOfCentre -
+            0.00569 - 0.00478 * Math.sin(omega);
+        const meanObliquity = 23.439291 -
+            0.0130042 * T - 0.000000164 * T2 + 0.000000504 * T3;
+        const trueObliquity = meanObliquity + 0.00256 * Math.cos(omega);
+        const lambda = apparentLongitude * rad;
+        const epsilon = trueObliquity * rad;
+        const x = Math.cos(lambda);
+        const y = Math.cos(epsilon) * Math.sin(lambda);
+        const z = Math.sin(epsilon) * Math.sin(lambda);
+        return {
+            ra: norm360(Math.atan2(y, x) / rad),
+            dec: Math.atan2(z, Math.hypot(x, y)) / rad,
+            longitude: norm360(apparentLongitude)
+        };
     };
     const gmstDegrees = date => {
         const jd = date.getTime()/86400000 + 2440587.5;
@@ -734,8 +755,21 @@
             updateEarthMoonTracker(previewDate);
         });
     }
-    updateEarthMoonTracker(now);
+    updateEarthMoonTracker(new Date());
+    const refreshLiveTracker = () => {
+        if (document.visibilityState === 'hidden') return;
+        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
+        // iOS may suspend the minute timer while the PWA is backgrounded.
+        // Always recalculate from the current epoch time when it becomes active.
+        updateEarthMoonTracker(new Date());
+    };
+    window.addEventListener('pageshow', refreshLiveTracker);
+    window.addEventListener('focus', refreshLiveTracker);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') refreshLiveTracker();
+    });
     const liveTrackerTimer = window.setInterval(() => {
+        if (document.visibilityState === 'hidden') return;
         if (timeScrubber && Number(timeScrubber.value) !== 0) return;
         updateEarthMoonTracker(new Date());
     },60000);
