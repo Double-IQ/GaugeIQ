@@ -859,6 +859,9 @@ if ($current && !empty($current['observed_at'])) {
                                     <linearGradient id="dewPointZoneArea" x1="0" y1="22" x2="0" y2="4" gradientUnits="userSpaceOnUse"><?= $dewAreaStops ?></linearGradient>
                                 </defs>
                             <?php endif; ?>
+                            <line class="climate-sparkline-gridline" x1="0" y1="6" x2="100" y2="6"></line>
+                            <line class="climate-sparkline-gridline" x1="0" y1="12" x2="100" y2="12"></line>
+                            <line class="climate-sparkline-gridline" x1="0" y1="18" x2="100" y2="18"></line>
                             <polygon class="climate-sparkline-area" points="<?= htmlspecialchars($bar['sparklineArea'], ENT_QUOTES) ?>"<?= ($bar['historyKey'] ?? '') === 'dew_point_c' ? ' style="fill:url(#dewPointZoneArea)"' : '' ?>></polygon>
                             <line class="climate-sparkline-baseline" x1="0" y1="23.5" x2="100" y2="23.5"></line>
                             <?php if (is_array($bar['sparklineEndpoint'])): ?>
