@@ -184,6 +184,20 @@ try {
         weatherTileFail(503, 'Prepared weather-map frame data is incomplete.');
     }
 
+    $regionBounds = [];
+    foreach (['west', 'south', 'east', 'north'] as $boundName) {
+        $boundValue = filter_input(INPUT_GET, 'region_' . $boundName, FILTER_VALIDATE_FLOAT);
+        if ($boundValue === false || $boundValue === null || !is_finite((float)$boundValue)) {
+            weatherTileFail(400, 'Invalid selected weather coverage bounds.');
+        }
+        $regionBounds[$boundName] = (float)$boundValue;
+    }
+    if ($regionBounds['west'] < -180 || $regionBounds['east'] > 180 ||
+        $regionBounds['south'] < -85 || $regionBounds['north'] > 85 ||
+        $regionBounds['west'] >= $regionBounds['east'] || $regionBounds['south'] >= $regionBounds['north']) {
+        weatherTileFail(400, 'Selected weather coverage bounds are outside the supported range.');
+    }
+
     $palette = weatherTilePalette($variable, $_GET);
     $interpolation = (string)($_GET['interpolation'] ?? 'cubic');
     if (!in_array($interpolation, ['nearest', 'linear', 'cubic', 'monotone'], true)) {
@@ -195,7 +209,7 @@ try {
     }
     $paletteSignature = json_encode($palette, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     $tileKey = hash('sha256', implode('|', [
-        'prepared-raster-v2', $key, (string)$z, (string)$x, (string)$y, $interpolation, (string)$deltaTimeHours, $paletteSignature
+        'prepared-raster-v3-region', $key, (string)$z, (string)$x, (string)$y, $interpolation, (string)$deltaTimeHours, $paletteSignature, json_encode($regionBounds, JSON_THROW_ON_ERROR)
     ]));
     $tilePath = $tileCacheDirectory . '/' . $tileKey . '.png';
     $etag = '"' . $tileKey . '"';
@@ -237,7 +251,9 @@ try {
                     $longitude = ($globalX / $world) * 360.0 - 180.0;
                     $mercator = M_PI * (1.0 - 2.0 * $globalY / $world);
                     $latitude = rad2deg(atan(sinh($mercator)));
-                    if ($longitude < $west || $longitude > (float)$region['east'] ||
+                    if ($longitude < $regionBounds['west'] || $longitude > $regionBounds['east'] ||
+                        $latitude < $regionBounds['south'] || $latitude > $regionBounds['north'] ||
+                        $longitude < $west || $longitude > (float)$region['east'] ||
                         $latitude < $south || $latitude > (float)$region['north']) {
                         $rgba .= "\0\0\0\0";
                         continue;
