@@ -351,7 +351,18 @@ final class WeatherMapCacheService
                     $needsDecode=false;
                     if($type==='past') foreach(['cloud_cover','precipitation'] as $variable) {
                         $key=WeatherMapRegionSettings::cacheKey($url,$variable,$bounds);
-                        if(!is_file($decodedDirectory.'/'.$key.'.f32') || !is_file($decodedDirectory.'/'.$key.'.json')) { $needsDecode=true; break; }
+                        $dataPath=$decodedDirectory.'/'.$key.'.f32';
+                        $metaPath=$decodedDirectory.'/'.$key.'.json';
+                        $meta=is_file($metaPath)?json_decode((string)file_get_contents($metaPath),true):null;
+                        $isValid=is_file($dataPath) && is_array($meta) &&
+                            ($meta['version']??null)===4 &&
+                            ($meta['frame_time']??'')===(string)$row['frame_time'] &&
+                            ($meta['source_url_sha256']??'')===hash('sha256',$url) &&
+                            ($meta['variable']??'')===$variable &&
+                            ($meta['encoding']??'')==='float32-le' &&
+                            (int)($meta['cell_count']??0)>0 &&
+                            (int)(filesize($dataPath)?:0)===(int)$meta['cell_count']*4;
+                        if(!$isValid) { $needsDecode=true; break; }
                     }
                     if(!isset($pendingSet[$url]) && !$needsDecode) continue;
                     $frames[]=['slot'=>(int)$row['slot_id'],'type'=>$type,'time'=>(string)$row['frame_time'],'url'=>$url];
