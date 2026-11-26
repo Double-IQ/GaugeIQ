@@ -82,33 +82,21 @@ try {
             (int)(filesize($dataPath) ?: 0) === (int)$meta['cell_count'] * 4;
     };
 
-    // Do not expose a missing server cache to the browser yet. First make a
-    // synchronous, location-specific attempt to fetch and decode every missing
-    // scheduled past frame. Browser rendering is only the fallback if this
-    // server-side attempt cannot produce a complete cache.
-    $missingServerCache = false;
-    foreach ($frameRows as $row) {
-        foreach (['precipitation', 'cloud_cover'] as $variable) {
-            if (!$isPreparedCache($row, $variable)) {
-                $missingServerCache = true;
-                break 2;
-            }
-        }
-    }
+    // Reconcile the server cache on every app startup request, independently
+    // of anything the browser may have cached. The prefetcher validates the
+    // server's own decoded files and downloads only missing/invalid server
+    // data; it does not use or trust the phone's BrowserBlockCache.
     $serverPrefetch = 'not-needed';
-    if ($missingServerCache) {
-        $serverPrefetch = 'attempted';
-        try {
-            if (function_exists('set_time_limit')) @set_time_limit(300);
-            $weatherMapCache->prefetchRegionalFramesIfDue(0, $locationId);
-            $serverPrefetch = 'completed';
-        } catch (Throwable $prefetchError) {
-            $serverPrefetch = 'failed';
-            error_log(
-                'GaugeIQ weather-map on-demand server prefetch failed for location ' .
-                $locationId . '; browser fallback may be used: ' . $prefetchError->getMessage()
-            );
-        }
+    try {
+        if (function_exists('set_time_limit')) @set_time_limit(300);
+        $prefetchResult = $weatherMapCache->prefetchRegionalFramesIfDue(0, $locationId);
+        $serverPrefetch = !empty($prefetchResult['skipped']) ? 'not-needed' : 'completed';
+    } catch (Throwable $prefetchError) {
+        $serverPrefetch = 'failed';
+        error_log(
+            'GaugeIQ weather-map on-demand server prefetch failed for location ' .
+            $locationId . '; browser fallback may be used: ' . $prefetchError->getMessage()
+        );
     }
 
     $frames = [];
