@@ -30,8 +30,12 @@ try {
 
     require_once __DIR__ . '/../../app/Database.php';
     require_once __DIR__ . '/../../app/WeatherMapCacheService.php';
+    require_once __DIR__ . '/../../app/WeatherMapRegionSettings.php';
 
     $pdo = (new Database($config))->pdo();
+    $locationId = filter_input(INPUT_GET, 'location_id', FILTER_VALIDATE_INT);
+    if ($locationId === false || $locationId === null || !in_array($locationId, [1, 2], true)) $locationId = 1;
+    $regionBounds = WeatherMapRegionSettings::get($pdo, $locationId);
 
     // Heal a stale schedule during a normal map request. This is especially
     // important when a deployment changes the ECMWF model path: the old rows
@@ -74,12 +78,12 @@ try {
         $decodedDirectory = rtrim($cacheRoot, '/') . '/decoded';
         $prepared = [];
         foreach (['precipitation', 'cloud_cover'] as $variable) {
-            $cacheKey = hash('sha256', $url . '|' . $variable . '|sa-grid-v3');
+            $cacheKey = WeatherMapRegionSettings::cacheKey($url, $variable, $regionBounds);
             $dataPath = $decodedDirectory . '/' . $cacheKey . '.f32';
             $metaPath = $decodedDirectory . '/' . $cacheKey . '.json';
             $meta = is_file($metaPath) ? json_decode((string)file_get_contents($metaPath), true) : null;
             $prepared[$variable] = is_file($dataPath) && is_array($meta) &&
-                ($meta['version'] ?? null) === 3 &&
+                ($meta['version'] ?? null) === 4 &&
                 ($meta['frame_time'] ?? '') === (string)$row['frame_time'] &&
                 ($meta['source_url_sha256'] ?? '') === hash('sha256', $url) &&
                 ($meta['variable'] ?? '') === $variable &&
@@ -95,6 +99,7 @@ try {
             'prepared' => $prepared,
             'modelRunTime' => (string)$row['model_run_time'],
             'refreshedAt' => (string)$row['refreshed_at'],
+            'regionBounds' => $regionBounds,
         ];
     }
 
