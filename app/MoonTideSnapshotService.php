@@ -93,7 +93,7 @@ final class MoonTideSnapshotService
         $localFmt=static fn(?DateTimeImmutable $v): string => $v ? $v->setTimezone($zone)->format('H:i') : 'POLAR';
         return [
             'sun'=>['ra'=>$sunRa,'dec'=>$sunDec,'longitude'=>self::norm($lambda/$rad)],
-            'moon'=>['ra'=>$moonRa,'dec'=>$moonDec,'distanceKm'=>$r*6378.14,'eclipticLongitude'=>$moonLon],
+            'moon'=>['ra'=>$moonRa,'dec'=>$moonDec,'distanceKm'=>$r*6378.14,'eclipticLongitude'=>$moonLon,'eclipticLatitude'=>atan2($zh,hypot($xh,$yh))/$rad],
             'gmst'=>$gmst,'phase'=>$phase,'illumination'=>$illum,'phaseName'=>$names[(int)round($phase*8)%8],
             'lunarAgeDays'=>$cycle,'moonDistanceKm'=>$moonDistance,'nextFullMoonAt'=>$at->modify('+'.(int)round($nextFullDays*86400).' seconds')->format(DATE_ATOM),
             'sunrise'=>$localFmt($rise),'sunset'=>$localFmt($set),'solarNoon'=>$localFmt($noon),
