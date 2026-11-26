@@ -1,4 +1,4 @@
-(() => {
+(async () => {
     'use strict';
     const root = document.getElementById('moonTideHud');
     if (!root) return;
@@ -10,18 +10,36 @@
     // Temporary Section 05 diagnostic logging has been removed.
     const tideLog = () => {};
 
-    const synodic = 29.530588853;
-    const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
-    const now = new Date();
-    const cycle = ((now.getTime() - knownNewMoon) / 86400000 % synodic + synodic) % synodic;
-    const phase = cycle / synodic;
-    const illumination = (1 - Math.cos(2 * Math.PI * phase)) / 2;
-    const names = ['NEW MOON','WAXING CRESCENT','FIRST QUARTER','WAXING GIBBOUS','FULL MOON','WANING GIBBOUS','LAST QUARTER','WANING CRESCENT'];
-    const phaseName = names[Math.round(phase * 8) % 8];
-    const nextFullDays = ((0.5 - phase + 1) % 1) * synodic;
-    const nextFull = new Date(now.getTime() + nextFullDays * 86400000);
-    const anomaly = 2 * Math.PI * ((cycle - 1.0) / 27.55455);
-    const distance = 385001 - 20905 * Math.cos(anomaly);
+    let serverSnapshot = null;
+    try {
+        const snapshotResponse = await fetch('api/moon-tide-snapshot.php?location=' + encodeURIComponent(root.dataset.locationId || '1'), {
+            headers: { Accept: 'application/json' }, cache: 'no-store'
+        });
+        if (!snapshotResponse.ok) throw new Error('Hourly Moon & Tide snapshot unavailable (HTTP ' + snapshotResponse.status + ').');
+        serverSnapshot = await snapshotResponse.json();
+        if (!serverSnapshot.generatedAt || !serverSnapshot.astronomy || !serverSnapshot.tides) {
+            throw new Error('The server returned an incomplete Moon & Tide snapshot.');
+        }
+    } catch (snapshotError) {
+        const live = root.querySelector('.mth-live');
+        if (live) live.textContent = 'SNAPSHOT UNAVAILABLE';
+        const status = $('mthTideStatus');
+        const message = $('mthTideMessage');
+        if (status) status.textContent = 'HOURLY SNAPSHOT UNAVAILABLE';
+        if (message) message.textContent = 'GaugeIQ could not retrieve the latest server-generated Moon & Tide data. ' + snapshotError.message;
+        const graphMessage = $('mthGraphMessage');
+        if (graphMessage) { graphMessage.hidden = false; graphMessage.textContent = 'Waiting for the next successful hourly server refresh.'; }
+        return;
+    }
+
+    const now = new Date(serverSnapshot.generatedAt);
+    const astronomySnapshot = serverSnapshot.astronomy;
+    const cycle = Number(astronomySnapshot.lunarAgeDays);
+    const phase = Number(astronomySnapshot.phase);
+    const illumination = Number(astronomySnapshot.illumination);
+    const phaseName = String(astronomySnapshot.phaseName);
+    const nextFull = new Date(astronomySnapshot.nextFullMoonAt);
+    const distance = Number(astronomySnapshot.moonDistanceKm);
     $('mthPhaseName').textContent = phaseName;
     $('mthIllumination').textContent = (illumination * 100).toFixed(1) + '%';
     $('mthLunarAge').textContent = cycle.toFixed(1) + ' DAYS';
@@ -267,21 +285,13 @@
         catch { return date.toISOString().slice(11,16) + ' UTC'; }
     }
     if (validLocation) {
-        const localDateParts = new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).reduce((out,part) => (out[part.type] = part.value, out), {});
-        const locationDay = new Date(Date.UTC(Number(localDateParts.year),Number(localDateParts.month)-1,Number(localDateParts.day)));
-        const sunrise = solarEvent(locationDay,lat,lon,true);
-        const sunset = solarEvent(locationDay,lat,lon,false);
-        $('mthSunrise').textContent = timeLabel(sunrise);
-        $('mthSunset').textContent = timeLabel(sunset);
-        if (sunrise && sunset) {
-            const noon = new Date((sunrise.getTime() + sunset.getTime()) / 2);
-            const minutes = Math.round((sunset - sunrise) / 60000);
-            $('mthSolarNoon').textContent = timeLabel(noon);
-            $('mthDaylight').textContent = Math.floor(minutes/60) + 'H ' + String(minutes%60).padStart(2,'0') + 'M';
-        } else {
-            $('mthSolarNoon').textContent = '—';
-            $('mthDaylight').textContent = 'POLAR DAY/NIGHT';
-        }
+        $('mthSunrise').textContent = astronomySnapshot.sunrise || 'POLAR';
+        $('mthSunset').textContent = astronomySnapshot.sunset || 'POLAR';
+        $('mthSolarNoon').textContent = astronomySnapshot.solarNoon || 'POLAR';
+        const daylightMinutes = Number(astronomySnapshot.daylightMinutes);
+        $('mthDaylight').textContent = Number.isFinite(daylightMinutes)
+            ? Math.floor(daylightMinutes / 60) + 'H ' + String(daylightMinutes % 60).padStart(2,'0') + 'M'
+            : 'POLAR DAY/NIGHT';
         const marker = root.querySelector('.mth-location-marker');
         if (marker) {
             marker.style.left = (50 + (lon / 180) * 40).toFixed(2) + '%';
@@ -297,6 +307,9 @@
     const rad = Math.PI / 180;
     const norm360 = value => (value % 360 + 360) % 360;
     const orbitalElements = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) {
+            return {...serverSnapshot.astronomy.moon, eclipticLatitude: 0};
+        }
         const d = (date.getTime() - Date.UTC(2000,0,0,0,0,0)) / 86400000;
         const N = norm360(125.1228 - 0.0529538083 * d);
         const inclination = 5.1454;
@@ -323,6 +336,7 @@
         return {ra,dec,distanceKm:r*6378.14,eclipticLongitude:eclLon,eclipticLatitude:eclLat};
     };
     const solarCoordinates = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) return serverSnapshot.astronomy.sun;
         // Apparent geocentric Sun coordinates (Meeus/NOAA low-order series).
         // The previous mean-longitude-only approximation omitted the equation
         // of centre and could place the terminator noticeably out of sync.
@@ -355,6 +369,7 @@
         };
     };
     const gmstDegrees = date => {
+        if (Math.abs(date.getTime() - now.getTime()) < 1000) return serverSnapshot.astronomy.gmst;
         const jd = date.getTime()/86400000 + 2440587.5;
         const T = (jd - 2451545.0)/36525;
         return norm360(280.46061837 + 360.98564736629*(jd-2451545) + 0.000387933*T*T - T*T*T/38710000);
@@ -741,7 +756,7 @@
         $('mthOrbitPosition').textContent = norm360(moonPosition.eclipticLongitude).toFixed(1) + '° ECL.';
         const hourOffset = (date.getTime()-now.getTime())/3600000;
         $('mthOrbitTime').textContent = Math.abs(hourOffset)<0.01 ? 'NOW · ' + timeLabel(date) : (hourOffset>0?'+':'') + hourOffset.toFixed(2) + ' H · ' + timeLabel(date);
-        $('mthOrbitState').textContent = 'CALCULATED POSITION';
+        $('mthOrbitState').textContent = 'HOURLY SERVER SNAPSHOT';
         if (globe) {
             // Earth is fixed in the selected observer's local frame.
             globe.style.setProperty('--mth-earth-turn','0deg');
@@ -755,24 +770,7 @@
             updateEarthMoonTracker(previewDate);
         });
     }
-    updateEarthMoonTracker(new Date());
-    const refreshLiveTracker = () => {
-        if (document.visibilityState === 'hidden') return;
-        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
-        // iOS may suspend the minute timer while the PWA is backgrounded.
-        // Always recalculate from the current epoch time when it becomes active.
-        updateEarthMoonTracker(new Date());
-    };
-    window.addEventListener('pageshow', refreshLiveTracker);
-    window.addEventListener('focus', refreshLiveTracker);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') refreshLiveTracker();
-    });
-    const liveTrackerTimer = window.setInterval(() => {
-        if (document.visibilityState === 'hidden') return;
-        if (timeScrubber && Number(timeScrubber.value) !== 0) return;
-        updateEarthMoonTracker(new Date());
-    },60000);
+    updateEarthMoonTracker(now);
 
     function tideUrl(mode, start, end, stationId = null) {
         const params = new URLSearchParams({
@@ -783,61 +781,13 @@
         return 'api/tides.php?' + params.toString();
     }
     async function fetchTidePayload(mode, start, end, stationId = null, timeoutMs = 30000) {
-        // Scope cached data to the exact prediction window and station.
-        const cacheKey = 'gaugeiq-mth-tides-v4:' + mode + ':' + lat.toFixed(3) + ':' + lon.toFixed(3) + ':' + start.toISOString() + ':' + end.toISOString() + ':' + (stationId || 'nearest');
-        try {
-            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
-            if (cached && cached.savedAt && Date.now() - cached.savedAt < 15 * 60 * 1000) { tideLog(mode.toUpperCase() + ' CACHE HIT', 'age=' + Math.round((Date.now()-cached.savedAt)/1000) + 's'); return cached.payload; }
-        } catch { /* Ignore unavailable or invalid session cache. */ }
-        const controller = new AbortController();
-        let timedOut = false;
-        let timeoutId;
-        // Race the whole request (including response parsing) against a hard
-        // deadline. Some mobile browsers can leave an aborted fetch pending;
-        // the independent rejection guarantees the HUD always leaves loading.
-        tideLog(mode.toUpperCase() + ' REQUEST START', tideUrl(mode,start,end,stationId));
-        const requestStartedAt = Date.now();
-        const requestPromise = (async () => {
-            const response = await fetch(tideUrl(mode, start, end, stationId), {
-                headers: { Accept: 'application/json' },
-                cache: 'no-store',
-                signal: controller.signal
-            });
-            tideLog(mode.toUpperCase() + ' HTTP RESPONSE', 'status=' + response.status + '; elapsed=' + (Date.now()-requestStartedAt) + 'ms');
-            let payload;
-            try {
-                payload = await response.json();
-            } catch {
-                throw new Error('Tide ' + mode + ' request returned an invalid JSON response (HTTP ' + response.status + ').');
-            }
-            if (!response.ok) {
-                const details = Array.isArray(payload?.errors)
-                    ? payload.errors.map(item => [item?.path, item?.message].filter(Boolean).join(': ')).filter(Boolean).join('; ')
-                    : '';
-                const detail = [payload?.message, details].filter(Boolean).join(' — ');
-                throw new Error(detail || 'Tide ' + mode + ' request returned HTTP ' + response.status);
-            }
-            tideLog(mode.toUpperCase() + ' JSON PARSED', 'elapsed=' + (Date.now()-requestStartedAt) + 'ms; keys=' + Object.keys(payload || {}).join(','));
-            return payload;
-        })();
-        const deadlinePromise = new Promise((resolve, reject) => {
-            timeoutId = window.setTimeout(() => {
-                timedOut = true;
-                controller.abort();
-                reject(new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.'));
-            }, timeoutMs);
-        });
-        try {
-            const payload = await Promise.race([requestPromise, deadlinePromise]);
-            try { sessionStorage.setItem(cacheKey, JSON.stringify({savedAt:Date.now(),payload})); } catch { /* Cache is optional. */ }
-            return payload;
-        } catch (error) {
-            tideLog(mode.toUpperCase() + ' REQUEST FAILED', (Date.now()-requestStartedAt) + 'ms; ' + (error?.stack || error?.message || String(error)));
-            if (timedOut) throw new Error('Tide ' + mode + ' request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds.');
-            throw error;
-        } finally {
-            window.clearTimeout(timeoutId);
+        const payload = mode === 'extremes'
+            ? serverSnapshot.tides.extremes
+            : serverSnapshot.tides.timeline;
+        if (!payload || typeof payload !== 'object') {
+            throw new Error(serverSnapshot.tides.error || 'The hourly cron did not produce a usable tide ' + mode + ' prediction.');
         }
+        return payload;
     }
     function tideLocalTime(timestamp, includeDay = true) {
         return new Intl.DateTimeFormat(undefined,{
@@ -907,7 +857,7 @@
             return '<line class="mth-graph-tick" x1="' + xx.toFixed(2) + '" y1="42" x2="' + xx.toFixed(2) + '" y2="190"/>' +
                 '<text class="mth-graph-axis-label" x="' + xx.toFixed(2) + '" y="211" text-anchor="middle">' + tideLocalTime(timestamp,false) + '</text>';
         }).join('');
-        const now = Date.now();
+        const now = nowSnapshotTimestamp;
         const nowX = x(Math.max(startTime,Math.min(endTime,now)));
         const nearest = samples.reduce((best,point) => Math.abs(point.timestamp-now) < Math.abs(best.timestamp-now) ? point : best,samples[0]);
         const before = samples.filter(point => point.timestamp <= now).slice(-1)[0] || samples[0];
@@ -987,7 +937,7 @@
             return;
         }
         tideLog('TIDE LOAD START');
-        const start = new Date();
+        const start = new Date(now.getTime());
         const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
         const extremesEnd = new Date(start.getTime() + 4 * 86400000);
 
@@ -1018,7 +968,7 @@
                 return;
             }
             const events = extremesPayload.extremes.map(event => ({...event,timestamp:Date.parse(event.time)}))
-                .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= Date.now() - 60000)
+                .filter(event => Number.isFinite(event.timestamp) && event.timestamp >= now.getTime() - 60000)
                 .sort((a,b) => a.timestamp - b.timestamp);
             const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
             const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
@@ -1082,6 +1032,7 @@
         setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.'));
     });
 
+    const nowSnapshotTimestamp = now.getTime();
     const nowText = new Intl.DateTimeFormat(undefined,{timeZone:zone,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
-    root.querySelector('.mth-live').setAttribute('aria-label','Astronomical calculations updated ' + nowText.format(now));
+    root.querySelector('.mth-live').setAttribute('aria-label','Server snapshot generated ' + nowText.format(now));
 })();

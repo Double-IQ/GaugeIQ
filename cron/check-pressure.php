@@ -29,6 +29,27 @@ date_default_timezone_set($config['app']['timezone']);
 $db = new Database($config);
 $pdo = $db->pdo();
 migrateDatabase($pdo);
+
+// Generate the complete Moon & Tide snapshot on the same hourly server
+// schedule as GaugeIQ's weather data. A failed refresh leaves the previous
+// snapshot untouched so clients can continue using the last successful cycle.
+require_once __DIR__ . '/../app/MoonTideSnapshotService.php';
+$moonTideLocations = getGaugeIqSetting($pdo, 'second_location_enabled', '0') === '1' ? [1, 2] : [1];
+foreach ($moonTideLocations as $moonTideLocationId) {
+    try {
+        $moonTideService = new MoonTideSnapshotService($pdo, $config);
+        $moonTideSnapshot = $moonTideService->refreshIfDue($moonTideLocationId, 3600);
+        printf(
+            "Moon & Tide hourly snapshot ready: Location %d at %s (tide station %s).\n",
+            $moonTideLocationId,
+            (string)$moonTideSnapshot['generatedAt'],
+            (string)($moonTideSnapshot['tides']['extremes']['station']['name'] ?? 'unavailable')
+        );
+    } catch (Throwable $moonTideError) {
+        error_log('GaugeIQ Moon & Tide snapshot refresh failed for Location ' . $moonTideLocationId . ': ' . $moonTideError->getMessage());
+        fwrite(STDERR, "Moon & Tide snapshot refresh failed for Location {$moonTideLocationId} (previous snapshot retained): " . $moonTideError->getMessage() . "\n");
+    }
+}
 // Refresh the six rolling ECMWF map-frame references and prefetch their
 // regional data chunks hourly. Both operations are non-fatal to monitoring.
 try {
@@ -528,7 +549,7 @@ foreach ($retentionLocations as $retentionLocation) {
         );
     } catch (Throwable $retentionError) {
         error_log('GaugeIQ historical retention failed for Location ' . (int)$retentionLocation['id'] . ': ' . $retentionError->getMessage());
-        fwrite(STDERR, "Historical retention failed for Location " . (int)$retentionLocation['id'] . ": " . $retentionError->getMessage() . "\\n");
+        fwrite(STDERR, "Historical retention failed for Location " . (int)$retentionLocation['id'] . ": " . $retentionError->getMessage() . "\n");
         $failedLocations++;
     }
 }
