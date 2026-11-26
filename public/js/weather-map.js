@@ -734,6 +734,10 @@ protocolOptions.fileReaderConfig = {
                         preparedTileFallbackReasons.set(frame.id, failure);
                     }
                 }
+                if (preparedTileFallbacks.size) {
+                    updateServerStatus('offline');
+                    setStatus('');
+                }
 
                 animationFrames = [...pastFrames].map(frame => ({
                     ...frame,
