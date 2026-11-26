@@ -610,6 +610,11 @@ protocolOptions.fileReaderConfig = {
                             tileUrl.searchParams.set('variable', item.variable);
                             tileUrl.searchParams.set('interpolation', appearance.interpolation);
                             tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
+                            // Apply the user-selected coverage rectangle to server-rendered tiles too.
+                            const regionBounds = Array.isArray(weatherRegionBounds) && weatherRegionBounds.length === 4
+                                ? weatherRegionBounds : defaultRegionBounds;
+                            ['west', 'south', 'east', 'north'].forEach((key, index) =>
+                                tileUrl.searchParams.set('region_' + key, String(regionBounds[index])));
                             const colors = item.variable === 'precipitation'
                                 ? precipitationColors
                                 : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
