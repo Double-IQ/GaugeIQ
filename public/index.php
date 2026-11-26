@@ -1332,7 +1332,6 @@ if ($current && !empty($current['observed_at'])) {
         data-timezone="<?= htmlspecialchars($dashboardTimezone, ENT_QUOTES, 'UTF-8') ?>"
         data-location-name="<?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?>"
         data-location-id="<?= (int)$locationId ?>">
-        data-location-id="<?= (int)$locationId ?>">
         <div class="mth-header">
             <div><p class="mth-kicker">LUNAR &amp; OCEANIC TELEMETRY</p><h2 id="moonTideTitle">MOON &amp; TIDE</h2><p class="mth-subtitle">LUNAR TRACKING SYSTEM <span>·</span> <span data-mth-location><?= htmlspecialchars($locationName, ENT_QUOTES, 'UTF-8') ?></span></p></div>
             <span class="mth-live"><i></i> SYSTEM ONLINE</span>
