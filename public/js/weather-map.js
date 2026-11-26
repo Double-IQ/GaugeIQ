@@ -336,8 +336,9 @@ protocolOptions.fileReaderConfig = {
         let animationLoadPoll = null;
         let animationLoadError = null;
         let animationFrameSourceAdder = null;
-        // Keep a visible session warning if any frame has to fall back from server-prepared tiles.
+        // Keep a visible session warning and the actual server response when a frame falls back.
         const preparedTileFallbacks = new Set();
+        const preparedTileFallbackReasons = new Map();
         function updateServerStatus(state) {
             if (!serverStatus) return;
             serverStatus.classList.remove('is-online', 'is-offline', 'is-checking');
@@ -350,7 +351,10 @@ protocolOptions.fileReaderConfig = {
         function setStatus(message) {
             const fallbackNotice = preparedTileFallbacks.size
                 ? '⚠ Server-prepared tiles failed for ' + Array.from(preparedTileFallbacks).join(', ') +
-                    '. Browser rendering is being used for those frame(s).'
+                    '. Browser rendering is being used for those frame(s).' +
+                    (preparedTileFallbackReasons.size
+                        ? ' Server response: ' + Array.from(preparedTileFallbackReasons.values()).join(' | ')
+                        : '')
                 : '';
             const visibleMessage = [fallbackNotice, message].filter(Boolean).join(' ');
             status.textContent = visibleMessage;
@@ -526,6 +530,7 @@ protocolOptions.fileReaderConfig = {
         async function prepareAnimation(autoStart = true) {
             clearAnimation();
             preparedTileFallbacks.clear();
+            preparedTileFallbackReasons.clear();
             updateServerStatus('checking');
             const token = animationToken;
             animationPreparing = true;
@@ -589,6 +594,112 @@ protocolOptions.fileReaderConfig = {
                 });
 
                 const variables = weatherVariables(layerSelect.value);
+                const buildPreparedTileUrl = (frame, item, z = 0, x = 0, y = 0) => {
+                    const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
+                    tileUrl.searchParams.set('slot', String(frame.slot));
+                    tileUrl.searchParams.set('location_id', activeLocationId);
+                    tileUrl.searchParams.set('frame_time', frame.frameTime);
+                    tileUrl.searchParams.set('variable', item.variable);
+                    tileUrl.searchParams.set('interpolation', appearance.interpolation);
+                    tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
+                    const regionBounds = Array.isArray(weatherRegionBounds) && weatherRegionBounds.length === 4
+                        ? weatherRegionBounds : defaultRegionBounds;
+                    ['west', 'south', 'east', 'north'].forEach((key, index) =>
+                        tileUrl.searchParams.set('region_' + key, String(regionBounds[index])));
+                    const colors = item.variable === 'precipitation'
+                        ? precipitationColors
+                        : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
+                            ...appearanceDefaults.cloudColors].slice(0, 4);
+                    const alphas = item.variable === 'precipitation'
+                        ? precipitationColorOpacities
+                        : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
+                            100, 100, 100, 100].slice(0, 4);
+                    tileUrl.searchParams.set('colors', colors.join(','));
+                    tileUrl.searchParams.set('alphas', alphas.join(','));
+                    tileUrl.searchParams.set('z', String(z));
+                    tileUrl.searchParams.set('x', String(x));
+                    tileUrl.searchParams.set('y', String(y));
+                    return tileUrl;
+                };
+
+                // Verify the actual PNG tile endpoint, not just the decoded cache files.
+                // A second schedule request forces the server-side cache reconciliation
+                // again before we decide that browser-side decoding is necessary.
+                for (const frame of pastFrames) {
+                    const preparedVariables = variables.filter(item => frame.prepared?.[item.variable]);
+                    if (!preparedVariables.length) {
+                        frame.forceBrowser = true;
+                        preparedTileFallbacks.add(frame.id);
+                        preparedTileFallbackReasons.set(frame.id, 'The server reports that decoded frame data is not prepared.');
+                        continue;
+                    }
+                    let failure = null;
+                    for (const item of preparedVariables) {
+                        try {
+                            const probeUrl = buildPreparedTileUrl(frame, item);
+                            const probeResponse = await fetch(probeUrl.href, { cache: 'no-store' });
+                            const contentType = probeResponse.headers.get('content-type') || '';
+                            if (!probeResponse.ok || !contentType.toLowerCase().includes('image/png')) {
+                                const responseText = (await probeResponse.text()).slice(0, 220).replace(/\\s+/g, ' ').trim();
+                                failure = 'HTTP ' + probeResponse.status + ' ' +
+                                    (responseText || probeResponse.statusText || 'Invalid tile response');
+                                break;
+                            }
+                        } catch (probeError) {
+                            failure = probeError?.message || 'The tile verification request failed.';
+                            break;
+                        }
+                    }
+                    if (failure) {
+                        // The frames API performs an unconditional server-cache
+                        // reconciliation. Retry the real tile request after it runs.
+                        try {
+                            const repairResponse = await fetch(
+                                '/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId) + '&repair=1',
+                                { cache: 'no-store' }
+                            );
+                            if (repairResponse.ok) {
+                                const repairedSchedule = await repairResponse.json();
+                                const repairedFrame = repairedSchedule.frames?.find(item =>
+                                    Number(item.slot) === frame.slot && String(item.time) === frame.frameTime
+                                );
+                                if (repairedFrame?.prepared) {
+                                    frame.prepared = repairedFrame.prepared;
+                                    let retryFailure = null;
+                                    for (const item of preparedVariables) {
+                                        if (!frame.prepared[item.variable]) {
+                                            retryFailure = 'The server still has no decoded ' + item.variable + ' data.';
+                                            break;
+                                        }
+                                        const retryUrl = buildPreparedTileUrl(frame, item);
+                                        const retryResponse = await fetch(retryUrl.href, { cache: 'no-store' });
+                                        const retryType = retryResponse.headers.get('content-type') || '';
+                                        if (!retryResponse.ok || !retryType.toLowerCase().includes('image/png')) {
+                                            const responseText = (await retryResponse.text()).slice(0, 220).replace(/\\s+/g, ' ').trim();
+                                            retryFailure = 'HTTP ' + retryResponse.status + ' ' +
+                                                (responseText || retryResponse.statusText || 'Invalid tile response');
+                                            break;
+                                        }
+                                    }
+                                    failure = retryFailure;
+                                } else {
+                                    failure = 'Server preparation retry did not return a prepared frame.';
+                                }
+                            } else {
+                                failure = 'Server preparation retry failed with HTTP ' + repairResponse.status + '.';
+                            }
+                        } catch (repairError) {
+                            failure = 'Server preparation retry failed: ' +
+                                (repairError?.message || 'request error') + '. Original tile error: ' + failure;
+                        }
+                    }
+                    if (failure) {
+                        frame.forceBrowser = true;
+                        preparedTileFallbacks.add(frame.id);
+                        preparedTileFallbackReasons.set(frame.id, failure);
+                    }
+                }
+
                 animationFrames = [...pastFrames].map(frame => ({
                     ...frame,
                     layerIds: [],
@@ -604,28 +715,10 @@ protocolOptions.fileReaderConfig = {
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         let sourceOptions;
                         if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
-                            const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
-                            tileUrl.searchParams.set('slot', String(frame.slot));
-                            tileUrl.searchParams.set('location_id', activeLocationId);
-                            tileUrl.searchParams.set('frame_time', frame.frameTime);
-                            tileUrl.searchParams.set('variable', item.variable);
-                            tileUrl.searchParams.set('interpolation', appearance.interpolation);
-                            tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                            // Apply the user-selected coverage rectangle to server-rendered tiles too.
-                            const regionBounds = Array.isArray(weatherRegionBounds) && weatherRegionBounds.length === 4
-                                ? weatherRegionBounds : defaultRegionBounds;
-                            ['west', 'south', 'east', 'north'].forEach((key, index) =>
-                                tileUrl.searchParams.set('region_' + key, String(regionBounds[index])));
-                            const colors = item.variable === 'precipitation'
-                                ? precipitationColors
-                                : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
-                                    ...appearanceDefaults.cloudColors].slice(0, 4);
-                            const alphas = item.variable === 'precipitation'
-                                ? precipitationColorOpacities
-                                : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
-                                    100, 100, 100, 100].slice(0, 4);
-                            tileUrl.searchParams.set('colors', colors.join(','));
-                            tileUrl.searchParams.set('alphas', alphas.join(','));
+                            const tileUrl = buildPreparedTileUrl(frame, item);
+                            tileUrl.searchParams.delete('z');
+                            tileUrl.searchParams.delete('x');
+                            tileUrl.searchParams.delete('y');
                             sourceOptions = {
                                 type: 'raster',
                                 tiles: [tileUrl.href + '&z={z}&x={x}&y={y}'],
