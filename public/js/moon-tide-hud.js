@@ -32,18 +32,14 @@
         return;
     }
 
-    const synodic = 29.530588853;
-    const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
     const now = new Date(serverSnapshot.generatedAt);
-    const cycle = ((now.getTime() - knownNewMoon) / 86400000 % synodic + synodic) % synodic;
-    const phase = cycle / synodic;
-    const illumination = (1 - Math.cos(2 * Math.PI * phase)) / 2;
-    const names = ['NEW MOON','WAXING CRESCENT','FIRST QUARTER','WAXING GIBBOUS','FULL MOON','WANING GIBBOUS','LAST QUARTER','WANING CRESCENT'];
-    const phaseName = names[Math.round(phase * 8) % 8];
-    const nextFullDays = ((0.5 - phase + 1) % 1) * synodic;
-    const nextFull = new Date(now.getTime() + nextFullDays * 86400000);
-    const anomaly = 2 * Math.PI * ((cycle - 1.0) / 27.55455);
-    const distance = 385001 - 20905 * Math.cos(anomaly);
+    const astronomySnapshot = serverSnapshot.astronomy;
+    const cycle = Number(astronomySnapshot.lunarAgeDays);
+    const phase = Number(astronomySnapshot.phase);
+    const illumination = Number(astronomySnapshot.illumination);
+    const phaseName = String(astronomySnapshot.phaseName);
+    const nextFull = new Date(astronomySnapshot.nextFullMoonAt);
+    const distance = Number(astronomySnapshot.moonDistanceKm);
     $('mthPhaseName').textContent = phaseName;
     $('mthIllumination').textContent = (illumination * 100).toFixed(1) + '%';
     $('mthLunarAge').textContent = cycle.toFixed(1) + ' DAYS';
@@ -289,21 +285,13 @@
         catch { return date.toISOString().slice(11,16) + ' UTC'; }
     }
     if (validLocation) {
-        const localDateParts = new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).reduce((out,part) => (out[part.type] = part.value, out), {});
-        const locationDay = new Date(Date.UTC(Number(localDateParts.year),Number(localDateParts.month)-1,Number(localDateParts.day)));
-        const sunrise = solarEvent(locationDay,lat,lon,true);
-        const sunset = solarEvent(locationDay,lat,lon,false);
-        $('mthSunrise').textContent = timeLabel(sunrise);
-        $('mthSunset').textContent = timeLabel(sunset);
-        if (sunrise && sunset) {
-            const noon = new Date((sunrise.getTime() + sunset.getTime()) / 2);
-            const minutes = Math.round((sunset - sunrise) / 60000);
-            $('mthSolarNoon').textContent = timeLabel(noon);
-            $('mthDaylight').textContent = Math.floor(minutes/60) + 'H ' + String(minutes%60).padStart(2,'0') + 'M';
-        } else {
-            $('mthSolarNoon').textContent = '—';
-            $('mthDaylight').textContent = 'POLAR DAY/NIGHT';
-        }
+        $('mthSunrise').textContent = astronomySnapshot.sunrise || 'POLAR';
+        $('mthSunset').textContent = astronomySnapshot.sunset || 'POLAR';
+        $('mthSolarNoon').textContent = astronomySnapshot.solarNoon || 'POLAR';
+        const daylightMinutes = Number(astronomySnapshot.daylightMinutes);
+        $('mthDaylight').textContent = Number.isFinite(daylightMinutes)
+            ? Math.floor(daylightMinutes / 60) + 'H ' + String(daylightMinutes % 60).padStart(2,'0') + 'M'
+            : 'POLAR DAY/NIGHT';
         const marker = root.querySelector('.mth-location-marker');
         if (marker) {
             marker.style.left = (50 + (lon / 180) * 40).toFixed(2) + '%';
