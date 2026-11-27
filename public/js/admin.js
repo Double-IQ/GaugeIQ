@@ -94,6 +94,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Only promote the update panel when a verified installable update exists.
+        const updatePanel = document.querySelector('.admin-updates-panel');
+        const monitorPanel = document.querySelector('.admin-monitor-panel');
+        if (updatePanel && monitorPanel) monitorPanel.before(updatePanel);
         document.getElementById('adminLatestVersion').textContent = 'Version ' + data.latest_version + ' is available.';
         document.getElementById('adminUpdateVersion').value = data.latest_version;
         details.hidden = false;
