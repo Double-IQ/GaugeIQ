@@ -417,6 +417,7 @@
     let trackerSunTextureReady = false;
     let trackerMoonTexture = null;
     let trackerMoonTextureReady = false;
+    let trackerRenderDate = now;
     function loadTrackerEarthTexture(gl,texture) {
         const image=new Image();
         // Load through GaugeIQ's same-origin cached proxy so iOS/PWA does not
@@ -440,6 +441,7 @@
                 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
                 gl.generateMipmap(gl.TEXTURE_2D);
                 trackerEarthTextureReady=true;
+                updateEarthMoonTracker(trackerRenderDate);
             } catch(error) { console.warn('GaugeIQ Earth texture could not be applied',error); }
         };
         image.onerror=()=>console.warn('GaugeIQ NASA Blue Marble texture could not be loaded');
@@ -462,6 +464,7 @@
                 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
                 gl.generateMipmap(gl.TEXTURE_2D); trackerSunTextureReady=true;
                 gl.activeTexture(gl.TEXTURE0);
+                updateEarthMoonTracker(trackerRenderDate);
             } catch(error) { console.warn('GaugeIQ NASA SDO Sun texture could not be applied',error); }
         };
         image.onerror=()=>console.warn('GaugeIQ NASA SDO Sun image could not be loaded');
@@ -482,6 +485,7 @@
                 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
                 gl.generateMipmap(gl.TEXTURE_2D);
                 trackerMoonTextureReady=true; gl.activeTexture(gl.TEXTURE0);
+                updateEarthMoonTracker(trackerRenderDate);
             } catch(error) { console.warn('GaugeIQ NASA LRO Moon texture could not be applied',error); }
         };
         image.onerror=()=>console.warn('GaugeIQ NASA LRO Moon texture could not be loaded');
@@ -704,6 +708,7 @@
     }
 
     function updateEarthMoonTracker(date) {
+        trackerRenderDate = date;
         // Section 04 renders on its own canvas; obsolete DOM globe elements
         // must not prevent the current WebGL tracker from updating.
         if (!date) return;
