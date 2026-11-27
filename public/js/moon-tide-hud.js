@@ -25,8 +25,8 @@
         if (live) live.textContent = 'SNAPSHOT UNAVAILABLE';
         const status = $('mthTideStatus');
         const message = $('mthTideMessage');
-        if (status) status.textContent = 'HOURLY SNAPSHOT UNAVAILABLE';
-        if (message) message.textContent = 'GaugeIQ could not retrieve the latest server-generated Moon & Tide data. ' + snapshotError.message;
+        if (status) if (status) status.textContent = 'HOURLY SNAPSHOT UNAVAILABLE';
+        if (message) if (message) message.textContent = 'GaugeIQ could not retrieve the latest server-generated Moon & Tide data. ' + snapshotError.message;
         const graphMessage = $('mthGraphMessage');
         if (graphMessage) { graphMessage.hidden = false; graphMessage.textContent = 'Waiting for the next successful hourly server refresh.'; }
         return;
@@ -931,8 +931,8 @@
         const status = $('mthTideStatus');
         const message = $('mthTideMessage');
         if (!validLocation) {
-            status.textContent = 'LOCATION COORDINATES UNAVAILABLE';
-            message.textContent = 'Set valid coordinates for the selected GaugeIQ location to search for a nearby tide station.';
+            if (status) status.textContent = 'LOCATION COORDINATES UNAVAILABLE';
+            if (message) message.textContent = 'Set valid coordinates for the selected GaugeIQ location to search for a nearby tide station.';
             setGraphUnavailable('Set valid coordinates for this GaugeIQ location to load a local tide profile.');
             return;
         }
@@ -954,15 +954,15 @@
             const station = extremesPayload.station || {};
             const distance = Number(extremesPayload.distance);
             if (!station.name || !Array.isArray(extremesPayload.extremes)) {
-                status.textContent = 'INCOMPLETE STATION DATA';
-                message.textContent = 'The tide provider returned an incomplete station prediction.';
+                if (status) status.textContent = 'INCOMPLETE STATION DATA';
+                if (message) message.textContent = 'The tide provider returned an incomplete station prediction.';
                 $('mthTideStation').textContent = 'INCOMPLETE STATION RESPONSE';
                 $('mthTideDistance').textContent = 'VERIFICATION FAILED';
                 return;
             }
             if (Number.isFinite(distance) && distance > 150) {
-                status.textContent = 'NO SUITABLE COASTAL STATION';
-                message.textContent = 'The nearest prediction station is ' + Math.round(distance) + ' km away. Distant predictions are not presented as local.';
+                if (status) status.textContent = 'NO SUITABLE COASTAL STATION';
+                if (message) message.textContent = 'The nearest prediction station is ' + Math.round(distance) + ' km away. Distant predictions are not presented as local.';
                 $('mthTideStation').textContent = 'STATION OUTSIDE LOCAL RANGE';
                 $('mthTideDistance').textContent = Math.round(distance) + ' KM AWAY';
                 return;
@@ -973,8 +973,8 @@
             const nextHigh = events.find(event => event.high === true || String(event.label || '').toLowerCase() === 'high');
             const nextLow = events.find(event => event.low === true || String(event.label || '').toLowerCase() === 'low');
             if (!nextHigh && !nextLow) {
-                status.textContent = 'NO UPCOMING TIDE EVENTS';
-                message.textContent = 'The station did not return upcoming high or low water events.';
+                if (status) status.textContent = 'NO UPCOMING TIDE EVENTS';
+                if (message) message.textContent = 'The station did not return upcoming high or low water events.';
                 $('mthTideStation').textContent = station.name.toUpperCase();
                 $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
                 return;
@@ -984,8 +984,8 @@
             $('mthNextHighTime').textContent = nextHigh ? tideLocalTime(nextHigh.timestamp) : 'NOT AVAILABLE';
             $('mthNextLow').textContent = nextLow ? height(nextLow) : '—';
             $('mthNextLowTime').textContent = nextLow ? tideLocalTime(nextLow.timestamp) : 'NOT AVAILABLE';
-            status.textContent = 'HARMONIC PREDICTIONS AVAILABLE';
-            message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
+            if (status) status.textContent = 'HARMONIC PREDICTIONS AVAILABLE';
+            if (message) message.textContent = 'Upcoming high and low water from the nearest supported prediction station. Heights use that station’s chart datum.';
             $('mthTideStation').textContent = station.name.toUpperCase();
             $('mthTideDistance').textContent = Number.isFinite(distance) ? distance.toFixed(1) + ' KM FROM LOCATION' : 'NEAREST STATION';
             $('mthTideAttribution').textContent = (station.attribution ? String(station.attribution) : 'Source: Open Waters / Slackwater harmonic tide predictions') + ' · Predictions do not account for weather-driven surge. Not for navigation.';
@@ -994,8 +994,8 @@
             if (tideState && tideState.textContent.includes('DATA LINK')) tideState.textContent = 'STATION LINKED';
         }).catch(error => {
             tideLog('EXTREMES HANDLER FAILED', error?.stack || error?.message || String(error));
-            status.textContent = 'TIDE DATA UNAVAILABLE';
-            message.textContent = 'Nearby high/low tide events could not be loaded. ' + (error?.message || 'Please try again later.');
+            if (status) status.textContent = 'TIDE DATA UNAVAILABLE';
+            if (message) message.textContent = 'Nearby high/low tide events could not be loaded. ' + (error?.message || 'Please try again later.');
             $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
             $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
         });
@@ -1025,8 +1025,8 @@
         tideLog('TOP-LEVEL TIDE FAILURE', error?.stack || error?.message || String(error));
         const status = $('mthTideStatus');
         const message = $('mthTideMessage');
-        if (status) status.textContent = 'TIDE DATA UNAVAILABLE';
-        if (message) message.textContent = 'A verified nearby prediction could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.');
+        if (status) if (status) status.textContent = 'TIDE DATA UNAVAILABLE';
+        if (message) if (message) message.textContent = 'A verified nearby prediction could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.');
         $('mthTideStation').textContent = 'NO VERIFIED STATION DATA';
         $('mthTideDistance').textContent = 'PREDICTION OFFLINE';
         setGraphUnavailable('A verified local tide curve could not be loaded. ' + (error && error.message ? error.message : 'Please try again later.'));
