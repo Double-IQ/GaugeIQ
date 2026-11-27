@@ -1333,7 +1333,7 @@ if ($current && !empty($current['observed_at'])) {
         <header class="gaugeiq-weather-map-toolbar">
             <div class="gaugeiq-weather-map-heading">
                 <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
-            </div>
+                </div>
             <div class="gaugeiq-weather-map-controls">
                 <select id="layer-select" aria-label="Weather layer">
                     <option value="temperature_2m">Temperature</option>
@@ -1341,7 +1341,7 @@ if ($current && !empty($current['observed_at'])) {
                     <option value="precipitation">Precipitation only</option>
                     <option value="cloud_cover">Cloud cover only</option>
                 </select>
-                <a class="gaugeiq-weather-map-action" href="weather-map/appearance.php?location=<?= $locationId ?>">Appearance</a>
+                <div class="gaugeiq-weather-map-appearance-wrap"><div class="gaugeiq-weather-map-server-status is-checking" id="map-server-status" role="status" aria-live="polite">Checking server…</div><a class="gaugeiq-weather-map-action" href="weather-map/appearance.php?location=<?= $locationId ?>">Appearance</a></div>
             </div>
         </header>
         <div class="gaugeiq-weather-map-timeline">
@@ -1357,8 +1357,7 @@ if ($current && !empty($current['observed_at'])) {
              data-latitude="<?= htmlspecialchars($dashboardLatitude, ENT_QUOTES, 'UTF-8') ?>"
              data-longitude="<?= htmlspecialchars($dashboardLongitude, ENT_QUOTES, 'UTF-8') ?>"
              data-location-id="<?= $locationId ?>">
-            <div class="gaugeiq-weather-map-server-status is-checking" id="map-server-status" role="status" aria-live="polite">Checking server…</div>
-            <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
+                        <div class="gaugeiq-weather-map-status" id="map-status" role="status">Loading interactive weather map…</div>
         </div>
         <div class="mth-footer data-usage-footer" data-usage-section="weather-map"><span>DATA USAGE</span><span id="weatherMapDataUsage">Measuring weather tiles…</span><span>THIS VISIT</span></div>
     </section>
