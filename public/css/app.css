@@ -6501,6 +6501,9 @@ body.gaugeiq-menu-open{overflow:hidden}
 .moon-tide-hud-card .mth-note{font-size:12px;line-height:1.5}
 @media(max-width:480px){
   .moon-tide-hud-card{padding:16px}
+  .moon-tide-hud-card .mth-header>div{flex:1;min-width:0}
+  .moon-tide-hud-card .mth-live{flex-shrink:0}
+  .moon-tide-hud-card .mth-subtitle{font-size:clamp(7px,2.1vw,9px);letter-spacing:.06em}
   .moon-tide-hud-card .mth-header h2{font-size:21px}
   .moon-tide-hud-card .mth-kicker{font-size:9px}
   .moon-tide-hud-card .mth-section-head strong{font-size:12px}
