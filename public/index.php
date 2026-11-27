@@ -1333,8 +1333,8 @@ if ($current && !empty($current['observed_at'])) {
         <header class="gaugeiq-weather-map-toolbar">
             <div class="gaugeiq-weather-map-heading">
                 <strong id="interactiveWeatherMapsTitle">Weather Map</strong>
+                <div class="gaugeiq-weather-map-server-status is-checking" id="map-server-status" role="status" aria-live="polite">Checking server…</div>
             </div>
-            <div class="gaugeiq-weather-map-server-status is-checking" id="map-server-status" role="status" aria-live="polite">Checking server…</div>
             <div class="gaugeiq-weather-map-controls">
                 <select id="layer-select" aria-label="Weather layer">
                     <option value="temperature_2m">Temperature</option>
