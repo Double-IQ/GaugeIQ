@@ -136,20 +136,6 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
 <?php if ($notice): ?><div class="admin-notice"><?= h($notice) ?></div><?php endif; ?>
 <?php if ($errors): ?><div class="admin-notice admin-notice-error"><?php foreach ($errors as $error): ?><div><?= h($error) ?></div><?php endforeach; ?></div><?php endif; ?>
 
-<section class="admin-panel admin-updates-panel" aria-labelledby="updatesTitle">
-    <div class="admin-updates-icon" aria-hidden="true">↻</div>
-    <div class="admin-updates-copy"><p class="admin-kicker">MAINTENANCE</p><h2 id="updatesTitle">Software updates</h2><p id="adminUpdateStatus" class="admin-muted">Checking for the latest release…</p></div>
-    <div id="adminUpdateDetails" class="admin-update-details" hidden>
-        <p><strong id="adminLatestVersion"></strong></p>
-        <form method="post" action="admin-update.php">
-            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-            <input type="hidden" name="version" id="adminUpdateVersion">
-            <button class="admin-console-button button-link" type="submit">Install update <span aria-hidden="true">→</span></button>
-        </form>
-    </div>
-</section>
-
-
 <section class="admin-panel admin-monitor-panel" aria-labelledby="monitoringTitle">
     <div class="admin-panel-heading">
         <div><p class="admin-kicker">LIVE SYSTEM OVERVIEW</p><h2 id="monitoringTitle">System monitor</h2><p class="admin-muted">GaugeIQ's scheduled hourly background monitor.</p></div>
@@ -200,6 +186,19 @@ $cronCommand = '/usr/local/bin/php -q ' . escapeshellarg($cronScript);
         </select>
     </label>
 </div>
+
+<section class="admin-panel admin-updates-panel" aria-labelledby="updatesTitle">
+    <div class="admin-updates-icon" aria-hidden="true">↻</div>
+    <div class="admin-updates-copy"><p class="admin-kicker">MAINTENANCE</p><h2 id="updatesTitle">Software updates</h2><p id="adminUpdateStatus" class="admin-muted">Checking for the latest release…</p></div>
+    <div id="adminUpdateDetails" class="admin-update-details" hidden>
+        <p><strong id="adminLatestVersion"></strong></p>
+        <form method="post" action="admin-update.php">
+            <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+            <input type="hidden" name="version" id="adminUpdateVersion">
+            <button class="admin-console-button button-link" type="submit">Install update <span aria-hidden="true">→</span></button>
+        </form>
+    </div>
+</section>
 
 <footer class="admin-console-footer"><span>GAUGЕIQ · ADMINISTRATION</span><a href="./">Return to dashboard</a></footer>
 
