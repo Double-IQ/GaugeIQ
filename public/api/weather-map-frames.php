@@ -134,6 +134,20 @@ try {
             'regionBounds' => $regionBounds,
         ];
     }
+    // Public clients receive only frames whose full configured-region tile
+    // set was prepared by the hourly server job. CLI callers are the prefetch
+    // job itself and must be able to obtain the schedule before preparing it.
+    if (PHP_SAPI !== 'cli') {
+        $preparedDirectory = $directory . '/prepared';
+        $regionHash = hash('sha256', json_encode($regionBounds, JSON_THROW_ON_ERROR));
+        foreach ($frames as $frame) {
+            $marker = $preparedDirectory . '/' . hash('sha256', $frame['time'] . '|' . $regionHash) . '.json';
+            if (!is_file($marker)) {
+                throw new RuntimeException('The selected EUMETSAT observations have not yet been fully prepared on the server.');
+            }
+        }
+    }
+
     echo json_encode([
         'source' => 'EUMETSAT',
         'cadence' => 'hourly',
