@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 header('X-Content-Type-Options: nosniff');
+$configPath = __DIR__ . '/../../config/local.php';
 
 function observationTileFail(int $status, string $message): never
 {
@@ -34,8 +35,12 @@ try {
         observationTileFail(404, 'Tile is outside the tile matrix.');
     }
 
+    if (!is_file($configPath)) observationTileFail(503, 'GaugeIQ is not installed.');
+    $config = require $configPath;
+    $cacheBase = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__, 2) . '/storage/weather-map-cache'));
+    if ($cacheBase === '' || $cacheBase[0] !== '/') observationTileFail(500, 'Invalid weather-map cache directory.');
     $layer = $variable === 'precipitation' ? 'msg_fes:h60b' : 'msg_fes:clm';
-    $cacheRoot = dirname(__DIR__, 2) . '/storage/weather-map-cache/eumetsat';
+    $cacheRoot = rtrim($cacheBase, '/') . '/eumetsat';
     $directory = $cacheRoot . '/' . $date->format('YmdH') . '/' . $variable . '/' . $z . '/' . $x;
     if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
         observationTileFail(503, 'Observation tile cache is unavailable.');
