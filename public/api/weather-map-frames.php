@@ -59,30 +59,72 @@ try {
     libxml_use_internal_errors($previous);
     if (!$loaded) throw new RuntimeException('The EUMETSAT WMS catalogue is invalid.');
     $xpath = new DOMXPath($document);
-    $latestEnds = [];
+    // Expand the catalogue's actual time dimensions. Never manufacture an
+    // observation timestamp by rounding the catalogue's latest time to :00.
+    $layerTimes = [];
     foreach (['msg_fes:h60b', 'msg_fes:clm'] as $layerName) {
-        $nameNodes = $xpath->query('//*[local-name()="Layer"]/*[local-name()="Name" and text()="' . $layerName . '"]');
+        $nameNodes = $xpath->query('//*[local-name()="Layer"]/*[local-name()="Name" and normalize-space(text())="' . $layerName . '"]');
         if (!$nameNodes || $nameNodes->length !== 1) throw new RuntimeException('Required EUMETSAT layer is missing: ' . $layerName);
         $layer = $nameNodes->item(0)->parentNode;
-        $timeNodes = $xpath->query('./*[local-name()="Dimension" or local-name()="Extent"][@name="time"]', $layer);
-        if (!$timeNodes || $timeNodes->length < 1) throw new RuntimeException('EUMETSAT time dimension is missing: ' . $layerName);
-        $range = trim((string)$timeNodes->item(0)->textContent);
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\/([^\/]+)\/PT(?:15M|10M)$/', $range, $matches)) {
-            throw new RuntimeException('Unsupported EUMETSAT observation cadence for ' . $layerName . '.');
+        $timeNode = null;
+        for ($node = $layer; $node instanceof DOMElement && $timeNode === null; $node = $node->parentNode) {
+            foreach ($node->childNodes as $child) {
+                if ($child instanceof DOMElement &&
+                    in_array($child->localName, ['Dimension', 'Extent'], true) &&
+                    strtolower((string)$child->getAttribute('name')) === 'time') {
+                    $timeNode = $child;
+                    break;
+                }
+            }
         }
-        $end = new DateTimeImmutable($matches[1], new DateTimeZone('UTC'));
-        $latestEnds[] = $end;
+        if (!$timeNode) throw new RuntimeException('EUMETSAT time dimension is missing: ' . $layerName);
+        $dimension = trim((string)$timeNode->textContent);
+        $available = [];
+        foreach (preg_split('/\s*,\s*/', $dimension, -1, PREG_SPLIT_NO_EMPTY) as $entry) {
+            if (preg_match('/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\/PT(10|15)M$/', $entry, $parts)) {
+                $cursor = new DateTimeImmutable($parts[1], new DateTimeZone('UTC'));
+                $last = new DateTimeImmutable($parts[2], new DateTimeZone('UTC'));
+                $stepSeconds = (int)$parts[3] * 60;
+                for ($i = 0; $cursor <= $last && $i < 20000; $i++, $cursor = $cursor->modify('+' . $stepSeconds . ' seconds')) {
+                    $available[$cursor->getTimestamp()] = true;
+                }
+                continue;
+            }
+            if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/', $entry)) {
+                $parsed = new DateTimeImmutable($entry, new DateTimeZone('UTC'));
+                $available[$parsed->getTimestamp()] = true;
+                continue;
+            }
+            throw new RuntimeException('Unsupported EUMETSAT time dimension format for ' . $layerName . '.');
+        }
+        if ($available === []) throw new RuntimeException('EUMETSAT has no usable observation timestamps for ' . $layerName . '.');
+        $layerTimes[] = $available;
     }
 
-    // Use only observation timestamps common to both layers. Select the
-    // latest complete UTC hour, then the three preceding hourly observations.
-    $latest = $latestEnds[0] < $latestEnds[1] ? $latestEnds[0] : $latestEnds[1];
-    $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-    if ($latest > $now) $latest = $now;
-    $hour = $latest->setTime((int)$latest->format('H'), 0, 0);
+    $commonTimes = array_intersect_key($layerTimes[0], $layerTimes[1]);
+    if ($commonTimes === []) throw new RuntimeException('EUMETSAT precipitation and cloud observations have no common timestamps.');
+    $availableTimes = array_map('intval', array_keys($commonTimes));
+    sort($availableTimes, SORT_NUMERIC);
+
+    $nowTimestamp = time();
+    $latestCompleteHour = intdiv($nowTimestamp, 3600) * 3600;
     $frames = [];
+    $used = [];
     for ($slot = 0; $slot < 4; $slot++) {
-        $time = $hour->modify('-' . $slot . ' hours')->format('Y-m-d\TH:i:s\Z');
+        $target = $latestCompleteHour - ($slot * 3600);
+        $selected = null;
+        for ($i = count($availableTimes) - 1; $i >= 0; $i--) {
+            $candidate = $availableTimes[$i];
+            if ($candidate <= $target && $candidate >= $target - 5400 && !isset($used[$candidate])) {
+                $selected = $candidate;
+                break;
+            }
+        }
+        if ($selected === null) {
+            throw new RuntimeException('EUMETSAT does not provide four distinct hourly observations for both weather layers.');
+        }
+        $used[$selected] = true;
+        $time = gmdate('Y-m-d\TH:i:s\Z', $selected);
         $frames[] = [
             'slot' => $slot,
             'type' => 'past',
