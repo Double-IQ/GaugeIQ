@@ -63,7 +63,7 @@ try {
     }
     $size = filesize($path);
     $signature = file_get_contents($path, false, null, 0, 8);
-    if ($size === false || $size <= 8 || $signature !== "\\x89PNG\\r\\n\\x1a\\n") {
+    if ($size === false || $size <= 8 || $signature !== "\x89PNG\r\n\x1a\n") {
         observationTileFail(503, 'Prepared observation tile is invalid.');
     }
     header('Content-Type: image/png');
