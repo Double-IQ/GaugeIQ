@@ -339,29 +339,18 @@ protocolOptions.fileReaderConfig = {
         let animationLoadPoll = null;
         let animationLoadError = null;
         let animationFrameSourceAdder = null;
-        // Keep a visible session warning and the actual server response when a frame falls back.
-        const preparedTileFallbacks = new Set();
-        const preparedTileFallbackReasons = new Map();
         function updateServerStatus(state) {
             if (!serverStatus) return;
             serverStatus.classList.remove('is-online', 'is-offline', 'is-checking');
             serverStatus.classList.add('is-' + state);
             serverStatus.textContent = state === 'online' ? 'Server online'
-                : state === 'offline' ? 'Server offline · browser fallback'
+                 : state === 'offline' ? 'Observation tiles unavailable'
                 : 'Checking server…';
         }
 
         function setStatus(message) {
-            const fallbackNotice = preparedTileFallbacks.size
-                ? '⚠ Server-prepared tiles failed for ' + Array.from(preparedTileFallbacks).join(', ') +
-                    '. Browser rendering is being used for those frame(s).' +
-                    (preparedTileFallbackReasons.size
-                        ? ' Server response: ' + Array.from(preparedTileFallbackReasons.values()).join(' | ')
-                        : '')
-                : '';
-            const visibleMessage = [fallbackNotice, message].filter(Boolean).join(' ');
-            status.textContent = visibleMessage;
-            status.hidden = !visibleMessage;
+            status.textContent = message;
+            status.hidden = !message;
         }
 
         function weatherVariables(selection) {
@@ -532,8 +521,6 @@ protocolOptions.fileReaderConfig = {
 
         async function prepareAnimation(autoStart = true) {
             clearAnimation();
-            preparedTileFallbacks.clear();
-            preparedTileFallbackReasons.clear();
             updateServerStatus('checking');
             const token = animationToken;
             animationPreparing = true;
@@ -582,18 +569,16 @@ protocolOptions.fileReaderConfig = {
                     time: Date.parse(item.time),
                     frameTime: String(item.time),
                     url: item.url,
-                    prepared: item.prepared || {},
-                    // Use the server-prepared regional frames for raster tiles.
-                    // If a tile fails, the map error handler switches this
-                    // frame back to the browser renderer automatically.
+                    serverProxy: item.serverProxy === true,
+                    // All observed frames are rendered only through GaugeIQ's server tile endpoint.
                     forceBrowser: false,
-                    usingPreparedTiles: false
+                    usingPreparedTiles: true
                 }));
                 if (scheduledFrames.some(frame =>
-                    !Number.isFinite(frame.time) ||
-                    !/^https:\/\/openmeteo\.s3\.amazonaws\.com\/data_spatial\/ecmwf_ifs025\/.+\.om$/.test(frame.url)
+                    !Number.isFinite(frame.time) || frame.type !== 'past' ||
+                    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(frame.frameTime)
                 )) {
-                    throw new Error('The scheduled weather-map frame list contains an invalid frame.');
+                    throw new Error('The server returned an invalid EUMETSAT observation frame.');
                 }
 
                 const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
@@ -623,27 +608,9 @@ protocolOptions.fileReaderConfig = {
 
                 const variables = weatherVariables(layerSelect.value);
                 const buildPreparedTileUrl = (frame, item, z = 0, x = 0, y = 0) => {
-                    const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
-                    tileUrl.searchParams.set('slot', String(frame.slot));
-                    tileUrl.searchParams.set('location_id', activeLocationId);
-                    tileUrl.searchParams.set('frame_time', frame.frameTime);
+                    const tileUrl = new URL('/api/weather-map-observation-tile.php', window.location.origin);
+                    tileUrl.searchParams.set('time', frame.frameTime);
                     tileUrl.searchParams.set('variable', item.variable);
-                    tileUrl.searchParams.set('interpolation', appearance.interpolation);
-                    tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                    const regionBounds = Array.isArray(weatherRegionBounds) && weatherRegionBounds.length === 4
-                        ? weatherRegionBounds : defaultRegionBounds;
-                    ['west', 'south', 'east', 'north'].forEach((key, index) =>
-                        tileUrl.searchParams.set('region_' + key, String(regionBounds[index])));
-                    const colors = item.variable === 'precipitation'
-                        ? precipitationColors
-                        : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
-                            ...appearanceDefaults.cloudColors].slice(0, 4);
-                    const alphas = item.variable === 'precipitation'
-                        ? precipitationColorOpacities
-                        : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
-                            100, 100, 100, 100].slice(0, 4);
-                    tileUrl.searchParams.set('colors', colors.join(','));
-                    tileUrl.searchParams.set('alphas', alphas.join(','));
                     tileUrl.searchParams.set('z', String(z));
                     tileUrl.searchParams.set('x', String(x));
                     tileUrl.searchParams.set('y', String(y));
@@ -653,7 +620,7 @@ protocolOptions.fileReaderConfig = {
                 // Verify the actual PNG tile endpoint, not just the decoded cache files.
                 // A second schedule request forces server-cache reconciliation before
                 // we decide that browser-side decoding is necessary.
-                const probeZoom = Math.max(0, Math.min(12, Math.floor(map.getZoom())));
+                const probeZoom = Math.max(0, Math.min(4, Math.floor(map.getZoom())));
                 const probeCount = 2 ** probeZoom;
                 const probeCenter = map.getCenter();
                 const probeLongitude = Math.max(-180, Math.min(180, probeCenter.lng));
@@ -663,19 +630,6 @@ protocolOptions.fileReaderConfig = {
                 const probeY = Math.max(0, Math.min(probeCount - 1,
                     Math.floor((1 - Math.asinh(Math.tan(probeLatitude * Math.PI / 180)) / Math.PI) / 2 * probeCount)));
                 for (const frame of pastFrames) {
-                    const allVariablesPrepared = variables.every(item => frame.prepared?.[item.variable]);
-                    if (!allVariablesPrepared) {
-                        frame.forceBrowser = true;
-                        preparedTileFallbacks.add(frame.id);
-                        if (!preparedTileFallbackReasons.has(frame.id)) {
-                            const missing = variables.filter(item => !frame.prepared?.[item.variable])
-                                .map(item => item.variable).join(', ');
-                            preparedTileFallbackReasons.set(frame.id,
-                                'Server decoded data is still unavailable for ' + (missing || 'this frame') + ' after retry.');
-                        }
-                        continue;
-                    }
-
                     let failure = null;
                     for (const item of variables) {
                         try {
@@ -695,16 +649,9 @@ protocolOptions.fileReaderConfig = {
                     }
 
                     if (failure) {
-                        frame.forceBrowser = true;
-                        preparedTileFallbacks.add(frame.id);
-                        preparedTileFallbackReasons.set(frame.id, failure);
+                        throw new Error('EUMETSAT observation tile verification failed for ' + frame.frameTime + ': ' + failure);
                     }
                 }
-                if (preparedTileFallbacks.size) {
-                    updateServerStatus('offline');
-                    setStatus('');
-                }
-
                 animationFrames = [...pastFrames].map(frame => ({
                     ...frame,
                     layerIds: [],
@@ -719,8 +666,7 @@ protocolOptions.fileReaderConfig = {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         let sourceOptions;
-                        if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
-                            const tileUrl = buildPreparedTileUrl(frame, item);
+                        const tileUrl = buildPreparedTileUrl(frame, item);
                             tileUrl.searchParams.delete('z');
                             tileUrl.searchParams.delete('x');
                             tileUrl.searchParams.delete('y');
@@ -728,27 +674,9 @@ protocolOptions.fileReaderConfig = {
                                 type: 'raster',
                                 tiles: [tileUrl.href + '&z={z}&x={x}&y={y}'],
                                 tileSize: 256,
-                                maxzoom: 12
+                                maxzoom: 4
                             };
                             frame.usingPreparedTiles = true;
-                        } else {
-                            if (!frame.forceBrowser) {
-                                preparedTileFallbacks.add(frame.id);
-                                updateServerStatus('offline');
-                            }
-                            const dataUrl = new URL(frame.url);
-                            dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                            dataUrl.searchParams.set('variable', item.variable);
-                            dataUrl.searchParams.set('interpolation', appearance.interpolation);
-                            dataUrl.searchParams.set('color_blend', 'true');
-                            dataUrl.searchParams.set('tile_size', '256');
-                            sourceOptions = {
-                                type: 'raster',
-                                url: 'om://' + dataUrl.href,
-                                tileSize: 256,
-                                maxzoom: 12
-                            };
-                        }
                         map.addSource(sourceId, sourceOptions);
                         map.addLayer({
                             id: layerId,
@@ -826,7 +754,7 @@ protocolOptions.fileReaderConfig = {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
                     animationToggle.disabled = false;
-                    updateServerStatus(preparedTileFallbacks.size ? 'offline' : 'online');
+                    updateServerStatus('online');
                     setStatus('');
                     showFrame(animationCurrentFrame);
                     if (autoStart) runAnimation();
@@ -885,41 +813,16 @@ protocolOptions.fileReaderConfig = {
 
         async function resolveCurrentOmUrls(variables) {
             const response = await fetch('/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId), { cache: 'no-store' });
-            if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
+            if (!response.ok) throw new Error('Observed EUMETSAT weather frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 4) throw new Error('The server has not supplied all 4 scheduled past weather frames.');
-
-            const now = Date.now();
-            const currentFrame = frames
-                .filter(frame => Number.isFinite(Date.parse(frame.time)))
-                .sort((a, b) => Math.abs(Date.parse(a.time) - now) - Math.abs(Date.parse(b.time) - now))[0];
-            if (!currentFrame) throw new Error('No usable current weather-map frame was found.');
-
-            const chronologicalFrames = frames
-                .filter(frame => Number.isFinite(Date.parse(frame.time)))
-                .sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
-            const currentIndex = chronologicalFrames.findIndex(frame =>
-                frame.slot === currentFrame.slot && frame.time === currentFrame.time
-            );
-            const neighbour = currentIndex === 0
-                ? chronologicalFrames[1]
-                : chronologicalFrames[currentIndex - 1];
-            const deltaTimeHours = neighbour
-                ? Math.abs(Date.parse(currentFrame.time) - Date.parse(neighbour.time)) / 3600000
-                : 3;
-            if (!Number.isFinite(deltaTimeHours) || deltaTimeHours <= 0) {
-                throw new Error('The current weather-map frame interval is invalid.');
-            }
-
+            if (frames.length !== 4) throw new Error('The server has not supplied all 4 observed weather frames.');
+            const currentFrame = frames.slice().sort((a, b) => Date.parse(b.time) - Date.parse(a.time))[0];
+            if (!currentFrame || !Number.isFinite(Date.parse(currentFrame.time))) throw new Error('No usable EUMETSAT observation was found.');
             return variables.map(item => {
-                const url = new URL(currentFrame.url);
-                url.searchParams.set('delta_time_hours', String(deltaTimeHours));
+                const url = new URL('/api/weather-map-observation-tile.php', window.location.origin);
+                url.searchParams.set('time', currentFrame.time);
                 url.searchParams.set('variable', item.variable);
-                url.searchParams.set('interpolation', appearance.interpolation);
-                // Blend colour stops and their alpha channels for smooth transitions.
-                url.searchParams.set('color_blend', 'true');
-                url.searchParams.set('tile_size', '256');
                 return url.href;
             });
         }
@@ -932,9 +835,9 @@ protocolOptions.fileReaderConfig = {
                 const layerId = 'gaugeiq-weather-layer-' + suffix + '-' + index;
                 map.addSource(sourceId, {
                     type: 'raster',
-                    url: 'om://' + urls[index],
+                    tiles: [urls[index] + '&z={z}&x={x}&y={y}'],
                     tileSize: 256,
-                    maxzoom: 12
+                    maxzoom: 8
                 });
                 map.addLayer({
                     id: layerId,
@@ -1140,24 +1043,6 @@ protocolOptions.fileReaderConfig = {
             const sourceId = event?.sourceId || event?.source?.id || '';
             if (String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
-                if (frame?.usingPreparedTiles && !frame.forceBrowser && animationFrameSourceAdder) {
-                    // A server tile failure must not strand playback. Replace this
-                    // frame with the proven browser renderer and keep the other
-                    // prepared frames untouched.
-                    removeAnimationFrameSources(frame);
-                    frame.forceBrowser = true;
-                    frame.usingPreparedTiles = false;
-                    frame.loadAttempts = 0;
-                    frame.loadError = null;
-                    preparedTileFallbacks.add(frame.id);
-                    preparedTileFallbackReasons.set(frame.id, message);
-                    updateServerStatus('offline');
-                    animationFrameSourceAdder(frame);
-                    // setStatus keeps this warning visible even when normal
-                    // loading/playback messages update the status line later.
-                    setStatus('');
-                    return;
-                }
                 if (frame) frame.loadError = message;
                 if (animationLoadTimeout !== null) {
                     animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;

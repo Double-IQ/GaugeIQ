@@ -86,6 +86,17 @@ try {
     fwrite(STDERR, "Weather-map refresh failed (monitoring continues): " . $weatherMapError->getMessage() . "\n");
 }
 
+// Prepare the four hourly EUMETSAT observation frames entirely on the
+// server. The public tile endpoint only serves these prepared cache files.
+try {
+    (static function (): void {
+        require __DIR__ . '/prefetch-eumetsat-observations.php';
+    })();
+} catch (Throwable $eumetsatError) {
+    error_log('GaugeIQ EUMETSAT observation prefetch failed: ' . $eumetsatError->getMessage());
+    fwrite(STDERR, "EUMETSAT observation prefetch failed (monitoring continues): " . $eumetsatError->getMessage() . "\n");
+}
+
 require_once __DIR__ . '/../app/WeatherMapRainfallNowcastService.php';
 $secondLocationEnabled = getGaugeIqSetting($pdo, 'second_location_enabled', '0') === '1';
 $monitorLocationIds = $secondLocationEnabled ? [1, 2] : [1];
