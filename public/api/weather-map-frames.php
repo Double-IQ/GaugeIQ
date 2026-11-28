@@ -12,7 +12,13 @@ try {
     require_once __DIR__ . '/../../app/Database.php';
     require_once __DIR__ . '/../../app/WeatherMapRegionSettings.php';
     $pdo = (new Database($config))->pdo();
+    // filter_input() reads the SAPI request data and does not reliably see
+    // manually populated $_GET values when this API is included by the CLI
+    // prefetch job. Fall back to the request array while keeping validation.
     $locationId = filter_input(INPUT_GET, 'location_id', FILTER_VALIDATE_INT);
+    if ($locationId === null) {
+        $locationId = filter_var($_GET['location_id'] ?? null, FILTER_VALIDATE_INT);
+    }
     if ($locationId === false || $locationId === null || !in_array($locationId, [1, 2], true)) $locationId = 1;
     $regionBounds = WeatherMapRegionSettings::get($pdo, $locationId);
 
