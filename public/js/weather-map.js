@@ -339,9 +339,6 @@ protocolOptions.fileReaderConfig = {
         let animationLoadPoll = null;
         let animationLoadError = null;
         let animationFrameSourceAdder = null;
-        // Keep a visible session warning and the actual server response when a frame falls back.
-        const preparedTileFallbacks = new Set();
-        const preparedTileFallbackReasons = new Map();
         function updateServerStatus(state) {
             if (!serverStatus) return;
             serverStatus.classList.remove('is-online', 'is-offline', 'is-checking');
@@ -352,16 +349,8 @@ protocolOptions.fileReaderConfig = {
         }
 
         function setStatus(message) {
-            const fallbackNotice = preparedTileFallbacks.size
-                ? '⚠ Server-prepared tiles failed for ' + Array.from(preparedTileFallbacks).join(', ') +
-                    '. Browser rendering is being used for those frame(s).' +
-                    (preparedTileFallbackReasons.size
-                        ? ' Server response: ' + Array.from(preparedTileFallbackReasons.values()).join(' | ')
-                        : '')
-                : '';
-            const visibleMessage = [fallbackNotice, message].filter(Boolean).join(' ');
-            status.textContent = visibleMessage;
-            status.hidden = !visibleMessage;
+            status.textContent = message;
+            status.hidden = !message;
         }
 
         function weatherVariables(selection) {
@@ -532,8 +521,6 @@ protocolOptions.fileReaderConfig = {
 
         async function prepareAnimation(autoStart = true) {
             clearAnimation();
-            preparedTileFallbacks.clear();
-            preparedTileFallbackReasons.clear();
             updateServerStatus('checking');
             const token = animationToken;
             animationPreparing = true;
@@ -583,11 +570,9 @@ protocolOptions.fileReaderConfig = {
                     frameTime: String(item.time),
                     url: item.url,
                     serverProxy: item.serverProxy === true,
-                    // Use the server-prepared regional frames for raster tiles.
-                    // If a tile fails, the map error handler switches this
-                    // frame back to the browser renderer automatically.
+                    // All observed frames are rendered only through GaugeIQ's server tile endpoint.
                     forceBrowser: false,
-                    usingPreparedTiles: false
+                    usingPreparedTiles: true
                 }));
                 if (scheduledFrames.some(frame =>
                     !Number.isFinite(frame.time) || frame.type !== 'past' ||
@@ -667,11 +652,6 @@ protocolOptions.fileReaderConfig = {
                         throw new Error('EUMETSAT observation tile verification failed for ' + frame.frameTime + ': ' + failure);
                     }
                 }
-                if (preparedTileFallbacks.size) {
-                    updateServerStatus('offline');
-                    setStatus('');
-                }
-
                 animationFrames = [...pastFrames].map(frame => ({
                     ...frame,
                     layerIds: [],
@@ -774,7 +754,7 @@ protocolOptions.fileReaderConfig = {
                         if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', 0);
                     });
                     animationToggle.disabled = false;
-                    updateServerStatus(preparedTileFallbacks.size ? 'offline' : 'online');
+                    updateServerStatus('online');
                     setStatus('');
                     showFrame(animationCurrentFrame);
                     if (autoStart) runAnimation();
@@ -1063,24 +1043,6 @@ protocolOptions.fileReaderConfig = {
             const sourceId = event?.sourceId || event?.source?.id || '';
             if (String(sourceId).startsWith('gaugeiq-animation-source-')) {
                 const frame = animationFrames.find(item => item.sourceIds.includes(sourceId));
-                if (frame?.usingPreparedTiles && !frame.forceBrowser && animationFrameSourceAdder) {
-                    // A server tile failure must not strand playback. Replace this
-                    // frame with the proven browser renderer and keep the other
-                    // prepared frames untouched.
-                    removeAnimationFrameSources(frame);
-                    frame.forceBrowser = true;
-                    frame.usingPreparedTiles = false;
-                    frame.loadAttempts = 0;
-                    frame.loadError = null;
-                    preparedTileFallbacks.add(frame.id);
-                    preparedTileFallbackReasons.set(frame.id, message);
-                    updateServerStatus('offline');
-                    animationFrameSourceAdder(frame);
-                    // setStatus keeps this warning visible even when normal
-                    // loading/playback messages update the status line later.
-                    setStatus('');
-                    return;
-                }
                 if (frame) frame.loadError = message;
                 if (animationLoadTimeout !== null) {
                     animationLoadError = (frame ? frame.id + ' · ' : '') + sourceId + ' · ' + message;
