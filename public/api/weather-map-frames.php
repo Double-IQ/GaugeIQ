@@ -88,7 +88,7 @@ try {
             'type' => 'past',
             'time' => $time,
             'source' => 'EUMETSAT MSG satellite observation',
-            'prepared' => ['precipitation' => true, 'cloud_cover' => true],
+            'serverProxy' => true,
             'regionBounds' => $regionBounds,
         ];
     }
@@ -97,7 +97,7 @@ try {
         'cadence' => 'hourly',
         'frames' => $frames,
         'refreshedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-        'serverPrepared' => true,
+        'serverProxy' => true,
     ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 } catch (Throwable $error) {
     error_log('GaugeIQ EUMETSAT observation schedule failed: ' . $error->getMessage());
