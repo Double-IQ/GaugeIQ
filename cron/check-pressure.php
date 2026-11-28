@@ -94,7 +94,7 @@ try {
     })();
 } catch (Throwable $eumetsatError) {
     error_log('GaugeIQ EUMETSAT observation prefetch failed: ' . $eumetsatError->getMessage());
-    fwrite(STDERR, "EUMETSAT observation prefetch failed (monitoring continues): " . $eumetsatError->getMessage() . "\\n");
+    fwrite(STDERR, "EUMETSAT observation prefetch failed (monitoring continues): " . $eumetsatError->getMessage() . "\n");
 }
 
 require_once __DIR__ . '/../app/WeatherMapRainfallNowcastService.php';
