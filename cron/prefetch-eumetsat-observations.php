@@ -50,6 +50,16 @@ foreach ($locations as $locationId) {
         if (!$date || $date->format('Y-m-d\TH:i:s\Z') !== $time) {
             throw new RuntimeException('Invalid observed frame timestamp.');
         }
+        $preparedDir = $prefetchCacheRoot . '/prepared';
+        $marker = $preparedDir . '/' . hash('sha256', $time . '|' . $regionHash) . '.json';
+        if (is_file($marker)) {
+            $markerData = json_decode((string)file_get_contents($marker), true);
+            if (is_array($markerData) && ($markerData['time'] ?? null) === $time &&
+                ($markerData['bounds'] ?? null) === $bounds && (int)($markerData['maxZoom'] ?? 0) === 4) {
+                printf("EUMETSAT frame already prepared: Location %s, %s\\n", $locationId, $time);
+                continue;
+            }
+        }
         foreach (['precipitation' => 'msg_fes:h60b', 'cloud_cover' => 'msg_fes:clm'] as $variable => $layer) {
             // Zoom 0-4 covers the configured region with a bounded tile count.
             // MapLibre overzooms the prepared native tiles at higher display zooms.
