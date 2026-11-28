@@ -41,7 +41,7 @@ try {
     if ($cacheBase === '' || $cacheBase[0] !== '/') observationTileFail(500, 'Invalid weather-map cache directory.');
     $layer = $variable === 'precipitation' ? 'msg_fes:h60b' : 'msg_fes:clm';
     $cacheRoot = rtrim($cacheBase, '/') . '/eumetsat';
-    $directory = $cacheRoot . '/' . $date->format('YmdH') . '/' . $variable . '/' . $z . '/' . $x;
+    $directory = $cacheRoot . '/' . $date->format('YmdHi') . '/' . $variable . '/' . $z . '/' . $x;
     if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
         observationTileFail(503, 'Observation tile cache is unavailable.');
     }
