@@ -69,7 +69,7 @@ foreach ($locations as $locationId) {
                             throw new RuntimeException('Could not create EUMETSAT tile cache directory.');
                         }
                         $path = $directory . '/' . $y . '.png';
-                        if (is_file($path) && filesize($path) > 8 && file_get_contents($path, false, null, 0, 8) === "\\x89PNG\\r\\n\\x1a\\n") continue;
+                        if (is_file($path) && filesize($path) > 8 && file_get_contents($path, false, null, 0, 8) === "\x89PNG\r\n\x1a\n") continue;
 
                         $world = 20037508.342789244;
                         $span = (2.0 * $world) / $count;
@@ -99,7 +99,7 @@ foreach ($locations as $locationId) {
                         $error = curl_error($ch);
                         curl_close($ch);
                         if (!is_string($png) || $status !== 200 || stripos($type, 'image/png') === false ||
-                            substr($png, 0, 8) !== "\\x89PNG\\r\\n\\x1a\\n") {
+                            substr($png, 0, 8) !== "\x89PNG\r\n\x1a\n") {
                             throw new RuntimeException('EUMETSAT prefetch failed for ' . $variable . ' tile ' . $z . '/' . $x . '/' . $y .
                                 ' (HTTP ' . $status . '): ' . $error);
                         }
@@ -124,6 +124,6 @@ foreach ($locations as $locationId) {
             @unlink($tmp);
             throw new RuntimeException('Could not publish EUMETSAT prepared-frame marker.');
         }
-        printf("EUMETSAT frame prepared: Location %s, %s\\n", $locationId, $time);
+        printf("EUMETSAT frame prepared: Location %s, %s\n", $locationId, $time);
     }
 }
