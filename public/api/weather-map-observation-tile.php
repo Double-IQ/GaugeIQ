@@ -26,7 +26,7 @@ try {
     $date = DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s\Z', $time, new DateTimeZone('UTC'));
     if (!$date || $date->format('Y-m-d\TH:i:s\Z') !== $time ||
         !in_array($variable, ['precipitation', 'cloud_cover'], true) ||
-        $z === false || $z === null || $z < 0 || $z > 8 ||
+        $z === false || $z === null || $z < 0 || $z > 4 ||
         $x === false || $x === null || $y === false || $y === null) {
         observationTileFail(400, 'Invalid EUMETSAT observation tile request.');
     }
@@ -42,8 +42,10 @@ try {
     $layer = $variable === 'precipitation' ? 'msg_fes:h60b' : 'msg_fes:clm';
     $cacheRoot = rtrim($cacheBase, '/') . '/eumetsat';
     $directory = $cacheRoot . '/' . $date->format('YmdHi') . '/' . $variable . '/' . $z . '/' . $x;
-    if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
-        observationTileFail(503, 'Observation tile cache is unavailable.');
+    // This endpoint is strictly read-only: only the hourly server prefetcher
+    // creates cache directories and files. Native prepared coverage ends at z4.
+    if ($z > 4 || !is_dir($directory)) {
+        observationTileFail(503, 'Observed tile has not been prepared by the server yet.');
     }
     $path = $directory . '/' . $y . '.png';
     $etag = '"' . hash('sha256', implode('|', [$layer, $time, $z, $x, $y])) . '"';
