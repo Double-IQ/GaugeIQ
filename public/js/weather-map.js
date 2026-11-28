@@ -620,7 +620,7 @@ protocolOptions.fileReaderConfig = {
                 // Verify the actual PNG tile endpoint, not just the decoded cache files.
                 // A second schedule request forces server-cache reconciliation before
                 // we decide that browser-side decoding is necessary.
-                const probeZoom = Math.max(0, Math.min(8, Math.floor(map.getZoom())));
+                const probeZoom = Math.max(0, Math.min(4, Math.floor(map.getZoom())));
                 const probeCount = 2 ** probeZoom;
                 const probeCenter = map.getCenter();
                 const probeLongitude = Math.max(-180, Math.min(180, probeCenter.lng));
@@ -674,7 +674,7 @@ protocolOptions.fileReaderConfig = {
                                 type: 'raster',
                                 tiles: [tileUrl.href + '&z={z}&x={x}&y={y}'],
                                 tileSize: 256,
-                                maxzoom: 8
+                                maxzoom: 4
                             };
                             frame.usingPreparedTiles = true;
                         map.addSource(sourceId, sourceOptions);
