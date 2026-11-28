@@ -64,7 +64,7 @@ foreach ($locations as $locationId) {
                 $yMin = $tileY($north); $yMax = $tileY($south);
                 for ($x = $xMin; $x <= $xMax; $x++) {
                     for ($y = $yMin; $y <= $yMax; $y++) {
-                        $directory = $cacheRoot . '/' . $date->format('YmdH') . '/' . $variable . '/' . $z . '/' . $x;
+                        $directory = $cacheRoot . '/' . $date->format('YmdHi') . '/' . $variable . '/' . $z . '/' . $x;
                         if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
                             throw new RuntimeException('Could not create EUMETSAT tile cache directory.');
                         }
