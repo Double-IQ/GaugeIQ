@@ -127,3 +127,32 @@ foreach ($locations as $locationId) {
         printf("EUMETSAT frame prepared: Location %s, %s\n", $locationId, $time);
     }
 }
+
+// Keep the prepared satellite cache bounded. The animation only needs four
+// hourly frames, but retain seven days to cover temporary client/offline gaps.
+$cacheCutoff = time() - (7 * 86400);
+$cacheIterator = new DirectoryIterator($prefetchCacheRoot);
+foreach ($cacheIterator as $entry) {
+    if ($entry->isDot() || !$entry->isDir() || !preg_match('/^\\d{12}$/', $entry->getFilename())) continue;
+    $frameDate = DateTimeImmutable::createFromFormat('!YmdHi', $entry->getFilename(), new DateTimeZone('UTC'));
+    if (!$frameDate || $frameDate->getTimestamp() >= $cacheCutoff) continue;
+    $directoryIterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($entry->getPathname(), FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+    foreach ($directoryIterator as $cachedEntry) {
+        if ($cachedEntry->isDir()) @rmdir($cachedEntry->getPathname());
+        else @unlink($cachedEntry->getPathname());
+    }
+    @rmdir($entry->getPathname());
+}
+
+$preparedDir = $prefetchCacheRoot . '/prepared';
+if (is_dir($preparedDir)) {
+    foreach (new DirectoryIterator($preparedDir) as $markerEntry) {
+        if ($markerEntry->isDot() || !$markerEntry->isFile() || $markerEntry->getExtension() !== 'json') continue;
+        $markerData = json_decode((string)file_get_contents($markerEntry->getPathname()), true);
+        $markerTime = is_array($markerData) ? strtotime((string)($markerData['time'] ?? '')) : false;
+        if ($markerTime === false || $markerTime < $cacheCutoff) @unlink($markerEntry->getPathname());
+    }
+}
