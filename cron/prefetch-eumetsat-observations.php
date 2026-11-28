@@ -56,7 +56,7 @@ foreach ($locations as $locationId) {
             $markerData = json_decode((string)file_get_contents($marker), true);
             if (is_array($markerData) && ($markerData['time'] ?? null) === $time &&
                 ($markerData['bounds'] ?? null) === $bounds && (int)($markerData['maxZoom'] ?? 0) === 4) {
-                printf("EUMETSAT frame already prepared: Location %s, %s\\n", $locationId, $time);
+                printf("EUMETSAT frame already prepared: Location %s, %s\n", $locationId, $time);
                 continue;
             }
         }
