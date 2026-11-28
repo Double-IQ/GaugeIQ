@@ -26,7 +26,7 @@ try {
     $capabilitiesLock = fopen($capabilitiesPath . '.lock', 'c');
     if ($capabilitiesLock === false || !flock($capabilitiesLock, LOCK_EX)) throw new RuntimeException('Could not lock the EUMETSAT catalogue cache.');
     try {
-        if (!is_file($capabilitiesPath) || (time() - (int)filemtime($capabilitiesPath)) >= 3600) {
+        if (!is_file($capabilitiesPath) || gmdate('YmdH', (int)filemtime($capabilitiesPath)) !== gmdate('YmdH')) {
             $ch = curl_init('https://view.eumetsat.int/geoserver/ows?service=WMS&version=1.3.0&request=GetCapabilities');
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false,
