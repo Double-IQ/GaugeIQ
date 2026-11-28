@@ -582,7 +582,7 @@ protocolOptions.fileReaderConfig = {
                     time: Date.parse(item.time),
                     frameTime: String(item.time),
                     url: item.url,
-                    prepared: item.prepared || {},
+                    serverProxy: item.serverProxy === true,
                     // Use the server-prepared regional frames for raster tiles.
                     // If a tile fails, the map error handler switches this
                     // frame back to the browser renderer automatically.
@@ -645,11 +645,6 @@ protocolOptions.fileReaderConfig = {
                 const probeY = Math.max(0, Math.min(probeCount - 1,
                     Math.floor((1 - Math.asinh(Math.tan(probeLatitude * Math.PI / 180)) / Math.PI) / 2 * probeCount)));
                 for (const frame of pastFrames) {
-                    const allVariablesPrepared = variables.every(item => frame.prepared?.[item.variable]);
-                    if (!allVariablesPrepared) {
-                        throw new Error('The server has not prepared every EUMETSAT observation layer for ' + frame.frameTime + '.');
-                    }
-
                     let failure = null;
                     for (const item of variables) {
                         try {
