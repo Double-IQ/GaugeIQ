@@ -56,21 +56,18 @@ try {
         exit;
     }
 
-    $lock = fopen($path . '.lock', 'c');
-    if ($lock === false || !flock($lock, LOCK_EX)) {
-        if (is_resource($lock)) fclose($lock);
-        observationTileFail(503, 'Observation tile cache is busy.');
+    // Prefetch writes tiles via atomic rename, so readers never see a partial
+    // PNG and must not create lock files or directories in the cache.
+    if (!is_file($path)) {
+        observationTileFail(503, 'Observed tile has not been prepared by the server yet.');
     }
-    try {
-        if (!is_file($path)) {
-            observationTileFail(503, 'Observed tile has not been prepared by the server yet.');
-        }
-    } finally {
-        flock($lock, LOCK_UN);
-        fclose($lock);
+    $size = filesize($path);
+    $signature = file_get_contents($path, false, null, 0, 8);
+    if ($size === false || $size <= 8 || $signature !== "\\x89PNG\\r\\n\\x1a\\n") {
+        observationTileFail(503, 'Prepared observation tile is invalid.');
     }
     header('Content-Type: image/png');
-    header('Content-Length: ' . (string)filesize($path));
+    header('Content-Length: ' . (string)$size);
     readfile($path);
 } catch (Throwable $error) {
     error_log('GaugeIQ EUMETSAT observation tile failed: ' . $error->getMessage());
