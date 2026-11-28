@@ -590,10 +590,10 @@ protocolOptions.fileReaderConfig = {
                     usingPreparedTiles: false
                 }));
                 if (scheduledFrames.some(frame =>
-                    !Number.isFinite(frame.time) ||
-                    !/^https:\/\/openmeteo\.s3\.amazonaws\.com\/data_spatial\/ecmwf_ifs025\/.+\.om$/.test(frame.url)
+                    !Number.isFinite(frame.time) || frame.type !== 'past' ||
+                    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(frame.frameTime)
                 )) {
-                    throw new Error('The scheduled weather-map frame list contains an invalid frame.');
+                    throw new Error('The server returned an invalid EUMETSAT observation frame.');
                 }
 
                 const pastFrames = scheduledFrames.filter(frame => frame.type === 'past');
@@ -635,7 +635,7 @@ protocolOptions.fileReaderConfig = {
                 // Verify the actual PNG tile endpoint, not just the decoded cache files.
                 // A second schedule request forces server-cache reconciliation before
                 // we decide that browser-side decoding is necessary.
-                const probeZoom = Math.max(0, Math.min(12, Math.floor(map.getZoom())));
+                const probeZoom = Math.max(0, Math.min(8, Math.floor(map.getZoom())));
                 const probeCount = 2 ** probeZoom;
                 const probeCenter = map.getCenter();
                 const probeLongitude = Math.max(-180, Math.min(180, probeCenter.lng));
@@ -647,15 +647,7 @@ protocolOptions.fileReaderConfig = {
                 for (const frame of pastFrames) {
                     const allVariablesPrepared = variables.every(item => frame.prepared?.[item.variable]);
                     if (!allVariablesPrepared) {
-                        frame.forceBrowser = true;
-                        preparedTileFallbacks.add(frame.id);
-                        if (!preparedTileFallbackReasons.has(frame.id)) {
-                            const missing = variables.filter(item => !frame.prepared?.[item.variable])
-                                .map(item => item.variable).join(', ');
-                            preparedTileFallbackReasons.set(frame.id,
-                                'Server decoded data is still unavailable for ' + (missing || 'this frame') + ' after retry.');
-                        }
-                        continue;
+                        throw new Error('The server has not prepared every EUMETSAT observation layer for ' + frame.frameTime + '.');
                     }
 
                     let failure = null;
