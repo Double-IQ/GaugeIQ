@@ -23,6 +23,15 @@ if (!is_dir($prefetchCacheRoot) && !mkdir($prefetchCacheRoot, 0750, true) && !is
     throw new RuntimeException('EUMETSAT cache directory is unavailable.');
 }
 
+// Prevent overlapping hourly runs from duplicating upstream requests or racing
+// prepared-frame publication. A busy run is harmless; the next cron retries.
+$prefetchLock = fopen($prefetchCacheRoot . '/prefetch.lock', 'c');
+if ($prefetchLock === false || !flock($prefetchLock, LOCK_EX | LOCK_NB)) {
+    if (is_resource($prefetchLock)) fclose($prefetchLock);
+    error_log('GaugeIQ EUMETSAT prefetch skipped: another run is still active.');
+    return;
+}
+
 foreach ($locations as $locationId) {
     // Reuse the exact authoritative server-side timestamp selection used by
     // the public API. Buffer its JSON response instead of making an HTTP loopback.
