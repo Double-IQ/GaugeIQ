@@ -347,7 +347,7 @@ protocolOptions.fileReaderConfig = {
             serverStatus.classList.remove('is-online', 'is-offline', 'is-checking');
             serverStatus.classList.add('is-' + state);
             serverStatus.textContent = state === 'online' ? 'Server online'
-                : state === 'offline' ? 'Server offline · browser fallback'
+                 : state === 'offline' ? 'Observation tiles unavailable'
                 : 'Checking server…';
         }
 
