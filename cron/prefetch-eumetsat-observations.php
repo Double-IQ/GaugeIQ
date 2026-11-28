@@ -18,8 +18,8 @@ if ((string)$stmt->fetchColumn() === '1') $locations[] = '2';
 
 $cacheBase = (string)($config['weather_map_cache']['directory'] ?? (dirname(__DIR__) . '/storage/weather-map-cache'));
 if ($cacheBase === '' || $cacheBase[0] !== '/') throw new RuntimeException('Invalid weather-map cache directory.');
-$cacheRoot = rtrim($cacheBase, '/') . '/eumetsat';
-if (!is_dir($cacheRoot) && !mkdir($cacheRoot, 0750, true) && !is_dir($cacheRoot)) {
+$prefetchCacheRoot = rtrim($cacheBase, '/') . '/eumetsat';
+if (!is_dir($prefetchCacheRoot) && !mkdir($prefetchCacheRoot, 0750, true) && !is_dir($prefetchCacheRoot)) {
     throw new RuntimeException('EUMETSAT cache directory is unavailable.');
 }
 
@@ -64,7 +64,7 @@ foreach ($locations as $locationId) {
                 $yMin = $tileY($north); $yMax = $tileY($south);
                 for ($x = $xMin; $x <= $xMax; $x++) {
                     for ($y = $yMin; $y <= $yMax; $y++) {
-                        $directory = $cacheRoot . '/' . $date->format('YmdHi') . '/' . $variable . '/' . $z . '/' . $x;
+                        $directory = $prefetchCacheRoot . '/' . $date->format('YmdHi') . '/' . $variable . '/' . $z . '/' . $x;
                         if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
                             throw new RuntimeException('Could not create EUMETSAT tile cache directory.');
                         }
@@ -112,7 +112,7 @@ foreach ($locations as $locationId) {
                 }
             }
         }
-        $preparedDir = $cacheRoot . '/prepared';
+        $preparedDir = $prefetchCacheRoot . '/prepared';
         if (!is_dir($preparedDir) && !mkdir($preparedDir, 0750, true) && !is_dir($preparedDir)) {
             throw new RuntimeException('Could not create EUMETSAT prepared-frame directory.');
         }
