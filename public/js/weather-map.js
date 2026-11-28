@@ -623,27 +623,9 @@ protocolOptions.fileReaderConfig = {
 
                 const variables = weatherVariables(layerSelect.value);
                 const buildPreparedTileUrl = (frame, item, z = 0, x = 0, y = 0) => {
-                    const tileUrl = new URL('/api/weather-map-tile.php', window.location.origin);
-                    tileUrl.searchParams.set('slot', String(frame.slot));
-                    tileUrl.searchParams.set('location_id', activeLocationId);
-                    tileUrl.searchParams.set('frame_time', frame.frameTime);
+                    const tileUrl = new URL('/api/weather-map-observation-tile.php', window.location.origin);
+                    tileUrl.searchParams.set('time', frame.frameTime);
                     tileUrl.searchParams.set('variable', item.variable);
-                    tileUrl.searchParams.set('interpolation', appearance.interpolation);
-                    tileUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                    const regionBounds = Array.isArray(weatherRegionBounds) && weatherRegionBounds.length === 4
-                        ? weatherRegionBounds : defaultRegionBounds;
-                    ['west', 'south', 'east', 'north'].forEach((key, index) =>
-                        tileUrl.searchParams.set('region_' + key, String(regionBounds[index])));
-                    const colors = item.variable === 'precipitation'
-                        ? precipitationColors
-                        : [...(Array.isArray(appearance.cloudColors) ? appearance.cloudColors : []),
-                            ...appearanceDefaults.cloudColors].slice(0, 4);
-                    const alphas = item.variable === 'precipitation'
-                        ? precipitationColorOpacities
-                        : [...(Array.isArray(appearance.cloudColorOpacities) ? appearance.cloudColorOpacities : []),
-                            100, 100, 100, 100].slice(0, 4);
-                    tileUrl.searchParams.set('colors', colors.join(','));
-                    tileUrl.searchParams.set('alphas', alphas.join(','));
                     tileUrl.searchParams.set('z', String(z));
                     tileUrl.searchParams.set('x', String(x));
                     tileUrl.searchParams.set('y', String(y));
@@ -695,9 +677,7 @@ protocolOptions.fileReaderConfig = {
                     }
 
                     if (failure) {
-                        frame.forceBrowser = true;
-                        preparedTileFallbacks.add(frame.id);
-                        preparedTileFallbackReasons.set(frame.id, failure);
+                        throw new Error('EUMETSAT observation tile verification failed for ' + frame.frameTime + ': ' + failure);
                     }
                 }
                 if (preparedTileFallbacks.size) {
@@ -719,8 +699,7 @@ protocolOptions.fileReaderConfig = {
                         const sourceId = 'gaugeiq-animation-source-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         const layerId = 'gaugeiq-animation-layer-' + token + '-' + frame.id + '-a' + frame.loadAttempts + '-' + variableIndex;
                         let sourceOptions;
-                        if (!frame.forceBrowser && frame.prepared?.[item.variable]) {
-                            const tileUrl = buildPreparedTileUrl(frame, item);
+                        const tileUrl = buildPreparedTileUrl(frame, item);
                             tileUrl.searchParams.delete('z');
                             tileUrl.searchParams.delete('x');
                             tileUrl.searchParams.delete('y');
@@ -728,27 +707,9 @@ protocolOptions.fileReaderConfig = {
                                 type: 'raster',
                                 tiles: [tileUrl.href + '&z={z}&x={x}&y={y}'],
                                 tileSize: 256,
-                                maxzoom: 12
+                                maxzoom: 8
                             };
                             frame.usingPreparedTiles = true;
-                        } else {
-                            if (!frame.forceBrowser) {
-                                preparedTileFallbacks.add(frame.id);
-                                updateServerStatus('offline');
-                            }
-                            const dataUrl = new URL(frame.url);
-                            dataUrl.searchParams.set('delta_time_hours', String(frame.deltaTimeHours));
-                            dataUrl.searchParams.set('variable', item.variable);
-                            dataUrl.searchParams.set('interpolation', appearance.interpolation);
-                            dataUrl.searchParams.set('color_blend', 'true');
-                            dataUrl.searchParams.set('tile_size', '256');
-                            sourceOptions = {
-                                type: 'raster',
-                                url: 'om://' + dataUrl.href,
-                                tileSize: 256,
-                                maxzoom: 12
-                            };
-                        }
                         map.addSource(sourceId, sourceOptions);
                         map.addLayer({
                             id: layerId,
@@ -885,41 +846,16 @@ protocolOptions.fileReaderConfig = {
 
         async function resolveCurrentOmUrls(variables) {
             const response = await fetch('/api/weather-map-frames.php?location_id=' + encodeURIComponent(activeLocationId), { cache: 'no-store' });
-            if (!response.ok) throw new Error('The scheduled weather-map frames could not be loaded.');
+            if (!response.ok) throw new Error('Observed EUMETSAT weather frames could not be loaded.');
             const schedule = await response.json();
             const frames = Array.isArray(schedule.frames) ? schedule.frames : [];
-            if (frames.length !== 4) throw new Error('The server has not supplied all 4 scheduled past weather frames.');
-
-            const now = Date.now();
-            const currentFrame = frames
-                .filter(frame => Number.isFinite(Date.parse(frame.time)))
-                .sort((a, b) => Math.abs(Date.parse(a.time) - now) - Math.abs(Date.parse(b.time) - now))[0];
-            if (!currentFrame) throw new Error('No usable current weather-map frame was found.');
-
-            const chronologicalFrames = frames
-                .filter(frame => Number.isFinite(Date.parse(frame.time)))
-                .sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
-            const currentIndex = chronologicalFrames.findIndex(frame =>
-                frame.slot === currentFrame.slot && frame.time === currentFrame.time
-            );
-            const neighbour = currentIndex === 0
-                ? chronologicalFrames[1]
-                : chronologicalFrames[currentIndex - 1];
-            const deltaTimeHours = neighbour
-                ? Math.abs(Date.parse(currentFrame.time) - Date.parse(neighbour.time)) / 3600000
-                : 3;
-            if (!Number.isFinite(deltaTimeHours) || deltaTimeHours <= 0) {
-                throw new Error('The current weather-map frame interval is invalid.');
-            }
-
+            if (frames.length !== 4) throw new Error('The server has not supplied all 4 observed weather frames.');
+            const currentFrame = frames.slice().sort((a, b) => Date.parse(b.time) - Date.parse(a.time))[0];
+            if (!currentFrame || !Number.isFinite(Date.parse(currentFrame.time))) throw new Error('No usable EUMETSAT observation was found.');
             return variables.map(item => {
-                const url = new URL(currentFrame.url);
-                url.searchParams.set('delta_time_hours', String(deltaTimeHours));
+                const url = new URL('/api/weather-map-observation-tile.php', window.location.origin);
+                url.searchParams.set('time', currentFrame.time);
                 url.searchParams.set('variable', item.variable);
-                url.searchParams.set('interpolation', appearance.interpolation);
-                // Blend colour stops and their alpha channels for smooth transitions.
-                url.searchParams.set('color_blend', 'true');
-                url.searchParams.set('tile_size', '256');
                 return url.href;
             });
         }
@@ -932,9 +868,9 @@ protocolOptions.fileReaderConfig = {
                 const layerId = 'gaugeiq-weather-layer-' + suffix + '-' + index;
                 map.addSource(sourceId, {
                     type: 'raster',
-                    url: 'om://' + urls[index],
+                    tiles: [urls[index] + '&z={z}&x={x}&y={y}'],
                     tileSize: 256,
-                    maxzoom: 12
+                    maxzoom: 8
                 });
                 map.addLayer({
                     id: layerId,
