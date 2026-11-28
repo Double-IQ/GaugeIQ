@@ -46,8 +46,8 @@ foreach ($locations as $locationId) {
 
     foreach ($schedule['frames'] as $frame) {
         $time = (string)($frame['time'] ?? '');
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i:s\\Z', $time, new DateTimeZone('UTC'));
-        if (!$date || $date->format('Y-m-d\\TH:i:s\\Z') !== $time) {
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s\Z', $time, new DateTimeZone('UTC'));
+        if (!$date || $date->format('Y-m-d\TH:i:s\Z') !== $time) {
             throw new RuntimeException('Invalid observed frame timestamp.');
         }
         foreach (['precipitation' => 'msg_fes:h60b', 'cloud_cover' => 'msg_fes:clm'] as $variable => $layer) {
